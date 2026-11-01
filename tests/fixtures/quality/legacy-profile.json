@@ -1,0 +1,732 @@
+{
+  "annotations": {},
+  "bivariate": [
+    {
+      "generator": "rule:pairs-v1",
+      "left": "group",
+      "method": "grouped_numeric",
+      "right": "amount",
+      "semantics": "inferred",
+      "statistics": {
+        "group_column": "group",
+        "groups": [
+          {
+            "mean": 0.0,
+            "n": 3,
+            "value": "A"
+          }
+        ],
+        "n": 3,
+        "numeric_column": "amount"
+      },
+      "uncertainty": "Descriptive complete-case association, not causation. Readings may be inferred. Pearson p-values assume independent paired observations and a suitable null model; the table cannot establish these assumptions."
+    },
+    {
+      "generator": "rule:pairs-v1",
+      "left": "flag",
+      "method": "grouped_numeric",
+      "right": "amount",
+      "semantics": "inferred",
+      "statistics": {
+        "group_column": "flag",
+        "groups": [
+          {
+            "mean": 0.0,
+            "n": 3,
+            "value": "true"
+          }
+        ],
+        "n": 3,
+        "numeric_column": "amount"
+      },
+      "uncertainty": "Descriptive complete-case association, not causation. Readings may be inferred. Pearson p-values assume independent paired observations and a suitable null model; the table cannot establish these assumptions."
+    }
+  ],
+  "columns": [
+    {
+      "count": 4,
+      "distinct": 3,
+      "effective_type": "string",
+      "examples": [
+        "001",
+        "002",
+        "003"
+      ],
+      "frequencies": [
+        {
+          "count": 2,
+          "value": "003"
+        },
+        {
+          "count": 1,
+          "value": "001"
+        },
+        {
+          "count": 1,
+          "value": "002"
+        }
+      ],
+      "inference": {
+        "alternatives": [
+          "free text",
+          "identifier",
+          "unobserved category levels"
+        ],
+        "confidence": "rule-based, uncalibrated",
+        "reasons": [
+          "At most 20 distinct strings, with repetition and distinct fraction <= 0.8."
+        ],
+        "type": "categorical"
+      },
+      "meaning": {
+        "generator": "human",
+        "value": "Synthetic record code; leading zeros are significant."
+      },
+      "missing": 0,
+      "name": "id",
+      "observed_type": "CSV text",
+      "override": {
+        "generator": "human",
+        "type": "string"
+      },
+      "statistics": {}
+    },
+    {
+      "count": 4,
+      "distinct": 2,
+      "effective_type": "numeric",
+      "examples": [
+        "10",
+        "-5"
+      ],
+      "frequencies": [
+        {
+          "count": 2,
+          "value": "-5"
+        },
+        {
+          "count": 1,
+          "value": "10"
+        }
+      ],
+      "inference": {
+        "alternatives": [
+          "categorical codes",
+          "identifier",
+          "quantity with unknown units"
+        ],
+        "confidence": "rule-based, uncalibrated",
+        "reasons": [
+          "All nonmissing values parse as finite numbers without leading-zero codes."
+        ],
+        "type": "numeric"
+      },
+      "meaning": null,
+      "missing": 1,
+      "name": "amount",
+      "observed_type": "CSV text",
+      "override": null,
+      "statistics": {
+        "invalid": 0,
+        "max": 10.0,
+        "mean": 0.0,
+        "median": -5.0,
+        "min": -5.0,
+        "negatives": 2,
+        "population_std": 7.0710678119,
+        "valid": 3,
+        "zeros": 0
+      }
+    },
+    {
+      "count": 4,
+      "distinct": 2,
+      "effective_type": "categorical",
+      "examples": [
+        "A",
+        "B"
+      ],
+      "frequencies": [
+        {
+          "count": 3,
+          "value": "A"
+        },
+        {
+          "count": 1,
+          "value": "B"
+        }
+      ],
+      "inference": {
+        "alternatives": [
+          "free text",
+          "identifier",
+          "unobserved category levels"
+        ],
+        "confidence": "rule-based, uncalibrated",
+        "reasons": [
+          "At most 20 distinct strings, with repetition and distinct fraction <= 0.8."
+        ],
+        "type": "categorical"
+      },
+      "meaning": {
+        "generator": "human",
+        "value": "Synthetic segment label."
+      },
+      "missing": 0,
+      "name": "group",
+      "observed_type": "CSV text",
+      "override": {
+        "generator": "human",
+        "type": "categorical"
+      },
+      "statistics": {}
+    },
+    {
+      "count": 4,
+      "distinct": 3,
+      "effective_type": "temporal",
+      "examples": [
+        "2026-01-01",
+        "2026-01-02",
+        "2026-01-03"
+      ],
+      "frequencies": [
+        {
+          "count": 2,
+          "value": "2026-01-03"
+        },
+        {
+          "count": 1,
+          "value": "2026-01-01"
+        },
+        {
+          "count": 1,
+          "value": "2026-01-02"
+        }
+      ],
+      "inference": {
+        "alternatives": [
+          "date-like code",
+          "unknown timezone or collection timing"
+        ],
+        "confidence": "rule-based, uncalibrated",
+        "reasons": [
+          "All nonmissing values are strict ISO calendar dates."
+        ],
+        "type": "temporal"
+      },
+      "meaning": null,
+      "missing": 0,
+      "name": "when",
+      "observed_type": "CSV text",
+      "override": null,
+      "statistics": {
+        "invalid": 0,
+        "max": "2026-01-03",
+        "min": "2026-01-01",
+        "valid": 4
+      }
+    },
+    {
+      "count": 4,
+      "distinct": 2,
+      "effective_type": "boolean",
+      "examples": [
+        "true",
+        "false"
+      ],
+      "frequencies": [
+        {
+          "count": 3,
+          "value": "true"
+        },
+        {
+          "count": 1,
+          "value": "false"
+        }
+      ],
+      "inference": {
+        "alternatives": [
+          "two category labels with unknown domain meaning"
+        ],
+        "confidence": "rule-based, uncalibrated",
+        "reasons": [
+          "All nonmissing values are lexical true/false."
+        ],
+        "type": "boolean"
+      },
+      "meaning": null,
+      "missing": 0,
+      "name": "flag",
+      "observed_type": "CSV text",
+      "override": null,
+      "statistics": {
+        "false": 1,
+        "invalid": 0,
+        "true": 3,
+        "valid": 4
+      }
+    }
+  ],
+  "context": {
+    "other_changes": [],
+    "snapshot_date": "2026-01-04",
+    "source": "Authored synthetic fixture",
+    "transformations": []
+  },
+  "dependencies": {
+    "scipy": "not requested"
+  },
+  "findings": [
+    {
+      "evidence": [
+        {
+          "path": "overview",
+          "value": {
+            "columns": 5,
+            "duplicate_rows": 1,
+            "missing_cells": 1,
+            "rows": 4
+          }
+        }
+      ],
+      "generator": "rule:profile-v1",
+      "id": "shape",
+      "kind": "observation",
+      "message": "The snapshot contains 4 rows and 5 columns.",
+      "provenance": {
+        "rule_version": 1,
+        "source_sha256": "4c8fcad59954c1a566ddfc92dcfc6f92a129d93f2072e93645dad7674f10b548"
+      },
+      "uncertainty": "Row unit is not inferred from shape."
+    },
+    {
+      "evidence": [
+        {
+          "path": "overview.duplicate_rows",
+          "value": 1
+        }
+      ],
+      "generator": "rule:profile-v1",
+      "id": "duplicates",
+      "kind": "observation",
+      "message": "1 full rows repeat beyond their first occurrence.",
+      "provenance": {
+        "rule_version": 1,
+        "source_sha256": "4c8fcad59954c1a566ddfc92dcfc6f92a129d93f2072e93645dad7674f10b548"
+      },
+      "uncertainty": "Measured in the supplied snapshot only."
+    },
+    {
+      "evidence": [
+        {
+          "finding": "duplicates"
+        }
+      ],
+      "generator": "rule:review-v1",
+      "id": "duplicates-review",
+      "kind": "action",
+      "message": "Review whether repeated rows are expected before removing any; confirm the row unit.",
+      "provenance": {
+        "rule_version": 1,
+        "source_sha256": "4c8fcad59954c1a566ddfc92dcfc6f92a129d93f2072e93645dad7674f10b548"
+      },
+      "uncertainty": "Review suggestion, not a defect verdict or permission to alter data."
+    },
+    {
+      "evidence": [
+        {
+          "path": "columns.0.inference",
+          "value": {
+            "alternatives": [
+              "free text",
+              "identifier",
+              "unobserved category levels"
+            ],
+            "confidence": "rule-based, uncalibrated",
+            "reasons": [
+              "At most 20 distinct strings, with repetition and distinct fraction <= 0.8."
+            ],
+            "type": "categorical"
+          }
+        }
+      ],
+      "generator": "rule:profile-v1",
+      "id": "column-0-type",
+      "kind": "interpretation",
+      "message": "id: inferred categorical; effective string (human override).",
+      "provenance": {
+        "rule_version": 1,
+        "source_sha256": "4c8fcad59954c1a566ddfc92dcfc6f92a129d93f2072e93645dad7674f10b548"
+      },
+      "uncertainty": "Lexical reading only; alternatives remain possible. Human type overrides are declarations."
+    },
+    {
+      "evidence": [
+        {
+          "path": "columns.1.inference",
+          "value": {
+            "alternatives": [
+              "categorical codes",
+              "identifier",
+              "quantity with unknown units"
+            ],
+            "confidence": "rule-based, uncalibrated",
+            "reasons": [
+              "All nonmissing values parse as finite numbers without leading-zero codes."
+            ],
+            "type": "numeric"
+          }
+        }
+      ],
+      "generator": "rule:profile-v1",
+      "id": "column-1-type",
+      "kind": "interpretation",
+      "message": "amount: inferred numeric; effective numeric (inferred, not a domain fact).",
+      "provenance": {
+        "rule_version": 1,
+        "source_sha256": "4c8fcad59954c1a566ddfc92dcfc6f92a129d93f2072e93645dad7674f10b548"
+      },
+      "uncertainty": "Lexical reading only; alternatives remain possible. Human type overrides are declarations."
+    },
+    {
+      "evidence": [
+        {
+          "path": "columns.1.missing",
+          "value": 1
+        }
+      ],
+      "generator": "rule:profile-v1",
+      "id": "column-1-missing",
+      "kind": "observation",
+      "message": "amount: 1 of 4 cells are missing.",
+      "provenance": {
+        "rule_version": 1,
+        "source_sha256": "4c8fcad59954c1a566ddfc92dcfc6f92a129d93f2072e93645dad7674f10b548"
+      },
+      "uncertainty": "Measured in the supplied snapshot only."
+    },
+    {
+      "evidence": [
+        {
+          "finding": "column-1-missing"
+        }
+      ],
+      "generator": "rule:review-v1",
+      "id": "column-1-missing-review",
+      "kind": "action",
+      "message": "Inspect missing values in amount and ask how absence was generated before choosing a treatment.",
+      "provenance": {
+        "rule_version": 1,
+        "source_sha256": "4c8fcad59954c1a566ddfc92dcfc6f92a129d93f2072e93645dad7674f10b548"
+      },
+      "uncertainty": "Review suggestion, not a defect verdict or permission to alter data."
+    },
+    {
+      "evidence": [
+        {
+          "path": "columns.1.meaning",
+          "value": null
+        }
+      ],
+      "generator": "rule:profile-v1",
+      "id": "column-1-meaning",
+      "kind": "question",
+      "message": "What is the domain meaning of amount?",
+      "provenance": {
+        "rule_version": 1,
+        "source_sha256": "4c8fcad59954c1a566ddfc92dcfc6f92a129d93f2072e93645dad7674f10b548"
+      },
+      "uncertainty": "The table cannot establish domain meaning."
+    },
+    {
+      "evidence": [
+        {
+          "path": "columns.2.inference",
+          "value": {
+            "alternatives": [
+              "free text",
+              "identifier",
+              "unobserved category levels"
+            ],
+            "confidence": "rule-based, uncalibrated",
+            "reasons": [
+              "At most 20 distinct strings, with repetition and distinct fraction <= 0.8."
+            ],
+            "type": "categorical"
+          }
+        }
+      ],
+      "generator": "rule:profile-v1",
+      "id": "column-2-type",
+      "kind": "interpretation",
+      "message": "group: inferred categorical; effective categorical (human override).",
+      "provenance": {
+        "rule_version": 1,
+        "source_sha256": "4c8fcad59954c1a566ddfc92dcfc6f92a129d93f2072e93645dad7674f10b548"
+      },
+      "uncertainty": "Lexical reading only; alternatives remain possible. Human type overrides are declarations."
+    },
+    {
+      "evidence": [
+        {
+          "path": "columns.3.inference",
+          "value": {
+            "alternatives": [
+              "date-like code",
+              "unknown timezone or collection timing"
+            ],
+            "confidence": "rule-based, uncalibrated",
+            "reasons": [
+              "All nonmissing values are strict ISO calendar dates."
+            ],
+            "type": "temporal"
+          }
+        }
+      ],
+      "generator": "rule:profile-v1",
+      "id": "column-3-type",
+      "kind": "interpretation",
+      "message": "when: inferred temporal; effective temporal (inferred, not a domain fact).",
+      "provenance": {
+        "rule_version": 1,
+        "source_sha256": "4c8fcad59954c1a566ddfc92dcfc6f92a129d93f2072e93645dad7674f10b548"
+      },
+      "uncertainty": "Lexical reading only; alternatives remain possible. Human type overrides are declarations."
+    },
+    {
+      "evidence": [
+        {
+          "path": "columns.3.meaning",
+          "value": null
+        }
+      ],
+      "generator": "rule:profile-v1",
+      "id": "column-3-meaning",
+      "kind": "question",
+      "message": "What is the domain meaning of when?",
+      "provenance": {
+        "rule_version": 1,
+        "source_sha256": "4c8fcad59954c1a566ddfc92dcfc6f92a129d93f2072e93645dad7674f10b548"
+      },
+      "uncertainty": "The table cannot establish domain meaning."
+    },
+    {
+      "evidence": [
+        {
+          "path": "columns.4.inference",
+          "value": {
+            "alternatives": [
+              "two category labels with unknown domain meaning"
+            ],
+            "confidence": "rule-based, uncalibrated",
+            "reasons": [
+              "All nonmissing values are lexical true/false."
+            ],
+            "type": "boolean"
+          }
+        }
+      ],
+      "generator": "rule:profile-v1",
+      "id": "column-4-type",
+      "kind": "interpretation",
+      "message": "flag: inferred boolean; effective boolean (inferred, not a domain fact).",
+      "provenance": {
+        "rule_version": 1,
+        "source_sha256": "4c8fcad59954c1a566ddfc92dcfc6f92a129d93f2072e93645dad7674f10b548"
+      },
+      "uncertainty": "Lexical reading only; alternatives remain possible. Human type overrides are declarations."
+    },
+    {
+      "evidence": [
+        {
+          "path": "columns.4.meaning",
+          "value": null
+        }
+      ],
+      "generator": "rule:profile-v1",
+      "id": "column-4-meaning",
+      "kind": "question",
+      "message": "What is the domain meaning of flag?",
+      "provenance": {
+        "rule_version": 1,
+        "source_sha256": "4c8fcad59954c1a566ddfc92dcfc6f92a129d93f2072e93645dad7674f10b548"
+      },
+      "uncertainty": "The table cannot establish domain meaning."
+    },
+    {
+      "evidence": [
+        {
+          "path": "working_record.row_unit",
+          "value": null
+        }
+      ],
+      "generator": "rule:profile-v1",
+      "id": "unknown-row_unit",
+      "kind": "question",
+      "message": "What is the row unit?",
+      "provenance": {
+        "rule_version": 1,
+        "source_sha256": "4c8fcad59954c1a566ddfc92dcfc6f92a129d93f2072e93645dad7674f10b548"
+      },
+      "uncertainty": "Unknown; requires information from the data owner or generating process."
+    },
+    {
+      "evidence": [
+        {
+          "path": "working_record.generating_process",
+          "value": null
+        }
+      ],
+      "generator": "rule:profile-v1",
+      "id": "unknown-generating_process",
+      "kind": "question",
+      "message": "What is the generating process?",
+      "provenance": {
+        "rule_version": 1,
+        "source_sha256": "4c8fcad59954c1a566ddfc92dcfc6f92a129d93f2072e93645dad7674f10b548"
+      },
+      "uncertainty": "Unknown; requires information from the data owner or generating process."
+    },
+    {
+      "evidence": [
+        {
+          "path": "working_record.missingness_mechanism",
+          "value": null
+        }
+      ],
+      "generator": "rule:profile-v1",
+      "id": "unknown-missingness_mechanism",
+      "kind": "question",
+      "message": "What is the missingness mechanism?",
+      "provenance": {
+        "rule_version": 1,
+        "source_sha256": "4c8fcad59954c1a566ddfc92dcfc6f92a129d93f2072e93645dad7674f10b548"
+      },
+      "uncertainty": "Unknown; requires information from the data owner or generating process."
+    },
+    {
+      "evidence": [
+        {
+          "path": "bivariate.0.statistics",
+          "value": {
+            "group_column": "group",
+            "groups": [
+              {
+                "mean": 0.0,
+                "n": 3,
+                "value": "A"
+              }
+            ],
+            "n": 3,
+            "numeric_column": "amount"
+          }
+        }
+      ],
+      "generator": "rule:pairs-v1",
+      "id": "pair-0",
+      "kind": "observation",
+      "message": "Selected relationship: group × amount (inferred).",
+      "provenance": {
+        "rule_version": 1,
+        "source_sha256": "4c8fcad59954c1a566ddfc92dcfc6f92a129d93f2072e93645dad7674f10b548"
+      },
+      "uncertainty": "Descriptive complete-case association, not causation. Readings may be inferred. Pearson p-values assume independent paired observations and a suitable null model; the table cannot establish these assumptions."
+    },
+    {
+      "evidence": [
+        {
+          "path": "bivariate.1.statistics",
+          "value": {
+            "group_column": "flag",
+            "groups": [
+              {
+                "mean": 0.0,
+                "n": 3,
+                "value": "true"
+              }
+            ],
+            "n": 3,
+            "numeric_column": "amount"
+          }
+        }
+      ],
+      "generator": "rule:pairs-v1",
+      "id": "pair-1",
+      "kind": "observation",
+      "message": "Selected relationship: flag × amount (inferred).",
+      "provenance": {
+        "rule_version": 1,
+        "source_sha256": "4c8fcad59954c1a566ddfc92dcfc6f92a129d93f2072e93645dad7674f10b548"
+      },
+      "uncertainty": "Descriptive complete-case association, not causation. Readings may be inferred. Pearson p-values assume independent paired observations and a suitable null model; the table cannot establish these assumptions."
+    }
+  ],
+  "kind": "profile",
+  "overview": {
+    "columns": 5,
+    "duplicate_rows": 1,
+    "missing_cells": 1,
+    "rows": 4
+  },
+  "purpose": {
+    "fallback": "Reference, understanding, QA and validation; no general fitness verdict.",
+    "mode": "declared",
+    "question": "What should be reviewed before using this table?",
+    "target": "amount"
+  },
+  "schema": {
+    "context": [],
+    "data_type": null,
+    "key": [],
+    "metric": null,
+    "mode": "wide",
+    "value": null
+  },
+  "schema_version": 1,
+  "selection": {
+    "budget": 2,
+    "excluded": [
+      {
+        "column": "id",
+        "reason": "unsupported type pair: string × numeric"
+      },
+      {
+        "column": "amount",
+        "reason": "target column"
+      },
+      {
+        "column": "when",
+        "reason": "unsupported type pair: temporal × numeric"
+      }
+    ],
+    "selected": [
+      [
+        "group",
+        "amount"
+      ],
+      [
+        "flag",
+        "amount"
+      ]
+    ],
+    "target": "amount"
+  },
+  "source": {
+    "connector": "csv",
+    "origin": "tests/fixtures/review.csv",
+    "sha256": "4c8fcad59954c1a566ddfc92dcfc6f92a129d93f2072e93645dad7674f10b548"
+  },
+  "working_record": {
+    "decisions": [
+      {
+        "decision": "Investigate repeated rows before removing any.",
+        "rationale": "The table alone cannot establish whether repetition is erroneous."
+      }
+    ],
+    "generating_process": null,
+    "generator": "human",
+    "missingness_mechanism": null,
+    "row_unit": null
+  }
+}
