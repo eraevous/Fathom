@@ -1,0 +1,6 @@
+context:
+  snapshot_date: 2026-01-05
+  source: Authored synthetic fixture revision
+  transformations:
+    - type: filter
+      description: Removed the missing-amount row and one repeated row for a synthetic comparison.

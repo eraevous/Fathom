@@ -1,0 +1,16 @@
+question: What should be reviewed before using this table?
+target: amount
+pair_budget: 2
+columns:
+  id:
+    type: string
+    meaning: Synthetic record code; leading zeros are significant.
+  group:
+    type: categorical
+    meaning: Synthetic segment label.
+context:
+  snapshot_date: 2026-01-04
+  source: Authored synthetic fixture
+decisions:
+  - decision: Investigate repeated rows before removing any.
+    rationale: The table alone cannot establish whether repetition is erroneous.
