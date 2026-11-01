@@ -1,50 +1,49 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+# Fathom Constitution
+
+This restates [CHARTER.md](../../CHARTER.md), the engineering charter accepted by Zach
+on 2026-11-01 (`DG-D2@1`). CHARTER.md is the source; this adds no principles.
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### 1. One data flow.
+   Rule: every connector produces a `GuideDataFrame`; every renderer consumes a `ProfilingResult`; only the profiler touches both.
+   Why: one path means one place to test.
+   Enforced by: `docs/design.md` (Architecture); review.
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+### 2. Findings are typed and attributed (`DG-RA`).
+   Rule: observation, interpretation, hypothesis, action or question, each with evidence and a generator.
+   Why: a reader must be able to tell what was measured from what was guessed.
+   Enforced by: `tests/test_understanding.py`.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### 3. Inference is never presented as fact (`DG-RB`).
+   Rule: inferred semantics keep their confidence, reasons and alternatives; human annotations override them and the inference is kept. Useful results resting on an inference are still shown, labelled.
+   Why: a type guess is not domain knowledge, and hiding it would lose what it is good for.
+   Enforced by: tests; report wording.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### 4. The question selects the analysis (`DG-RC`).
+   Rule: a declared question, decision or target governs which pairs and metrics are shown, within a budget. Excluded columns are listed with reasons. No all-pairs (Cartesian-cross) explosions.
+   Why: combinatorial output buries what matters.
+   Enforced by: pair-screening tests.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### 5. Re-profile and compare (`DG-RD`).
+   Rule: a transformed table can be profiled again and compared. Each profile carries its context (snapshot date, source, transformations and their types), the comparison states those differences first, and it says what it can't know (row-level lineage).
+   Enforced by: `guide compare` tests.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+### 6. The artifact is the interface (`DG-RE`).
+   Rule: `guide-profile.json` is versioned; Markdown and HTML derive from it.
+   Enforced by: renderer tests.
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+### 7. Tested for accuracy, routing, degradation, reproducibility and purpose (`DG-RF`).
+   Rule: every check has a violating fixture and a decoy; output is byte-identical across runs; missing optional dependencies degrade.
+   Enforced by: `python3 -m pytest`.
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
-
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+### 8. Safe to publish.
+   Rule: no real data, credentials or org-specific code in the repository.
+   Why: the April design targets public release.
+   Enforced by: review.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+CHARTER.md changes need Zach’s approval.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.0.0 | **Ratified**: 2026-11-01 | **Last Amended**: 2026-11-01
