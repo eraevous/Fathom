@@ -1,0 +1,16 @@
+# Copy into .github/workflows/aec.yml. Pinned to the AEC release that generated it (v0.4.0);
+# change the ref only to a release or commit you have reviewed.
+name: aec
+on: [push, pull_request]
+jobs:
+  aec:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install "aec @ git+https://github.com/eraevous/AEC.git@v0.4.0"
+      - name: Structural snapshot (regenerated, never trusted from the branch)
+        run: python3 -m aec edges . -o .aec/edges.jsonl
+      - name: Records check (fails on errors, including dangling code references)
+        run: python3 -m aec check .aec/records.jsonl --edges .aec/edges.jsonl

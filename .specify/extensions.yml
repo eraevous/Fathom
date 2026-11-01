@@ -1,0 +1,32 @@
+installed:
+- aec
+settings:
+  auto_execute_hooks: true
+hooks:
+  after_specify:
+  - extension: aec
+    command: speckit.aec.purpose-link
+    enabled: true
+    optional: true
+    priority: 10
+    prompt: Check that this spec cites the AEC purpose it serves?
+    description: 'AEC: purpose link check after specification'
+    condition: null
+  after_tasks:
+  - extension: aec
+    command: speckit.aec.check
+    enabled: true
+    optional: true
+    priority: 10
+    prompt: Run AEC record checks before implementation?
+    description: 'AEC: cross-record check after task generation'
+    condition: null
+  after_implement:
+  - extension: aec
+    command: speckit.aec.impact
+    enabled: true
+    optional: true
+    priority: 10
+    prompt: Report which conclusions this implementation affects?
+    description: 'AEC: structural diff and change impact after implementation'
+    condition: null

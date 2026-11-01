@@ -1,0 +1,21 @@
+{
+  "schema_version": "1.0",
+  "extensions": {
+    "aec": {
+      "version": "0.3.0",
+      "source": "local",
+      "manifest_hash": "sha256:91c17600efa33c61d2945fd9c822031f122cc9f146219978bc2c57e653ae19c6",
+      "enabled": true,
+      "priority": 10,
+      "registered_commands": {
+        "codex": [
+          "speckit.aec.purpose-link",
+          "speckit.aec.check",
+          "speckit.aec.impact"
+        ]
+      },
+      "registered_skills": [],
+      "installed_at": "2026-11-01T19:18:56.171778+00:00"
+    }
+  }
+}

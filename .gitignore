@@ -1,0 +1,17 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+build/
+dist/
+.pytest_cache/
+.coverage
+# credentials never committed (docs/design.md, Connectors)
+*.credentials.json
+*.credentials.yaml
+creds/
+.env
+# local outputs
+reports/
+*-out/

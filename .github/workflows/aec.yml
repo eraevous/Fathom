@@ -1,0 +1,15 @@
+# AEC records check. Pinned to a reviewed AEC commit (no AEC release tag exists yet).
+name: aec
+on: [push, pull_request]
+jobs:
+  aec:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install "aec @ git+https://github.com/eraevous/AEC.git@860b7815f208fac09c4e2ba57e5fbfe418ed2ba7"
+      - name: Structural snapshot (regenerated, never trusted from the branch)
+        run: python3 -m aec edges . -o .aec/edges.jsonl
+      - name: Records check (fails on errors, including dangling code references)
+        run: python3 -m aec check .aec/records.jsonl --edges .aec/edges.jsonl
