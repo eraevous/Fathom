@@ -17,6 +17,7 @@ The MVP is **data to decisions**: decisions about the data, about other processe
 3. **`CHARTER.md`:** the engineering rules (accepted).
 4. **`docs/vision.md`:** the vision. It is a synthesis, not a specification.
 5. **`docs/design.md`:** the April design, distilled. It was approved, but later records win over it.
+6. **`docs/acceptance.md`:** how usefulness is judged (proposed, `FT-R4`). Check each slice against it before calling it done.
 
 Where these conflict, follow the higher item and record the conflict. Don't settle it yourself.
 
