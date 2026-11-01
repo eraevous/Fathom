@@ -2,14 +2,15 @@
 
 Fathom turns raw or semi-cleaned tabular data into understanding someone can use and pass on: an enhanced data dictionary, a diagnostic EDA engine and a repeatable working record. It answers what is in a dataset, what can't be known from it, and what it is good for.
 
-**Status: first provisional MVP slice.** Fathom is the successor to Data Guide.
+**Status: data-quality and readable-report slice.** Fathom is the successor to Data Guide.
 It starts from guiding documents and decisions, with no earlier implementation,
 and is built with [AEC](https://github.com/eraevous/AEC) and Spec Kit.
 
-The first slice helps decide **what needs review before using a table**: an
+Fathom helps decide **what needs review before using a table**: an
 enhanced dictionary, evidenced review actions, explicit unknowns, human decisions
-and context-first before/after comparison. The feature requirement remains
-provisional until Zach accepts it; tests and merge do not accept requirements.
+and context-first before/after comparison. The slice-2 scope FT-R2–FT-R6 is accepted;
+its algorithmic refinements and usefulness
+remain for review. Tests and merge do not accept requirements.
 
 ## Try it with synthetic data
 
@@ -45,10 +46,14 @@ human decisions/rationales, and profile context. See the
 [synthetic example](tests/fixtures/review.yaml) and [CLI contract](specs/001-data-review/contracts/cli.md).
 Unknown keys and column references fail before output is written.
 
-Only target-related pairs are considered, in input column order within the budget.
-Numeric pairs show complete-case Pearson coefficients; category/boolean × numeric
-pairs show group counts and means. Every excluded column has a reason. There are
-no pair analyses without a target, and associations never establish causation.
+Existing target-related value routes and quality missingness contrasts share the
+budget. They rank by declared focus, descriptive strength, case count and lexical
+ties, rather than input column order. Near-duplicate and near-constant value
+columns are excluded. Numeric pairs retain complete-case Pearson coefficients;
+category/boolean × numeric pairs retain group counts and means. Quality contrasts
+show group sizes and missing rates, including without a target. Ranking and
+exclusions are disclosed; associations never establish causation. No new general
+target-analysis methods are included in this slice.
 Optional `pip install -e '.[stats]'` adds SciPy p-values with stated assumptions.
 Without it, coefficients/counts remain available and p-values are labelled unavailable.
 P-values do not choose review actions.
@@ -58,6 +63,36 @@ Human overrides take effect without erasing inference. Leading-zero codes remain
 strings by default; blank/whitespace cells are missing, while `NA`, `null` and `0`
 are literal values. Date inference recognizes strict ISO dates only. Numeric
 overrides count incompatible/non-finite values rather than silently coercing them.
+
+## Data quality and readable reports
+
+```bash
+.venv/bin/guide profile tests/fixtures/quality/workshop.csv --out reports/quality
+.venv/bin/guide profile tests/fixtures/quality/holdout.csv --out reports/quality-holdout
+```
+
+The opening summarizes completeness, duplicated/lockstep columns, inferred types,
+constant/near-constant columns and missing cells, with links to findings. It states
+usefulness and unknowns before typed findings, relations, a compact dictionary and
+provenance. Findings are plain sentences; evidence and uncertainty expand in one
+click. **Show full per-item detail** switches grouped column findings to their
+complete original items and back. The HTML is self-contained and uses no script.
+Both views come from the same saved artifact; Markdown has static disclosures.
+
+Quality findings cover suspected sentinel/placeholder/dummy values, dominance,
+duplicate/lockstep/near-copy columns, co-missingness and segment-dependent missing
+rates, inferred date-cadence gaps, strong skew and repeated rows. Heuristics, sample
+minima and screening limits are disclosed. They never confirm a defect or domain
+meaning. For example, the holdout's valid extreme 999 triggers an unnecessary
+sentinel review, while its unlisted 888, compound dummy label and intended monthly
+gap are only partially found or missed. See the complete
+[builder found/missed ledger](specs/002-data-quality/validation.md) and
+[slice-2 intent note](codex_++/intents/2026-11-01__data-quality.intent.md).
+
+Old version-1 artifacts remain renderable. New completeness measurements requiring
+raw rows are explicitly unavailable there. The quality helper uses no new optional
+dependency. Advanced univariate work, FT-R7 target methods and FT-R8 switchable
+chart axes remain later work under DG-D5.
 
 ## Scope and limits
 
@@ -76,9 +111,9 @@ include values/examples from the supplied table. Use public or synthetic inputs
 for this run. Tests demonstrate conformance on those examples; usefulness for
 most projects and business fitness have not been established.
 
-The [feature spec](specs/001-data-review/spec.md), [plan](specs/001-data-review/plan.md)
-and [intent note](codex_++/intents/2026-11-01__data-review.intent.md) record scope,
-dependencies, clarification readings and trade-offs.
+The [slice-1 spec](specs/001-data-review/spec.md) and
+[slice-2 spec](specs/002-data-quality/spec.md), with their plans and intent notes,
+record scope, dependencies, clarification readings and trade-offs.
 
 | Start here | What it holds |
 |---|---|

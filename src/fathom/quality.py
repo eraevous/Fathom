@@ -27,6 +27,16 @@ def share(count, total):
     return count / total if total else None
 
 
+def copy_evidence(left, right):
+    """Shared absence alone is not evidence of duplicated observed values."""
+    joint=[(a,b) for a,b in zip(left,right) if a is not None and b is not None]
+    agreement=share(sum(a==b for a,b in zip(left,right)),len(left))
+    joint_agreement=share(sum(a==b for a,b in joint),len(joint))
+    near=bool(joint and joint_agreement>=.95 and agreement is not None and
+              (agreement==1 or (len(left)>=5 and len(joint)>=5 and agreement>=.95)))
+    return {"agreement":agreement,"jointly_present":len(joint),"joint_agreement":joint_agreement,"near":near}
+
+
 def quality_profile(rows, columns, cfg, emit):
     """Return additive summary, screening evidence and quality pair candidates."""
     n, p = len(rows), len(columns)
@@ -39,7 +49,7 @@ def quality_profile(rows, columns, cfg, emit):
         "placeholder": "literal na/null/none/unknown/n/a/n-a/tbd/?; possible codes, not null conversion",
         "dominant": "n>=5 nonmissing and top share>=0.95; constant n>=2 and distinct=1",
         "constant": "n>=2 nonmissing and exactly one distinct observed value; all-missing is not constant",
-        "redundancy": "exact vectors; affine normalized numeric fingerprints to 1e-8; repeated-category partition recoding; near-copy row agreement>=0.95 with n>=5",
+        "redundancy": "exact vectors; affine normalized numeric fingerprints to 1e-8; repeated-category partition recoding; near-copy row AND jointly-present agreement>=0.95 with n>=5 and >=5 jointly-present cells",
         "co_missing": "identical nonempty missing-row masks",
         "conditional_missingness": "2..20 groups, each n>=3, missing-rate spread>=0.30; first 20 grouping columns, target first then lexical",
         "temporal_gap": ">=4 dates; modal positive day interval occurs>=2 and >=half intervals; gap>1.5x cadence",
@@ -175,13 +185,13 @@ def quality_profile(rows, columns, cfg, emit):
             if comparisons >= 2000:
                 omitted += 1; continue
             comparisons += 1
-            agreement = sum(a==b for a,b in zip(vectors[name],vectors[other]))/n
-            jointly_present = sum(a is not None and b is not None for a,b in zip(vectors[name],vectors[other]))
-            if agreement >= .95 and jointly_present >= 5:
+            evidence = copy_evidence(vectors[name],vectors[other])
+            agreement = evidence["agreement"]
+            if evidence["near"]:
                 blocked[name] = f"near-duplicate of {other} (row agreement {agreement:.1%})"
                 if agreement < 1:
                     diagnostic(f"q-near-{i}-{names.index(other)}", "near_duplicate_columns", [other,name], f"{name} agrees with {other} on {agreement:.1%} of rows.",
-                               {"agreement": agreement, "rows": n, "jointly_present": jointly_present}, f"Review the few differences between {name} and {other} before keeping both.")
+                               {**evidence, "rows": n}, f"Review the few differences between {name} and {other} before keeping both.")
                 break
     for i, (mask, group) in enumerate(sorted(masks.items())):
         if len(group)>1:

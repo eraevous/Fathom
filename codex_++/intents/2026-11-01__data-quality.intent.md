@@ -19,8 +19,8 @@ Author codex:aec; HO-20261101-006; 2026-11-01. Implementation readings, not new 
    fingerprints (>=5 finite, >=3 distinct, matching missing/invalid mask, rounded
    normalized tolerance 1e-8), or repeated-category recoding partitions (>=5 cells,
    2..20 levels, at least two observations per level). Unique categorical IDs are
-   not declared lockstep. Near duplicates use >=95% row agreement and >=5 rows,
-   require jointly present data; screen at most 2000 candidate vector comparisons.
+   not declared lockstep. Near duplicates use >=95% row agreement AND >=95% agreement among at least five
+   jointly present cells (exact vectors are excluded even on smaller tables); screen at most 2000 candidate vector comparisons.
    Fingerprint groups avoid producing an all-pairs matrix. Group findings do not
    consume the pair budget; they describe structural redundancy, not associations.
 7. Co-missingness: nonempty identical missing-row masks, with counts/shares and
@@ -50,6 +50,15 @@ Author codex:aec; HO-20261101-006; 2026-11-01. Implementation readings, not new 
 13. Builder tables and a later builder holdout are synthetic and public. The latter
     is not an independent blind trial. List misses and false alarms without tuning
     rules to erase misses; Zach/Kate's unseen tables remain outside this run.
+
+14. docs/acceptance.md and AGENTS retain older “proposed” wording, while the latest
+    FT-R4@2 is committed and accepted. The record takes precedence; the criterion
+    is applied without editing the protected document or claiming builder acceptance.
+    Repetitive quality findings, not only type/meaning questions, are grouped by
+    diagnostic family and kind; their original messages/evidence remain one click
+    away. The initial diagnostic freeze preceded the holdout; a later shared-absence
+    audit decoy required the generic jointly-present agreement guard. Both hashes
+    and that timing are recorded; held-out misses were not tuned away.
 
 Drift check: a quality helper stays inside the profiler's responsibility and receives
 plain columns/rows; it creates no connector, renderer or orchestration subsystem.

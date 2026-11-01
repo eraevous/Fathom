@@ -156,3 +156,25 @@ def test_wide_screening_limits_are_explicit(make_profile):
     assert cov['omitted_near_duplicate_candidates']>0
     assert cov['omitted_grouping_columns']==50
     assert len(cov['grouping_columns_excluded'])==50
+
+
+def test_later_builder_holdout_report_evidence():
+    result=profile(CSVConnector(F/'holdout.csv').load())
+    d=result.document
+    assert d['overview']=={'rows':31,'columns':16,'duplicate_rows':1,'missing_cells':20}
+    assert d['dataset_summary']['complete_rows']=={'count':21,'share':pytest.approx(21/31)}
+    near=rules(d,'near_duplicate_columns')
+    assert near and near[0]['evidence'][0]['value']['agreement']==pytest.approx(30/31)
+    assert rules(d,'conditional_missingness') and rules(d,'temporal_gap')
+    text=render_html(result)+render_markdown(result)
+    for value in ('999','test_7','near_a','near_b','2026-03-10','2026-03-13'):
+        assert value in text
+
+
+def test_shared_absence_is_not_near_copy_evidence():
+    d=profile(CSVConnector(F/'shared-absence.csv').load()).document
+    assert rules(d,'co_missing')
+    assert not rules(d,'near_duplicate_columns')
+    assert not d['quality']['value_exclusions']
+    targeted=profile(CSVConnector(F/'shared-absence.csv').load(),{'target':'b'}).document
+    assert targeted['selection']['selected']==[['a','b']]

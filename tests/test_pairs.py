@@ -68,7 +68,9 @@ def test_missing_optional_dependency_degrades(make_profile, monkeypatch):
 
 
 def test_optional_dependency_clean_decoy(make_profile):
-    pytest.importorskip("scipy")
+    stats = pytest.importorskip("scipy.stats")
+    if not hasattr(stats, "pearsonr"):
+        pytest.skip("optional scipy.stats.pearsonr is unavailable")
     d = make_profile("x,y\n1,2\n2,4\n3,6\n", {"target": "y"}).document
     assert d["bivariate"][0]["statistics"]["p_value"] == pytest.approx(0, abs=1e-7)
     assert d["dependencies"]["scipy"] == "available"

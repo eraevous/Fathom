@@ -9,7 +9,7 @@ import statistics
 
 from .config import validate_config
 from .models import GuideDataFrame, ProfilingResult
-from .quality import quality_profile
+from .quality import quality_profile, copy_evidence
 
 
 def number(value: str) -> float | None:
@@ -187,13 +187,14 @@ def select_pairs(rows: list, columns: list, cfg: dict, quality=None, quality_pai
     for index, col in enumerate(columns):
         reason, stats, method = None, None, None
         a, b = col["effective_type"], tcol["effective_type"]
+        duplicate_target = copy_evidence([row[index] for row in rows], [row[target_index] for row in rows])["near"] if index!=target_index else False
         if index == target_index:
             reason = "target column"
         elif col["name"] in blocked:
             reason = blocked[col["name"]]
             if reason == "constant column" and a == "numeric":
                 reason = "constant numeric input"
-        elif rows and (all(row[index] == row[target_index] for row in rows) or (len(rows) >= 5 and sum(row[index] == row[target_index] for row in rows) / len(rows) >= .95)) and any(row[index] is not None and row[target_index] is not None for row in rows):
+        elif duplicate_target:
             reason = "near-duplicate of target (row agreement >=95%)"
         elif a == b == "numeric":
             cases = [(x, y) for row in rows if (x := number(row[index])) is not None

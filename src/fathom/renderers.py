@@ -72,15 +72,34 @@ def summary_rows(d):
     return [(title,scalar(value),s.get('finding_links',{}).get(key,[])) for key,title,value in items]
 
 
-def repetitive(f):
+def repetitive(f, ids=None):
+    if ids is not None: return f["id"] in ids
     return bool(re.fullmatch(r'column-\d+-(?:type|meaning)', f['id']))
 
 
 def repetition_groups(d):
     types=[f for f in d['findings'] if re.fullmatch(r'column-\d+-type',f['id'])]
     meanings=[f for f in d['findings'] if re.fullmatch(r'column-\d+-meaning',f['id'])]
-    return [(f'{len(types)} columns have inferred type readings; human overrides are retained separately.', types),
-            (f'Domain meaning is unknown for {len(meanings)} columns; ask the data owner.', meanings)]
+    result = [(f'{len(types)} columns have inferred type readings; human overrides are retained separately.', types),
+              (f'Domain meaning is unknown for {len(meanings)} columns; ask the data owner.', meanings)]
+    buckets = {}
+    for f in d['findings']:
+        if repetitive(f): continue
+        match = re.fullmatch(r'column-\d+-(missing|invalid)(-review)?', f['id'])
+        rule = f.get('rule') or (match.group(1) if match else None)
+        if rule not in {'missing','invalid','sentinel','dummy','placeholder','dominant','constant','skew','temporal_gap'}:
+            continue
+        buckets.setdefault((rule,f['kind']),[]).append(f)
+    for (rule,kind),items in buckets.items():
+        if len(items)<2: continue
+        names=[]
+        for f in items:
+            affected=f.get('columns') or [d['columns'][int(f['id'].split('-')[1])]['name']]
+            for name in affected:
+                if name not in names: names.append(name)
+        message=items[0]['message'].rstrip('.')+'; review the same concern across '+str(len(names))+' columns ('+', '.join(names)+').'
+        result.append((message,items))
+    return result
 
 
 def unknowns(d):
@@ -98,9 +117,9 @@ def bars(items, title):
     return ''.join(out)+'</svg>'
 
 
-def finding_html(f):
+def finding_html(f, repeated_ids):
     fid=escape(f['id'],quote=True)
-    cls='finding repetitive' if repetitive(f) else 'finding'
+    cls='finding repetitive' if repetitive(f,repeated_ids) else 'finding'
     out=[f'<article id="{fid}" class="{cls}"><p>{escape(f["message"])}</p><details><summary>Evidence and uncertainty</summary>']
     for item in f['evidence']:
         if 'finding' in item:
@@ -128,16 +147,17 @@ def render_html(result: ProfilingResult):
                 '<p>Use these observations to choose what to review; they do not certify fitness or authorize automatic cleaning.</p>',
                 '<h3>What the data cannot tell</h3>'+readable_html(unknowns(d))+'</section>',
                 '<section id="findings"><h2>Findings</h2><input id="full-view" type="checkbox"><label for="full-view">Show full per-item detail</label>',
-                '<div class="summary-view">']
-        for message,items in repetition_groups(d):
-            if not items: continue
-            links=', '.join(f'<a href="#{escape(f["id"],quote=True)}">{escape(d["columns"][int(f["id"].split("-")[1])]["name"])}</a>' for f in items)
-            out.append('<p>'+escape(message)+'</p><details><summary>Affected columns</summary>'+links+'</details>')
-        out.append('</div><div class="full-view">')
+                '<div class="full-view">']
+        summaries=repetition_groups(d)
+        repeated_ids={f['id'] for _,items in summaries for f in items}
         for kind,title in KINDS:
             out.append('<h3>'+title+'</h3>')
+            for message,items in summaries:
+                if not items or items[0]['kind']!=kind: continue
+                links=''.join('<p><a href="#'+escape(f['id'],quote=True)+'">Original item</a>: '+escape(f['message'])+'</p>'+readable_html({'evidence':f['evidence'],'generator':f['generator'],'uncertainty':f['uncertainty'],'provenance':f['provenance']}) for f in items)
+                out.append('<div class="summary-view"><p>'+escape(message)+'</p><details><summary>Evidence, uncertainty and original items</summary>'+links+'</details></div>')
             fs=[f for f in d['findings'] if f['kind']==kind]
-            out.extend(finding_html(f) for f in fs)
+            out.extend(finding_html(f,repeated_ids) for f in fs)
             if not fs: out.append('<p>None recorded.</p>')
         out += ['</div></section><section><h2>Relations</h2><p>'+escape(d['selection'].get('ranking_rule','Legacy input-order selection; no relevance ranking recorded.'))+'</p>',
                 '<p>Selected '+str(len(d['bivariate']))+' relationship(s); budget '+str(d['selection']['budget'])+'.</p>']
@@ -159,7 +179,7 @@ def render_html(result: ProfilingResult):
                 '<h3>Working record (human declarations)</h3>',readable_html(d['working_record']),'</section>']
     if d.get('annotations'):
         out += ['<section><h2>Labelled annotations</h2>',readable_html(d['annotations']),'</section>']
-    css='''body{font:16px/1.55 system-ui,sans-serif;background:#f5f8f7;color:#193e42;max-width:1120px;padding:32px;margin:auto}h1{font-size:44px;margin-bottom:8px}h2{border-bottom:2px solid #28777c;padding-bottom:7px;margin-top:40px}h3{margin-top:24px}section{margin-bottom:30px}.opening{background:white;padding:24px;border:1px solid #d5e1df;border-radius:8px}table{border-collapse:collapse;width:100%;background:white}td,th{padding:10px;text-align:left;border-bottom:1px solid #d5e1df;vertical-align:top}td{overflow-wrap:anywhere}article{background:white;border-left:3px solid #b9d3cf;padding:8px 16px;margin:10px 0}article>p{margin:7px 0}details{margin:8px 0}summary{cursor:pointer;color:#12656b;font-weight:600}details[open]{padding-bottom:10px}a{color:#12656b}small{color:#4d676b}dt{font-weight:600;margin-top:8px}dd{margin-left:20px;overflow-wrap:anywhere}ul{padding-left:24px}svg{width:100%;max-width:760px}svg text{font:13px system-ui,sans-serif}label{cursor:pointer;font-weight:600;margin-left:8px}.summary-view{background:#e9f2ee;padding:12px;margin-top:12px}.repetitive{display:none}.repetitive:target{display:block}#full-view:checked ~ .summary-view{display:none}#full-view:checked ~ .full-view .repetitive{display:block}@media(max-width:700px){body{padding:12px}td,th{padding:6px;font-size:14px}.opening{padding:12px}}@media print{body{background:white;padding:0}details{break-inside:avoid}.repetitive{display:block}}'''
+    css='''body{font:16px/1.55 system-ui,sans-serif;background:#f5f8f7;color:#193e42;max-width:1120px;padding:32px;margin:auto}h1{font-size:44px;margin-bottom:8px}h2{border-bottom:2px solid #28777c;padding-bottom:7px;margin-top:40px}h3{margin-top:24px}section{margin-bottom:30px}.opening{background:white;padding:24px;border:1px solid #d5e1df;border-radius:8px}table{border-collapse:collapse;width:100%;background:white}td,th{padding:10px;text-align:left;border-bottom:1px solid #d5e1df;vertical-align:top}td{overflow-wrap:anywhere}article{background:white;border-left:3px solid #b9d3cf;padding:8px 16px;margin:10px 0}article>p{margin:7px 0}details{margin:8px 0}summary{cursor:pointer;color:#12656b;font-weight:600}details[open]{padding-bottom:10px}a{color:#12656b}small{color:#4d676b}dt{font-weight:600;margin-top:8px}dd{margin-left:20px;overflow-wrap:anywhere}ul{padding-left:24px}svg{width:100%;max-width:760px}svg text{font:13px system-ui,sans-serif}label{cursor:pointer;font-weight:600;margin-left:8px}.summary-view{background:#e9f2ee;padding:12px;margin-top:12px}.repetitive{display:none}.repetitive:target{display:block}#full-view:checked ~ .summary-view{display:none}#full-view:checked ~ .full-view .summary-view{display:none}#full-view:checked ~ .full-view .repetitive{display:block}@media(max-width:700px){body{padding:12px}td,th{padding:6px;font-size:14px}.opening{padding:12px}}@media print{body{background:white;padding:0}details{break-inside:avoid}.repetitive{display:block}}'''
     return '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Fathom — '+escape(d['kind'])+'</title><style>'+css+'</style></head><body>'+'\n'.join(out)+'</body></html>\n'
 
 
@@ -177,14 +197,14 @@ def render_markdown(result: ProfilingResult):
         lines += ['','### Usefulness','',md_text(d['purpose'].get('question') or d['purpose'].get('fallback','Reference, understanding, QA and validation.')),'',
                   'Choose what to review; these observations do not certify fitness or authorize automatic cleaning.','','### What the data cannot tell','',readable_md(unknowns(d)),
                   '## Findings','']
-        repeated=[]
-        for message,items in repetition_groups(d):
-            if items:
-                lines += [md_text(message),'']
-                repeated.extend(items)
+        summaries=repetition_groups(d)
+        repeated=[f for _,items in summaries for f in items]
+        repeated_ids={f['id'] for f in repeated}
         for kind,title in KINDS:
             lines += ['### '+title,'']
-            fs=[f for f in d['findings'] if f['kind']==kind and not repetitive(f)]
+            for message,items in summaries:
+                if items and items[0]['kind']==kind: lines += [md_text(message),'']
+            fs=[f for f in d['findings'] if f['kind']==kind and not repetitive(f,repeated_ids)]
             for f in fs: lines += markdown_finding(f)
             if not fs: lines += ['No additional items recorded.','']
         if repeated:

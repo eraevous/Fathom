@@ -19,5 +19,38 @@
     "rows": 12,
     "columns": 5,
     "planted": []
+  },
+  "holdout": {
+    "rows": 31,
+    "columns": 16,
+    "rules_frozen_sha256": "fa52899a3921db64be596cdad7a299417bfc6c41e175b44e604d32178d553627",
+    "method": "Created after quality implementation commit; builder holdout, not an independent blind trial.",
+    "planted": [
+      "rare maximum 999 in age (1/31)",
+      "test_7 dummy label (1/31)",
+      "dominant usual (30/31) and constant fixed",
+      "near_a/near_b agree on 30/31 rows",
+      "a/b missing together on 10/31 rows, all in east (10/16 vs 0/15)",
+      "day has two unrecorded daily positions between 2026-03-10 and 2026-03-13",
+      "skew column 1000 tail changes mean vs median",
+      "one repeated full row"
+    ],
+    "harder_problems": [
+      "unlisted sentinel 888 in unlisted_code",
+      "compound dummy label test alice in subtle_label",
+      "missing March under a human-intended monthly schedule in monthly_day"
+    ],
+    "known_valid_decoy": "valid_extreme=999 is an intentionally valid value, not a sentinel; an unnecessary sentinel review is a false alarm against builder truth.",
+    "rules_after_audit_sha256": "f67af5422430cde5ac1b1936a891fb869390c63049f6e90ace076f5fb2ee1c92",
+    "audit_note": "After initial holdout, a separate 95%-shared-absence decoy revealed a generic near-copy false alarm; require jointly-present agreement as well as row agreement. Initial holdout misses were not tuned away."
+  },
+  "shared_absence": {
+    "rows": 100,
+    "columns": 3,
+    "planted": [
+      "a/b missing together on 95/100 rows; jointly observed values disagree on all five remaining rows"
+    ],
+    "must_not_claim": "near-copy redundancy from shared null cells alone",
+    "timing": "An adversarial audit decoy after the first builder holdout; led to a generic jointly-present agreement guard."
   }
 }
