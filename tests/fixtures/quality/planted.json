@@ -1,0 +1,23 @@
+{
+  "source": "Authored synthetic tables; no real data.",
+  "workshop": {
+    "rows": 41,
+    "columns": 13,
+    "planted": [
+      "rare extreme 999 in age/age_copy (2/41 each)",
+      "dummy status (1/41)",
+      "dominant keep (40/41) and constant fixed",
+      "age_copy exact duplicate of age",
+      "amount_scaled affine lockstep with amount; site_code recodes site",
+      "availability_a/b missing together on 13/41 rows, concentrated in north (13/21 vs 0/20)",
+      "10 unrecorded dates between 2026-01-20 and 2026-01-31 under inferred daily cadence",
+      "amount right tail: 10000 makes mean unlike median",
+      "one repeated full row"
+    ]
+  },
+  "clean": {
+    "rows": 12,
+    "columns": 5,
+    "planted": []
+  }
+}

@@ -151,6 +151,42 @@ def validate_document(doc: dict) -> None:
         if (not isinstance(selection.get("selected"), list) or not isinstance(selection.get("excluded"), list)
                 or type(selection.get("budget")) is not int or not 0 <= selection["budget"] <= 20):
             raise ValueError("invalid artifact selection")
+        if "dataset_summary" in doc:
+            summary = doc["dataset_summary"]
+            if not isinstance(summary, dict):
+                raise ValueError("invalid dataset summary")
+            for key in ("rows", "columns", "duplicate_rows", "duplicate_columns", "lockstep_columns"):
+                if type(summary.get(key)) is not int or summary[key] < 0:
+                    raise ValueError("invalid dataset summary count")
+            for key in ("complete_rows", "complete_columns", "missing_cells"):
+                measure = summary.get(key)
+                if not isinstance(measure, dict) or type(measure.get("count")) is not int or measure["count"]<0:
+                    raise ValueError("invalid dataset summary measure")
+                rate = measure.get("share")
+                if rate is not None and (type(rate) not in (int,float) or not 0<=rate<=1):
+                    raise ValueError("invalid dataset summary share")
+            for key in ("duplicate_groups", "lockstep_groups", "constant_columns", "near_constant_columns"):
+                if not isinstance(summary.get(key), list):
+                    raise ValueError("invalid dataset summary column groups")
+                groups = summary[key] if key.endswith("groups") else [summary[key]]
+                if any(not isinstance(group,list) or any(not isinstance(name,str) or name not in names for name in group) for group in groups):
+                    raise ValueError("invalid dataset summary column names")
+            if any(summary[k] != doc["overview"][k] for k in ("rows","columns","duplicate_rows")):
+                raise ValueError("inconsistent dataset summary")
+            if not isinstance(summary.get("inferred_types"), dict) or any(
+                    k not in TYPES or type(v) is not int or v<0 for k,v in summary["inferred_types"].items()):
+                raise ValueError("invalid dataset summary inferred types")
+            ids = [f["id"] for f in doc["findings"]]
+            links = summary.get("finding_links")
+            if len(set(ids)) != len(ids) or not isinstance(links, dict) or any(
+                    not isinstance(refs,list) or not refs or any(not isinstance(ref,str) or ref not in ids for ref in refs) for refs in links.values()):
+                raise ValueError("invalid dataset summary finding links")
+            if not set(summary)-{"finding_links"} <= links.keys():
+                raise ValueError("incomplete dataset summary finding links")
+        if "quality" in doc:
+            quality = doc["quality"]
+            if not isinstance(quality,dict) or any(not isinstance(quality.get(k),dict) for k in ("rules","coverage","value_exclusions")):
+                raise ValueError("invalid quality evidence")
     else:
         if set(doc["contexts"]) != {"before", "after"}:
             raise ValueError("comparison needs before and after contexts")

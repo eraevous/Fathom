@@ -9,6 +9,7 @@ import statistics
 
 from .config import validate_config
 from .models import GuideDataFrame, ProfilingResult
+from .quality import quality_profile
 
 
 def number(value: str) -> float | None:
@@ -90,9 +91,9 @@ def profile(data: GuideDataFrame, config: dict | None = None) -> ProfilingResult
     findings, columns = [], []
     provenance = {"source_sha256": data.source["sha256"], "rule_version": 1}
 
-    def finding(fid, kind, message, evidence, uncertainty, generator="rule:profile-v1"):
+    def finding(fid, kind, message, evidence, uncertainty, generator="rule:profile-v1", **metadata):
         findings.append({"id": fid, "kind": kind, "message": message, "generator": generator,
-                         "evidence": evidence, "uncertainty": uncertainty, "provenance": provenance})
+                         "evidence": evidence, "uncertainty": uncertainty, "provenance": provenance, **metadata})
 
     def diagnostic(fid, message, evidence, action):
         finding(fid, "observation", message, evidence, "Measured in the supplied snapshot only.")
@@ -146,10 +147,21 @@ def profile(data: GuideDataFrame, config: dict | None = None) -> ProfilingResult
             finding("unknown-" + key, "question", f"What is the {label}?",
                     [{"path": "working_record." + key, "value": None}],
                     "Unknown; requires information from the data owner or generating process.")
-    selection, pairs, dependencies = select_pairs(rows, columns, cfg)
+    dataset_summary, quality, quality_pairs = quality_profile(rows, columns, cfg, finding)
+    selection, pairs, dependencies = select_pairs(rows, columns, cfg, quality, quality_pairs)
+    quality["coverage"]["reported_missingness_candidates"] = sum(p["method"] == "missingness_by_group" for p in pairs)
     for index, pair in enumerate(pairs):
-        finding(f"pair-{index}", "observation", f"Selected relationship: {pair['left']} × {pair['right']} ({pair['semantics']}).",
-                [{"path": f"bivariate.{index}.statistics", "value": pair["statistics"]}], pair["uncertainty"], "rule:pairs-v1")
+        is_missingness = pair["method"] == "missingness_by_group"
+        message = (f"Missingness in {pair['left']} varies across {pair['right']} groups by {pair['statistics']['spread']:.1%}."
+                   if is_missingness else f"Selected relationship: {pair['left']} × {pair['right']} ({pair['semantics']}).")
+        finding(f"pair-{index}", "observation", message,
+                [{"path": f"bivariate.{index}.statistics", "value": pair["statistics"]}], pair["uncertainty"],
+                "rule:quality-v1" if is_missingness else "rule:pairs-v1",
+                rule="conditional_missingness" if is_missingness else "selected_relation", columns=[pair["left"],pair["right"]])
+        if is_missingness:
+            finding(f"pair-{index}-review", "action", f"Investigate collection differences across {pair['right']} before choosing a missing-value treatment for {pair['left']}.",
+                    [{"finding": f"pair-{index}"}], "A descriptive contrast does not establish the missingness mechanism.", "rule:quality-v1",
+                    rule="conditional_missingness", columns=[pair["left"],pair["right"]])
     return ProfilingResult({"schema_version": 1, "kind": "profile", "source": data.source,
         "schema": asdict(schema), "context": cfg["context"],
         "purpose": {"question": cfg.get("question"), "target": cfg.get("target"),
@@ -158,16 +170,18 @@ def profile(data: GuideDataFrame, config: dict | None = None) -> ProfilingResult
         "working_record": {"generator": "human", **{k: cfg.get(k) for k in ("row_unit", "generating_process", "missingness_mechanism")},
                            "decisions": cfg["decisions"]},
         "overview": overview, "columns": columns, "findings": findings,
-        "selection": selection, "bivariate": pairs, "dependencies": dependencies, "annotations": {}})
+        "selection": selection, "bivariate": pairs, "dependencies": dependencies, "annotations": {},
+        "dataset_summary": dataset_summary, "quality": quality})
 
 
-def select_pairs(rows: list, columns: list, cfg: dict) -> tuple[dict, list, dict]:
+def select_pairs(rows: list, columns: list, cfg: dict, quality=None, quality_pairs=None) -> tuple[dict, list, dict]:
     target, budget = cfg.get("target"), cfg["pair_budget"]
     selection = {"target": target, "budget": budget, "selected": [], "excluded": []}
     pairs, dependencies = [], {"scipy": "not requested"}
+    blocked = (quality or {}).get("value_exclusions", {})
     if target is None:
         selection["excluded"] = [{"column": c["name"], "reason": "no target declared"} for c in columns]
-        return selection, pairs, dependencies
+        return rank_pairs(rows, columns, cfg, selection, quality_pairs or [], dependencies)
     target_index = next(i for i, c in enumerate(columns) if c["name"] == target)
     tcol = columns[target_index]
     for index, col in enumerate(columns):
@@ -175,8 +189,12 @@ def select_pairs(rows: list, columns: list, cfg: dict) -> tuple[dict, list, dict
         a, b = col["effective_type"], tcol["effective_type"]
         if index == target_index:
             reason = "target column"
-        elif len(pairs) >= budget:
-            reason = "pair budget exhausted"
+        elif col["name"] in blocked:
+            reason = blocked[col["name"]]
+            if reason == "constant column" and a == "numeric":
+                reason = "constant numeric input"
+        elif rows and (all(row[index] == row[target_index] for row in rows) or (len(rows) >= 5 and sum(row[index] == row[target_index] for row in rows) / len(rows) >= .95)) and any(row[index] is not None and row[target_index] is not None for row in rows):
+            reason = "near-duplicate of target (row agreement >=95%)"
         elif a == b == "numeric":
             cases = [(x, y) for row in rows if (x := number(row[index])) is not None
                      and (y := number(row[target_index])) is not None]
@@ -195,17 +213,6 @@ def select_pairs(rows: list, columns: list, cfg: dict) -> tuple[dict, list, dict
                 else:
                     method = "pearson"
                     stats = {"n": len(cases), "pearson_r": r, "p_value": None, "p_value_status": "unavailable"}
-                    try:
-                        from scipy.stats import pearsonr
-                    except ImportError:
-                        dependencies["scipy"] = "unavailable; p-values omitted"
-                    else:
-                        import warnings
-                        with warnings.catch_warnings():
-                            warnings.simplefilter("ignore", RuntimeWarning)
-                            p = rounded(float(pearsonr(xs, ys).pvalue))
-                        stats.update(p_value=p, p_value_status="available" if p is not None else "undefined")
-                        dependencies["scipy"] = "available"
         elif (a in {"categorical", "boolean"} and b == "numeric") or (a == "numeric" and b in {"categorical", "boolean"}):
             gi, ni = (index, target_index) if a != "numeric" else (target_index, index)
             group_type = columns[gi]["effective_type"]
@@ -238,7 +245,54 @@ def select_pairs(rows: list, columns: list, cfg: dict) -> tuple[dict, list, dict
             pairs.append({"left": col["name"], "right": target, "method": method, "statistics": stats,
                           "generator": "rule:pairs-v1", "semantics": "human-declared" if col["override"] and tcol["override"] else "inferred",
                           "uncertainty": "Descriptive complete-case association, not causation. Readings may be inferred. Pearson p-values assume independent paired observations and a suitable null model; the table cannot establish these assumptions."})
-    return selection, pairs, dependencies
+    return rank_pairs(rows, columns, cfg, selection, pairs + (quality_pairs or []), dependencies)
+
+
+def rank_pairs(rows, columns, cfg, selection, candidates, dependencies):
+    """Use only core metrics to select; enrich only the chosen numeric pairs."""
+    target, question = cfg.get("target"), (cfg.get("question") or "").casefold()
+    vectors = {c["name"]: [row[i] for row in rows] for i,c in enumerate(columns)}
+    for pair in candidates:
+        names = (pair["left"], pair["right"])
+        pair["focus"] = int(target in names if target else False) + int(any(
+            re.search(r"(?<!\w)" + re.escape(name.casefold()) + r"(?!\w)", question) for name in names))
+        if pair["method"] == "pearson":
+            pair["strength"] = abs(pair["statistics"]["pearson_r"])
+        elif pair["method"] == "grouped_numeric":
+            means = [g["mean"] for g in pair["statistics"]["groups"] if g["mean"] is not None]
+            nums = [x for v in vectors[pair["statistics"]["numeric_column"]] if (x:=number(v)) is not None]
+            span = max(nums)-min(nums) if nums else 0
+            pair["strength"] = rounded((max(means)-min(means))/span) if means and span and math.isfinite(span) else 0
+    candidates.sort(key=lambda x: (-x["focus"], -x["strength"], -x["statistics"]["n"], x["left"], x["right"], x["method"]))
+    selection["ranking_rule"] = "Declared target/literal question-column focus, then descriptive strength (absolute r, group-mean range/value range, or missing-rate spread), complete-case n, then lexical pair/method ties; unlike scores are priority heuristics, not inferential comparisons."
+    selection["selected"] = []
+    selection["ranked"] = []
+    chosen = []
+    for rank, pair in enumerate(candidates, 1):
+        selected = len(chosen) < cfg["pair_budget"]
+        selection["ranked"].append({"rank": rank, "left": pair["left"], "right": pair["right"], "method": pair["method"],
+                                    "focus": pair["focus"], "strength": pair["strength"], "n": pair["statistics"]["n"], "selected": selected})
+        if not selected:
+            selection["excluded"].append({"column": pair["left"], "other": pair["right"], "method": pair["method"], "reason": "pair budget exhausted"})
+            continue
+        if pair["method"] == "pearson":
+            ix, iy = [next(i for i,c in enumerate(columns) if c["name"]==name) for name in (pair["left"],pair["right"])]
+            cases = [(x,y) for row in rows if (x:=number(row[ix])) is not None and (y:=number(row[iy])) is not None]
+            xs,ys = [x for x,_ in cases],[y for _,y in cases]
+            try:
+                from scipy.stats import pearsonr
+            except ImportError:
+                dependencies["scipy"] = "unavailable; p-values omitted"
+            else:
+                import warnings
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore", RuntimeWarning)
+                    p = rounded(float(pearsonr(xs,ys).pvalue))
+                pair["statistics"].update(p_value=p, p_value_status="available" if p is not None else "undefined")
+                dependencies["scipy"] = "available"
+        chosen.append(pair)
+        selection["selected"].append([pair["left"],pair["right"]])
+    return selection, chosen, dependencies
 
 
 def compare(before: ProfilingResult, after: ProfilingResult) -> ProfilingResult:

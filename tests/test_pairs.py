@@ -34,7 +34,7 @@ def test_boolean_pair_and_override_label(make_profile):
 def test_no_unsolicited_pairs(make_profile, cfg, expected):
     d = make_profile("x,y\n1,2\n2,4\n", cfg).document
     assert not d["bivariate"]
-    assert d["selection"]["excluded"][0]["reason"] == expected
+    assert next(e["reason"] for e in d["selection"]["excluded"] if e["column"] == "x") == expected
 
 
 def test_pair_bad_data_and_clean_decoy(make_profile):
