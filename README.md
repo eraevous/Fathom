@@ -2,7 +2,83 @@
 
 Fathom turns raw or semi-cleaned tabular data into understanding someone can use and pass on: an enhanced data dictionary, a diagnostic EDA engine and a repeatable working record. It answers what is in a dataset, what can't be known from it, and what it is good for.
 
-**Status: documents only, no code yet.** Fathom is the successor to Data Guide. It deliberately starts from its guiding documents, which are the vision, the design, the accepted decisions and the charter. It is being built from them with [AEC](https://github.com/eraevous/AEC) and Spec Kit, to see how far a project gets from documents alone.
+**Status: first provisional MVP slice.** Fathom is the successor to Data Guide.
+It starts from guiding documents and decisions, with no earlier implementation,
+and is built with [AEC](https://github.com/eraevous/AEC) and Spec Kit.
+
+The first slice helps decide **what needs review before using a table**: an
+enhanced dictionary, evidenced review actions, explicit unknowns, human decisions
+and context-first before/after comparison. The feature requirement remains
+provisional until Zach accepts it; tests and merge do not accept requirements.
+
+## Try it with synthetic data
+
+Python 3.12+:
+
+```bash
+python -m venv .venv
+.venv/bin/pip install -e '.[test]'
+.venv/bin/python -m pytest
+.venv/bin/guide profile tests/fixtures/review.csv --config tests/fixtures/review.yaml --out reports/before
+.venv/bin/guide profile tests/fixtures/revised.csv --config tests/fixtures/revised.yaml --out reports/after
+.venv/bin/guide compare reports/before/guide-profile.json reports/after/guide-profile.json --out reports/comparison
+.venv/bin/guide render reports/before/guide-profile.json --out reports/rendered
+.venv/bin/guide validate tests/fixtures/review.csv --config tests/fixtures/review.yaml
+```
+
+Open `reports/before/report.html` offline. Its two review actions link to the
+observed missing amount and repeated full row. They recommend investigation,
+not deletion or imputation. The clean fixture produces neither review action.
+The report also asks about unsupplied row unit, meanings, generating process and
+missingness mechanism. It never guesses a domain explanation.
+
+`guide-profile.json` (schema version 1) is the interface. Markdown and self-contained
+HTML with embedded charts derive solely from that artifact. Re-rendering does not
+need the CSV. Repeated runs with identical input paths, bytes, configuration and
+dependency availability produce byte-identical outputs. No runtime date is added.
+
+## Declare a question and keep a working record
+
+YAML configuration supports `question`, `target`, `pair_budget` (0–20, default 5),
+column meanings/type overrides, row unit, generating process, missingness mechanism,
+human decisions/rationales, and profile context. See the
+[synthetic example](tests/fixtures/review.yaml) and [CLI contract](specs/001-data-review/contracts/cli.md).
+Unknown keys and column references fail before output is written.
+
+Only target-related pairs are considered, in input column order within the budget.
+Numeric pairs show complete-case Pearson coefficients; category/boolean × numeric
+pairs show group counts and means. Every excluded column has a reason. There are
+no pair analyses without a target, and associations never establish causation.
+Optional `pip install -e '.[stats]'` adds SciPy p-values with stated assumptions.
+Without it, coefficients/counts remain available and p-values are labelled unavailable.
+P-values do not choose review actions.
+
+Inferred types retain uncalibrated confidence, reasons and alternative readings.
+Human overrides take effect without erasing inference. Leading-zero codes remain
+strings by default; blank/whitespace cells are missing, while `NA`, `null` and `0`
+are literal values. Date inference recognizes strict ISO dates only. Numeric
+overrides count incompatible/non-finite values rather than silently coercing them.
+
+## Scope and limits
+
+This is a local, in-memory, single CSV/wide slice under `DG-D1`'s data-to-decisions
+definition. It does **not** complete the April connector/CLI checklist. Globs,
+Excel/JSON/database connectors, long tables, interactive guidance, advanced EDA,
+dashboards, PDF and narrative generation are deferred. Explicit long contracts
+are rejected. No data is changed or transmitted by the application.
+
+Comparisons state both source contexts, dates, declared transformations and other
+changes before aggregate measured deltas. They cannot reconstruct row-level
+lineage or establish why a difference occurred. Type/meaning changes are flagged.
+
+All committed fixtures are authored synthetic examples. Exported reports can
+include values/examples from the supplied table. Use public or synthetic inputs
+for this run. Tests demonstrate conformance on those examples; usefulness for
+most projects and business fitness have not been established.
+
+The [feature spec](specs/001-data-review/spec.md), [plan](specs/001-data-review/plan.md)
+and [intent note](codex_++/intents/2026-11-01__data-review.intent.md) record scope,
+dependencies, clarification readings and trade-offs.
 
 | Start here | What it holds |
 |---|---|
