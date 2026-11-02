@@ -63,6 +63,14 @@
     "bytes": 7797,
     "sha256": "b7a4b1cdd7b298e66f104510b14141cc48f6d461da5a0e33123e96e936569662"
   },
+  "after-pptx-comparison-1280.png": {
+    "bytes": 43709,
+    "sha256": "c81f021db4ec798146f7604ba70c861716986746540c2cb24b5e1cb815fbb2bc"
+  },
+  "after-pptx-comparison-390.png": {
+    "bytes": 7659,
+    "sha256": "a1f0c40559bae44167235b57af6c05a843404d7dce5a37879b3a5e60c5876e64"
+  },
   "after-pptx-contact.png": {
     "bytes": 209470,
     "sha256": "6ca95d0f2832da3747625027d4280abc5f867daa909e248b5c7f4b32c72a85cf"

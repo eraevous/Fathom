@@ -60,6 +60,13 @@ def capture(stage):
                 index=next(i for i,page in enumerate(doc) if term in page.get_text());page=doc[index]
                 name=f'{stage}-{kind}-{topic}-1280.png';page.get_pixmap(matrix=fitz.Matrix(1280/page.rect.width,1280/page.rect.width),alpha=False).save(out/name)
                 manifest[name]={'kind':'actual PDF raster' if kind=='pdf' else 'LibreOffice-rendered actual PPTX raster','width':1280,'page':index+1,'topic':topic}
+    comparison=Path('reports/layout-comparison/slides/report.pdf')
+    if stage=='after' and comparison.exists():
+        doc=fitz.open(comparison);page=doc[1]
+        for width in (1280,390):
+            name=f'after-pptx-comparison-{width}.png'
+            page.get_pixmap(matrix=fitz.Matrix(width/page.rect.width,width/page.rect.width),alpha=False).save(out/name)
+            manifest[name]={'kind':'LibreOffice-rendered actual comparison PPTX raster','width':width,'page':2}
     (out/f'{stage}-manifest.json').write_text(json.dumps(manifest,indent=2,sort_keys=True)+'\n')
 
 

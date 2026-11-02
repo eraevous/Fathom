@@ -1,5 +1,5 @@
-{"aec_edges": 1, "files": 27, "files_sha": "4e9504de2a9fa33c", "modules": {"specs.005-plots-and-layout.review.capture": "specs/005-plots-and-layout/review/capture.py", "src.fathom": "src/fathom/__init__.py", "src.fathom.__main__": "src/fathom/__main__.py", "src.fathom.charts": "src/fathom/charts.py", "src.fathom.cli": "src/fathom/cli.py", "src.fathom.config": "src/fathom/config.py", "src.fathom.connectors": "src/fathom/connectors.py", "src.fathom.exports": "src/fathom/exports.py", "src.fathom.models": "src/fathom/models.py", "src.fathom.parsing": "src/fathom/parsing.py", "src.fathom.presentation": "src/fathom/presentation.py", "src.fathom.profiler": "src/fathom/profiler.py", "src.fathom.quality": "src/fathom/quality.py", "src.fathom.renderers": "src/fathom/renderers.py", "src.fathom.special": "src/fathom/special.py", "src.fathom.univariate": "src/fathom/univariate.py", "tests.conftest": "tests/conftest.py", "tests.test_cli": "tests/test_cli.py", "tests.test_exports": "tests/test_exports.py", "tests.test_outputs": "tests/test_outputs.py", "tests.test_pairs": "tests/test_pairs.py", "tests.test_plots_layout": "tests/test_plots_layout.py", "tests.test_quality": "tests/test_quality.py", "tests.test_readability": "tests/test_readability.py", "tests.test_special_types": "tests/test_special_types.py", "tests.test_understanding": "tests/test_understanding.py", "tests.test_univariate": "tests/test_univariate.py"}, "root": ".", "skipped": [], "source_roots": ["src"], "tool_version": "0.3.0"}
-{"body_sha": "5afd8a4b05a1", "dst": "specs.005-plots-and-layout.review.capture.capture", "file": "specs/005-plots-and-layout/review/capture.py", "kind": "defines", "line": 18, "resolved": true, "src": "specs.005-plots-and-layout.review.capture"}
+{"aec_edges": 1, "files": 27, "files_sha": "c650e30e8d37cd8c", "modules": {"specs.005-plots-and-layout.review.capture": "specs/005-plots-and-layout/review/capture.py", "src.fathom": "src/fathom/__init__.py", "src.fathom.__main__": "src/fathom/__main__.py", "src.fathom.charts": "src/fathom/charts.py", "src.fathom.cli": "src/fathom/cli.py", "src.fathom.config": "src/fathom/config.py", "src.fathom.connectors": "src/fathom/connectors.py", "src.fathom.exports": "src/fathom/exports.py", "src.fathom.models": "src/fathom/models.py", "src.fathom.parsing": "src/fathom/parsing.py", "src.fathom.presentation": "src/fathom/presentation.py", "src.fathom.profiler": "src/fathom/profiler.py", "src.fathom.quality": "src/fathom/quality.py", "src.fathom.renderers": "src/fathom/renderers.py", "src.fathom.special": "src/fathom/special.py", "src.fathom.univariate": "src/fathom/univariate.py", "tests.conftest": "tests/conftest.py", "tests.test_cli": "tests/test_cli.py", "tests.test_exports": "tests/test_exports.py", "tests.test_outputs": "tests/test_outputs.py", "tests.test_pairs": "tests/test_pairs.py", "tests.test_plots_layout": "tests/test_plots_layout.py", "tests.test_quality": "tests/test_quality.py", "tests.test_readability": "tests/test_readability.py", "tests.test_special_types": "tests/test_special_types.py", "tests.test_understanding": "tests/test_understanding.py", "tests.test_univariate": "tests/test_univariate.py"}, "root": ".", "skipped": [], "source_roots": ["src"], "tool_version": "0.3.0"}
+{"body_sha": "58af4b33e4c7", "dst": "specs.005-plots-and-layout.review.capture.capture", "file": "specs/005-plots-and-layout/review/capture.py", "kind": "defines", "line": 18, "resolved": true, "src": "specs.005-plots-and-layout.review.capture"}
 {"body_sha": "6ca1c43a1127", "dst": "src.fathom.__version__", "file": "src/fathom/__init__.py", "kind": "defines", "line": 3, "resolved": true, "src": "src.fathom"}
 {"body_sha": "3861d5e38385", "dst": "src.fathom.charts.svg_chart", "file": "src/fathom/charts.py", "kind": "defines", "line": 9, "resolved": true, "src": "src.fathom.charts"}
 {"body_sha": "6074504fdfea", "dst": "src.fathom.charts.svg_chart.<locals>.e", "file": "src/fathom/charts.py", "kind": "defines", "line": 10, "resolved": true, "src": "src.fathom.charts.svg_chart"}
@@ -15,12 +15,12 @@
 {"body_sha": "35b12bea4c6a", "dst": "src.fathom.connectors.CSVConnector.connect", "file": "src/fathom/connectors.py", "kind": "defines", "line": 18, "resolved": true, "src": "src.fathom.connectors.CSVConnector"}
 {"body_sha": "4908db4f9931", "dst": "src.fathom.connectors.CSVConnector.load", "file": "src/fathom/connectors.py", "kind": "defines", "line": 22, "resolved": true, "src": "src.fathom.connectors.CSVConnector"}
 {"body_sha": "8ed5954f6919", "dst": "src.fathom.exports.chart_topics", "file": "src/fathom/exports.py", "kind": "defines", "line": 32, "resolved": true, "src": "src.fathom.exports"}
-{"body_sha": "755dfc609a79", "dst": "src.fathom.exports.export_bundle", "file": "src/fathom/exports.py", "kind": "defines", "line": 246, "resolved": true, "src": "src.fathom.exports"}
+{"body_sha": "755dfc609a79", "dst": "src.fathom.exports.export_bundle", "file": "src/fathom/exports.py", "kind": "defines", "line": 251, "resolved": true, "src": "src.fathom.exports"}
 {"body_sha": "d634bc58606c", "dst": "src.fathom.exports.finding_topics", "file": "src/fathom/exports.py", "kind": "defines", "line": 16, "resolved": true, "src": "src.fathom.exports"}
 {"body_sha": "526cbfb8ee63", "dst": "src.fathom.exports.identity", "file": "src/fathom/exports.py", "kind": "defines", "line": 25, "resolved": true, "src": "src.fathom.exports"}
 {"body_sha": "300f5e7cbee2", "dst": "src.fathom.exports.normalized_zip", "file": "src/fathom/exports.py", "kind": "defines", "line": 155, "resolved": true, "src": "src.fathom.exports"}
 {"body_sha": "6162bb1ea074", "dst": "src.fathom.exports.pdf_bytes", "file": "src/fathom/exports.py", "kind": "defines", "line": 36, "resolved": true, "src": "src.fathom.exports"}
-{"body_sha": "7170f040ebdd", "dst": "src.fathom.exports.pptx_bytes", "file": "src/fathom/exports.py", "kind": "defines", "line": 168, "resolved": true, "src": "src.fathom.exports"}
+{"body_sha": "1c04ebd3d171", "dst": "src.fathom.exports.pptx_bytes", "file": "src/fathom/exports.py", "kind": "defines", "line": 168, "resolved": true, "src": "src.fathom.exports"}
 {"body_sha": "cc296873deea", "dst": "src.fathom.exports.pdf_bytes.<locals>.Chart", "file": "src/fathom/exports.py", "kind": "defines", "line": 68, "resolved": true, "src": "src.fathom.exports.pdf_bytes"}
 {"body_sha": "cef79fc43dcc", "dst": "src.fathom.exports.pdf_bytes.<locals>.heading", "file": "src/fathom/exports.py", "kind": "defines", "line": 59, "resolved": true, "src": "src.fathom.exports.pdf_bytes"}
 {"body_sha": "b777084faa05", "dst": "src.fathom.exports.pdf_bytes.<locals>.p", "file": "src/fathom/exports.py", "kind": "defines", "line": 57, "resolved": true, "src": "src.fathom.exports.pdf_bytes"}
@@ -125,13 +125,13 @@
 {"body_sha": "ced3e5b5fb66", "dst": "tests.test_cli.test_cli_roundtrip_compare_validate_and_reproducibility", "file": "tests/test_cli.py", "kind": "defines", "line": 17, "resolved": true, "src": "tests.test_cli"}
 {"body_sha": "90711023963f", "dst": "tests.test_cli.test_cli_unknown_artifact_version", "file": "tests/test_cli.py", "kind": "defines", "line": 60, "resolved": true, "src": "tests.test_cli"}
 {"body_sha": "2c021027b1b5", "dst": "tests.test_cli.test_cli_unsafe_yaml_and_unknown_target", "file": "tests/test_cli.py", "kind": "defines", "line": 51, "resolved": true, "src": "tests.test_cli"}
-{"body_sha": "6e85a412dea8", "dst": "tests.test_exports.test_cli_export_fresh_process_bytes", "file": "tests/test_exports.py", "kind": "defines", "line": 53, "resolved": true, "src": "tests.test_exports"}
-{"body_sha": "2a4b446f2b2f", "dst": "tests.test_exports.test_export_invalid_input_writes_nothing", "file": "tests/test_exports.py", "kind": "defines", "line": 79, "resolved": true, "src": "tests.test_exports"}
-{"body_sha": "25ed9696cfb6", "dst": "tests.test_exports.test_formats_are_independent_and_unicode_is_disclosed", "file": "tests/test_exports.py", "kind": "defines", "line": 64, "resolved": true, "src": "tests.test_exports"}
+{"body_sha": "6e85a412dea8", "dst": "tests.test_exports.test_cli_export_fresh_process_bytes", "file": "tests/test_exports.py", "kind": "defines", "line": 54, "resolved": true, "src": "tests.test_exports"}
+{"body_sha": "2a4b446f2b2f", "dst": "tests.test_exports.test_export_invalid_input_writes_nothing", "file": "tests/test_exports.py", "kind": "defines", "line": 80, "resolved": true, "src": "tests.test_exports"}
+{"body_sha": "25ed9696cfb6", "dst": "tests.test_exports.test_formats_are_independent_and_unicode_is_disclosed", "file": "tests/test_exports.py", "kind": "defines", "line": 65, "resolved": true, "src": "tests.test_exports"}
 {"body_sha": "59084544fcd9", "dst": "tests.test_exports.test_optional_absence_preserves_core_status", "file": "tests/test_exports.py", "kind": "defines", "line": 15, "resolved": true, "src": "tests.test_exports"}
 {"body_sha": "03ea77d1bc5b", "dst": "tests.test_exports.test_pdf_content_and_determinism", "file": "tests/test_exports.py", "kind": "defines", "line": 25, "resolved": true, "src": "tests.test_exports"}
-{"body_sha": "662af4e88f02", "dst": "tests.test_exports.test_pptx_content_charts_and_determinism", "file": "tests/test_exports.py", "kind": "defines", "line": 38, "resolved": true, "src": "tests.test_exports"}
-{"body_sha": "1ad3bf173716", "dst": "tests.test_exports.test_formats_are_independent_and_unicode_is_disclosed.<locals>.no_pdf", "file": "tests/test_exports.py", "kind": "defines", "line": 67, "resolved": true, "src": "tests.test_exports.test_formats_are_independent_and_unicode_is_disclosed"}
+{"body_sha": "368168a426f3", "dst": "tests.test_exports.test_pptx_content_charts_and_determinism", "file": "tests/test_exports.py", "kind": "defines", "line": 38, "resolved": true, "src": "tests.test_exports"}
+{"body_sha": "1ad3bf173716", "dst": "tests.test_exports.test_formats_are_independent_and_unicode_is_disclosed.<locals>.no_pdf", "file": "tests/test_exports.py", "kind": "defines", "line": 68, "resolved": true, "src": "tests.test_exports.test_formats_are_independent_and_unicode_is_disclosed"}
 {"body_sha": "f78e6fcfff4e", "dst": "tests.test_exports.test_optional_absence_preserves_core_status.<locals>.no_extras", "file": "tests/test_exports.py", "kind": "defines", "line": 17, "resolved": true, "src": "tests.test_exports.test_optional_absence_preserves_core_status"}
 {"body_sha": "1678aac9ed9a", "dst": "tests.test_outputs.test_artifact_roundtrip_and_standalone_views", "file": "tests/test_outputs.py", "kind": "defines", "line": 11, "resolved": true, "src": "tests.test_outputs"}
 {"body_sha": "d939221d6bc1", "dst": "tests.test_outputs.test_bad_artifacts_rejected", "file": "tests/test_outputs.py", "kind": "defines", "line": 63, "resolved": true, "src": "tests.test_outputs"}
@@ -389,7 +389,7 @@
 {"dst": "subprocess", "file": "tests/test_exports.py", "kind": "imports", "line": 6, "resolved": true, "src": "tests.test_exports"}
 {"dst": "sys", "file": "tests/test_exports.py", "kind": "imports", "line": 7, "resolved": true, "src": "tests.test_exports"}
 {"dst": "zipfile", "file": "tests/test_exports.py", "kind": "imports", "line": 8, "resolved": true, "src": "tests.test_exports"}
-{"dst": "src.fathom.cli.main", "file": "tests/test_exports.py", "kind": "imports", "line": 81, "resolved": true, "src": "tests.test_exports.test_export_invalid_input_writes_nothing"}
+{"dst": "src.fathom.cli.main", "file": "tests/test_exports.py", "kind": "imports", "line": 82, "resolved": true, "src": "tests.test_exports.test_export_invalid_input_writes_nothing"}
 {"dst": "src.fathom.profiler.compare", "file": "tests/test_exports.py", "kind": "imports", "line": 33, "resolved": true, "src": "tests.test_exports.test_pdf_content_and_determinism"}
 {"dst": "src.fathom.profiler.compare", "file": "tests/test_exports.py", "kind": "imports", "line": 47, "resolved": true, "src": "tests.test_exports.test_pptx_content_charts_and_determinism"}
 {"dst": "copy", "file": "tests/test_outputs.py", "kind": "imports", "line": 1, "resolved": true, "src": "tests.test_outputs"}
@@ -463,14 +463,15 @@
 {"dst": "copy", "file": "tests/test_univariate.py", "kind": "imports", "line": 129, "resolved": true, "src": "tests.test_univariate.test_invalid_chart_artifact_is_rejected"}
 {"dst": "yaml.SafeLoader", "file": "src/fathom/config.py", "kind": "inherits", "line": 109, "resolved": true, "src": "src.fathom.config.load_config.<locals>.ConfigLoader"}
 {"dst": "?Flowable", "file": "src/fathom/exports.py", "kind": "inherits", "line": 68, "resolved": false, "src": "src.fathom.exports.pdf_bytes.<locals>.Chart"}
-{"dst": "?parser.add_argument", "file": "specs/005-plots-and-layout/review/capture.py", "kind": "calls", "line": 67, "resolved": false, "src": "specs.005-plots-and-layout.review.capture"}
-{"dst": "?parser.parse_args", "file": "specs/005-plots-and-layout/review/capture.py", "kind": "calls", "line": 67, "resolved": false, "src": "specs.005-plots-and-layout.review.capture"}
-{"dst": "argparse.ArgumentParser", "file": "specs/005-plots-and-layout/review/capture.py", "kind": "calls", "line": 67, "resolved": true, "src": "specs.005-plots-and-layout.review.capture"}
-{"dst": "specs.005-plots-and-layout.review.capture.capture", "file": "specs/005-plots-and-layout/review/capture.py", "kind": "calls", "line": 67, "resolved": true, "src": "specs.005-plots-and-layout.review.capture"}
+{"dst": "?parser.add_argument", "file": "specs/005-plots-and-layout/review/capture.py", "kind": "calls", "line": 74, "resolved": false, "src": "specs.005-plots-and-layout.review.capture"}
+{"dst": "?parser.parse_args", "file": "specs/005-plots-and-layout/review/capture.py", "kind": "calls", "line": 74, "resolved": false, "src": "specs.005-plots-and-layout.review.capture"}
+{"dst": "argparse.ArgumentParser", "file": "specs/005-plots-and-layout/review/capture.py", "kind": "calls", "line": 74, "resolved": true, "src": "specs.005-plots-and-layout.review.capture"}
+{"dst": "specs.005-plots-and-layout.review.capture.capture", "file": "specs/005-plots-and-layout/review/capture.py", "kind": "calls", "line": 74, "resolved": true, "src": "specs.005-plots-and-layout.review.capture"}
 {"dst": "?binop.read_text", "file": "specs/005-plots-and-layout/review/capture.py", "kind": "calls", "line": 24, "resolved": false, "src": "specs.005-plots-and-layout.review.capture.capture"}
-{"dst": "?binop.write_text", "file": "specs/005-plots-and-layout/review/capture.py", "kind": "calls", "line": 63, "resolved": false, "src": "specs.005-plots-and-layout.review.capture.capture"}
+{"dst": "?binop.write_text", "file": "specs/005-plots-and-layout/review/capture.py", "kind": "calls", "line": 70, "resolved": false, "src": "specs.005-plots-and-layout.review.capture.capture"}
 {"dst": "?browser.close", "file": "specs/005-plots-and-layout/review/capture.py", "kind": "calls", "line": 37, "resolved": false, "src": "specs.005-plots-and-layout.review.capture.capture"}
 {"dst": "?browser.new_page", "file": "specs/005-plots-and-layout/review/capture.py", "kind": "calls", "line": 23, "resolved": false, "src": "specs.005-plots-and-layout.review.capture.capture"}
+{"dst": "?comparison.exists", "file": "specs/005-plots-and-layout/review/capture.py", "kind": "calls", "line": 64, "resolved": false, "src": "specs.005-plots-and-layout.review.capture.capture"}
 {"dst": "?draw.text", "file": "specs/005-plots-and-layout/review/capture.py", "kind": "calls", "line": 51, "resolved": false, "src": "specs.005-plots-and-layout.review.capture.capture"}
 {"dst": "?entry.bounding_box", "file": "specs/005-plots-and-layout/review/capture.py", "kind": "calls", "line": 30, "resolved": false, "src": "specs.005-plots-and-layout.review.capture.capture"}
 {"dst": "?entry.locator", "file": "specs/005-plots-and-layout/review/capture.py", "kind": "calls", "line": 28, "resolved": false, "src": "specs.005-plots-and-layout.review.capture.capture"}
@@ -502,7 +503,7 @@
 {"dst": "PIL.ImageDraw.Draw", "file": "specs/005-plots-and-layout/review/capture.py", "kind": "calls", "line": 49, "resolved": true, "src": "specs.005-plots-and-layout.review.capture.capture"}
 {"dst": "fitz.Matrix", "file": "specs/005-plots-and-layout/review/capture.py", "kind": "calls", "line": 45, "resolved": true, "src": "specs.005-plots-and-layout.review.capture.capture"}
 {"dst": "fitz.open", "file": "specs/005-plots-and-layout/review/capture.py", "kind": "calls", "line": 39, "resolved": true, "src": "specs.005-plots-and-layout.review.capture.capture"}
-{"dst": "json.dumps", "file": "specs/005-plots-and-layout/review/capture.py", "kind": "calls", "line": 63, "resolved": true, "src": "specs.005-plots-and-layout.review.capture.capture"}
+{"dst": "json.dumps", "file": "specs/005-plots-and-layout/review/capture.py", "kind": "calls", "line": 70, "resolved": true, "src": "specs.005-plots-and-layout.review.capture.capture"}
 {"dst": "pathlib.Path", "file": "specs/005-plots-and-layout/review/capture.py", "kind": "calls", "line": 19, "resolved": true, "src": "specs.005-plots-and-layout.review.capture.capture"}
 {"dst": "playwright.sync_api.sync_playwright", "file": "specs/005-plots-and-layout/review/capture.py", "kind": "calls", "line": 20, "resolved": true, "src": "specs.005-plots-and-layout.review.capture.capture"}
 {"dst": "src.fathom.cli.main", "file": "src/fathom/__main__.py", "kind": "calls", "line": 3, "resolved": true, "src": "src.fathom.__main__"}
@@ -583,12 +584,12 @@
 {"dst": "?col.get", "file": "src/fathom/exports.py", "kind": "calls", "line": 33, "resolved": false, "src": "src.fathom.exports.chart_topics"}
 {"dst": "?col.get(...).get", "file": "src/fathom/exports.py", "kind": "calls", "line": 33, "resolved": false, "src": "src.fathom.exports.chart_topics"}
 {"dst": "?d.get", "file": "src/fathom/exports.py", "kind": "calls", "line": 33, "resolved": false, "src": "src.fathom.exports.chart_topics"}
-{"dst": "?hashlib.sha256(...).hexdigest", "file": "src/fathom/exports.py", "kind": "calls", "line": 248, "resolved": false, "src": "src.fathom.exports.export_bundle"}
-{"dst": "?result.to_json", "file": "src/fathom/exports.py", "kind": "calls", "line": 248, "resolved": false, "src": "src.fathom.exports.export_bundle"}
-{"dst": "?result.to_json(...).encode", "file": "src/fathom/exports.py", "kind": "calls", "line": 248, "resolved": false, "src": "src.fathom.exports.export_bundle"}
-{"dst": "?serializers[...]", "file": "src/fathom/exports.py", "kind": "calls", "line": 252, "resolved": false, "src": "src.fathom.exports.export_bundle"}
-{"dst": "hashlib.sha256", "file": "src/fathom/exports.py", "kind": "calls", "line": 248, "resolved": true, "src": "src.fathom.exports.export_bundle"}
-{"dst": "importlib.metadata.version", "file": "src/fathom/exports.py", "kind": "calls", "line": 254, "resolved": true, "src": "src.fathom.exports.export_bundle"}
+{"dst": "?hashlib.sha256(...).hexdigest", "file": "src/fathom/exports.py", "kind": "calls", "line": 253, "resolved": false, "src": "src.fathom.exports.export_bundle"}
+{"dst": "?result.to_json", "file": "src/fathom/exports.py", "kind": "calls", "line": 253, "resolved": false, "src": "src.fathom.exports.export_bundle"}
+{"dst": "?result.to_json(...).encode", "file": "src/fathom/exports.py", "kind": "calls", "line": 253, "resolved": false, "src": "src.fathom.exports.export_bundle"}
+{"dst": "?serializers[...]", "file": "src/fathom/exports.py", "kind": "calls", "line": 257, "resolved": false, "src": "src.fathom.exports.export_bundle"}
+{"dst": "hashlib.sha256", "file": "src/fathom/exports.py", "kind": "calls", "line": 253, "resolved": true, "src": "src.fathom.exports.export_bundle"}
+{"dst": "importlib.metadata.version", "file": "src/fathom/exports.py", "kind": "calls", "line": 259, "resolved": true, "src": "src.fathom.exports.export_bundle"}
 {"dst": "?d.get", "file": "src/fathom/exports.py", "kind": "calls", "line": 21, "resolved": false, "src": "src.fathom.exports.finding_topics"}
 {"dst": "src.fathom.renderers.repetition_groups", "file": "src/fathom/exports.py", "kind": "calls", "line": 17, "resolved": true, "src": "src.fathom.exports.finding_topics"}
 {"dst": "?d.get", "file": "src/fathom/exports.py", "kind": "calls", "line": 26, "resolved": false, "src": "src.fathom.exports.identity"}
@@ -681,31 +682,33 @@
 {"dst": "reportlab.platypus.TableStyle", "file": "src/fathom/exports.py", "kind": "calls", "line": 63, "resolved": true, "src": "src.fathom.exports.pdf_bytes.<locals>.table"}
 {"dst": "xml.sax.saxutils.escape", "file": "src/fathom/exports.py", "kind": "calls", "line": 62, "resolved": true, "src": "src.fathom.exports.pdf_bytes.<locals>.table"}
 {"dst": "?constant.join", "file": "src/fathom/exports.py", "kind": "calls", "line": 53, "resolved": false, "src": "src.fathom.exports.pdf_bytes.<locals>.text"}
-{"dst": "?ch.get", "file": "src/fathom/exports.py", "kind": "calls", "line": 200, "resolved": false, "src": "src.fathom.exports.pptx_bytes"}
-{"dst": "?constant.join", "file": "src/fathom/exports.py", "kind": "calls", "line": 206, "resolved": false, "src": "src.fathom.exports.pptx_bytes"}
-{"dst": "?deck.save", "file": "src/fathom/exports.py", "kind": "calls", "line": 242, "resolved": false, "src": "src.fathom.exports.pptx_bytes"}
-{"dst": "?notes.append", "file": "src/fathom/exports.py", "kind": "calls", "line": 233, "resolved": false, "src": "src.fathom.exports.pptx_bytes"}
-{"dst": "?output.getvalue", "file": "src/fathom/exports.py", "kind": "calls", "line": 243, "resolved": false, "src": "src.fathom.exports.pptx_bytes"}
-{"dst": "?s.shapes.add_chart", "file": "src/fathom/exports.py", "kind": "calls", "line": 220, "resolved": false, "src": "src.fathom.exports.pptx_bytes"}
-{"dst": "?s.shapes.add_shape", "file": "src/fathom/exports.py", "kind": "calls", "line": 205, "resolved": false, "src": "src.fathom.exports.pptx_bytes"}
-{"dst": "?s.shapes.add_textbox", "file": "src/fathom/exports.py", "kind": "calls", "line": 206, "resolved": false, "src": "src.fathom.exports.pptx_bytes"}
-{"dst": "?series.add_data_point", "file": "src/fathom/exports.py", "kind": "calls", "line": 211, "resolved": false, "src": "src.fathom.exports.pptx_bytes"}
-{"dst": "?slide", "file": "src/fathom/exports.py", "kind": "calls", "line": 200, "resolved": false, "src": "src.fathom.exports.pptx_bytes"}
+{"dst": "?ch.get", "file": "src/fathom/exports.py", "kind": "calls", "line": 205, "resolved": false, "src": "src.fathom.exports.pptx_bytes"}
+{"dst": "?constant.join", "file": "src/fathom/exports.py", "kind": "calls", "line": 201, "resolved": false, "src": "src.fathom.exports.pptx_bytes"}
+{"dst": "?deck.save", "file": "src/fathom/exports.py", "kind": "calls", "line": 247, "resolved": false, "src": "src.fathom.exports.pptx_bytes"}
+{"dst": "?lines.append", "file": "src/fathom/exports.py", "kind": "calls", "line": 200, "resolved": false, "src": "src.fathom.exports.pptx_bytes"}
+{"dst": "?notes.append", "file": "src/fathom/exports.py", "kind": "calls", "line": 238, "resolved": false, "src": "src.fathom.exports.pptx_bytes"}
+{"dst": "?output.getvalue", "file": "src/fathom/exports.py", "kind": "calls", "line": 248, "resolved": false, "src": "src.fathom.exports.pptx_bytes"}
+{"dst": "?s.shapes.add_chart", "file": "src/fathom/exports.py", "kind": "calls", "line": 225, "resolved": false, "src": "src.fathom.exports.pptx_bytes"}
+{"dst": "?s.shapes.add_shape", "file": "src/fathom/exports.py", "kind": "calls", "line": 210, "resolved": false, "src": "src.fathom.exports.pptx_bytes"}
+{"dst": "?s.shapes.add_textbox", "file": "src/fathom/exports.py", "kind": "calls", "line": 211, "resolved": false, "src": "src.fathom.exports.pptx_bytes"}
+{"dst": "?series.add_data_point", "file": "src/fathom/exports.py", "kind": "calls", "line": 216, "resolved": false, "src": "src.fathom.exports.pptx_bytes"}
+{"dst": "?slide", "file": "src/fathom/exports.py", "kind": "calls", "line": 205, "resolved": false, "src": "src.fathom.exports.pptx_bytes"}
 {"dst": "?topics", "file": "src/fathom/exports.py", "kind": "calls", "line": 194, "resolved": false, "src": "src.fathom.exports.pptx_bytes"}
-{"dst": "?values.add_series", "file": "src/fathom/exports.py", "kind": "calls", "line": 209, "resolved": false, "src": "src.fathom.exports.pptx_bytes"}
-{"dst": "?x", "file": "src/fathom/exports.py", "kind": "calls", "line": 205, "resolved": false, "src": "src.fathom.exports.pptx_bytes"}
+{"dst": "?values.add_series", "file": "src/fathom/exports.py", "kind": "calls", "line": 214, "resolved": false, "src": "src.fathom.exports.pptx_bytes"}
+{"dst": "?x", "file": "src/fathom/exports.py", "kind": "calls", "line": 210, "resolved": false, "src": "src.fathom.exports.pptx_bytes"}
 {"dst": "datetime.datetime", "file": "src/fathom/exports.py", "kind": "calls", "line": 176, "resolved": true, "src": "src.fathom.exports.pptx_bytes"}
-{"dst": "io.BytesIO", "file": "src/fathom/exports.py", "kind": "calls", "line": 242, "resolved": true, "src": "src.fathom.exports.pptx_bytes"}
+{"dst": "io.BytesIO", "file": "src/fathom/exports.py", "kind": "calls", "line": 247, "resolved": true, "src": "src.fathom.exports.pptx_bytes"}
 {"dst": "pptx.Presentation", "file": "src/fathom/exports.py", "kind": "calls", "line": 174, "resolved": true, "src": "src.fathom.exports.pptx_bytes"}
-{"dst": "pptx.chart.data.CategoryChartData", "file": "src/fathom/exports.py", "kind": "calls", "line": 218, "resolved": true, "src": "src.fathom.exports.pptx_bytes"}
-{"dst": "pptx.chart.data.XyChartData", "file": "src/fathom/exports.py", "kind": "calls", "line": 209, "resolved": true, "src": "src.fathom.exports.pptx_bytes"}
+{"dst": "pptx.chart.data.CategoryChartData", "file": "src/fathom/exports.py", "kind": "calls", "line": 223, "resolved": true, "src": "src.fathom.exports.pptx_bytes"}
+{"dst": "pptx.chart.data.XyChartData", "file": "src/fathom/exports.py", "kind": "calls", "line": 214, "resolved": true, "src": "src.fathom.exports.pptx_bytes"}
 {"dst": "pptx.util.Inches", "file": "src/fathom/exports.py", "kind": "calls", "line": 174, "resolved": true, "src": "src.fathom.exports.pptx_bytes"}
-{"dst": "pptx.util.Pt", "file": "src/fathom/exports.py", "kind": "calls", "line": 224, "resolved": true, "src": "src.fathom.exports.pptx_bytes"}
-{"dst": "src.fathom.exports.chart_topics", "file": "src/fathom/exports.py", "kind": "calls", "line": 199, "resolved": true, "src": "src.fathom.exports.pptx_bytes"}
-{"dst": "src.fathom.exports.finding_topics", "file": "src/fathom/exports.py", "kind": "calls", "line": 198, "resolved": true, "src": "src.fathom.exports.pptx_bytes"}
+{"dst": "pptx.util.Pt", "file": "src/fathom/exports.py", "kind": "calls", "line": 229, "resolved": true, "src": "src.fathom.exports.pptx_bytes"}
+{"dst": "src.fathom.exports.chart_topics", "file": "src/fathom/exports.py", "kind": "calls", "line": 204, "resolved": true, "src": "src.fathom.exports.pptx_bytes"}
+{"dst": "src.fathom.exports.finding_topics", "file": "src/fathom/exports.py", "kind": "calls", "line": 203, "resolved": true, "src": "src.fathom.exports.pptx_bytes"}
 {"dst": "src.fathom.exports.identity", "file": "src/fathom/exports.py", "kind": "calls", "line": 175, "resolved": true, "src": "src.fathom.exports.pptx_bytes"}
-{"dst": "src.fathom.exports.normalized_zip", "file": "src/fathom/exports.py", "kind": "calls", "line": 243, "resolved": true, "src": "src.fathom.exports.pptx_bytes"}
-{"dst": "src.fathom.presentation.formatted", "file": "src/fathom/exports.py", "kind": "calls", "line": 206, "resolved": true, "src": "src.fathom.exports.pptx_bytes"}
+{"dst": "src.fathom.exports.normalized_zip", "file": "src/fathom/exports.py", "kind": "calls", "line": 248, "resolved": true, "src": "src.fathom.exports.pptx_bytes"}
+{"dst": "src.fathom.presentation.formatted", "file": "src/fathom/exports.py", "kind": "calls", "line": 211, "resolved": true, "src": "src.fathom.exports.pptx_bytes"}
+{"dst": "src.fathom.presentation.structured_tables", "file": "src/fathom/exports.py", "kind": "calls", "line": 199, "resolved": true, "src": "src.fathom.exports.pptx_bytes"}
 {"dst": "src.fathom.renderers.summary_rows", "file": "src/fathom/exports.py", "kind": "calls", "line": 195, "resolved": true, "src": "src.fathom.exports.pptx_bytes"}
 {"dst": "?deck.slides.add_slide", "file": "src/fathom/exports.py", "kind": "calls", "line": 178, "resolved": false, "src": "src.fathom.exports.pptx_bytes.<locals>.slide"}
 {"dst": "?s.shapes.add_textbox", "file": "src/fathom/exports.py", "kind": "calls", "line": 180, "resolved": false, "src": "src.fathom.exports.pptx_bytes.<locals>.slide"}
@@ -1235,23 +1238,23 @@
 {"dst": "?out.exists", "file": "tests/test_cli.py", "kind": "calls", "line": 56, "resolved": false, "src": "tests.test_cli.test_cli_unsafe_yaml_and_unknown_target"}
 {"dst": "?p.write_text", "file": "tests/test_cli.py", "kind": "calls", "line": 53, "resolved": false, "src": "tests.test_cli.test_cli_unsafe_yaml_and_unknown_target"}
 {"dst": "tests.test_cli.run", "file": "tests/test_cli.py", "kind": "calls", "line": 55, "resolved": true, "src": "tests.test_cli.test_cli_unsafe_yaml_and_unknown_target"}
-{"dst": "?binop.read_bytes", "file": "tests/test_exports.py", "kind": "calls", "line": 61, "resolved": false, "src": "tests.test_exports.test_cli_export_fresh_process_bytes"}
-{"dst": "?make_profile", "file": "tests/test_exports.py", "kind": "calls", "line": 55, "resolved": false, "src": "tests.test_exports.test_cli_export_fresh_process_bytes"}
-{"dst": "?make_profile(...).to_json", "file": "tests/test_exports.py", "kind": "calls", "line": 55, "resolved": false, "src": "tests.test_exports.test_cli_export_fresh_process_bytes"}
-{"dst": "?p.write_text", "file": "tests/test_exports.py", "kind": "calls", "line": 55, "resolved": false, "src": "tests.test_exports.test_cli_export_fresh_process_bytes"}
-{"dst": "pathlib.Path", "file": "tests/test_exports.py", "kind": "calls", "line": 56, "resolved": true, "src": "tests.test_exports.test_cli_export_fresh_process_bytes"}
-{"dst": "pytest.importorskip", "file": "tests/test_exports.py", "kind": "calls", "line": 54, "resolved": true, "src": "tests.test_exports.test_cli_export_fresh_process_bytes"}
-{"dst": "subprocess.run", "file": "tests/test_exports.py", "kind": "calls", "line": 58, "resolved": true, "src": "tests.test_exports.test_cli_export_fresh_process_bytes"}
-{"dst": "?bad.write_text", "file": "tests/test_exports.py", "kind": "calls", "line": 80, "resolved": false, "src": "tests.test_exports.test_export_invalid_input_writes_nothing"}
-{"dst": "?out.exists", "file": "tests/test_exports.py", "kind": "calls", "line": 84, "resolved": false, "src": "tests.test_exports.test_export_invalid_input_writes_nothing"}
-{"dst": "src.fathom.cli.main", "file": "tests/test_exports.py", "kind": "calls", "line": 83, "resolved": true, "src": "tests.test_exports.test_export_invalid_input_writes_nothing"}
-{"dst": "?m.setattr", "file": "tests/test_exports.py", "kind": "calls", "line": 72, "resolved": false, "src": "tests.test_exports.test_formats_are_independent_and_unicode_is_disclosed"}
-{"dst": "?make_profile", "file": "tests/test_exports.py", "kind": "calls", "line": 70, "resolved": false, "src": "tests.test_exports.test_formats_are_independent_and_unicode_is_disclosed"}
-{"dst": "?monkeypatch.context", "file": "tests/test_exports.py", "kind": "calls", "line": 71, "resolved": false, "src": "tests.test_exports.test_formats_are_independent_and_unicode_is_disclosed"}
-{"dst": "pytest.importorskip", "file": "tests/test_exports.py", "kind": "calls", "line": 65, "resolved": true, "src": "tests.test_exports.test_formats_are_independent_and_unicode_is_disclosed"}
-{"dst": "src.fathom.exports.export_bundle", "file": "tests/test_exports.py", "kind": "calls", "line": 73, "resolved": true, "src": "tests.test_exports.test_formats_are_independent_and_unicode_is_disclosed"}
-{"dst": "?name.startswith", "file": "tests/test_exports.py", "kind": "calls", "line": 68, "resolved": false, "src": "tests.test_exports.test_formats_are_independent_and_unicode_is_disclosed.<locals>.no_pdf"}
-{"dst": "?original", "file": "tests/test_exports.py", "kind": "calls", "line": 69, "resolved": false, "src": "tests.test_exports.test_formats_are_independent_and_unicode_is_disclosed.<locals>.no_pdf"}
+{"dst": "?binop.read_bytes", "file": "tests/test_exports.py", "kind": "calls", "line": 62, "resolved": false, "src": "tests.test_exports.test_cli_export_fresh_process_bytes"}
+{"dst": "?make_profile", "file": "tests/test_exports.py", "kind": "calls", "line": 56, "resolved": false, "src": "tests.test_exports.test_cli_export_fresh_process_bytes"}
+{"dst": "?make_profile(...).to_json", "file": "tests/test_exports.py", "kind": "calls", "line": 56, "resolved": false, "src": "tests.test_exports.test_cli_export_fresh_process_bytes"}
+{"dst": "?p.write_text", "file": "tests/test_exports.py", "kind": "calls", "line": 56, "resolved": false, "src": "tests.test_exports.test_cli_export_fresh_process_bytes"}
+{"dst": "pathlib.Path", "file": "tests/test_exports.py", "kind": "calls", "line": 57, "resolved": true, "src": "tests.test_exports.test_cli_export_fresh_process_bytes"}
+{"dst": "pytest.importorskip", "file": "tests/test_exports.py", "kind": "calls", "line": 55, "resolved": true, "src": "tests.test_exports.test_cli_export_fresh_process_bytes"}
+{"dst": "subprocess.run", "file": "tests/test_exports.py", "kind": "calls", "line": 59, "resolved": true, "src": "tests.test_exports.test_cli_export_fresh_process_bytes"}
+{"dst": "?bad.write_text", "file": "tests/test_exports.py", "kind": "calls", "line": 81, "resolved": false, "src": "tests.test_exports.test_export_invalid_input_writes_nothing"}
+{"dst": "?out.exists", "file": "tests/test_exports.py", "kind": "calls", "line": 85, "resolved": false, "src": "tests.test_exports.test_export_invalid_input_writes_nothing"}
+{"dst": "src.fathom.cli.main", "file": "tests/test_exports.py", "kind": "calls", "line": 84, "resolved": true, "src": "tests.test_exports.test_export_invalid_input_writes_nothing"}
+{"dst": "?m.setattr", "file": "tests/test_exports.py", "kind": "calls", "line": 73, "resolved": false, "src": "tests.test_exports.test_formats_are_independent_and_unicode_is_disclosed"}
+{"dst": "?make_profile", "file": "tests/test_exports.py", "kind": "calls", "line": 71, "resolved": false, "src": "tests.test_exports.test_formats_are_independent_and_unicode_is_disclosed"}
+{"dst": "?monkeypatch.context", "file": "tests/test_exports.py", "kind": "calls", "line": 72, "resolved": false, "src": "tests.test_exports.test_formats_are_independent_and_unicode_is_disclosed"}
+{"dst": "pytest.importorskip", "file": "tests/test_exports.py", "kind": "calls", "line": 66, "resolved": true, "src": "tests.test_exports.test_formats_are_independent_and_unicode_is_disclosed"}
+{"dst": "src.fathom.exports.export_bundle", "file": "tests/test_exports.py", "kind": "calls", "line": 74, "resolved": true, "src": "tests.test_exports.test_formats_are_independent_and_unicode_is_disclosed"}
+{"dst": "?name.startswith", "file": "tests/test_exports.py", "kind": "calls", "line": 69, "resolved": false, "src": "tests.test_exports.test_formats_are_independent_and_unicode_is_disclosed.<locals>.no_pdf"}
+{"dst": "?original", "file": "tests/test_exports.py", "kind": "calls", "line": 70, "resolved": false, "src": "tests.test_exports.test_formats_are_independent_and_unicode_is_disclosed.<locals>.no_pdf"}
 {"dst": "?make_profile", "file": "tests/test_exports.py", "kind": "calls", "line": 21, "resolved": false, "src": "tests.test_exports.test_optional_absence_preserves_core_status"}
 {"dst": "?monkeypatch.setattr", "file": "tests/test_exports.py", "kind": "calls", "line": 20, "resolved": false, "src": "tests.test_exports.test_optional_absence_preserves_core_status"}
 {"dst": "?status[...].values", "file": "tests/test_exports.py", "kind": "calls", "line": 22, "resolved": false, "src": "tests.test_exports.test_optional_absence_preserves_core_status"}
@@ -1568,17 +1571,17 @@
 {"dst": "yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG", "file": "src/fathom/config.py", "kind": "references", "line": 123, "resolved": true, "src": "src.fathom.config.load_config"}
 {"dst": "src.fathom.models.TYPES", "file": "src/fathom/config.py", "kind": "references", "line": 43, "resolved": true, "src": "src.fathom.config.validate_config"}
 {"dst": "src.fathom.parsing.DATE_FORMATS", "file": "src/fathom/config.py", "kind": "references", "line": 47, "resolved": true, "src": "src.fathom.config.validate_config"}
-{"dst": "src.fathom.exports.pdf_bytes", "file": "src/fathom/exports.py", "kind": "references", "line": 247, "resolved": true, "src": "src.fathom.exports.export_bundle"}
-{"dst": "src.fathom.exports.pptx_bytes", "file": "src/fathom/exports.py", "kind": "references", "line": 247, "resolved": true, "src": "src.fathom.exports.export_bundle"}
+{"dst": "src.fathom.exports.pdf_bytes", "file": "src/fathom/exports.py", "kind": "references", "line": 252, "resolved": true, "src": "src.fathom.exports.export_bundle"}
+{"dst": "src.fathom.exports.pptx_bytes", "file": "src/fathom/exports.py", "kind": "references", "line": 252, "resolved": true, "src": "src.fathom.exports.export_bundle"}
 {"dst": "src.fathom.renderers.KINDS", "file": "src/fathom/exports.py", "kind": "references", "line": 19, "resolved": true, "src": "src.fathom.exports.finding_topics"}
 {"dst": "zipfile.ZIP_DEFLATED", "file": "src/fathom/exports.py", "kind": "references", "line": 157, "resolved": true, "src": "src.fathom.exports.normalized_zip"}
 {"dst": "reportlab.lib.enums.TA_RIGHT", "file": "src/fathom/exports.py", "kind": "references", "line": 60, "resolved": true, "src": "src.fathom.exports.pdf_bytes"}
 {"dst": "reportlab.rl_config.__file__", "file": "src/fathom/exports.py", "kind": "references", "line": 46, "resolved": true, "src": "src.fathom.exports.pdf_bytes"}
-{"dst": "pptx.enum.chart.XL_CHART_TYPE.BAR_CLUSTERED", "file": "src/fathom/exports.py", "kind": "references", "line": 219, "resolved": true, "src": "src.fathom.exports.pptx_bytes"}
-{"dst": "pptx.enum.chart.XL_CHART_TYPE.COLUMN_CLUSTERED", "file": "src/fathom/exports.py", "kind": "references", "line": 219, "resolved": true, "src": "src.fathom.exports.pptx_bytes"}
-{"dst": "pptx.enum.chart.XL_CHART_TYPE.XY_SCATTER_LINES_NO_MARKERS", "file": "src/fathom/exports.py", "kind": "references", "line": 213, "resolved": true, "src": "src.fathom.exports.pptx_bytes"}
-{"dst": "pptx.enum.chart.XL_DATA_LABEL_POSITION.OUTSIDE_END", "file": "src/fathom/exports.py", "kind": "references", "line": 230, "resolved": true, "src": "src.fathom.exports.pptx_bytes"}
-{"dst": "pptx.enum.shapes.MSO_SHAPE.RECTANGLE", "file": "src/fathom/exports.py", "kind": "references", "line": 205, "resolved": true, "src": "src.fathom.exports.pptx_bytes"}
+{"dst": "pptx.enum.chart.XL_CHART_TYPE.BAR_CLUSTERED", "file": "src/fathom/exports.py", "kind": "references", "line": 224, "resolved": true, "src": "src.fathom.exports.pptx_bytes"}
+{"dst": "pptx.enum.chart.XL_CHART_TYPE.COLUMN_CLUSTERED", "file": "src/fathom/exports.py", "kind": "references", "line": 224, "resolved": true, "src": "src.fathom.exports.pptx_bytes"}
+{"dst": "pptx.enum.chart.XL_CHART_TYPE.XY_SCATTER_LINES_NO_MARKERS", "file": "src/fathom/exports.py", "kind": "references", "line": 218, "resolved": true, "src": "src.fathom.exports.pptx_bytes"}
+{"dst": "pptx.enum.chart.XL_DATA_LABEL_POSITION.OUTSIDE_END", "file": "src/fathom/exports.py", "kind": "references", "line": 235, "resolved": true, "src": "src.fathom.exports.pptx_bytes"}
+{"dst": "pptx.enum.shapes.MSO_SHAPE.RECTANGLE", "file": "src/fathom/exports.py", "kind": "references", "line": 210, "resolved": true, "src": "src.fathom.exports.pptx_bytes"}
 {"dst": "dataclasses.dataclass", "file": "src/fathom/models.py", "kind": "references", "line": 40, "resolved": true, "src": "src.fathom.models"}
 {"dst": "pandas.DataFrame", "file": "src/fathom/models.py", "kind": "references", "line": 42, "resolved": true, "src": "src.fathom.models.GuideDataFrame"}
 {"dst": "src.fathom.models.SchemaContract", "file": "src/fathom/models.py", "kind": "references", "line": 43, "resolved": true, "src": "src.fathom.models.GuideDataFrame"}
@@ -1601,10 +1604,10 @@
 {"dst": "sys.executable", "file": "tests/test_cli.py", "kind": "references", "line": 14, "resolved": true, "src": "tests.test_cli.run"}
 {"dst": "tests.test_cli.F", "file": "tests/test_cli.py", "kind": "references", "line": 20, "resolved": true, "src": "tests.test_cli.test_cli_roundtrip_compare_validate_and_reproducibility"}
 {"dst": "tests.test_cli.F", "file": "tests/test_cli.py", "kind": "references", "line": 55, "resolved": true, "src": "tests.test_cli.test_cli_unsafe_yaml_and_unknown_target"}
-{"dst": "os.environ", "file": "tests/test_exports.py", "kind": "references", "line": 56, "resolved": true, "src": "tests.test_exports.test_cli_export_fresh_process_bytes"}
-{"dst": "sys.executable", "file": "tests/test_exports.py", "kind": "references", "line": 58, "resolved": true, "src": "tests.test_exports.test_cli_export_fresh_process_bytes"}
-{"dst": "builtins", "file": "tests/test_exports.py", "kind": "references", "line": 72, "resolved": true, "src": "tests.test_exports.test_formats_are_independent_and_unicode_is_disclosed"}
-{"dst": "builtins.__import__", "file": "tests/test_exports.py", "kind": "references", "line": 66, "resolved": true, "src": "tests.test_exports.test_formats_are_independent_and_unicode_is_disclosed"}
+{"dst": "os.environ", "file": "tests/test_exports.py", "kind": "references", "line": 57, "resolved": true, "src": "tests.test_exports.test_cli_export_fresh_process_bytes"}
+{"dst": "sys.executable", "file": "tests/test_exports.py", "kind": "references", "line": 59, "resolved": true, "src": "tests.test_exports.test_cli_export_fresh_process_bytes"}
+{"dst": "builtins", "file": "tests/test_exports.py", "kind": "references", "line": 73, "resolved": true, "src": "tests.test_exports.test_formats_are_independent_and_unicode_is_disclosed"}
+{"dst": "builtins.__import__", "file": "tests/test_exports.py", "kind": "references", "line": 67, "resolved": true, "src": "tests.test_exports.test_formats_are_independent_and_unicode_is_disclosed"}
 {"dst": "builtins", "file": "tests/test_exports.py", "kind": "references", "line": 20, "resolved": true, "src": "tests.test_exports.test_optional_absence_preserves_core_status"}
 {"dst": "builtins.__import__", "file": "tests/test_exports.py", "kind": "references", "line": 16, "resolved": true, "src": "tests.test_exports.test_optional_absence_preserves_core_status"}
 {"dst": "builtins", "file": "tests/test_pairs.py", "kind": "references", "line": 62, "resolved": true, "src": "tests.test_pairs.test_missing_optional_dependency_degrades"}

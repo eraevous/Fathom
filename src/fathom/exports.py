@@ -194,7 +194,12 @@ def pptx_bytes(d):
     topics(title,[description,basis,'Rule-based observations; suggested actions need human review.'])
     if d['kind']=='profile':topics('Dataset summary',[name+': '+value for name,value,_ in summary_rows(d)])
     else:
-        for name,key in [('Contexts','contexts'),('Context differences','context_differences'),('Measured deltas','deltas'),('Limitations','limitations')]:topics(name,[str(d[key])])
+        for name,key in [('Contexts','contexts'),('Context differences','context_differences'),('Measured deltas','deltas'),('Limitations','limitations')]:
+            lines=[]
+            for t in structured_tables(name,d[key]):
+                lines.append(t['caption'])
+                lines += ['; '.join(h+': '+str(v) for h,v in zip(t['headers'],row)) for row in t['rows']]
+            topics(name,lines)
     for name,messages in finding_topics(d):topics(name,messages)
     for ch in chart_topics(d):
         s=slide(ch['title']);data=ch.get('data',[])

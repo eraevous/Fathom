@@ -48,6 +48,7 @@ def test_pptx_content_charts_and_determinism(make_profile):
     files,_=export_bundle(compare(p,p),['pptx'])
     deck=pptx.Presentation(io.BytesIO(files['report.pptx']))
     assert any(s.shapes.title.text.startswith('Measured deltas') for s in deck.slides)
+    assert not any('{' in shape.text for s in deck.slides for shape in s.shapes if shape.has_text_frame)
 
 
 def test_cli_export_fresh_process_bytes(make_profile,tmp_path):

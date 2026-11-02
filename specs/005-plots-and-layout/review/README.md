@@ -38,11 +38,12 @@ alongside contact sheets; this is not a claim of exhaustive pixel-level inspecti
 | V09 | First review found PDF headings orphaned from chart | Fixed: keep chart and heading together |
 | V10 | Slide title and native chart title duplicated/crowded | Fixed: one24pt slide title, consistent plot frame and smaller ticks |
 | V11 | Long slide categories overflowed off left side | Fixed: explicit ellipsis, original labels in slide notes/artifact; PDF shortening also disclosed |
+| V18 | Comparison slides still stringified nested context/delta dictionaries | Fixed: structured labelled measurements; [desktop](after-pptx-comparison-1280.png) / [phone](after-pptx-comparison-390.png) inspected |
 | V12 | First review's long tables delayed plots | Fixed: HTML plots follow overview, other statistics follow plots or human-table disclosure |
 | V13 | Fixed-width charts clip at phone viewport edge | Open by static-layout reading: chart-region panning with visible instruction; phone table labels can wrap aggressively; exact-value disclosure remains usable. No new responsive reflow under DG-D7 |
 | V14 | Fixed PDF/PPTX fit-to390px text is too small | Open: zoom required; no mobile export redesign authorized |
 | V15 | Rotated y-axis titles, few intermediate SVG/PDF ticks | Open: labelled and exact tables available, but less readable than horizontal titles/richer ticks recommended by guidance |
-| V16 | Many plots make a long report (31 PDF pages /48 slides here) | Open: static comprehensive output, no dynamic filtering/rearrangement; accepted section order retains summary after dictionary |
+| V16 | Many plots make a long report (31 PDF pages /48 slides here) | Open: static comprehensive output and verbose comparison context slides, no dynamic filtering/rearrangement; accepted section order retains summary after dictionary |
 | V17 | PDF's bundled font has limited Unicode coverage | Existing open limit, disclosed replacement count; exact text in core artifact/views |
 
 ## Comparison with practice and another profiling report
@@ -91,3 +92,5 @@ application dependency. Export serializer versions are in export-status.json.
 Screenshot bytes depend on renderer/font versions; application output repeatability
 is tested separately. Browser/office export rendering does not feed application
 analysis or alter saved data.
+
+Comparison supplement: compare planted/clean saved artifacts, export its PPTX, convert with Impress, then rerun capture.py after for its optional first-context-slide supplement at1280/390. No source CSV is reopened.

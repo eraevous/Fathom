@@ -95,6 +95,16 @@
     "total_pages": 48,
     "width": 390
   },
+  "after-pptx-comparison-1280.png": {
+    "kind": "LibreOffice-rendered actual comparison PPTX raster",
+    "page": 2,
+    "width": 1280
+  },
+  "after-pptx-comparison-390.png": {
+    "kind": "LibreOffice-rendered actual comparison PPTX raster",
+    "page": 2,
+    "width": 390
+  },
   "after-pptx-ecdf-1280.png": {
     "kind": "LibreOffice-rendered actual PPTX raster",
     "page": 25,
