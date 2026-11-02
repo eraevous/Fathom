@@ -31,7 +31,7 @@ Agent readings, not new owner decisions; FT-R14 stays provisional.
 8. Identifier-like means declared key/role or id/key/code/title/name in the name;
    repeated titles may be legitimate. Quantity-like means human role or amount/
    gross/revenue/cost/price names. Rare zero candidates require >=5 finite values,
-   <=20% zeros and median positive nonzero>=100 recorded units; ask for meaning.
+   <=20% zeros and median positive nonzero>=100 and at least80% of nonzero values>=100 recorded units; ask for meaning.
 9. New fields are additive in artifact v1; old artifacts keep unavailable fields
    unavailable. No quality score/subscores. Existing slice-2 relations unchanged.
 10. Builder tables are synthetic; later audit tables are not independent blind

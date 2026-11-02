@@ -130,3 +130,18 @@ def test_invalid_chart_artifact_is_rejected(make_profile):
     d=copy.deepcopy(make_profile('x\n1\n2\n').document)
     d['columns'][0]['univariate']['charts'][1].pop('box')
     with pytest.raises(ValueError):ProfilingResult(d)
+
+
+def test_builder_film_clean_and_late_tables():
+    from fathom.config import load_config
+    root=Path(__file__).parent/'fixtures'/'univariate'
+    cfg=load_config(root/'film.yaml')
+    d=profile(CSVConnector(root/'film.csv').load(),cfg).document
+    rules={f.get('rule') for f in d['findings']}
+    assert {'repeated_identifier','two_digit_year','future_date','placeholder_date','implausible_zero'}<=rules
+    assert d['columns'][2]['univariate']['statistics']['invalid']==1
+    clean=profile(CSVConnector(root/'clean.csv').load(),cfg).document
+    assert not [f for f in clean['findings'] if f['kind']=='action']
+    late=profile(CSVConnector(root/'late.csv').load(),cfg).document
+    assert late['columns'][1]['univariate']['statistics']['ambiguous_dates']==1
+    assert late['columns'][1]['univariate']['statistics']['invalid_examples']==['Dec 1999']

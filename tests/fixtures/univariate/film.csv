@@ -1,31 +1,31 @@
-film_id,title,release_date,gross,genre,notes
-F000,Film 0,Jun 1 1998,"$100,000",Comedy,HELLO!
-F001,Film 1,Jun 2 1998,"$200,000",Drama,Hello!
-F002,Film 2,Jun 3 1998,"$300,000",Comedy,hello!
-F003,Film 3,Jun 4 1998,$0,Drama,NA
-F004,Film 4,Jul 15 44,"$500,000",Comedy,none
-F005,Film 5,Jun 6 1998,"$600,000",Drama,blank
-F006,Film 6,Jun 7 1998,"$700,000",Comedy, 
-F007,Film 7,1900-01-01,"$800,000",Drama,
-F008,Film 8,Jun 9 1998,"$900,000",Comedy,HELLO!
-F009,Film 9,Feb 30 2001,"$1,000,000",Drama,Hello!
-F010,Film 10,Jun 11 1998,"$1,100,000",Comedy,hello!
-F011,Film 11,Jun 12 1998,"$1,200,000",Drama,NA
-F012,Film 12,Jun 13 1998,"$1,300,000",Comedy,none
-F013,Film 13,Jun 14 1998,"$1,400,000",Drama,blank
-F014,Film 14,Jun 15 1998,"$1,500,000",Comedy, 
-F015,Film 15,Jun 16 1998,"$1,600,000",Drama,
-F016,Film 16,Jun 17 1998,"$1,700,000",Comedy,HELLO!
-F017,Film 17,Jun 18 1998,"$1,800,000",Drama,Hello!
-F018,Film 2,Jun 19 1998,"$1,900,000",Comedy,hello!
-F019,Film 19,Jun 20 1998,"$2,000,000",Drama,NA
-F020,Film 20,Jun 21 1998,"$2,100,000",Comedy,none
-F021,Film 21,Jun 22 1998,"$2,200,000",Drama,blank
-F022,Film 22,Jun 23 1998,"$2,300,000",Comedy, 
-F023,Film 23,Jun 24 1998,"$2,400,000",Drama,
-F024,Film 24,Jun 25 1998,"$2,500,000",Comedy,HELLO!
-F025,Film 25,Jun 26 1998,"$2,600,000",Drama,Hello!
-F026,Film 26,Jun 27 1998,"$2,700,000",Comedy,hello!
-F027,Film 27,Jun 28 1998,"$2,800,000",Drama,NA
-F028,Film 28,Jun 29 1998,"$2,900,000",Comedy,none
-F029,Film 29,Jun 30 1998,"$3,000,000",RareGenre,blank
+"film_id","title","release_date","gross","genre","notes"
+"F000","Film 0","Jun 1 1998","$100,000","Comedy","HELLO!"
+"F001","Film 1","Jun 2 1998","$200,000","Drama","Hello!"
+"F002","Film 2","Jun 3 1998","$300,000","Comedy","hello!"
+"F003","Film 3","Jun 4 1998","$0","Drama","NA"
+"F004","Film 4","Jul 15 44","$500,000","Comedy","none"
+"F005","Film 5","Jun 6 1998","$600,000","Drama","blank"
+"F006","Film 6","Jun 7 1998","$700,000","Comedy"," "
+"F007","Film 7","1900-01-01","$800,000","Drama",""
+"F008","Film 8","Jun 9 1998","$900,000","Comedy","HELLO!"
+"F009","Film 9","Feb 30 2001","$1,000,000","Drama","Hello!"
+"F010","Film 10","Jun 11 1998","$1,100,000","Comedy","hello!"
+"F011","Film 11","Jun 12 1998","$1,200,000","Drama","NA"
+"F012","Film 12","Jun 13 1998","$1,300,000","Comedy","none"
+"F013","Film 13","Jun 14 1998","$1,400,000","Drama","blank"
+"F014","Film 14","Jun 15 1998","$1,500,000","Comedy"," "
+"F015","Film 15","Jun 16 1998","$1,600,000","Drama",""
+"F016","Film 16","Jun 17 1998","$1,700,000","Comedy","HELLO!"
+"F017","Film 17","Jun 18 1998","$1,800,000","Drama","Hello!"
+"F018","Film 2","Jun 19 1998","$1,900,000","Comedy","hello!"
+"F019","Film 19","Jun 20 1998","$2,000,000","Drama","NA"
+"F020","Film 20","Jun 21 1998","$2,100,000","Comedy","none"
+"F021","Film 21","Jun 22 1998","$2,200,000","Drama","blank"
+"F022","Film 22","Jun 23 1998","$2,300,000","Comedy"," "
+"F023","Film 23","Jun 24 1998","$2,400,000","Drama",""
+"F024","Film 24","Jun 25 1998","$2,500,000","Comedy","HELLO!"
+"F025","Film 25","Jun 26 1998","$2,600,000","Drama","Hello!"
+"F026","Film 26","Jun 27 1998","$2,700,000","Comedy","hello!"
+"F027","Film 27","Jun 28 1998","$2,800,000","Drama","NA"
+"F028","Film 28","Jun 29 1998","$2,900,000","Comedy","none"
+"F029","Film 29","Jun 30 1998","$3,000,000","RareGenre","blank"
