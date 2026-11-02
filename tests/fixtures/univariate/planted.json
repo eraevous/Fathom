@@ -1,0 +1,19 @@
+{
+  "film": [
+    "English release dates",
+    "one two-digit year normalized into 2044",
+    "one placeholder date",
+    "one invalid calendar date",
+    "one $0 gross against large values",
+    "one repeated title with unique film_id",
+    "blank/casing/punctuation/rare-category metrics"
+  ],
+  "clean": [],
+  "late": [
+    "repeated title",
+    "ambiguous numeric two-digit date",
+    "partial month/year date not supported",
+    "a low-scale zero-code candidate (miss under >=100 rule)",
+    "a legitimate planned future release (review noise against builder truth)"
+  ]
+}

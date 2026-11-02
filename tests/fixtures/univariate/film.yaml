@@ -1,0 +1,8 @@
+title: Synthetic release ledger
+description: Authored film-like values for univariate checks.
+sample_seed: 17
+context:
+  snapshot_date: 2026-11-01
+columns:
+  gross:
+    units: USD (human-declared synthetic units)

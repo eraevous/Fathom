@@ -18,7 +18,7 @@ def test_review_actions_and_clean_decoy():
     assert dirty["overview"] == {"rows": 4, "columns": 5, "missing_cells": 1, "duplicate_rows": 1}
     assert [x for x in clean["findings"] if x["kind"] == "action"] == []
     observations = {f["id"]: f for f in dirty["findings"] if f["kind"] == "observation"}
-    actions = [x for x in dirty["findings"] if x["kind"] == "action"]
+    actions = [x for x in dirty["findings"] if x["kind"] == "action" and x["generator"] == "rule:review-v1"]
     assert len(actions) == 2
     for action in actions:
         assert action["evidence"][0]["finding"] in observations

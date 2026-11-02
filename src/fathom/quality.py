@@ -8,11 +8,8 @@ import statistics
 
 
 def finite(value):
-    try:
-        n = float(value)
-        return n if math.isfinite(n) else None
-    except (TypeError, ValueError, OverflowError):
-        return None
+    from .parsing import finite_number
+    return finite_number(value)
 
 
 def calendar_date(value):

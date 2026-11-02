@@ -25,9 +25,13 @@ def mapping(value: object, name: str, allowed: set[str]) -> dict:
 def validate_config(raw: dict | None = None, columns: list[str] | None = None) -> dict:
     cfg = dict(mapping({} if raw is None else raw, "config", {
         "question", "target", "pair_budget", "columns", "row_unit", "generating_process",
-        "missingness_mechanism", "decisions", "context", "schema"}))
-    for key in ("question", "target", "row_unit", "generating_process", "missingness_mechanism"):
+        "missingness_mechanism", "decisions", "context", "schema", "title", "description", "sample_rows", "sample_seed", "sample_text_limit"}))
+    for key in ("question", "target", "row_unit", "generating_process", "missingness_mechanism", "title", "description"):
         text(cfg.get(key), key, nullable=True)
+    for key,default,low,high in (("sample_rows",20,0,100),("sample_seed",0,0,2**32-1),("sample_text_limit",120,20,1000)):
+        value=cfg.get(key,default)
+        if type(value) is not int or not low<=value<=high: raise ValueError(f"{key} must be an integer from {low} to {high}")
+        cfg[key]=value
     budget = cfg.get("pair_budget", 5)
     if type(budget) is not int or not 0 <= budget <= 20:
         raise ValueError("pair_budget must be an integer from 0 to 20")
@@ -35,9 +39,14 @@ def validate_config(raw: dict | None = None, columns: list[str] | None = None) -
     metadata = mapping(cfg.get("columns", {}), "columns", set(columns) if columns is not None else set(cfg.get("columns", {})) if isinstance(cfg.get("columns", {}), dict) else set())
     for name, item in metadata.items():
         text(name, "column name")
-        mapping(item, f"columns.{name}", {"type", "meaning"})
+        mapping(item, f"columns.{name}", {"type", "meaning", "date_format", "units", "role"})
         if "type" in item and (not isinstance(item["type"], str) or item["type"] not in TYPES):
             raise ValueError(f"columns.{name}.type is unsupported")
+        if "date_format" in item:
+            from .parsing import DATE_FORMATS
+            if not isinstance(item["date_format"],str) or item["date_format"] not in DATE_FORMATS: raise ValueError("unsupported date_format")
+        if "role" in item and (not isinstance(item["role"],str) or item["role"] not in {"identifier","quantity"}): raise ValueError("unsupported column role")
+        if "units" in item: text(item["units"], "column units")
         if "meaning" in item:
             text(item["meaning"], f"columns.{name}.meaning")
     cfg["columns"] = metadata

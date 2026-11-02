@@ -26,11 +26,12 @@ class CSVConnector:
         columns = next(reader, None)
         if not columns or any(not c.strip() for c in columns) or len(columns) != len(set(columns)):
             raise ValueError("CSV requires unique, nonblank column headers")
-        rows = []
+        rows, raw_rows = [], []
         for row in reader:
             if len(row) != len(columns):
                 raise ValueError(f"CSV record ending at line {reader.line_num} has {len(row)} fields; expected {len(columns)}")
+            raw_rows.append(row)
             rows.append([s if s.strip() else None for s in row])
         schema = self.schema.resolve(columns)
         return GuideDataFrame(pd.DataFrame(rows, columns=columns, dtype=object), schema,
-                              {"connector": "csv", "origin": str(self.path), "sha256": sha256(raw).hexdigest()})
+                              {"connector": "csv", "origin": str(self.path), "sha256": sha256(raw).hexdigest()}, raw_rows)
