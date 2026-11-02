@@ -1,0 +1,110 @@
+{
+  "after-calendar-1280.png": {
+    "height": 900,
+    "kind": "actual Chromium viewport",
+    "topic": "calendar",
+    "width": 1280
+  },
+  "after-calendar-390.png": {
+    "height": 900,
+    "kind": "actual Chromium viewport",
+    "topic": "calendar",
+    "width": 390
+  },
+  "after-category-1280.png": {
+    "height": 900,
+    "kind": "actual Chromium viewport",
+    "topic": "category",
+    "width": 1280
+  },
+  "after-category-390.png": {
+    "height": 900,
+    "kind": "actual Chromium viewport",
+    "topic": "category",
+    "width": 390
+  },
+  "after-ecdf-1280.png": {
+    "height": 900,
+    "kind": "actual Chromium viewport",
+    "topic": "ecdf",
+    "width": 1280
+  },
+  "after-ecdf-390.png": {
+    "height": 900,
+    "kind": "actual Chromium viewport",
+    "topic": "ecdf",
+    "width": 390
+  },
+  "after-html-1280.png": {
+    "document_width": 1280,
+    "height": 900,
+    "kind": "actual Chromium viewport",
+    "topic": "positive_amount column entry",
+    "width": 1280
+  },
+  "after-html-390.png": {
+    "document_width": 390,
+    "height": 900,
+    "kind": "actual Chromium viewport",
+    "topic": "positive_amount column entry",
+    "width": 390
+  },
+  "after-missingness-1280.png": {
+    "height": 900,
+    "kind": "actual Chromium viewport",
+    "topic": "missingness",
+    "width": 1280
+  },
+  "after-missingness-390.png": {
+    "height": 900,
+    "kind": "actual Chromium viewport",
+    "topic": "missingness",
+    "width": 390
+  },
+  "after-pdf-1280.png": {
+    "height": 1657,
+    "kind": "actual export raster",
+    "page": 6,
+    "total_pages": 31,
+    "width": 1280
+  },
+  "after-pdf-390.png": {
+    "height": 505,
+    "kind": "actual export raster",
+    "page": 6,
+    "total_pages": 31,
+    "width": 390
+  },
+  "after-pdf-box-1280.png": {
+    "kind": "actual PDF raster",
+    "page": 7,
+    "topic": "box",
+    "width": 1280
+  },
+  "after-pptx-1280.png": {
+    "height": 721,
+    "kind": "LibreOffice-rendered actual PPTX raster",
+    "page": 23,
+    "total_pages": 48,
+    "width": 1280
+  },
+  "after-pptx-390.png": {
+    "height": 220,
+    "kind": "LibreOffice-rendered actual PPTX raster",
+    "page": 23,
+    "total_pages": 48,
+    "width": 390
+  },
+  "after-pptx-ecdf-1280.png": {
+    "kind": "LibreOffice-rendered actual PPTX raster",
+    "page": 25,
+    "topic": "ecdf",
+    "width": 1280
+  },
+  "after-pptx-long-label-1280.png": {
+    "kind": "LibreOffice-rendered actual PPTX raster",
+    "page": 32,
+    "topic": "long-label",
+    "width": 1280
+  }
+}
