@@ -1,7 +1,7 @@
 """Readable tables derived from saved measurements; raw evidence stays separate."""
 
 from html import escape
-import math
+import re
 
 
 def formatted(value, share=False):
@@ -13,6 +13,24 @@ def formatted(value, share=False):
         if abs(value)>=1e12 or abs(value)<.001:return f'{value:.3g}'
         return f'{value:,.3f}'.rstrip('0').rstrip('.') if isinstance(value,float) else f'{value:,}'
     return str(value)
+
+
+def structured_tables(caption,value):
+    """Tabulate saved context/relationship measures without nested key/value UI."""
+    if isinstance(value,dict):
+        flat={k:v for k,v in value.items() if not isinstance(v,(dict,list,tuple))}
+        tables=[metric_table(caption,flat)] if flat else []
+        for k in sorted(value):
+            if isinstance(value[k],(dict,list,tuple)):tables+=structured_tables(caption+' / '+title(k),value[k])
+        return tables
+    if isinstance(value,(list,tuple)):
+        if value and all(isinstance(v,dict) and all(not isinstance(x,(dict,list,tuple)) for x in v.values()) for v in value):
+            keys=sorted({k for v in value for k in v});numeric=[i for i,k in enumerate(keys) if all(v.get(k) is None or isinstance(v.get(k),(int,float)) for v in value)]
+            return [{'caption':caption,'headers':[title(k) for k in keys],'numeric':numeric,'rows':[[formatted(v.get(k),k in {'share','rate','spread'}) for k in keys] for v in value]}]
+        tables=[]
+        for i,v in enumerate(value):tables+=structured_tables(caption+' / '+str(i+1),v)
+        return tables
+    return [metric_table(caption,{'value':value})]
 
 
 def title(key):return str(key).replace('_',' ').capitalize()
@@ -63,6 +81,6 @@ def html_table(table):
 
 
 def markdown_table(table):
-    def cell(v):return escape(str(v),quote=False).replace('|','&#124;').replace('\n',' ')
+    def cell(v):return re.sub(r'([\\`*_{}\[\]()#!])',r'\\\1',escape(str(v),quote=False).replace('|','&#124;').replace('\n',' '))
     lines=['**'+cell(table['caption'])+'**','', '| '+' | '.join(map(cell,table['headers']))+' |','| '+' | '.join('---:' if i in table['numeric'] else '---' for i in range(len(table['headers'])))+' |']
     return '\n'.join(lines+['| '+' | '.join(map(cell,row))+' |' for row in table['rows']])+'\n'

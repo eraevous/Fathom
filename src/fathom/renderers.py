@@ -6,7 +6,7 @@ import re
 
 from .models import ProfilingResult
 from .charts import svg_chart
-from .presentation import formatted, column_tables, html_table, markdown_table, metric_table
+from .presentation import formatted, column_tables, html_table, markdown_table, metric_table, structured_tables
 from pathlib import Path
 
 KINDS = (("observation", "Observations"), ("interpretation", "Interpretations"),
@@ -72,7 +72,7 @@ def summary_rows(d):
              ('missing_cells','Overall missing cells',fraction(s['missing_cells'],s['rows']*s['columns']))]
     for key in ('duplicate_groups','lockstep_groups'):
         if key in s: items.append((key,label(key),'; '.join(', '.join(g) for g in s[key]) or 'None flagged'))
-    return [(title,scalar(value),s.get('finding_links',{}).get(key,[])) for key,title,value in items]
+    return [(title,formatted(value),s.get('finding_links',{}).get(key,[])) for key,title,value in items]
 
 
 def repetitive(f, ids=None):
@@ -166,7 +166,7 @@ def finding_html(f, repeated_ids):
 
 
 def dictionary_and_provenance_html(d):
-    out=['<section><h2>Dictionary</h2><p>Inferred readings are lexical and uncalibrated; meanings are human declarations or unknown.</p>',
+    out=['<section><h2>Dictionary</h2><p>Inferred readings are lexical and uncalibrated; meanings are human declarations or unknown.</p><p>Charts use a fixed drawing area: pan horizontally if needed. Exact plotted values are available below each chart.</p>',
          bars([(c['name'],c['missing']) for c in d['columns'][:20]],'Missing cells by column (first 20)')]
     masks=d.get('missingness_patterns')
     if masks:
@@ -182,8 +182,9 @@ def dictionary_and_provenance_html(d):
         tables=column_tables(c)
         primary=[t for t in tables if t['caption'].startswith(('Column overview','Univariate statistics','Percentiles','Most common nonmissing'))]
         extra=[t for t in tables if t not in primary]
-        out += [html_table(t) for t in primary]
+        out += [html_table(t) for t in primary[:1]]
         out += [svg_chart(ch) for ch in c.get('univariate',{}).get('charts',[])]
+        out += [html_table(t) for t in primary[1:]]
         if extra:out += ['<details><summary>Additional statistics</summary>',''.join(html_table(t) for t in extra),'</details>']
         out += ['<details><summary>Raw evidence</summary>'+readable_html(c)+'</details></article>']
     out += ['</section><section><h2>Provenance</h2><p>Source and context are recorded; expand for technical detail.</p><details><summary>Provenance internals</summary>',readable_html({'source':d['source'],'context':d['context'],'schema':d['schema'],'dependencies':d['dependencies'],'identity_basis':d.get('dataset',{}).get('basis',{})}),
@@ -199,7 +200,7 @@ def render_html(result: ProfilingResult):
     if identity:out += ['<p>'+escape(identity['description']['text'])+'</p><p><small>Title: '+escape(identity['title']['status'])+' · description: '+escape(identity['description']['status'])+'</small></p>']
     if d['kind']=='comparison':
         for title,value in [('Contexts',d['contexts']),('Context differences',d['context_differences']),('Measured deltas',d['deltas']),('Limitations',d['limitations'])]:
-            out += ['<section><h2>'+title+'</h2>',readable_html(value),'</section>']
+            out += ['<section><h2>'+title+'</h2>',''.join(html_table(t) for t in structured_tables(title,value)),'</section>']
     else:
         out += [dictionary_and_provenance_html(d)]
         out += ['<section class="opening"><h2>Dataset summary</h2><table><thead><tr><th>Measure</th><th>Snapshot</th><th>Evidence</th></tr></thead><tbody>']
@@ -226,7 +227,7 @@ def render_html(result: ProfilingResult):
                 '<p>Selected '+str(len(d['bivariate']))+' relationship(s); budget '+str(d['selection']['budget'])+'.</p>']
         for pair in d['bivariate']:
             out += ['<article><h3>'+escape(pair['left'])+' × '+escape(pair['right'])+'</h3><p>'+escape(pair['method'])+' · '+escape(pair['semantics'])+'</p>',
-                    html_table(metric_table('Relationship statistics',{k:v for k,v in pair['statistics'].items() if not isinstance(v,(dict,list))})),'<p>'+escape(pair['uncertainty'])+'</p></article>']
+                    ''.join(html_table(t) for t in structured_tables('Relationship statistics',pair['statistics'])),'<p>'+escape(pair['uncertainty'])+'</p></article>']
         out += ['<details><summary>Ranking and exclusions</summary>',readable_html(d['selection']),'</details>']
         if 'quality' in d:
             out += ['<details><summary>Quality rules and screening coverage</summary>',readable_html(d['quality']),'</details>']
@@ -234,7 +235,7 @@ def render_html(result: ProfilingResult):
     if d.get('annotations'):
         out += ['<section><h2>Labelled annotations</h2>',readable_html(d['annotations']),'</section>']
     css='''body{font:16px/1.55 system-ui,sans-serif;background:#f5f8f7;color:#193e42;max-width:1120px;padding:32px;margin:auto}h1{font-size:44px;margin-bottom:8px}h2{border-bottom:2px solid #28777c;padding-bottom:7px;margin-top:40px}h3{margin-top:24px}section{margin-bottom:30px}.opening{background:white;padding:24px;border:1px solid #d5e1df;border-radius:8px}table{border-collapse:collapse;width:100%;background:white}td,th{padding:10px;text-align:left;border-bottom:1px solid #d5e1df;vertical-align:top}td{overflow-wrap:anywhere}article{background:white;border-left:3px solid #b9d3cf;padding:8px 16px;margin:10px 0}article>p{margin:7px 0}details{margin:8px 0}summary{cursor:pointer;color:#12656b;font-weight:600}details[open]{padding-bottom:10px}a{color:#12656b}small{color:#4d676b}dt{font-weight:600;margin-top:8px}dd{margin-left:20px;overflow-wrap:anywhere}ul{padding-left:24px}.sample-scroll{overflow-x:auto}.sample-scroll td{min-width:90px;max-width:260px;white-space:pre-wrap}svg{width:100%;max-width:800px}svg text{font:13px system-ui,sans-serif}label{cursor:pointer;font-weight:600;margin-left:8px}.summary-view{background:#e9f2ee;padding:12px;margin-top:12px}.repetitive{display:none}.repetitive:target{display:block}#full-view:checked ~ .summary-view{display:none}#full-view:checked ~ .full-view .summary-view{display:none}#full-view:checked ~ .full-view .repetitive{display:block}@media(max-width:700px){body{padding:12px}td,th{padding:6px;font-size:14px}.opening{padding:12px}}@media print{body{background:white;padding:0}details{break-inside:avoid}.repetitive{display:block}}'''
-    css += '.column-entry{box-sizing:border-box;width:100%;border:1px solid #d5e1df;border-radius:6px;padding:20px;margin:24px 0}.column-entry h3{margin-top:0;overflow-wrap:anywhere}.review-table{table-layout:fixed;margin:12px 0 20px}caption{text-align:left;font-weight:600;padding:8px 0}.num{text-align:right;font-variant-numeric:tabular-nums}.table-scroll{overflow-x:auto;max-width:100%}.chart{margin:20px 0;max-width:100%;overflow-x:auto}.chart svg{width:720px;max-width:none;display:block}.chart svg text{font:15px system-ui,sans-serif}.chart-title{font-weight:600}figcaption{font-size:14px;margin:8px 0;color:#4d676b}p{overflow-wrap:anywhere}'
+    css += '.column-entry{box-sizing:border-box;width:100%;border:1px solid #d5e1df;border-radius:6px;padding:20px;margin:24px 0}.column-entry h3{margin-top:0;overflow-wrap:anywhere}.review-table{table-layout:fixed;margin:12px 0 20px}.review-table td,.review-table th{padding:6px 10px}caption{text-align:left;font-weight:600;padding:8px 0}.num{text-align:right;font-variant-numeric:tabular-nums}.table-scroll{overflow-x:auto;max-width:100%}.chart{margin:20px 0;max-width:100%;overflow-x:auto}.chart svg{width:720px;max-width:none;display:block}.chart svg text{font:15px system-ui,sans-serif}.chart-title{font-weight:600}figcaption{font-size:14px;margin:8px 0;color:#4d676b}p{overflow-wrap:anywhere}'
     return '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Fathom — '+escape(d['kind'])+'</title><style>'+css+'</style></head><body>'+'\n'.join(out)+'</body></html>\n'
 
 
@@ -257,7 +258,7 @@ def render_markdown(result: ProfilingResult):
     if identity:lines += [md_text(identity['description']['text']),'', 'Title: '+identity['title']['status']+'; description: '+identity['description']['status']+'.','']
     if d['kind']=='comparison':
         for title,value in [('Contexts',d['contexts']),('Context differences',d['context_differences']),('Measured deltas',d['deltas']),('Limitations',d['limitations'])]:
-            lines += ['## '+title,'',readable_md(value),'']
+            lines += ['## '+title,'','\n'.join(markdown_table(t) for t in structured_tables(title,value)),'']
     else:
         lines += dictionary_and_provenance_markdown(d)
         lines += ['## Dataset summary','','| Measure | Snapshot | Evidence |','| --- | --- | --- |']
@@ -284,7 +285,7 @@ def render_markdown(result: ProfilingResult):
         lines += ['## Relations','',md_text(d['selection'].get('ranking_rule','Legacy input-order selection; no relevance ranking recorded.')),'',
                   f"Selected {len(d['bivariate'])} relationship(s); budget {d['selection']['budget']}.",'']
         for pair in d['bivariate']:
-            lines += ['### '+md_text(pair['left'])+' × '+md_text(pair['right']),'',md_text(pair['method']+' · '+pair['semantics']),'',markdown_table(metric_table('Relationship statistics',{k:v for k,v in pair['statistics'].items() if not isinstance(v,(dict,list))})),md_text(pair['uncertainty']),'']
+            lines += ['### '+md_text(pair['left'])+' × '+md_text(pair['right']),'',md_text(pair['method']+' · '+pair['semantics']),'','\n'.join(markdown_table(t) for t in structured_tables('Relationship statistics',pair['statistics'])),md_text(pair['uncertainty']),'']
         lines += ['<details><summary>Ranking and exclusions</summary>','',readable_md(d['selection']),'</details>','']
         if 'quality' in d:
             lines += ['<details><summary>Quality rules and screening coverage</summary>','',readable_md(d['quality']),'</details>','']

@@ -38,7 +38,7 @@ def svg_chart(chart):
         out += [f'<path d="{path}" fill="none" stroke="#216e73" stroke-width="2"/>',f'<text x="35" y="{bottom}">0%</text><text x="30" y="{bottom-160}">100%</text>',f'<text x="80" y="{bottom+22}">{e(formatted(lo))}</text><text x="630" y="{bottom+22}" text-anchor="end">{e(formatted(hi))}</text>']
     elif data:
         maxcount=max(d['count'] for d in data) or 1;barwidth=550/len(data);bottom=top+190
-        out += [f'<text x="35" y="{top+20}">{formatted(maxcount)}</text><text x="45" y="{bottom}">0</text>']
+        out += [f'<text x="70" y="{top+20}" text-anchor="end">{formatted(maxcount)}</text><text x="70" y="{bottom}" text-anchor="end">0</text>']
         for i,d in enumerate(data):
             h=d['count']/maxcount*165;x=80+i*barwidth
             out.append(f'<rect x="{x}" y="{bottom-h}" width="{max(.5,barwidth-2)}" height="{h}" fill="#216e73"><title>{e(d["label"])}: {d["count"]}</title></rect>')

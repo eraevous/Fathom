@@ -196,6 +196,10 @@ def validate_document(doc: dict) -> None:
         if 'missingness_patterns' in doc:
             m=doc['missingness_patterns']
             if not isinstance(m,dict) or not isinstance(m.get('patterns'),list) or len(m['patterns'])>20 or m.get('rows')!=doc['overview']['rows']:raise ValueError('invalid missingness patterns')
+            if not isinstance(m.get('columns'),list) or len(m['columns'])>20 or any(name not in names for name in m['columns']) or any(type(m.get(k)) is not int or m[k]<0 for k in ('omitted_rows','omitted_columns','omitted_patterns')):raise ValueError('invalid missingness bounds')
+            ch=m.get('chart')
+            if not isinstance(ch,dict) or ch.get('kind')!='bar' or any(not isinstance(ch.get(k),str) for k in ('title','x_label','y_label')) or not isinstance(ch.get('data'),list) or len(ch['data'])!=len(m['patterns']):raise ValueError('invalid missingness chart')
+            if any(not isinstance(v,dict) or not isinstance(v.get('label'),str) or type(v.get('count')) is not int or v['count']<0 for v in ch['data']):raise ValueError('invalid missingness chart counts')
             for pattern in m['patterns']:
                 if not isinstance(pattern,dict) or not isinstance(pattern.get('missing'),list) or any(v not in names for v in pattern['missing']) or type(pattern.get('count')) is not int or pattern['count']<0 or type(pattern.get('share')) not in (int,float) or not 0<=pattern['share']<=1:raise ValueError('invalid missingness pattern')
             if sum(p['count'] for p in m['patterns'])+m.get('omitted_rows',-1)!=m['rows']:raise ValueError('inconsistent missingness totals')

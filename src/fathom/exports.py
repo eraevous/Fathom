@@ -10,7 +10,7 @@ import zipfile
 from xml.sax.saxutils import escape
 
 from .renderers import KINDS, repetition_groups, sample_cell, scalar, summary_rows
-from .presentation import formatted, column_tables
+from .presentation import formatted, column_tables, structured_tables
 
 
 def finding_topics(d):
@@ -40,7 +40,7 @@ def pdf_bytes(d):
     from reportlab.lib.styles import getSampleStyleSheet
     from reportlab.pdfbase import pdfmetrics
     from reportlab.pdfbase.ttfonts import TTFont
-    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Flowable, PageBreak
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Flowable, KeepTogether
     font='FathomVera'
     if font not in pdfmetrics.getRegisteredFontNames():
         pdfmetrics.registerFont(TTFont(font,str(Path(rl_config.__file__).parent/'fonts'/'Vera.ttf')))
@@ -75,7 +75,7 @@ def pdf_bytes(d):
                 b=ch['box'];scale=max(abs(b['min']),abs(b['max']),1);lo=b['min']/scale;span=b['max']/scale-lo
                 def x(v):return 55+390*((v/scale-lo)/span if span else .5)
                 c.line(x(b['min']),110,x(b['max']),110);c.rect(x(b['q1']),90,max(1,x(b['q3'])-x(b['q1'])),40,fill=0);c.line(x(b['median']),90,x(b['median']),130)
-                for i,k in enumerate(('min','q1','median','q3','max')):c.drawString(40,65-i*10,text(k+': '+scalar(b[k])))
+                for i,k in enumerate(('min','q1','median','q3','max')):c.drawString(40,65-i*10,text(k+': '+formatted(b[k])))
             elif ch['kind']=='ecdf':
                 points=ch['points'];lo,hi=points[0]['x'],points[-1]['x'];scale=max(abs(lo),abs(hi),1);span=hi/scale-lo/scale
                 def x(v):return 55+390*((v/scale-lo/scale)/span if span else .5)
@@ -93,14 +93,15 @@ def pdf_bytes(d):
                 else:
                     width=390/len(data)
                     for i,item in enumerate(data):c.rect(55+i*width,45,max(.5,width-2),135*item['count']/maximum,fill=1,stroke=0)
-                    c.drawString(25,45,'0');c.drawString(25,180,str(maximum));c.drawString(55,30,text(data[0]['label'])[:30]);c.drawRightString(450,30,text(data[-1]['label'])[:30])
+                    first=formatted(data[0]['low']) if ch['kind']=='histogram' else data[0]['label'];last=formatted(data[-1]['high']) if ch['kind']=='histogram' else data[-1]['label']
+                    c.drawRightString(48,45,'0');c.drawRightString(48,180,formatted(maximum));c.drawString(55,30,text(first));c.drawRightString(450,30,text(last))
             if ch.get('omitted_periods'):c.drawString(30,18,str(ch['omitted_periods'])+' middle periods omitted; see saved profile.')
 
     def pdf_chart(ch):
-        story.append(p(ch['title'],'Heading3'));story.append(Chart(ch))
+        story.append(KeepTogether([p(ch['title'],'Heading3'),Chart(ch)]))
         if ch.get('omitted_points'):story.append(p(f"Approximate ECDF display: {ch['omitted_points']} distinct points omitted."))
         if 'coverage' in ch:story.append(p('Top10 coverage: '+formatted(ch['coverage'],True)+'; other is the remainder.'))
-        story.append(p('Long chart labels may be shortened with …; exact labels remain in the core report/artifact.'))
+        if ch['kind']=='bar' and any(len(str(x['label']))>29 for x in ch.get('data',[])):story.append(p('Long chart labels shortened with …; exact labels remain in the core report/artifact.'))
     if d['kind']=='profile':
         heading('Dictionary')
         if d.get('missingness_patterns'):pdf_chart(d['missingness_patterns']['chart'])
@@ -132,14 +133,20 @@ def pdf_bytes(d):
         story.append(p('The table does not establish domain meaning, causation or fitness for use. Suggested actions require review.'))
         heading('Findings')
     else:
-        for name,key in [('Contexts','contexts'),('Context differences','context_differences'),('Measured deltas','deltas'),('Limitations','limitations')]:heading(name);story.append(p(str(d[key])))
+        for name,key in [('Contexts','contexts'),('Context differences','context_differences'),('Measured deltas','deltas'),('Limitations','limitations')]:
+            heading(name)
+            for t in structured_tables(name,d[key]):
+                story.append(p(t['caption']));table([t['headers'],*t['rows']],[490/len(t['headers'])]*len(t['headers']),t['numeric'])
     for name,messages in finding_topics(d):
         story.append(p(name,'Heading3'))
         for message in messages:story.append(p(message))
     if d['kind']=='profile':
         heading('Relations')
         story.append(p(d['selection'].get('ranking_rule','Ranking not recorded.')))
-        for pair in d['bivariate']:story.append(p(f"{pair['left']} × {pair['right']}: {pair['method']}; {pair['statistics']}; {pair['uncertainty']}"))
+        for pair in d['bivariate']:
+            story.append(p(f"{pair['left']} × {pair['right']}: {pair['method']}; {pair['uncertainty']}"))
+            for t in structured_tables('Relationship statistics',pair['statistics']):
+                story.append(p(t['caption']));table([t['headers'],*t['rows']],[490/len(t['headers'])]*len(t['headers']),t['numeric'])
     output=io.BytesIO()
     SimpleDocTemplate(output,pagesize=(612,792),leftMargin=56,rightMargin=56,topMargin=40,bottomMargin=40,title=text(title),author='Fathom',invariant=1,pageCompression=0).build(story)
     return output.getvalue(),{'unsupported_glyph_replacements':replacements}
@@ -196,7 +203,7 @@ def pptx_bytes(d):
             def x(v):return Inches(1+11*((v/scale-lo)/span if span else .5))
             for a,z,y,h in [('min','max',3.5,.03),('q1','q3',3,.9),('median','median',3,.9)]:
                 s.shapes.add_shape(MSO_SHAPE.RECTANGLE,x(b[a]),Inches(y),max(Inches(.02),x(b[z])-x(b[a])),Inches(h))
-            s.shapes.add_textbox(Inches(1),Inches(5),Inches(11),Inches(1)).text_frame.text='X: '+ch['x_label']+'; Y: '+ch['y_label']+'\n'+'; '.join(k+': '+scalar(v) for k,v in b.items())
+            s.shapes.add_textbox(Inches(1),Inches(5),Inches(11),Inches(1)).text_frame.text='X: '+ch['x_label']+'; Y: '+ch['y_label']+'\n'+'; '.join(k+': '+formatted(b[k]) for k in ('min','q1','median','q3','max'))
         elif data or ch['kind']=='ecdf':
             if ch['kind']=='ecdf':
                 values=XyChartData();series=values.add_series('Cumulative share');previous=0
@@ -205,18 +212,26 @@ def pptx_bytes(d):
                     series.add_data_point(point['x'],point['cumulative']*100);previous=point['cumulative']
                 chart_type=XL_CHART_TYPE.XY_SCATTER_LINES_NO_MARKERS
             else:
-                values=CategoryChartData();values.categories=[str(v['label']) for v in data];values.add_series('Values (count)',[v['count'] for v in data])
+                categories=[formatted(v['low'])+' – '+formatted(v['high']) if ch['kind']=='histogram' else str(v['label']) for v in data]
+                # Native office engines otherwise expand long categories off-slide.
+                shortened=[v if len(v)<=42 else v[:41]+'…' for v in categories]
+                values=CategoryChartData();values.categories=shortened;values.add_series('Values (count)',[v['count'] for v in data])
                 chart_type=XL_CHART_TYPE.BAR_CLUSTERED if ch['kind']=='bar' else XL_CHART_TYPE.COLUMN_CLUSTERED
             chart=s.shapes.add_chart(chart_type,Inches(.7),Inches(1.6),Inches(12),Inches(4.8),values).chart
             chart.has_legend=False;chart.has_title=False
             chart.category_axis.has_title=True;chart.category_axis.axis_title.text_frame.text=ch['y_label'] if ch['kind']=='bar' else ch['x_label']
             chart.value_axis.has_title=True;chart.value_axis.axis_title.text_frame.text=ch['x_label'] if ch['kind']=='bar' else ch['y_label']
             chart.category_axis.tick_labels.font.size=Pt(12);chart.value_axis.tick_labels.font.size=Pt(12)
+            chart.value_axis.tick_labels.number_format='#,##0.###'
+            if ch['kind']=='ecdf':chart.category_axis.tick_labels.number_format='#,##0.###'
             if ch['kind']=='ecdf':chart.value_axis.minimum_scale=0;chart.value_axis.maximum_scale=100
             else:
                 chart.value_axis.minimum_scale=0
-                chart.plots[0].has_data_labels=True;labels=chart.plots[0].data_labels;labels.position=XL_DATA_LABEL_POSITION.OUTSIDE_END;labels.font.size=Pt(11)
+                chart.plots[0].has_data_labels=True;labels=chart.plots[0].data_labels;labels.position=XL_DATA_LABEL_POSITION.OUTSIDE_END;labels.font.size=Pt(11);labels.number_format='#,##0;-#,##0;'
             notes=[]
+            if ch['kind']!='ecdf' and shortened!=categories:
+                notes.append('Long labels shortened with …; full labels in slide notes and artifact.')
+                s.notes_slide.notes_text_frame.text='\n'.join(categories)
             if ch.get('omitted_periods'):notes.append(str(ch['omitted_periods'])+' middle bins omitted; full counts in saved profile.')
             if ch.get('omitted_points'):notes.append('Approximate ECDF display; '+str(ch['omitted_points'])+' distinct points omitted.')
             if 'coverage' in ch:notes.append('Top10 covers '+formatted(ch['coverage'],True)+' of raw values; other is remainder.')

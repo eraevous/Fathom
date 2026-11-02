@@ -115,7 +115,8 @@ def histogram(nums,title,x_label,**metadata):
 def missingness_patterns(columns,rows):
     counts=Counter(tuple(c['name'] for c,v in zip(columns,row) if v is None) for row in rows)
     ordered=sorted(counts.items(),key=lambda x:(-x[1],x[0]));n=len(rows)
-    names=[c['name'] for c in columns if any(c['name'] in mask for mask in counts)]
+    missing_names={name for mask in counts for name in mask}
+    names=[c['name'] for c in columns if c['name'] in missing_names]
     patterns=[{'missing':list(mask),'count':count,'share':count/n if n else None} for mask,count in ordered[:20]]
     data=[{'label':f'P{i+1}: '+(', '.join(p['missing'][:20]) or 'Complete rows')+(' …' if len(p['missing'])>20 else ''),'count':p['count'],'share':p['share']} for i,p in enumerate(patterns)]
     return {'columns':names[:20],'omitted_columns':max(0,len(names)-20),'patterns':patterns,'rows':n,
@@ -143,7 +144,10 @@ def text_profile(raw,name):
            'rare_levels':rare[:20],'rare_level_count':len(rare),'most_common':top,'least_common':common(counts,True)}
     data=[{'label':x['value'] or '[empty string]','count':x['count'],'share':x['count']/n} for x in top]
     other=n-sum(x['count'] for x in top)
-    if other:data.append({'label':'[Other values — remainder]','count':other,'share':other/n,'is_other':True})
+    if other:
+        remainder='[Other values — remainder]'
+        while remainder in counts:remainder+=' (aggregate)'
+        data.append({'label':remainder,'count':other,'share':other/n,'is_other':True})
     charts=[chart('bar',f'Most common values of {name}','Values (count)','Value (top 10 + remainder)',data=data,coverage=sum(x['count'] for x in top)/n,denominator=n)] if top else []
     if lengths:charts.append(histogram(lengths,f'String lengths in {name}','Raw string length (characters)',measure='string_length'))
     return stats,charts
