@@ -6,6 +6,7 @@ import re
 
 from .models import ProfilingResult
 from .charts import svg_chart
+from .presentation import formatted, column_tables, html_table, markdown_table, metric_table
 from pathlib import Path
 
 KINDS = (("observation", "Observations"), ("interpretation", "Interpretations"),
@@ -141,13 +142,7 @@ def samples_markdown(d):
 
 
 def charts_markdown(col):
-    u=col.get('univariate')
-    if not u:return ''
-    lines=[readable_md(u['statistics'])]
-    if col.get('special'):lines += [readable_md(col['special'])]
-    for ch in u['charts']:
-        lines += ['**'+md_text(ch['title'])+'**','', 'X: '+md_text(ch['x_label'])+'; Y: '+md_text(ch['y_label']), '',svg_chart(ch),'',readable_md(ch.get('data',ch.get('box',{})))]
-    return '\n'.join(lines)
+    return '\n'.join(markdown_table(t) for t in column_tables(col))+'\n'+'\n'.join(svg_chart(ch) for ch in col.get('univariate',{}).get('charts',[]))
 
 
 def bars(items, title):
@@ -171,21 +166,29 @@ def finding_html(f, repeated_ids):
 
 
 def dictionary_and_provenance_html(d):
-    out=[]
-    out += ['<section><h2>Dictionary</h2><p>Inferred readings are lexical and uncalibrated; meanings are human declarations or unknown.</p>',
-            bars([(c['name'],c['missing']) for c in d['columns'][:20]],'Missing cells by column (first 20)'),
-            samples_html(d), '<table><thead><tr><th>Column / meaning</th><th>Type / basis</th><th>Missing / distinct</th><th>Details</th></tr></thead><tbody>']
+    out=['<section><h2>Dictionary</h2><p>Inferred readings are lexical and uncalibrated; meanings are human declarations or unknown.</p>',
+         bars([(c['name'],c['missing']) for c in d['columns'][:20]],'Missing cells by column (first 20)')]
+    masks=d.get('missingness_patterns')
+    if masks:
+        out += [svg_chart(masks['chart']),'<p>'+escape(masks['basis'])+' '+str(masks['omitted_patterns'])+' patterns / '+str(masks['omitted_rows'])+' rows omitted; '+str(masks['omitted_columns'])+' columns beyond the display limit.</p>']
+        out += [html_table({'caption':'Exact row masks — share of all rows','headers':['Pattern / missing columns','Count','Share'],'numeric':[1,2],
+                            'rows':[['P'+str(i+1)+': '+(', '.join(p['missing']) or 'Complete rows'),formatted(p['count']),formatted(p['share'],True)] for i,p in enumerate(masks['patterns'])]})]
+    out += [samples_html(d)]
     for c in d['columns']:
         meaning=c['meaning']['value']+' (human)' if c['meaning'] else 'Unknown meaning'
-        basis='human override; inferred '+c['inference']['type'] if c['override'] else 'inferred'
-        details={k:c[k] for k in ('observed_type','inference','override','statistics','examples','frequencies')}
-        if c.get('univariate'):details['univariate statistics']=c['univariate']['statistics']
-        if c.get('special'):details['special syntax/range']=c['special']
-        figures=''.join(svg_chart(ch) for ch in c.get('univariate',{}).get('charts',[]))
-        out.append('<tr><td>'+escape(c['name'])+'<br><small>'+escape(meaning)+'</small><br><small>Examples: '+escape(', '.join(v[:60]+('…' if len(v)>60 else '') for v in c['examples']))+'</small></td><td>'+escape(c['effective_type'])+'<br><small>'+escape(basis)+'</small></td><td>'+str(c['missing'])+'/'+str(c['count'])+' missing; '+str(c['distinct'])+' distinct</td><td><details><summary>Column evidence</summary>'+figures+readable_html(details)+'</details></td></tr>')
-    out += ['</tbody></table></section><section><h2>Provenance</h2><p>Source and context are recorded; expand for technical detail.</p><details><summary>Provenance internals</summary>',readable_html({'source':d['source'],'context':d['context'],'schema':d['schema'],'dependencies':d['dependencies'],'identity_basis':d.get('dataset',{}).get('basis',{})}),
+        basis='human override; inferred '+c['inference']['type'] if c['override'] else 'inferred, not a domain fact'
+        out += ['<article class="column-entry"><h3>'+escape(c['name'])+'</h3><p>'+escape(meaning)+' · '+escape(c['effective_type'])+' ('+escape(basis)+')</p>',
+                '<p>Examples: '+escape(', '.join(v[:120]+('… [truncated]' if len(v)>120 else '') for v in c['examples']))+'</p>']
+        tables=column_tables(c)
+        primary=[t for t in tables if t['caption'].startswith(('Column overview','Univariate statistics','Percentiles','Most common nonmissing'))]
+        extra=[t for t in tables if t not in primary]
+        out += [html_table(t) for t in primary]
+        out += [svg_chart(ch) for ch in c.get('univariate',{}).get('charts',[])]
+        if extra:out += ['<details><summary>Additional statistics</summary>',''.join(html_table(t) for t in extra),'</details>']
+        out += ['<details><summary>Raw evidence</summary>'+readable_html(c)+'</details></article>']
+    out += ['</section><section><h2>Provenance</h2><p>Source and context are recorded; expand for technical detail.</p><details><summary>Provenance internals</summary>',readable_html({'source':d['source'],'context':d['context'],'schema':d['schema'],'dependencies':d['dependencies'],'identity_basis':d.get('dataset',{}).get('basis',{})}),
             '<h3>Working record (human declarations)</h3>',readable_html(d['working_record']),'</details></section>']
-    return "".join(out)
+    return ''.join(out)
 
 
 def render_html(result: ProfilingResult):
@@ -223,7 +226,7 @@ def render_html(result: ProfilingResult):
                 '<p>Selected '+str(len(d['bivariate']))+' relationship(s); budget '+str(d['selection']['budget'])+'.</p>']
         for pair in d['bivariate']:
             out += ['<article><h3>'+escape(pair['left'])+' × '+escape(pair['right'])+'</h3><p>'+escape(pair['method'])+' · '+escape(pair['semantics'])+'</p>',
-                    readable_html(pair['statistics']),'<p>'+escape(pair['uncertainty'])+'</p></article>']
+                    html_table(metric_table('Relationship statistics',{k:v for k,v in pair['statistics'].items() if not isinstance(v,(dict,list))})),'<p>'+escape(pair['uncertainty'])+'</p></article>']
         out += ['<details><summary>Ranking and exclusions</summary>',readable_html(d['selection']),'</details>']
         if 'quality' in d:
             out += ['<details><summary>Quality rules and screening coverage</summary>',readable_html(d['quality']),'</details>']
@@ -231,21 +234,18 @@ def render_html(result: ProfilingResult):
     if d.get('annotations'):
         out += ['<section><h2>Labelled annotations</h2>',readable_html(d['annotations']),'</section>']
     css='''body{font:16px/1.55 system-ui,sans-serif;background:#f5f8f7;color:#193e42;max-width:1120px;padding:32px;margin:auto}h1{font-size:44px;margin-bottom:8px}h2{border-bottom:2px solid #28777c;padding-bottom:7px;margin-top:40px}h3{margin-top:24px}section{margin-bottom:30px}.opening{background:white;padding:24px;border:1px solid #d5e1df;border-radius:8px}table{border-collapse:collapse;width:100%;background:white}td,th{padding:10px;text-align:left;border-bottom:1px solid #d5e1df;vertical-align:top}td{overflow-wrap:anywhere}article{background:white;border-left:3px solid #b9d3cf;padding:8px 16px;margin:10px 0}article>p{margin:7px 0}details{margin:8px 0}summary{cursor:pointer;color:#12656b;font-weight:600}details[open]{padding-bottom:10px}a{color:#12656b}small{color:#4d676b}dt{font-weight:600;margin-top:8px}dd{margin-left:20px;overflow-wrap:anywhere}ul{padding-left:24px}.sample-scroll{overflow-x:auto}.sample-scroll td{min-width:90px;max-width:260px;white-space:pre-wrap}svg{width:100%;max-width:800px}svg text{font:13px system-ui,sans-serif}label{cursor:pointer;font-weight:600;margin-left:8px}.summary-view{background:#e9f2ee;padding:12px;margin-top:12px}.repetitive{display:none}.repetitive:target{display:block}#full-view:checked ~ .summary-view{display:none}#full-view:checked ~ .full-view .summary-view{display:none}#full-view:checked ~ .full-view .repetitive{display:block}@media(max-width:700px){body{padding:12px}td,th{padding:6px;font-size:14px}.opening{padding:12px}}@media print{body{background:white;padding:0}details{break-inside:avoid}.repetitive{display:block}}'''
+    css += '.column-entry{box-sizing:border-box;width:100%;border:1px solid #d5e1df;border-radius:6px;padding:20px;margin:24px 0}.column-entry h3{margin-top:0;overflow-wrap:anywhere}.review-table{table-layout:fixed;margin:12px 0 20px}caption{text-align:left;font-weight:600;padding:8px 0}.num{text-align:right;font-variant-numeric:tabular-nums}.table-scroll{overflow-x:auto;max-width:100%}.chart{margin:20px 0;max-width:100%;overflow-x:auto}.chart svg{width:720px;max-width:none;display:block}.chart svg text{font:15px system-ui,sans-serif}.chart-title{font-weight:600}figcaption{font-size:14px;margin:8px 0;color:#4d676b}p{overflow-wrap:anywhere}'
     return '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Fathom — '+escape(d['kind'])+'</title><style>'+css+'</style></head><body>'+'\n'.join(out)+'</body></html>\n'
 
 
 def dictionary_and_provenance_markdown(d):
-    lines=[]
-    lines += ['## Dictionary','','Inferred readings are lexical and uncalibrated; meanings are human declarations or unknown.','',
-              samples_markdown(d),'| Column | Meaning | Effective type / basis | Missing | Distinct |','| --- | --- | --- | --- | --- |']
+    lines=['## Dictionary','','Inferred readings are lexical and uncalibrated; meanings are human declarations or unknown.','',samples_markdown(d)]
+    if d.get('missingness_patterns'):lines += [svg_chart(d['missingness_patterns']['chart'])]
     for c in d['columns']:
-        meaning=c['meaning']['value']+' (human)' if c['meaning'] else 'Unknown'
-        basis='human override; inferred '+c['inference']['type'] if c['override'] else 'inferred'
-        lines += ['| '+ ' | '.join(md_text(x) for x in (c['name'],meaning+'; examples: '+', '.join(v[:60] for v in c['examples']),c['effective_type']+' / '+basis,f"{c['missing']}/{c['count']}",c['distinct']))+' |']
-    lines += ['','<details><summary>Full column evidence</summary>','']
-    for c in d['columns']:
-        lines += ['### '+md_text(c['name']),'',charts_markdown(c),'',readable_md({k:c[k] for k in ('observed_type','inference','override','statistics','examples','frequencies')}),'']
-    lines += ['</details>','','## Provenance','','Source and context are recorded; technical details are collapsed.','','<details><summary>Provenance internals</summary>','',readable_md({'source':d['source'],'context':d['context'],'schema':d['schema'],'dependencies':d['dependencies'],'identity_basis':d.get('dataset',{}).get('basis',{})}),
+        meaning=c['meaning']['value']+' (human)' if c['meaning'] else 'Unknown meaning'
+        lines += ['### '+md_text(c['name']),'',md_text(meaning+'; effective '+c['effective_type']+(' (human override)' if c['override'] else ' (inferred)')),'',charts_markdown(c),'',
+                  '<details><summary>Raw evidence</summary>','',readable_md(c),'</details>','']
+    lines += ['## Provenance','','Source and context are recorded; technical details are collapsed.','','<details><summary>Provenance internals</summary>','',readable_md({'source':d['source'],'context':d['context'],'schema':d['schema'],'dependencies':d['dependencies'],'identity_basis':d.get('dataset',{}).get('basis',{})}),
               '### Working record (human declarations)','',readable_md(d['working_record']),'</details>','']
     return lines
 
@@ -284,7 +284,7 @@ def render_markdown(result: ProfilingResult):
         lines += ['## Relations','',md_text(d['selection'].get('ranking_rule','Legacy input-order selection; no relevance ranking recorded.')),'',
                   f"Selected {len(d['bivariate'])} relationship(s); budget {d['selection']['budget']}.",'']
         for pair in d['bivariate']:
-            lines += ['### '+md_text(pair['left'])+' × '+md_text(pair['right']),'',md_text(pair['method']+' · '+pair['semantics']),'',readable_md(pair['statistics']),md_text(pair['uncertainty']),'']
+            lines += ['### '+md_text(pair['left'])+' × '+md_text(pair['right']),'',md_text(pair['method']+' · '+pair['semantics']),'',markdown_table(metric_table('Relationship statistics',{k:v for k,v in pair['statistics'].items() if not isinstance(v,(dict,list))})),md_text(pair['uncertainty']),'']
         lines += ['<details><summary>Ranking and exclusions</summary>','',readable_md(d['selection']),'</details>','']
         if 'quality' in d:
             lines += ['<details><summary>Quality rules and screening coverage</summary>','',readable_md(d['quality']),'</details>','']

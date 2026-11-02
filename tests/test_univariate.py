@@ -35,7 +35,7 @@ def test_numeric_profile_exact_currency_and_charts(make_profile):
     assert s['zeros']=={'count':1,'share':pytest.approx(1/6)}
     assert s['integers']==6 and s['non_integers']==0
     assert s['percentiles']['25']==125 and s['percentiles']['50']==250
-    assert {x['kind'] for x in u['charts']}=={'histogram','box'}
+    assert {x['kind'] for x in u['charts']}=={'histogram','box','ecdf'}
     assert any(f.get('rule')=='implausible_zero' and f['kind']=='observation' for f in d['findings'])
     clean=make_profile(csv_text(['gross'],[[i] for i in range(100,700,100)])).document
     assert not any(f.get('rule')=='implausible_zero' for f in clean['findings'])

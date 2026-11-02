@@ -36,7 +36,7 @@ def chart(kind,title,x,y,**data):
 def identity_and_samples(data,cfg,columns):
     names=[c['name'] for c in columns];n=len(data.frame)
     suggested=[]
-    for term,pattern in [('identifiers/titles',r'(^id$|_id$|title|name|key)'),('amounts',r'(gross|amount|revenue|cost|price)'),('dates',r'(date|release|time)'),('categories',r'(category|genre|group|status)')]:
+    for term,pattern in [('identifiers/titles',r'(^id$|_id$|title|name|key)'),('amounts',r'(gross|amount|revenue|cost|price)'),('dates',r'(date|release)'),('categories',r'(category|genre|group|status)')]:
         matches=[name for name in names if re.search(pattern,name,re.I)]
         if matches: suggested.append(term+' ('+', '.join(matches[:5])+')')
     description=f"Schema sketch: {n} rows and {len(names)} columns"+('; names suggest '+', '.join(suggested) if suggested else '; domain and row unit are unknown')+'. These readings are inferred, not domain facts.'
@@ -93,7 +93,35 @@ def numeric_profile(values,name,units):
         axis=f'{name} ({units or "recorded values; units unknown"})'
         charts=[chart('histogram',f'Distribution of {name}',axis,'Rows (count)',data=data),
                 chart('box',f'Five-number view of {name}',axis,'Column',box={'min':safe(lo),'q1':percentiles['25'],'median':percentiles['50'],'q3':percentiles['75'],'max':safe(hi)})]
+        cumulative=0;points=[]
+        for x,count in sorted(Counter(nums).items()):
+            cumulative+=count;points.append({'x':x,'cumulative':cumulative/n,'count':cumulative})
+        omitted=max(0,len(points)-200)
+        if omitted:points=[points[round(i*(len(points)-1)/199)] for i in range(200)]
+        charts.append(chart('ecdf',f'Empirical cumulative distribution of {name}',axis,'Finite values at or below X (%)',points=points,omitted_points=omitted,n=n))
+        if lo>0 and skew is not None and skew>=2:
+            charts.append(histogram([math.log10(x) for x in nums],f'Log10 distribution of {name}','log10 '+axis,scale='log10'))
     return stats,charts
+
+
+def histogram(nums,title,x_label,**metadata):
+    lo,hi=min(nums),max(nums);n=len(nums);bins=min(10,max(1,math.ceil(math.sqrt(n)))) if hi!=lo else 1
+    scale=max(abs(lo),abs(hi),1);a,b=lo/scale,hi/scale
+    edges=[(a+(b-a)*i/bins)*scale for i in range(bins+1)];counts=[0]*bins
+    for x in nums:counts[min(bins-1,int((x/scale-a)/(b-a)*bins)) if b!=a else 0]+=1
+    return chart('histogram',title,x_label,'Values (count)',data=[{'label':f'{edges[i]:.5g} to {edges[i+1]:.5g}','low':safe(edges[i]),'high':safe(edges[i+1]),'count':c} for i,c in enumerate(counts)],**metadata)
+
+
+def missingness_patterns(columns,rows):
+    counts=Counter(tuple(c['name'] for c,v in zip(columns,row) if v is None) for row in rows)
+    ordered=sorted(counts.items(),key=lambda x:(-x[1],x[0]));n=len(rows)
+    names=[c['name'] for c in columns if any(c['name'] in mask for mask in counts)]
+    patterns=[{'missing':list(mask),'count':count,'share':count/n if n else None} for mask,count in ordered[:20]]
+    data=[{'label':f'P{i+1}: '+(', '.join(p['missing'][:20]) or 'Complete rows')+(' …' if len(p['missing'])>20 else ''),'count':p['count'],'share':p['share']} for i,p in enumerate(patterns)]
+    return {'columns':names[:20],'omitted_columns':max(0,len(names)-20),'patterns':patterns,'rows':n,
+            'omitted_patterns':max(0,len(ordered)-20),'omitted_rows':sum(c for _,c in ordered[20:]),
+            'chart':chart('bar','Exact row missingness patterns','Rows (count)','Columns missing together',data=data),
+            'basis':'Canonical nulls only; exact row masks, not causal or within-group analysis.'}
 
 
 def text_profile(raw,name):
@@ -108,12 +136,17 @@ def text_profile(raw,name):
         casing['uncased' if not letters else 'upper' if letters.isupper() else 'lower' if letters.islower() else 'mixed']+=1
         chars.update(c for c in v if not c.isalnum() and not c.isspace());tokens.update(re.findall(r'\w{2,}',v.casefold()))
     top=common(counts);rare=[{'value':v,'count':c} for v,c in sorted(counts.items(),key=lambda x:(x[1],x[0])) if c<=2 or (n and c/n<=.01)]
-    stats={'candidate_blanks':blank,'length':{'min':min(lengths) if lengths else None,'max':max(lengths) if lengths else None,'mean':safe(statistics.mean(lengths)) if lengths else None,'median':safe(statistics.median(lengths)) if lengths else None},
+    stats={'raw_lexemes':n,'special_character_total':sum(chars.values()),'substring_total':sum(tokens.values()),'candidate_blanks':blank,'length':{'min':min(lengths) if lengths else None,'max':max(lengths) if lengths else None,'mean':safe(statistics.mean(lengths)) if lengths else None,'median':safe(statistics.median(lengths)) if lengths else None},
            'casing':dict(casing),'special_characters':common(chars),'common_substrings':common(tokens),'substring_basis':'case-folded word tokens, length>=2','special_character_basis':'character occurrences; whitespace excluded',
            'entropy_bits':safe(-sum((c/n)*math.log2(c/n) for c in counts.values())) if n else None,
            'top_n_coverage':{'n':10,'count':sum(x['count'] for x in top),'share':sum(x['count'] for x in top)/n if n else None},
            'rare_levels':rare[:20],'rare_level_count':len(rare),'most_common':top,'least_common':common(counts,True)}
-    return stats,[chart('bar',f'Most common values of {name}','Rows (count)','Value (top 10)',data=[{'label':x['value'],'count':x['count']} for x in top])] if top else []
+    data=[{'label':x['value'] or '[empty string]','count':x['count'],'share':x['count']/n} for x in top]
+    other=n-sum(x['count'] for x in top)
+    if other:data.append({'label':'[Other values — remainder]','count':other,'share':other/n,'is_other':True})
+    charts=[chart('bar',f'Most common values of {name}','Values (count)','Value (top 10 + remainder)',data=data,coverage=sum(x['count'] for x in top)/n,denominator=n)] if top else []
+    if lengths:charts.append(histogram(lengths,f'String lengths in {name}','Raw string length (characters)',measure='string_length'))
+    return stats,charts
 
 
 def temporal_profile(values,name,cfg,meta):
@@ -151,7 +184,23 @@ def temporal_profile(values,name,cfg,meta):
            'quarter_counts':{f'Q{i}':sum((d.month-1)//3+1==i for d in dates) for i in range(1,5)},'year_counts':dict(sorted(Counter(str(d.year) for d in dates).items())),
            'large_gaps':gaps[:20],'omitted_gaps':max(0,len(gaps)-20),'gap_rule':'more than three times median distinct-date spacing',
            'lag1_period':period,'lag1_count_autocorrelation':lag,'lag1_basis':'consecutive periods including zeros; descriptive, not a stationarity test'}
-    charts=[chart('time',f'Record counts over time for {name}','Calendar month (inferred dates)','Rows (count)',data=chart_data,omitted_periods=omitted)] if dates else []
+    charts=[]
+    if unique:
+        days=(unique[-1]-unique[0]).days
+        chart_period='day' if days<=60 else 'month' if days<=365*5 else 'year'
+        if chart_period=='day':
+            from datetime import timedelta
+            observed=Counter(d.isoformat() for d in dates)
+            chart_data=[{'label':(unique[0]+timedelta(days=i)).isoformat(),'count':observed.get((unique[0]+timedelta(days=i)).isoformat(),0)} for i in range(days+1)]
+        elif chart_period=='month':
+            chart_data=[{'label':f'{m//12:04}-{m%12+1:02}','count':periods.get(f'{m//12:04}-{m%12+1:02}',0)} for m in range(first,last+1)]
+        else:
+            years=Counter(d.year for d in dates);chart_data=[{'label':str(y),'count':years.get(y,0)} for y in range(unique[0].year,unique[-1].year+1)]
+        omitted=max(0,len(chart_data)-60)
+        if omitted:chart_data=chart_data[:30]+chart_data[-30:]
+        charts=[chart('time',f'Record counts over time for {name}',f'Calendar {chart_period} (parsed dates)','Rows (count)',data=chart_data,omitted_periods=omitted,period=chart_period)]
+        for key,basis in [('weekday_counts','weekday'),('month_counts','month')]:
+            charts.append(chart('bar',f'{basis.capitalize()} counts for {name}','Parsed dates (count)',basis.capitalize(),data=[{'label':k,'count':v} for k,v in stats[key].items()],calendar=basis))
     return stats,charts
 
 

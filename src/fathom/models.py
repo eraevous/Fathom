@@ -178,12 +178,27 @@ def validate_document(doc: dict) -> None:
                 if not isinstance(u,dict) or not isinstance(u.get("statistics"),dict) or not isinstance(u.get("charts"),list):raise ValueError("invalid univariate profile")
                 for chart in u["charts"]:
                     if not isinstance(chart,dict) or any(not isinstance(chart.get(k),str) or not chart[k] for k in ("kind","title","x_label","y_label")):raise ValueError("invalid chart labels")
-                    if chart["kind"] not in {"bar","time","histogram","box"}:raise ValueError("unsupported chart kind")
-                    if chart["kind"]=="box":
+                    if chart["kind"] not in {"bar","time","histogram","box","ecdf"}:raise ValueError("unsupported chart kind")
+                    if chart["kind"]=='ecdf':
+                        points=chart.get('points')
+                        if not isinstance(points,list) or not points or len(points)>200:raise ValueError('invalid ECDF points')
+                        previous=None
+                        for point in points:
+                            if not isinstance(point,dict) or type(point.get('x')) not in (int,float) or type(point.get('cumulative')) not in (int,float) or not 0<=point['cumulative']<=1 or type(point.get('count')) is not int or point['count']<1:raise ValueError('invalid ECDF point')
+                            if previous and (point['x']<=previous['x'] or point['cumulative']<previous['cumulative']):raise ValueError('invalid ECDF ordering')
+                            previous=point
+                        if points[-1]['cumulative']!=1:raise ValueError('invalid ECDF endpoint')
+                    elif chart["kind"]=="box":
                         box=chart.get("box")
                         if not isinstance(box,dict) or any(type(box.get(k)) not in (int,float) for k in ("min","q1","median","q3","max")):raise ValueError("invalid box values")
                     else:
                         if not isinstance(chart.get("data"),list) or any(not isinstance(v,dict) or not isinstance(v.get("label"),str) or type(v.get("count")) is not int or v["count"]<0 for v in chart["data"]):raise ValueError("invalid chart data")
+        if 'missingness_patterns' in doc:
+            m=doc['missingness_patterns']
+            if not isinstance(m,dict) or not isinstance(m.get('patterns'),list) or len(m['patterns'])>20 or m.get('rows')!=doc['overview']['rows']:raise ValueError('invalid missingness patterns')
+            for pattern in m['patterns']:
+                if not isinstance(pattern,dict) or not isinstance(pattern.get('missing'),list) or any(v not in names for v in pattern['missing']) or type(pattern.get('count')) is not int or pattern['count']<0 or type(pattern.get('share')) not in (int,float) or not 0<=pattern['share']<=1:raise ValueError('invalid missingness pattern')
+            if sum(p['count'] for p in m['patterns'])+m.get('omitted_rows',-1)!=m['rows']:raise ValueError('inconsistent missingness totals')
         if "dataset_summary" in doc:
             summary = doc["dataset_summary"]
             if not isinstance(summary, dict):

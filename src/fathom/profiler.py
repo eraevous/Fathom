@@ -11,7 +11,7 @@ from .config import validate_config
 from .models import GuideDataFrame, ProfilingResult
 from .quality import quality_profile, copy_evidence
 from .parsing import finite_number, parse_date
-from .univariate import enrich_columns, identity_and_samples
+from .univariate import enrich_columns, identity_and_samples, missingness_patterns
 from .special import infer_special, enrich_special
 
 
@@ -42,7 +42,7 @@ def infer(values: list[str], name="", meta=None) -> dict:
         typ, reason = "string", "No nonmissing values; type is unknown, string is the storage fallback."
     elif all(v.lower() in {"true", "false"} for v in values):
         typ, reason = "boolean", "All nonmissing values are lexical true/false."
-    elif meta.get("date_format") or (sum(parse_date(v,meta.get("date_format")) is not None for v in values)>=len(values)*(.8 if re.search(r"date|release|time",name,re.I) else 1)):
+    elif meta.get("date_format") or (sum(parse_date(v,meta.get("date_format")) is not None for v in values)>=len(values)*(.8 if re.search(r"date|release",name,re.I) else 1)):
         typ, reason = "temporal", "Local date formats recognized; ambiguous readings and format evidence are retained."
     elif (all(number(v) is not None for v in values) or (re.search(r"gross|amount|cost|price|revenue|rating|score|count|quantity",name,re.I) and sum(number(v) is not None for v in values)>=.8*len(values))) and not any(re.match(r"^[+-]?0\d", v.strip()) for v in values):
         typ, reason = "numeric", "Finite numeric readings (local currency/thousands syntax allowed); named numeric columns may retain up to 20% incompatible values, counted separately."
@@ -180,7 +180,8 @@ def profile(data: GuideDataFrame, config: dict | None = None) -> ProfilingResult
                            "decisions": cfg["decisions"]},
         "overview": overview, "columns": columns, "findings": findings,
         "selection": selection, "bivariate": pairs, "dependencies": dependencies, "annotations": {},
-        "dataset_summary": dataset_summary, "quality": quality, "dataset":dataset, "samples":samples})
+        "dataset_summary": dataset_summary, "quality": quality, "dataset":dataset, "samples":samples,
+        "missingness_patterns":missingness_patterns(columns,rows)})
 
 
 def select_pairs(rows: list, columns: list, cfg: dict, quality=None, quality_pairs=None) -> tuple[dict, list, dict]:
