@@ -221,8 +221,8 @@ def enrich_columns(columns,rows,raw_rows,cfg,emit,findings):
         if role is None:
             role='identifier' if name in cfg['schema'].get('key',[]) or re.search(r'(^id$|_id$|key|code|title|name)',name,re.I) else 'quantity' if re.search(r'(gross|amount|revenue|cost|price)',name,re.I) else None
         col['univariate']={'statistics':stats,'charts':charts,'role':role,'role_basis':basis if role else 'unknown','units':{'value':meta['units'],'generator':'human'} if meta.get('units') else None}
-        if role=='identifier' or (len(values)>=5 and len(set(values))/len(values)>=.9):
-            col['univariate']['top_n_suppression']='Identifier-like values; values rarely repeat.' if role=='identifier' else 'Values rarely repeat (at least90% distinct among nonmissing values).'
+        if role=='identifier' or (typ not in {'numeric','latitude','longitude','temporal'} and len(values)>=5 and len(set(values))/len(values)>=.9):
+            col['univariate']['top_n_suppression']='Identifier-like values; values rarely repeat.' if role=='identifier' else 'Values rarely repeat (at least 90% distinct among nonmissing values).'
             charts[:]=[c for c in charts if not (c['kind']=='bar' and 'coverage' in c)]
         def notice(rule,message,evidence,action=None,kind='observation'):
             fid=f'u-{i}-{rule}'

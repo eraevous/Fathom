@@ -89,6 +89,19 @@ def formatted_examples(col):
     return [formatted(n,units=units) if numeric and (n:=finite_number(v)) is not None else v[:120]+('… [truncated]' if len(v)>120 else '') for v in col['examples']]
 
 
+def top_n_reason(col):
+    u=col.get('univariate',{})
+    if u.get('top_n_suppression'):return u['top_n_suppression']
+    if u.get('role')=='identifier':return 'Identifier-like values; values rarely repeat.'
+    n=col['count']-col['missing']
+    return 'Values rarely repeat (at least 90% distinct).' if col['effective_type'] not in {'numeric','latitude','longitude','temporal'} and n>=5 and col['distinct']/n>=.9 else None
+
+
+def display_charts(col):
+    charts=[ch for ch in col.get('univariate',{}).get('charts',[]) if not (top_n_reason(col) and ch['kind']=='bar' and 'coverage' in ch)]
+    return [{**ch,'data':[{**item,'label':item['label'].capitalize()} for item in ch['data']]} if ch.get('calendar')=='month' else ch for ch in charts]
+
+
 def tick_label(value):
     for magnitude,suffix in ((1e12,'T'),(1e9,'B'),(1e6,'M'),(1e3,'K')):
         if abs(value)>=magnitude:return f'{value/magnitude:.3g}'+suffix

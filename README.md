@@ -2,7 +2,7 @@
 
 Fathom turns raw or semi-cleaned tabular data into understanding someone can use and pass on: an enhanced data dictionary, a diagnostic EDA engine and a repeatable working record. It answers what is in a dataset, what can't be known from it, and what it is good for.
 
-**Status: plots and review-layout slice.** Fathom is the successor to Data Guide.
+**Status: report-polish slice.** Fathom is the successor to Data Guide.
 It starts from guiding documents and decisions, with no earlier implementation,
 and is built with [AEC](https://github.com/eraevous/AEC) and Spec Kit.
 
@@ -150,11 +150,21 @@ coverage, string lengths, calendar bars and exact row-missingness patterns come
 from the saved artifact. Time alone no longer suggests a date. Old artifacts and
 optional exports remain supported; no new runtime dependency.
 
-Charts have a fixed drawing area and may require panning on phones. Fixed PDF pages
-and slides require zoom; dynamic layouts remain future work under DG-D7. See
+Column headers start collapsed. Expanded entries place compact statistics beside
+plots, stacking at phone width; charts scale without horizontal page overflow.
+Intermediate formatted ticks, wrapping horizontal HTML/PDF axis captions and a
+separate box summary avoid crowded annotations. Skewed columns with zeros retain
+a positive-only log view with explicit exclusion counts. Identifier-like/near-unique
+top-N charts are replaced by a repetition explanation.
+
+PowerPoint defaults to a summary of at most12slides, with omitted chart counts;
+`guide export PROFILE --out DIR --deck full` selects all topics/charts.
+Fixed PDF pages and slides still require zoom on phones; dynamic layout building
+remains future work under DG-D7. See
 [spec005](specs/005-plots-and-layout/spec.md), its
 [builder found/missed ledger](specs/005-plots-and-layout/validation.md) and
-[visual-review gallery and open issues](specs/005-plots-and-layout/review/README.md).
+[slice-4 visual review](specs/005-plots-and-layout/review/README.md), plus
+[polish review and current open issues](specs/006-report-polish/review/README.md).
 
 ## Scope and limits
 
@@ -168,7 +178,8 @@ Comparisons state both source contexts, dates, declared transformations and othe
 changes before aggregate measured deltas. They cannot reconstruct row-level
 lineage or establish why a difference occurred. Type/meaning changes are flagged.
 
-All committed fixtures are authored synthetic examples. Exported reports can
+Committed fixtures are authored synthetic examples or [pinned, sourced public
+review tables](tests/fixtures/polish/README.md). Exported reports can
 include values/examples from the supplied table. Use public or synthetic inputs
 for this run. Tests demonstrate conformance on those examples; usefulness for
 most projects and business fitness have not been established.

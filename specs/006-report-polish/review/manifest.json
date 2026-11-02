@@ -1,0 +1,224 @@
+{
+  "after-college-column-1280.png": {
+    "format": "HTML",
+    "topic": "Median",
+    "width": 1280
+  },
+  "after-college-column-390.png": {
+    "format": "HTML",
+    "topic": "Median",
+    "width": 390
+  },
+  "after-college-headers-1280.png": {
+    "format": "HTML",
+    "topic": "default column headers",
+    "width": 1280
+  },
+  "after-college-headers-390.png": {
+    "format": "HTML",
+    "topic": "default column headers",
+    "width": 390
+  },
+  "after-college-pdf-1280.png": {
+    "format": "pdf",
+    "page": 49,
+    "pages": 80,
+    "renderer": "ReportLab/PyMuPDF",
+    "width": 1280
+  },
+  "after-college-pdf-390.png": {
+    "format": "pdf",
+    "page": 49,
+    "pages": 80,
+    "renderer": "ReportLab/PyMuPDF",
+    "width": 390
+  },
+  "after-college-pptx-1280.png": {
+    "format": "pptx",
+    "page": 7,
+    "pages": 12,
+    "renderer": "LibreOffice Impress/PyMuPDF",
+    "width": 1280
+  },
+  "after-college-pptx-390.png": {
+    "format": "pptx",
+    "page": 7,
+    "pages": 12,
+    "renderer": "LibreOffice Impress/PyMuPDF",
+    "width": 390
+  },
+  "after-movies-box-1280.png": {
+    "format": "HTML",
+    "topic": "box",
+    "width": 1280
+  },
+  "after-movies-box-390.png": {
+    "format": "HTML",
+    "topic": "box",
+    "width": 390
+  },
+  "after-movies-column-1280.png": {
+    "format": "HTML",
+    "topic": "Worldwide Gross",
+    "width": 1280
+  },
+  "after-movies-column-390.png": {
+    "format": "HTML",
+    "topic": "Worldwide Gross",
+    "width": 390
+  },
+  "after-movies-headers-1280.png": {
+    "format": "HTML",
+    "topic": "default column headers",
+    "width": 1280
+  },
+  "after-movies-headers-390.png": {
+    "format": "HTML",
+    "topic": "default column headers",
+    "width": 390
+  },
+  "after-movies-log-1280.png": {
+    "format": "HTML",
+    "topic": "log",
+    "width": 1280
+  },
+  "after-movies-log-390.png": {
+    "format": "HTML",
+    "topic": "log",
+    "width": 390
+  },
+  "after-movies-pdf-1280.png": {
+    "format": "pdf",
+    "page": 9,
+    "pages": 53,
+    "renderer": "ReportLab/PyMuPDF",
+    "width": 1280
+  },
+  "after-movies-pdf-390.png": {
+    "format": "pdf",
+    "page": 9,
+    "pages": 53,
+    "renderer": "ReportLab/PyMuPDF",
+    "width": 390
+  },
+  "after-movies-pdf-box-1280.png": {
+    "format": "pdf",
+    "page": 8,
+    "pages": 53,
+    "topic": "close quartile labels",
+    "width": 1280
+  },
+  "after-movies-pdf-box-390.png": {
+    "format": "pdf",
+    "page": 8,
+    "pages": 53,
+    "topic": "close quartile labels",
+    "width": 390
+  },
+  "after-movies-pptx-1280.png": {
+    "format": "pptx",
+    "page": 8,
+    "pages": 12,
+    "renderer": "LibreOffice Impress/PyMuPDF",
+    "width": 1280
+  },
+  "after-movies-pptx-390.png": {
+    "format": "pptx",
+    "page": 8,
+    "pages": 12,
+    "renderer": "LibreOffice Impress/PyMuPDF",
+    "width": 390
+  },
+  "after-movies-pptx-full-box-1280.png": {
+    "format": "pptx-full",
+    "page": 23,
+    "pages": 61,
+    "topic": "close quartile labels",
+    "width": 1280
+  },
+  "after-movies-pptx-full-box-390.png": {
+    "format": "pptx-full",
+    "page": 23,
+    "pages": 61,
+    "topic": "close quartile labels",
+    "width": 390
+  },
+  "before-college-column-1280.png": {
+    "format": "HTML",
+    "topic": "Median",
+    "width": 1280
+  },
+  "before-college-column-390.png": {
+    "format": "HTML",
+    "topic": "Median",
+    "width": 390
+  },
+  "before-college-headers-1280.png": {
+    "format": "HTML",
+    "topic": "default column headers",
+    "width": 1280
+  },
+  "before-college-headers-390.png": {
+    "format": "HTML",
+    "topic": "default column headers",
+    "width": 390
+  },
+  "before-movies-box-1280.png": {
+    "format": "HTML",
+    "topic": "box",
+    "width": 1280
+  },
+  "before-movies-box-390.png": {
+    "format": "HTML",
+    "topic": "box",
+    "width": 390
+  },
+  "before-movies-column-1280.png": {
+    "format": "HTML",
+    "topic": "Worldwide Gross",
+    "width": 1280
+  },
+  "before-movies-column-390.png": {
+    "format": "HTML",
+    "topic": "Worldwide Gross",
+    "width": 390
+  },
+  "before-movies-headers-1280.png": {
+    "format": "HTML",
+    "topic": "default column headers",
+    "width": 1280
+  },
+  "before-movies-headers-390.png": {
+    "format": "HTML",
+    "topic": "default column headers",
+    "width": 390
+  },
+  "before-movies-pdf-1280.png": {
+    "format": "pdf",
+    "page": 7,
+    "pages": 48,
+    "renderer": "ReportLab/PyMuPDF",
+    "width": 1280
+  },
+  "before-movies-pdf-390.png": {
+    "format": "pdf",
+    "page": 7,
+    "pages": 48,
+    "renderer": "ReportLab/PyMuPDF",
+    "width": 390
+  },
+  "before-movies-pptx-1280.png": {
+    "format": "pptx",
+    "page": 22,
+    "pages": 60,
+    "renderer": "LibreOffice Impress/PyMuPDF",
+    "width": 1280
+  },
+  "before-movies-pptx-390.png": {
+    "format": "pptx",
+    "page": 22,
+    "pages": 60,
+    "renderer": "LibreOffice Impress/PyMuPDF",
+    "width": 390
+  }
+}

@@ -10,7 +10,7 @@ import zipfile
 from xml.sax.saxutils import escape
 
 from .renderers import KINDS, repetition_groups, sample_cell, scalar, summary_rows
-from .presentation import formatted, column_tables, structured_tables, formatted_examples
+from .presentation import formatted, column_tables, structured_tables, formatted_examples, display_charts, top_n_reason
 
 
 def finding_topics(d):
@@ -30,7 +30,7 @@ def identity(d):
 
 
 def chart_topics(d):
-    return ([d['missingness_patterns']['chart']] if d.get('missingness_patterns') else [])+[ch for col in d.get('columns',[]) for ch in col.get('univariate',{}).get('charts',[])]
+    return ([d['missingness_patterns']['chart']] if d.get('missingness_patterns') else [])+[ch for col in d.get('columns',[]) for ch in display_charts(col)]
 
 
 def summary_chart_topics(d):
@@ -42,7 +42,7 @@ def summary_chart_topics(d):
     columns=sorted(enumerate(d.get('columns',[])),key=lambda x:(x[1]['name'] not in action_columns,x[0]))
     for _,col in columns:
         if col.get('univariate',{}).get('role')=='identifier':continue
-        charts=col.get('univariate',{}).get('charts',[])
+        charts=display_charts(col)
         if not charts:continue
         priority=lambda ch:0 if ch.get('scale')=='log10' else {'time':1,'histogram':2,'bar':3,'ecdf':4,'box':5}.get(ch['kind'],6)
         selected.append(min(charts,key=priority))
@@ -101,7 +101,7 @@ def pdf_bytes(d):
         def __init__(self,ch):super().__init__();self.ch=ch;self.width=480;self.height=250 if ch['kind']!='bar' else max(200,110+len(ch.get('data',[]))*12)
         def draw(self):
             c=self.canv;ch=self.ch;c.setFont(font,8)
-            from .charts import linear_ticks
+            from .charts import linear_ticks, count_ticks
             from .presentation import tick_label
             def wrapped(value,y):
                 import textwrap
@@ -127,7 +127,7 @@ def pdf_bytes(d):
             elif data:
                 maximum=max(x['count'] for x in data) or 1
                 if ch['kind']=='bar':
-                    for value in linear_ticks(0,maximum):c.drawCentredString(190+230*value/maximum,35,tick_label(value))
+                    for value in count_ticks(maximum):c.drawCentredString(190+230*value/maximum,35,tick_label(value))
                     for i,item in enumerate(data):
                         y=self.height-40-i*12;label=text(item['label']);label=label if len(label)<=29 else label[:28]+'…'
                         c.drawRightString(180,y,label);end=190+230*item['count']/maximum;c.rect(190,y-2,end-190,8,fill=1,stroke=0);c.drawString(end+5,y,formatted(item['count']))
@@ -135,7 +135,7 @@ def pdf_bytes(d):
                     width=390/len(data)
                     for i,item in enumerate(data):c.rect(55+i*width,45,max(.5,width-2),135*item['count']/maximum,fill=1,stroke=0)
                     first=formatted(data[0]['low']) if ch['kind']=='histogram' else data[0]['label'];last=formatted(data[-1]['high']) if ch['kind']=='histogram' else data[-1]['label']
-                    for value in linear_ticks(0,maximum):c.drawRightString(48,45+135*value/maximum,tick_label(value))
+                    for value in count_ticks(maximum):c.drawRightString(48,45+135*value/maximum,tick_label(value))
                     if ch['kind']=='histogram':
                         lo,hi=data[0]['low'],data[-1]['high'];scale=max(abs(lo),abs(hi),1);span=hi/scale-lo/scale
                         for value in linear_ticks(lo,hi):c.drawCentredString(55+390*((value/scale-lo/scale)/span if span else .5),35,tick_label(value))
@@ -157,13 +157,13 @@ def pdf_bytes(d):
             heading(col['name'])
             story.append(p((col['meaning']['value']+' (human)' if col['meaning'] else 'Unknown meaning')+' / '+col['effective_type']+(' (human override)' if col['override'] else ' (inferred)')))
             story.append(p('Examples: '+', '.join(formatted_examples(col))))
-            if col.get('univariate',{}).get('top_n_suppression'):story.append(p(col['univariate']['top_n_suppression']))
+            if top_n_reason(col):story.append(p(top_n_reason(col)))
             for t in column_tables(col):
                 if not t['caption'].startswith(('Column overview','Univariate statistics','Percentiles','Most common nonmissing')):continue
                 story.append(p(t['caption'],'Heading3'))
                 widths=[245,245] if len(t['headers'])==2 else [290,100,100]
                 table([t['headers'],*t['rows']],widths,t['numeric'])
-            for ch in col.get('univariate',{}).get('charts',[]):pdf_chart(ch)
+            for ch in display_charts(col):pdf_chart(ch)
         samples=d.get('samples')
         if samples:
             story.append(p(samples['note']+f" Seed: {samples['seed']}; requested: {samples['size']}."))
@@ -221,6 +221,7 @@ def pptx_bytes(d,full=False):
     from pptx.enum.chart import XL_CHART_TYPE, XL_DATA_LABEL_POSITION, XL_TICK_MARK
     from pptx.enum.shapes import MSO_SHAPE
     from pptx.util import Inches, Pt
+    from pptx.enum.text import PP_ALIGN
     deck=Presentation();deck.slide_width=Inches(13.333);deck.slide_height=Inches(7.5)
     title,description,basis=identity(d)
     props=deck.core_properties;props.title=title;props.author='Fathom';props.last_modified_by='Fathom';props.created=datetime(2000,1,1);props.modified=datetime(2000,1,1);props.revision=1
@@ -264,6 +265,14 @@ def pptx_bytes(d,full=False):
             def x(v):return Inches(1+11*((v/scale-lo)/span if span else .5))
             for a,z,y,h in [('min','max',3.5,.03),('q1','q3',3,.9),('median','median',3,.9)]:
                 s.shapes.add_shape(MSO_SHAPE.RECTANGLE,x(b[a]),Inches(y),max(Inches(.02),x(b[z])-x(b[a])),Inches(h))
+            from .charts import linear_ticks
+            from .presentation import tick_label
+            for value in linear_ticks(b['min'],b['max']):
+                s.shapes.add_shape(MSO_SHAPE.RECTANGLE,x(value),Inches(4.2),Inches(.01),Inches(.1))
+                label=s.shapes.add_textbox(x(value)-Inches(.5),Inches(4.35),Inches(1),Inches(.35))
+                label.text_frame.text=tick_label(value)
+                for paragraph in label.text_frame.paragraphs:
+                    paragraph.font.size=Pt(12);paragraph.alignment=PP_ALIGN.CENTER
             s.shapes.add_textbox(Inches(1),Inches(5),Inches(11),Inches(1)).text_frame.text='X: '+ch['x_label']+'; Y: '+ch['y_label']+'\n'+'; '.join(k+': '+formatted(b[k]) for k in ('min','q1','median','q3','max'))
         elif data or ch['kind']=='ecdf':
             if ch['kind']=='ecdf':

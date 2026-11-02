@@ -46,10 +46,14 @@ def test_identifier_near_unique_suppression_and_category_decoy(make_profile):
         assert not any(ch['kind']=='bar' and 'coverage' in ch for ch in c['univariate']['charts'])
     c=make_profile('group\na\na\na\nb\nb\nc\n').document['columns'][0]
     assert any(ch['kind']=='bar' for ch in c['univariate']['charts'])
+    c=make_profile('gross\n1\n2\n3\n4\n5\n').document['columns'][0]
+    assert 'top_n_suppression' not in c['univariate']
 
 
 def test_months_ticks_box_and_axis_captions(make_profile):
-    from fathom.charts import svg_chart
+    from fathom.charts import svg_chart, count_ticks
+    assert count_ticks(3)==[0,1,2,3]
+    assert count_ticks(1082)==[0,270,541,812,1082]
     p=make_profile('date\n2020-01-01\n2020-02-01\n2020-02-02\n')
     charts=p.document['columns'][0]['univariate']['charts']
     month=next(x for x in charts if x.get('calendar')=='month')
@@ -71,6 +75,7 @@ def test_summary_full_deck_budget_scope_and_bytes(make_profile):
     full,status=export_bundle(p,['pptx'],deck='full')
     deck=pptx.Presentation(io.BytesIO(full['report.pptx']))
     assert 5<=len(summary.slides)<=12 and len(deck.slides)>len(summary.slides)
+    assert any('7.25' in shape.text for slide in deck.slides for shape in slide.shapes if shape.has_text_frame)
     assert s['formats']['pptx']['mode']=='summary' and status['formats']['pptx']['mode']=='full'
     assert any('Summary deck' in shape.text for slide in summary.slides for shape in slide.shapes if shape.has_text_frame)
 

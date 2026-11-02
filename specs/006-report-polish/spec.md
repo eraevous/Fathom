@@ -69,7 +69,7 @@ log coverage; summary/full deck selection. Raw artifact values remain authoritat
 ## Success Criteria
 
 All seven FT-R18 items have explicit fixture/image checks; public films default
-height falls by at least50% on the same artifact/config/width, and expanded height
+height falls by at least50% on the same input/config/width, and expanded height
 is disclosed. Tick positions include interior values, zero exclusions are explicit,
 summary<=12slides and full optional. Tests/bytes/core degradation pass; AEC0errors.
 All six format/width combinations reviewed; independent acceptance not claimed.

@@ -6,7 +6,7 @@ import re
 
 from .models import ProfilingResult
 from .charts import svg_chart
-from .presentation import formatted, column_tables, html_table, markdown_table, metric_table, structured_tables, formatted_examples
+from .presentation import formatted, column_tables, html_table, markdown_table, metric_table, structured_tables, formatted_examples, display_charts, top_n_reason
 from pathlib import Path
 
 KINDS = (("observation", "Observations"), ("interpretation", "Interpretations"),
@@ -142,7 +142,7 @@ def samples_markdown(d):
 
 
 def charts_markdown(col):
-    return '\n'.join(markdown_table(t) for t in column_tables(col))+'\n'+'\n'.join(svg_chart(ch) for ch in col.get('univariate',{}).get('charts',[]))
+    return '\n'.join(markdown_table(t) for t in column_tables(col))+'\n'+'\n'.join(svg_chart(ch) for ch in display_charts(col))
 
 
 def bars(items, title):
@@ -171,21 +171,21 @@ def dictionary_and_provenance_html(d):
     masks=d.get('missingness_patterns')
     if masks:
         out += [svg_chart(masks['chart']),'<p>'+escape(masks['basis'])+' '+str(masks['omitted_patterns'])+' patterns / '+str(masks['omitted_rows'])+' rows omitted; '+str(masks['omitted_columns'])+' columns beyond the display limit.</p>']
-        out += [html_table({'caption':'Exact row masks — share of all rows','headers':['Pattern / missing columns','Count','Share'],'numeric':[1,2],
-                            'rows':[['P'+str(i+1)+': '+(', '.join(p['missing']) or 'Complete rows'),formatted(p['count']),formatted(p['share'],True)] for i,p in enumerate(masks['patterns'])]})]
+        out += ['<details><summary>Exact pattern table — counts and shares</summary>',html_table({'caption':'Exact row masks — share of all rows','headers':['Pattern / missing columns','Count','Share'],'numeric':[1,2],
+                            'rows':[['P'+str(i+1)+': '+(', '.join(p['missing']) or 'Complete rows'),formatted(p['count']),formatted(p['share'],True)] for i,p in enumerate(masks['patterns'])]}),'</details>']
     out += [samples_html(d)]
     for c in d['columns']:
         meaning=c['meaning']['value']+' (human)' if c['meaning'] else 'Unknown meaning'
         basis='human override; inferred '+c['inference']['type'] if c['override'] else 'inferred, not a domain fact'
-        out += ['<details class="column-entry"><summary><h3>'+escape(c['name'])+'</h3><span>'+escape(c['effective_type'])+' · '+formatted(c['missing'])+'/'+formatted(c['count'])+' missing · '+formatted(c['distinct'])+' distinct</span></summary><p>'+escape(meaning)+' ('+escape(basis)+')</p>',
+        out += ['<details class="column-entry"><summary><h3>'+escape(c['name'])+'</h3> <span>'+escape(c['effective_type'])+' · '+formatted(c['missing'])+'/'+formatted(c['count'])+' missing · '+formatted(c['distinct'])+' distinct</span></summary><p>'+escape(meaning)+' ('+escape(basis)+')</p>',
                 '<p>Examples: '+escape(', '.join(formatted_examples(c)))+'</p><div class="column-grid"><div class="column-statistics">']
         tables=column_tables(c)
         primary=[t for t in tables if t['caption'].startswith(('Column overview','Univariate statistics','Percentiles','Most common nonmissing'))]
         extra=[t for t in tables if t not in primary]
         out += [html_table(t) for t in primary[:1]]
         out += ['</div><div class="column-plots">']
-        if c.get('univariate',{}).get('top_n_suppression'):out += ['<p>'+escape(c['univariate']['top_n_suppression'])+'</p>']
-        out += [svg_chart(ch) for ch in c.get('univariate',{}).get('charts',[])]
+        if top_n_reason(c):out += ['<p>'+escape(top_n_reason(c))+'</p>']
+        out += [svg_chart(ch) for ch in display_charts(c)]
         out += ['</div></div>']
         extra=primary[1:]+extra
         if extra:out += ['<details><summary>Additional statistics</summary>',''.join(html_table(t) for t in extra),'</details>']
@@ -239,7 +239,7 @@ def render_html(result: ProfilingResult):
         out += ['<section><h2>Labelled annotations</h2>',readable_html(d['annotations']),'</section>']
     css='''body{font:16px/1.55 system-ui,sans-serif;background:#f5f8f7;color:#193e42;max-width:1120px;padding:32px;margin:auto}h1{font-size:44px;margin-bottom:8px}h2{border-bottom:2px solid #28777c;padding-bottom:7px;margin-top:40px}h3{margin-top:24px}section{margin-bottom:30px}.opening{background:white;padding:24px;border:1px solid #d5e1df;border-radius:8px}table{border-collapse:collapse;width:100%;background:white}td,th{padding:10px;text-align:left;border-bottom:1px solid #d5e1df;vertical-align:top}td{overflow-wrap:anywhere}article{background:white;border-left:3px solid #b9d3cf;padding:8px 16px;margin:10px 0}article>p{margin:7px 0}details{margin:8px 0}summary{cursor:pointer;color:#12656b;font-weight:600}details[open]{padding-bottom:10px}a{color:#12656b}small{color:#4d676b}dt{font-weight:600;margin-top:8px}dd{margin-left:20px;overflow-wrap:anywhere}ul{padding-left:24px}.sample-scroll{overflow-x:auto}.sample-scroll td{min-width:90px;max-width:260px;white-space:pre-wrap}svg{width:100%;max-width:800px}svg text{font:13px system-ui,sans-serif}label{cursor:pointer;font-weight:600;margin-left:8px}.summary-view{background:#e9f2ee;padding:12px;margin-top:12px}.repetitive{display:none}.repetitive:target{display:block}#full-view:checked ~ .summary-view{display:none}#full-view:checked ~ .full-view .summary-view{display:none}#full-view:checked ~ .full-view .repetitive{display:block}@media(max-width:700px){body{padding:12px}td,th{padding:6px;font-size:14px}.opening{padding:12px}}@media print{body{background:white;padding:0}details{break-inside:avoid}.repetitive{display:block}}'''
     css += '.column-entry{box-sizing:border-box;width:100%;border:1px solid #d5e1df;border-radius:6px;padding:20px;margin:24px 0}.column-entry h3{margin-top:0;overflow-wrap:anywhere}.review-table{table-layout:fixed;margin:12px 0 20px}.review-table td,.review-table th{padding:6px 10px}caption{text-align:left;font-weight:600;padding:8px 0}.num{text-align:right;font-variant-numeric:tabular-nums}.table-scroll{overflow-x:auto;max-width:100%}.chart{margin:20px 0;max-width:100%;overflow-x:auto}.chart svg{width:720px;max-width:none;display:block}.chart svg text{font:15px system-ui,sans-serif}.chart-title{font-weight:600}figcaption{font-size:14px;margin:8px 0;color:#4d676b}p{overflow-wrap:anywhere}'
-    css += '.column-entry{padding:12px 16px;margin:10px 0}.column-entry>summary{display:list-item}.column-entry>summary h3{display:inline;margin:0 16px 0 0;font-size:18px}.column-entry>summary span{font-size:14px;font-weight:400;color:#4d676b}.column-grid{display:grid;grid-template-columns:minmax(230px,.75fr) minmax(0,1.25fr);gap:24px;align-items:start}.column-statistics{min-width:0;max-width:360px}.column-plots{min-width:0}.review-table{max-width:420px}.chart svg{width:100%;max-width:100%;height:auto}.chart svg text{font:18px system-ui,sans-serif}.chart h4{font-size:16px;margin:8px 0}.axis-captions p{margin:3px 0;font-size:14px;overflow-wrap:anywhere}.box-summary{max-width:320px}.chart{overflow:visible;margin:10px 0 20px}.column-entry .table-scroll{max-width:100%}@media(max-width:800px){.column-grid{grid-template-columns:minmax(0,1fr)}.column-entry{padding:10px}.column-statistics{max-width:100%}}'
+    css += '.column-entry{padding:12px 16px;margin:10px 0}.column-entry>summary{display:list-item}.column-entry>summary h3{display:inline;margin:0 16px 0 0;font-size:18px}.column-entry>summary span{font-size:14px;font-weight:400;color:#4d676b}.column-grid{display:grid;grid-template-columns:minmax(230px,.75fr) minmax(0,1.25fr);gap:24px;align-items:start}.column-statistics{min-width:0;max-width:360px}.column-plots{min-width:0}.review-table{max-width:420px}.chart{max-width:760px}.chart svg{width:100%;max-width:100%;height:auto}.chart svg text{font:18px system-ui,sans-serif}.chart h4{font-size:16px;margin:8px 0}.axis-captions p{margin:3px 0;font-size:14px;overflow-wrap:anywhere}.box-summary{max-width:320px}.chart{overflow:visible;margin:10px 0 20px}.column-entry .table-scroll{max-width:100%}@media(max-width:800px){.column-grid{grid-template-columns:minmax(0,1fr)}.column-entry{padding:10px}.column-statistics{max-width:100%}}@media(max-width:500px){.chart svg text{font-size:22px}}'
     return '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Fathom — '+escape(d['kind'])+'</title><style>'+css+'</style></head><body>'+'\n'.join(out)+'</body></html>\n'
 
 
@@ -248,7 +248,7 @@ def dictionary_and_provenance_markdown(d):
     if d.get('missingness_patterns'):lines += [svg_chart(d['missingness_patterns']['chart'])]
     for c in d['columns']:
         meaning=c['meaning']['value']+' (human)' if c['meaning'] else 'Unknown meaning'
-        lines += ['### '+md_text(c['name']),'',md_text(meaning+'; effective '+c['effective_type']+(' (human override)' if c['override'] else ' (inferred)')),'',charts_markdown(c),'',
+        lines += ['### '+md_text(c['name']),'',md_text(meaning+'; effective '+c['effective_type']+(' (human override)' if c['override'] else ' (inferred)')),'',md_text('Examples: '+', '.join(formatted_examples(c))),'',charts_markdown(c),'',
                   '<details><summary>Raw evidence</summary>','',readable_md(c),'</details>','']
     lines += ['## Provenance','','Source and context are recorded; technical details are collapsed.','','<details><summary>Provenance internals</summary>','',readable_md({'source':d['source'],'context':d['context'],'schema':d['schema'],'dependencies':d['dependencies'],'identity_basis':d.get('dataset',{}).get('basis',{})}),
               '### Working record (human declarations)','',readable_md(d['working_record']),'</details>','']

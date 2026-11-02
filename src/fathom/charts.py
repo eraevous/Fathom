@@ -12,13 +12,18 @@ def linear_ticks(lo,hi,count=5):
     return [(lo/scale+(hi/scale-lo/scale)*i/(count-1))*scale for i in range(count)]
 
 
+def count_ticks(maximum):
+    """Count axes use distinct whole-number tick positions."""
+    return sorted(set(round(value) for value in linear_ticks(0,maximum)))
+
+
 def svg_chart(chart):
     def e(v):return escape(str(v))
     kind=chart['kind'];data=chart.get('data',[]);width=560
     labels=[]
     for d in data:
-        lines=textwrap.wrap(str(d['label']) or '[empty]',17)
-        labels.append(lines[:2]+[lines[2][:15]+'…'] if len(lines)>3 else lines)
+        lines=textwrap.wrap(str(d['label']) or '[empty]',14)
+        labels.append(lines[:2]+[lines[2][:12]+'…'] if len(lines)>3 else lines)
     heights=[max(38,len(x)*22+10) for x in labels]
     height=50+sum(heights) if kind=='bar' else 270
     out=[f'<svg role="img" aria-label="{escape(chart["title"],quote=True)}" viewBox="0 0 {width} {height}"><title>{e(chart["title"])}</title>']
@@ -27,7 +32,7 @@ def svg_chart(chart):
     def grid(x1,y1,x2,y2):out.append(f'<line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke="#d5e1df"/>')
     if kind=='bar':
         maximum=max((d['count'] for d in data),default=1) or 1
-        for value in linear_ticks(0,maximum):
+        for value in count_ticks(maximum):
             x=175+305*value/maximum;grid(x,15,x,height-30);text(x,height-7,tick_label(value),'middle','tick-label')
         y=20
         for d,lines,h in zip(data,labels,heights):
@@ -46,7 +51,9 @@ def svg_chart(chart):
         ticks=linear_ticks(lo,hi)
         if kind=='time':
             indices=sorted(set(round(i*(len(data)-1)/4) for i in range(5)))
-            for i in indices:text(left+(right-left)*((i+.5)/len(data)),255,data[i]['label'],'middle','tick-label')
+            for i in indices:
+                label=data[i]['label'];label=label[5:] if len(label)==10 else label
+                text(left+(right-left)*((i+.5)/len(data)),255,label,'middle','tick-label')
         else:
             for value in ticks:
                 x=px(value);grid(x,top,x,bottom);text(x,255,tick_label(value),'middle','tick-label')
@@ -55,9 +62,9 @@ def svg_chart(chart):
             out += [f'<line x1="{px(lo)}" y1="{y}" x2="{px(hi)}" y2="{y}" stroke="#193e42"/><rect x="{px(b["q1"])}" y="90" width="{max(1,px(b["q3"])-px(b["q1"]))}" height="60" fill="#c3ded8" stroke="#216e73"/><line x1="{px(b["median"])}" y1="90" x2="{px(b["median"])}" y2="150" stroke="#193e42"/>']
         else:
             maximum=1 if kind=='ecdf' else max((d['count'] for d in data),default=1) or 1
-            for value in linear_ticks(0,maximum):
+            for value in (linear_ticks(0,1) if kind=='ecdf' else count_ticks(maximum)):
                 y=bottom-value/maximum*(bottom-top);grid(left,y,right,y)
-                text(left-8,y+6,formatted(value,True) if kind=='ecdf' else tick_label(value),'end','tick-label')
+                text(left-8,y+6,f'{value:.0%}' if kind=='ecdf' else tick_label(value),'end','tick-label')
             if kind=='ecdf':
                 path=f'M {px(lo)} {bottom}'
                 for point in chart['points']:path+=f' H {px(point["x"])} V {bottom-point["cumulative"]*(bottom-top)}'
@@ -69,6 +76,7 @@ def svg_chart(chart):
                     out.append(f'<rect x="{left+i*barwidth}" y="{bottom-h}" width="{max(.5,barwidth-2)}" height="{h}" fill="#216e73"><title>{e(d["label"])}: {d["count"]}</title></rect>')
     out.append('</svg>')
     notes=[]
+    if kind=='time' and data:notes.append('Calendar range: '+data[0]['label']+' to '+data[-1]['label']+'. Day ticks omit the year; exact dates remain in chart values.')
     if 'coverage' in chart:notes.append('Top10 covers '+formatted(chart['coverage'],True)+f" of {chart['denominator']:,} raw values; remainder is shown separately.")
     if chart.get('omitted_periods'):notes.append(f"{chart['omitted_periods']:,} middle calendar bins omitted; full counts remain in profile.")
     if chart.get('omitted_points'):notes.append(f"Approximate ECDF display: {chart['omitted_points']:,} distinct points omitted.")
