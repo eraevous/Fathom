@@ -12,6 +12,7 @@ from .models import GuideDataFrame, ProfilingResult
 from .quality import quality_profile, copy_evidence
 from .parsing import finite_number, parse_date
 from .univariate import enrich_columns, identity_and_samples
+from .special import infer_special, enrich_special
 
 
 def number(value: str) -> float | None:
@@ -32,6 +33,10 @@ def rounded(n: float | None) -> float | None:
 
 def infer(values: list[str], name="", meta=None) -> dict:
     meta=meta or {}
+    special=infer_special(values,name)
+    if special:
+        typ,reason=special
+        return {'type':typ,'confidence':'rule-based, uncalibrated','reasons':[reason],'alternatives':['identifier or category codes','another format or coordinate system; ask the owner']}
     distinct = set(values)
     if not values:
         typ, reason = "string", "No nonmissing values; type is unknown, string is the storage fallback."
@@ -150,6 +155,7 @@ def profile(data: GuideDataFrame, config: dict | None = None) -> ProfilingResult
                     "Unknown; requires information from the data owner or generating process.")
     dataset_summary, quality, quality_pairs = quality_profile(rows, columns, cfg, finding)
     enrich_columns(columns,rows,data.raw_rows if data.raw_rows is not None else rows,cfg,finding,findings)
+    enrich_special(columns,rows,finding)
     dataset,samples=identity_and_samples(data,cfg,columns)
     selection, pairs, dependencies = select_pairs(rows, columns, cfg, quality, quality_pairs)
     quality["coverage"]["reported_missingness_candidates"] = sum(p["method"] == "missingness_by_group" for p in pairs)

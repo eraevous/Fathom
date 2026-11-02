@@ -5,7 +5,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        stats: [core, scipy]
+        stats: [core, scipy, exports]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -13,4 +13,6 @@ jobs:
       - run: pip install -e '.[test]'
       - if: matrix.stats == 'scipy'
         run: pip install -e '.[stats]'
+      - if: matrix.stats == 'exports'
+        run: pip install -e '.[exports]'
       - run: python -m pytest -q
