@@ -48,7 +48,7 @@ def readable_md(value, depth=0):
 def fraction(measure, total):
     if not isinstance(measure,dict): return str(measure)
     rate = measure.get('share')
-    return f"{measure['count']}/{total}" + (f" ({rate:.1%})" if rate is not None else ' (share unavailable)')
+    return formatted(measure['count'])+'/'+formatted(total) + (f" ({rate:.1%})" if rate is not None else ' (share unavailable)')
 
 
 def summary_rows(d):
