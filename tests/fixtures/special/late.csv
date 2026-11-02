@@ -1,0 +1,6 @@
+"phone","email","website","latitude","longitude","label"
+"+1 (202) 555-0100 ext 3","ghost@example.invalid","ftp://example.org/file","4500","-7500","合成 😀"
+"+1 (202) 555-0101","δοκιμή@example.org","https://example.invalid/unreachable","45","-75","Alpha"
+"+1 (202) 555-0102","""quoted local""@example.org","https://example.org","-90","180","Beta"
+"+1 (202) 555-0103","person@example.org","https://example.org:0","90","-180","Gamma"
+"+1 (202) 555-0104","test2@example.org","https://example.org","0","0","Delta"

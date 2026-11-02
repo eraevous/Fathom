@@ -7,7 +7,7 @@ from pathlib import Path
 import pandas as pd
 
 
-TYPES = {"numeric", "categorical", "boolean", "temporal", "string"}
+TYPES = {"numeric", "categorical", "boolean", "temporal", "string", "phone", "email", "url", "latitude", "longitude"}
 
 
 def canonical_json(value: object) -> str:
@@ -166,6 +166,13 @@ def validate_document(doc: dict) -> None:
                     if not isinstance(row,dict) or type(row.get("position")) is not int or not 1<=row["position"]<=doc["overview"]["rows"]:raise ValueError("invalid sample position")
                     if not isinstance(row.get("values"),list) or len(row["values"])!=len(names) or any(v is not None and not isinstance(v,str) for v in row["values"]):raise ValueError("invalid sample cells")
         for col in doc["columns"]:
+            if "special" in col:
+                s=col['special']
+                if not isinstance(s,dict) or any(type(s.get(k)) is not int or s[k]<0 for k in ('valid','invalid','placeholders','test_values')):raise ValueError('invalid special counts')
+                if any(not isinstance(s.get(k),str) for k in ('policy','recognition','generator')):raise ValueError('invalid special provenance')
+                for key in ('invalid_examples','placeholder_examples','test_examples'):
+                    if not isinstance(s.get(key),list) or any(not isinstance(v,str) for v in s[key]):raise ValueError('invalid special examples')
+                if not isinstance(s.get('domains'),list) or any(not isinstance(v,dict) or not isinstance(v.get('value'),str) or type(v.get('count')) is not int or v['count']<0 for v in s['domains']):raise ValueError('invalid special domains')
             if "univariate" in col:
                 u=col["univariate"]
                 if not isinstance(u,dict) or not isinstance(u.get("statistics"),dict) or not isinstance(u.get("charts"),list):raise ValueError("invalid univariate profile")

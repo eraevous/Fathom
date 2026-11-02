@@ -159,7 +159,7 @@ def enrich_columns(columns,rows,raw_rows,cfg,emit,findings):
     for i,col in enumerate(columns):
         name=col['name'];meta=cfg['columns'].get(name,{});typ=col['effective_type']
         values=[r[i] for r in rows if r[i] is not None];raw=[r[i] for r in raw_rows]
-        if typ=='numeric':stats,charts=numeric_profile(values,name,meta.get('units'))
+        if typ in {'numeric','latitude','longitude'}:stats,charts=numeric_profile(values,name,meta.get('units') or ('degrees (inferred)' if typ in {'latitude','longitude'} else None))
         elif typ=='temporal':stats,charts=temporal_profile(values,name,cfg,meta)
         else:stats,charts=text_profile(raw,name)
         role=meta.get('role');basis='human' if role else 'inferred from column name'

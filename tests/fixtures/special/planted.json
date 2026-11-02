@@ -1,0 +1,13 @@
+{
+  "synthetic": true,
+  "planted": {
+    "phone_placeholder": 1,
+    "phone_invalid": 1,
+    "test_email": 1,
+    "email_invalid": 1,
+    "url_invalid": 2,
+    "latitude_invalid": 1,
+    "longitude_invalid": 1
+  },
+  "clean": "no special review actions"
+}

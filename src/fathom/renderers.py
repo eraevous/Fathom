@@ -89,7 +89,7 @@ def repetition_groups(d):
         if repetitive(f): continue
         match = re.fullmatch(r'column-\d+-(missing|invalid)(-review)?', f['id'])
         rule = f.get('rule') or (match.group(1) if match else None)
-        if rule not in {'missing','invalid','sentinel','dummy','placeholder','dominant','constant','skew','temporal_gap'}:
+        if rule is None or rule in {'dataset_summary','selected_relation','conditional_missingness'} or (f.get('columns') and len(f['columns'])!=1):
             continue
         buckets.setdefault((rule,f['kind']),[]).append(f)
     for (rule,kind),items in buckets.items():
@@ -144,6 +144,7 @@ def charts_markdown(col):
     u=col.get('univariate')
     if not u:return ''
     lines=[readable_md(u['statistics'])]
+    if col.get('special'):lines += [readable_md(col['special'])]
     for ch in u['charts']:
         lines += ['**'+md_text(ch['title'])+'**','', 'X: '+md_text(ch['x_label'])+'; Y: '+md_text(ch['y_label']), '',svg_chart(ch),'',readable_md(ch.get('data',ch.get('box',{})))]
     return '\n'.join(lines)
@@ -179,6 +180,7 @@ def dictionary_and_provenance_html(d):
         basis='human override; inferred '+c['inference']['type'] if c['override'] else 'inferred'
         details={k:c[k] for k in ('observed_type','inference','override','statistics','examples','frequencies')}
         if c.get('univariate'):details['univariate statistics']=c['univariate']['statistics']
+        if c.get('special'):details['special syntax/range']=c['special']
         figures=''.join(svg_chart(ch) for ch in c.get('univariate',{}).get('charts',[]))
         out.append('<tr><td>'+escape(c['name'])+'<br><small>'+escape(meaning)+'</small><br><small>Examples: '+escape(', '.join(v[:60]+('…' if len(v)>60 else '') for v in c['examples']))+'</small></td><td>'+escape(c['effective_type'])+'<br><small>'+escape(basis)+'</small></td><td>'+str(c['missing'])+'/'+str(c['count'])+' missing; '+str(c['distinct'])+' distinct</td><td><details><summary>Column evidence</summary>'+figures+readable_html(details)+'</details></td></tr>')
     out += ['</tbody></table></section><section><h2>Provenance</h2><p>Source and context are recorded; expand for technical detail.</p><details><summary>Provenance internals</summary>',readable_html({'source':d['source'],'context':d['context'],'schema':d['schema'],'dependencies':d['dependencies'],'identity_basis':d.get('dataset',{}).get('basis',{})}),
