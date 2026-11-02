@@ -15,8 +15,8 @@ F = Path(__file__).parent / "fixtures" / "quality"
 def test_person_first_order_and_no_primary_json_dump():
     p = profile(CSVConnector(F/"workshop.csv").load())
     for view in (render_html(p), render_markdown(p)):
-        titles = ("Dataset summary", "Usefulness", "What the data cannot tell", "Findings", "Relations", "Dictionary", "Provenance")
-        order = [view.index(("<h3>" if s in titles[1:3] else "<h2>")+s+"</h" if view.startswith("<!doctype") else ("### " if s in titles[1:3] else "## ")+s) for s in titles]
+        titles = ("Dictionary", "Provenance", "Dataset summary", "Usefulness", "What the data cannot tell", "Findings", "Relations")
+        order = [view.index(("<h3>" if s in ("Usefulness","What the data cannot tell") else "<h2>")+s+"</h" if view.startswith("<!doctype") else ("### " if s in ("Usefulness","What the data cannot tell") else "## ")+s) for s in titles]
         assert order == sorted(order)
         assert '"source_sha256"' not in view and '"effective_type"' not in view
     html = render_html(p)

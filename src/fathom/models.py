@@ -42,6 +42,7 @@ class GuideDataFrame:
     frame: pd.DataFrame
     schema: SchemaContract
     source: dict
+    raw_rows: list[list[str]] | None = None
 
 
 @dataclass
@@ -151,6 +152,31 @@ def validate_document(doc: dict) -> None:
         if (not isinstance(selection.get("selected"), list) or not isinstance(selection.get("excluded"), list)
                 or type(selection.get("budget")) is not int or not 0 <= selection["budget"] <= 20):
             raise ValueError("invalid artifact selection")
+        if "dataset" in doc:
+            identity=doc["dataset"]
+            if not isinstance(identity,dict):raise ValueError("invalid dataset identity")
+            for key in ("title","description"):
+                if not isinstance(identity.get(key),dict) or not isinstance(identity[key].get("text"),str) or not isinstance(identity[key].get("status"),str) or identity[key].get("status") not in {"human","inferred"}:raise ValueError("invalid dataset identity text")
+        if "samples" in doc:
+            samples=doc["samples"]
+            if not isinstance(samples,dict) or samples.get("columns")!=names or type(samples.get("seed")) is not int:raise ValueError("invalid samples")
+            for key in ("first","last","random"):
+                if not isinstance(samples.get(key),list):raise ValueError("invalid sample window")
+                for row in samples[key]:
+                    if not isinstance(row,dict) or type(row.get("position")) is not int or not 1<=row["position"]<=doc["overview"]["rows"]:raise ValueError("invalid sample position")
+                    if not isinstance(row.get("values"),list) or len(row["values"])!=len(names) or any(v is not None and not isinstance(v,str) for v in row["values"]):raise ValueError("invalid sample cells")
+        for col in doc["columns"]:
+            if "univariate" in col:
+                u=col["univariate"]
+                if not isinstance(u,dict) or not isinstance(u.get("statistics"),dict) or not isinstance(u.get("charts"),list):raise ValueError("invalid univariate profile")
+                for chart in u["charts"]:
+                    if not isinstance(chart,dict) or any(not isinstance(chart.get(k),str) or not chart[k] for k in ("kind","title","x_label","y_label")):raise ValueError("invalid chart labels")
+                    if chart["kind"] not in {"bar","time","histogram","box"}:raise ValueError("unsupported chart kind")
+                    if chart["kind"]=="box":
+                        box=chart.get("box")
+                        if not isinstance(box,dict) or any(type(box.get(k)) not in (int,float) for k in ("min","q1","median","q3","max")):raise ValueError("invalid box values")
+                    else:
+                        if not isinstance(chart.get("data"),list) or any(not isinstance(v,dict) or not isinstance(v.get("label"),str) or type(v.get("count")) is not int or v["count"]<0 for v in chart["data"]):raise ValueError("invalid chart data")
         if "dataset_summary" in doc:
             summary = doc["dataset_summary"]
             if not isinstance(summary, dict):

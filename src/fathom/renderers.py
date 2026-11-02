@@ -5,6 +5,8 @@ from html import escape
 import re
 
 from .models import ProfilingResult
+from .charts import svg_chart
+from pathlib import Path
 
 KINDS = (("observation", "Observations"), ("interpretation", "Interpretations"),
          ("hypothesis", "Hypotheses"), ("action", "Suggested actions"), ("question", "Open questions"))
@@ -107,14 +109,49 @@ def unknowns(d):
     return questions or ['Recorded context is supplied by humans; the table does not independently establish domain meaning, causation or fitness for use.']
 
 
+def sample_cell(value):
+    if value is None:return '[missing; original lexeme unavailable]'
+    if value=='':return '[empty string]'
+    if not value.strip():return repr(value)+' [whitespace]'
+    return value
+
+
+def samples_html(d):
+    samples=d.get('samples')
+    if not samples:return '<p>Sample rows unavailable in this saved artifact.</p>'
+    out=['<p>'+escape(samples['note'])+' Seed: '+str(samples['seed'])+'; requested rows per view: '+str(samples['size'])+'.</p>']
+    for key,title in [('first','First rows'),('last','Last rows'),('random','Random rows')]:
+        out += ['<details><summary>'+title+'</summary><div class="sample-scroll"><table><thead><tr><th>Input row</th>']
+        out += ['<th>'+escape(name)+'</th>' for name in samples['columns']]
+        out += ['</tr></thead><tbody>']
+        for row in samples[key]:out.append('<tr><td>'+str(row['position'])+'</td>'+''.join('<td>'+escape(sample_cell(v))+'</td>' for v in row['values'])+'</tr>')
+        out += ['</tbody></table></div></details>']
+    return ''.join(out)
+
+
+def samples_markdown(d):
+    samples=d.get('samples')
+    if not samples:return 'Sample rows unavailable in this saved artifact.\n'
+    lines=[samples['note']+f" Seed: {samples['seed']}; requested rows per view: {samples['size']}",'']
+    for key,title in [('first','First rows'),('last','Last rows'),('random','Random rows')]:
+        lines += ['<details><summary>'+title+'</summary>','', '| Input row | '+' | '.join(md_text(x) for x in samples['columns'])+' |','| '+' | '.join('---' for _ in range(len(samples['columns'])+1))+' |']
+        for row in samples[key]:lines.append('| '+str(row['position'])+' | '+' | '.join(md_text(sample_cell(v)) for v in row['values'])+' |')
+        lines += ['','</details>','']
+    return '\n'.join(lines)
+
+
+def charts_markdown(col):
+    u=col.get('univariate')
+    if not u:return ''
+    lines=[readable_md(u['statistics'])]
+    for ch in u['charts']:
+        lines += ['**'+md_text(ch['title'])+'**','', 'X: '+md_text(ch['x_label'])+'; Y: '+md_text(ch['y_label']), '',svg_chart(ch),'',readable_md(ch.get('data',ch.get('box',{})))]
+    return '\n'.join(lines)
+
+
 def bars(items, title):
-    if not items: return ''
-    maximum=max((n for _,n in items),default=0) or 1
-    out=[f'<svg role="img" aria-label="{escape(title,quote=True)}" viewBox="0 0 640 {len(items)*30+12}"><title>{escape(title)}</title>']
-    for i,(name,n) in enumerate(items):
-        y=10+i*30
-        out += [f'<text x="0" y="{y+14}">{escape(name[:28])}</text><rect x="230" y="{y}" width="{round(n/maximum*330,3)}" height="20" fill="#216e73"/><text x="575" y="{y+14}">{n}</text>']
-    return ''.join(out)+'</svg>'
+    return svg_chart({'kind':'bar','title':title,'x_label':'Missing cells (count)' if 'Missing' in title else 'Rows (count)',
+                      'y_label':'Column' if 'column' in title else 'Value','data':[{'label':k,'count':v} for k,v in items]}) if items else ''
 
 
 def finding_html(f, repeated_ids):
@@ -132,13 +169,34 @@ def finding_html(f, repeated_ids):
     return ''.join(out)+'</details></article>'
 
 
+def dictionary_and_provenance_html(d):
+    out=[]
+    out += ['<section><h2>Dictionary</h2><p>Inferred readings are lexical and uncalibrated; meanings are human declarations or unknown.</p>',
+            bars([(c['name'],c['missing']) for c in d['columns'][:20]],'Missing cells by column (first 20)'),
+            samples_html(d), '<table><thead><tr><th>Column / meaning</th><th>Type / basis</th><th>Missing / distinct</th><th>Details</th></tr></thead><tbody>']
+    for c in d['columns']:
+        meaning=c['meaning']['value']+' (human)' if c['meaning'] else 'Unknown meaning'
+        basis='human override; inferred '+c['inference']['type'] if c['override'] else 'inferred'
+        details={k:c[k] for k in ('observed_type','inference','override','statistics','examples','frequencies')}
+        if c.get('univariate'):details['univariate statistics']=c['univariate']['statistics']
+        figures=''.join(svg_chart(ch) for ch in c.get('univariate',{}).get('charts',[]))
+        out.append('<tr><td>'+escape(c['name'])+'<br><small>'+escape(meaning)+'</small><br><small>Examples: '+escape(', '.join(v[:60]+('…' if len(v)>60 else '') for v in c['examples']))+'</small></td><td>'+escape(c['effective_type'])+'<br><small>'+escape(basis)+'</small></td><td>'+str(c['missing'])+'/'+str(c['count'])+' missing; '+str(c['distinct'])+' distinct</td><td><details><summary>Column evidence</summary>'+figures+readable_html(details)+'</details></td></tr>')
+    out += ['</tbody></table></section><section><h2>Provenance</h2><p>Source and context are recorded; expand for technical detail.</p><details><summary>Provenance internals</summary>',readable_html({'source':d['source'],'context':d['context'],'schema':d['schema'],'dependencies':d['dependencies'],'identity_basis':d.get('dataset',{}).get('basis',{})}),
+            '<h3>Working record (human declarations)</h3>',readable_html(d['working_record']),'</details></section>']
+    return "".join(out)
+
+
 def render_html(result: ProfilingResult):
     d=result.document
-    out=['<h1>Fathom</h1>']
+    identity=d.get('dataset',{})
+    title=identity.get('title',{}).get('text',Path(d.get('source',{}).get('origin','Fathom')).stem)
+    out=['<h1>'+escape(title)+'</h1>']
+    if identity:out += ['<p>'+escape(identity['description']['text'])+'</p><p><small>Title: '+escape(identity['title']['status'])+' · description: '+escape(identity['description']['status'])+'</small></p>']
     if d['kind']=='comparison':
         for title,value in [('Contexts',d['contexts']),('Context differences',d['context_differences']),('Measured deltas',d['deltas']),('Limitations',d['limitations'])]:
             out += ['<section><h2>'+title+'</h2>',readable_html(value),'</section>']
     else:
+        out += [dictionary_and_provenance_html(d)]
         out += ['<section class="opening"><h2>Dataset summary</h2><table><thead><tr><th>Measure</th><th>Snapshot</th><th>Evidence</th></tr></thead><tbody>']
         for title,value,refs in summary_rows(d):
             links=' '.join(f'<a href="#{escape(ref,quote=True)}">Finding</a>' for ref in refs) or 'Stored measurement'
@@ -167,29 +225,39 @@ def render_html(result: ProfilingResult):
         out += ['<details><summary>Ranking and exclusions</summary>',readable_html(d['selection']),'</details>']
         if 'quality' in d:
             out += ['<details><summary>Quality rules and screening coverage</summary>',readable_html(d['quality']),'</details>']
-        out += ['</section><section><h2>Dictionary</h2><p>Inferred readings are lexical and uncalibrated; meanings are human declarations or unknown.</p>',
-                bars([(c['name'],c['missing']) for c in d['columns'][:20]],'Missing cells by column (first 20)'),
-                '<table><thead><tr><th>Column / meaning</th><th>Type / basis</th><th>Missing / distinct</th><th>Details</th></tr></thead><tbody>']
-        for c in d['columns']:
-            meaning=c['meaning']['value']+' (human)' if c['meaning'] else 'Unknown meaning'
-            basis='human override; inferred '+c['inference']['type'] if c['override'] else 'inferred'
-            details={k:c[k] for k in ('observed_type','inference','override','statistics','examples','frequencies')}
-            out.append('<tr><td>'+escape(c['name'])+'<br><small>'+escape(meaning)+'</small></td><td>'+escape(c['effective_type'])+'<br><small>'+escape(basis)+'</small></td><td>'+str(c['missing'])+'/'+str(c['count'])+' missing; '+str(c['distinct'])+' distinct</td><td><details><summary>Column evidence</summary>'+readable_html(details)+'</details></td></tr>')
-        out += ['</tbody></table></section><section><h2>Provenance</h2>',readable_html({'source':d['source'],'context':d['context'],'schema':d['schema'],'dependencies':d['dependencies']}),
-                '<h3>Working record (human declarations)</h3>',readable_html(d['working_record']),'</section>']
+        out += ['</section>']
     if d.get('annotations'):
         out += ['<section><h2>Labelled annotations</h2>',readable_html(d['annotations']),'</section>']
-    css='''body{font:16px/1.55 system-ui,sans-serif;background:#f5f8f7;color:#193e42;max-width:1120px;padding:32px;margin:auto}h1{font-size:44px;margin-bottom:8px}h2{border-bottom:2px solid #28777c;padding-bottom:7px;margin-top:40px}h3{margin-top:24px}section{margin-bottom:30px}.opening{background:white;padding:24px;border:1px solid #d5e1df;border-radius:8px}table{border-collapse:collapse;width:100%;background:white}td,th{padding:10px;text-align:left;border-bottom:1px solid #d5e1df;vertical-align:top}td{overflow-wrap:anywhere}article{background:white;border-left:3px solid #b9d3cf;padding:8px 16px;margin:10px 0}article>p{margin:7px 0}details{margin:8px 0}summary{cursor:pointer;color:#12656b;font-weight:600}details[open]{padding-bottom:10px}a{color:#12656b}small{color:#4d676b}dt{font-weight:600;margin-top:8px}dd{margin-left:20px;overflow-wrap:anywhere}ul{padding-left:24px}svg{width:100%;max-width:760px}svg text{font:13px system-ui,sans-serif}label{cursor:pointer;font-weight:600;margin-left:8px}.summary-view{background:#e9f2ee;padding:12px;margin-top:12px}.repetitive{display:none}.repetitive:target{display:block}#full-view:checked ~ .summary-view{display:none}#full-view:checked ~ .full-view .summary-view{display:none}#full-view:checked ~ .full-view .repetitive{display:block}@media(max-width:700px){body{padding:12px}td,th{padding:6px;font-size:14px}.opening{padding:12px}}@media print{body{background:white;padding:0}details{break-inside:avoid}.repetitive{display:block}}'''
+    css='''body{font:16px/1.55 system-ui,sans-serif;background:#f5f8f7;color:#193e42;max-width:1120px;padding:32px;margin:auto}h1{font-size:44px;margin-bottom:8px}h2{border-bottom:2px solid #28777c;padding-bottom:7px;margin-top:40px}h3{margin-top:24px}section{margin-bottom:30px}.opening{background:white;padding:24px;border:1px solid #d5e1df;border-radius:8px}table{border-collapse:collapse;width:100%;background:white}td,th{padding:10px;text-align:left;border-bottom:1px solid #d5e1df;vertical-align:top}td{overflow-wrap:anywhere}article{background:white;border-left:3px solid #b9d3cf;padding:8px 16px;margin:10px 0}article>p{margin:7px 0}details{margin:8px 0}summary{cursor:pointer;color:#12656b;font-weight:600}details[open]{padding-bottom:10px}a{color:#12656b}small{color:#4d676b}dt{font-weight:600;margin-top:8px}dd{margin-left:20px;overflow-wrap:anywhere}ul{padding-left:24px}.sample-scroll{overflow-x:auto}.sample-scroll td{min-width:90px;max-width:260px;white-space:pre-wrap}svg{width:100%;max-width:800px}svg text{font:13px system-ui,sans-serif}label{cursor:pointer;font-weight:600;margin-left:8px}.summary-view{background:#e9f2ee;padding:12px;margin-top:12px}.repetitive{display:none}.repetitive:target{display:block}#full-view:checked ~ .summary-view{display:none}#full-view:checked ~ .full-view .summary-view{display:none}#full-view:checked ~ .full-view .repetitive{display:block}@media(max-width:700px){body{padding:12px}td,th{padding:6px;font-size:14px}.opening{padding:12px}}@media print{body{background:white;padding:0}details{break-inside:avoid}.repetitive{display:block}}'''
     return '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Fathom — '+escape(d['kind'])+'</title><style>'+css+'</style></head><body>'+'\n'.join(out)+'</body></html>\n'
+
+
+def dictionary_and_provenance_markdown(d):
+    lines=[]
+    lines += ['## Dictionary','','Inferred readings are lexical and uncalibrated; meanings are human declarations or unknown.','',
+              samples_markdown(d),'| Column | Meaning | Effective type / basis | Missing | Distinct |','| --- | --- | --- | --- | --- |']
+    for c in d['columns']:
+        meaning=c['meaning']['value']+' (human)' if c['meaning'] else 'Unknown'
+        basis='human override; inferred '+c['inference']['type'] if c['override'] else 'inferred'
+        lines += ['| '+ ' | '.join(md_text(x) for x in (c['name'],meaning+'; examples: '+', '.join(v[:60] for v in c['examples']),c['effective_type']+' / '+basis,f"{c['missing']}/{c['count']}",c['distinct']))+' |']
+    lines += ['','<details><summary>Full column evidence</summary>','']
+    for c in d['columns']:
+        lines += ['### '+md_text(c['name']),'',charts_markdown(c),'',readable_md({k:c[k] for k in ('observed_type','inference','override','statistics','examples','frequencies')}),'']
+    lines += ['</details>','','## Provenance','','Source and context are recorded; technical details are collapsed.','','<details><summary>Provenance internals</summary>','',readable_md({'source':d['source'],'context':d['context'],'schema':d['schema'],'dependencies':d['dependencies'],'identity_basis':d.get('dataset',{}).get('basis',{})}),
+              '### Working record (human declarations)','',readable_md(d['working_record']),'</details>','']
+    return lines
 
 
 def render_markdown(result: ProfilingResult):
     d=result.document
-    lines=['# Fathom — '+d['kind'],'']
+    identity=d.get('dataset',{})
+    lines=['# '+md_text(identity.get('title',{}).get('text','Fathom — '+d['kind'])),'']
+    if identity:lines += [md_text(identity['description']['text']),'', 'Title: '+identity['title']['status']+'; description: '+identity['description']['status']+'.','']
     if d['kind']=='comparison':
         for title,value in [('Contexts',d['contexts']),('Context differences',d['context_differences']),('Measured deltas',d['deltas']),('Limitations',d['limitations'])]:
             lines += ['## '+title,'',readable_md(value),'']
     else:
+        lines += dictionary_and_provenance_markdown(d)
         lines += ['## Dataset summary','','| Measure | Snapshot | Evidence |','| --- | --- | --- |']
         for title,value,refs in summary_rows(d):
             links=', '.join('[Finding](#'+ref+')' for ref in refs) or 'Stored measurement'
@@ -218,17 +286,6 @@ def render_markdown(result: ProfilingResult):
         lines += ['<details><summary>Ranking and exclusions</summary>','',readable_md(d['selection']),'</details>','']
         if 'quality' in d:
             lines += ['<details><summary>Quality rules and screening coverage</summary>','',readable_md(d['quality']),'</details>','']
-        lines += ['## Dictionary','','Inferred readings are lexical and uncalibrated; meanings are human declarations or unknown.','',
-                  '| Column | Meaning | Effective type / basis | Missing | Distinct |','| --- | --- | --- | --- | --- |']
-        for c in d['columns']:
-            meaning=c['meaning']['value']+' (human)' if c['meaning'] else 'Unknown'
-            basis='human override; inferred '+c['inference']['type'] if c['override'] else 'inferred'
-            lines += ['| '+ ' | '.join(md_text(x) for x in (c['name'],meaning,c['effective_type']+' / '+basis,f"{c['missing']}/{c['count']}",c['distinct']))+' |']
-        lines += ['','<details><summary>Full column evidence</summary>','']
-        for c in d['columns']:
-            lines += ['### '+md_text(c['name']),'',readable_md({k:c[k] for k in ('observed_type','inference','override','statistics','examples','frequencies')}),'']
-        lines += ['</details>','','## Provenance','',readable_md({'source':d['source'],'context':d['context'],'schema':d['schema'],'dependencies':d['dependencies']}),
-                  '### Working record (human declarations)','',readable_md(d['working_record'])]
     if d.get('annotations'): lines += ['## Labelled annotations','',readable_md(d['annotations'])]
     return '\n'.join(lines).rstrip()+'\n'
 

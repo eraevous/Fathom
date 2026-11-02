@@ -10,14 +10,12 @@ import statistics
 from .config import validate_config
 from .models import GuideDataFrame, ProfilingResult
 from .quality import quality_profile, copy_evidence
+from .parsing import finite_number, parse_date
+from .univariate import enrich_columns, identity_and_samples
 
 
 def number(value: str) -> float | None:
-    try:
-        n = float(value)
-        return n if math.isfinite(n) else None
-    except (TypeError, ValueError, OverflowError):
-        return None
+    return finite_number(value)
 
 
 def iso_date(value: str) -> str | None:
@@ -32,16 +30,17 @@ def rounded(n: float | None) -> float | None:
     return round(n, 10) if n is not None and math.isfinite(n) else None
 
 
-def infer(values: list[str]) -> dict:
+def infer(values: list[str], name="", meta=None) -> dict:
+    meta=meta or {}
     distinct = set(values)
     if not values:
         typ, reason = "string", "No nonmissing values; type is unknown, string is the storage fallback."
     elif all(v.lower() in {"true", "false"} for v in values):
         typ, reason = "boolean", "All nonmissing values are lexical true/false."
-    elif all(iso_date(v) is not None for v in values):
-        typ, reason = "temporal", "All nonmissing values are strict ISO calendar dates."
-    elif all(number(v) is not None for v in values) and not any(re.match(r"^[+-]?0\d", v.strip()) for v in values):
-        typ, reason = "numeric", "All nonmissing values parse as finite numbers without leading-zero codes."
+    elif meta.get("date_format") or (sum(parse_date(v,meta.get("date_format")) is not None for v in values)>=len(values)*(.8 if re.search(r"date|release|time",name,re.I) else 1)):
+        typ, reason = "temporal", "Local date formats recognized; ambiguous readings and format evidence are retained."
+    elif (all(number(v) is not None for v in values) or (re.search(r"gross|amount|cost|price|revenue|rating|score|count|quantity",name,re.I) and sum(number(v) is not None for v in values)>=.8*len(values))) and not any(re.match(r"^[+-]?0\d", v.strip()) for v in values):
+        typ, reason = "numeric", "Finite numeric readings (local currency/thousands syntax allowed); named numeric columns may retain up to 20% incompatible values, counted separately."
     elif len(distinct) <= 20 and len(distinct) < len(values) and len(distinct) / len(values) <= 0.8:
         typ, reason = "categorical", "At most 20 distinct strings, with repetition and distinct fraction <= 0.8."
     else:
@@ -57,7 +56,7 @@ def infer(values: list[str]) -> dict:
             "reasons": [reason], "alternatives": alternatives[typ]}
 
 
-def summarize(values: list[str], typ: str) -> dict:
+def summarize(values: list[str], typ: str, meta=None) -> dict:
     if typ == "numeric":
         nums = [n for v in values if (n := number(v)) is not None]
         stats = {"valid": len(nums), "invalid": len(values) - len(nums),
@@ -69,7 +68,7 @@ def summarize(values: list[str], typ: str) -> dict:
                  "zeros": sum(n == 0 for n in nums), "negatives": sum(n < 0 for n in nums)}
         return stats
     if typ == "temporal":
-        dates = [d for v in values if (d := iso_date(v)) is not None]
+        dates = [d["date"] for v in values if (d := parse_date(v,(meta or {}).get("date_format"))) is not None]
         return {"valid": len(dates), "invalid": len(values) - len(dates),
                 "min": min(dates) if dates else None, "max": max(dates) if dates else None}
     if typ == "boolean":
@@ -88,6 +87,8 @@ def profile(data: GuideDataFrame, config: dict | None = None) -> ProfilingResult
     if any(v is not None and not isinstance(v, str) for row in rows for v in row):
         raise ValueError("GuideDataFrame cells must be raw strings or None")
     nrows = len(rows)
+    if data.raw_rows is not None and (len(data.raw_rows)!=nrows or any(len(row)!=len(names) or any(not isinstance(v,str) for v in row) for row in data.raw_rows)):
+        raise ValueError("raw_rows must align with frame and contain lexical strings")
     findings, columns = [], []
     provenance = {"source_sha256": data.source["sha256"], "rule_version": 1}
 
@@ -113,10 +114,10 @@ def profile(data: GuideDataFrame, config: dict | None = None) -> ProfilingResult
         raw = [row[index] for row in rows]
         values = [v for v in raw if v is not None]
         counts = Counter(values)
-        reading = infer(values)
         meta = cfg["columns"].get(name, {})
+        reading = infer(values,name,meta)
         typ = meta.get("type", reading["type"])
-        stats = summarize(values, typ)
+        stats = summarize(values, typ, meta)
         col = {"name": name, "observed_type": "CSV text" if values else "empty",
                "count": nrows, "missing": nrows - len(values), "distinct": len(counts),
                "examples": list(dict.fromkeys(values))[:3],
@@ -135,9 +136,9 @@ def profile(data: GuideDataFrame, config: dict | None = None) -> ProfilingResult
                        [{"path": f"columns.{index}.missing", "value": col["missing"]}],
                        f"Inspect missing values in {name} and ask how absence was generated before choosing a treatment.")
         if stats.get("invalid", 0):
-            diagnostic(prefix + "-invalid", f"{name}: {stats['invalid']} values do not match the declared {typ} type.",
+            diagnostic(prefix + "-invalid", f"{name}: {stats['invalid']} values do not match the effective {typ} type.",
                        [{"path": f"columns.{index}.statistics.invalid", "value": stats["invalid"]}],
-                       f"Review the declared type and incompatible values in {name}; do not coerce silently.")
+                       f"Review the type reading and incompatible values in {name}; do not coerce silently.")
         if col["meaning"] is None:
             finding(prefix + "-meaning", "question", f"What is the domain meaning of {name}?",
                     [{"path": f"columns.{index}.meaning", "value": None}], "The table cannot establish domain meaning.")
@@ -148,6 +149,8 @@ def profile(data: GuideDataFrame, config: dict | None = None) -> ProfilingResult
                     [{"path": "working_record." + key, "value": None}],
                     "Unknown; requires information from the data owner or generating process.")
     dataset_summary, quality, quality_pairs = quality_profile(rows, columns, cfg, finding)
+    enrich_columns(columns,rows,data.raw_rows if data.raw_rows is not None else rows,cfg,finding,findings)
+    dataset,samples=identity_and_samples(data,cfg,columns)
     selection, pairs, dependencies = select_pairs(rows, columns, cfg, quality, quality_pairs)
     quality["coverage"]["reported_missingness_candidates"] = sum(p["method"] == "missingness_by_group" for p in pairs)
     for index, pair in enumerate(pairs):
@@ -171,7 +174,7 @@ def profile(data: GuideDataFrame, config: dict | None = None) -> ProfilingResult
                            "decisions": cfg["decisions"]},
         "overview": overview, "columns": columns, "findings": findings,
         "selection": selection, "bivariate": pairs, "dependencies": dependencies, "annotations": {},
-        "dataset_summary": dataset_summary, "quality": quality})
+        "dataset_summary": dataset_summary, "quality": quality, "dataset":dataset, "samples":samples})
 
 
 def select_pairs(rows: list, columns: list, cfg: dict, quality=None, quality_pairs=None) -> tuple[dict, list, dict]:
