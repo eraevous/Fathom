@@ -31,6 +31,7 @@ def main(argv: list[str] | None = None) -> int:
             sub.add_argument("--out", type=Path, required=True)
         if command == "export":
             sub.add_argument("--formats", nargs="+", choices=("pdf", "pptx"), default=["pdf", "pptx"])
+            sub.add_argument("--deck",choices=("summary","full"),default="summary")
     args = parser.parse_args(argv)
     try:
         if args.command in {"profile", "validate"}:
@@ -54,7 +55,7 @@ def main(argv: list[str] | None = None) -> int:
         binaries = {}
         if args.command == "export":
             from .exports import export_bundle
-            binaries, status = export_bundle(result, args.formats)
+            binaries, status = export_bundle(result, args.formats,deck=args.deck)
             files['export-status.json'] = canonical_json(status)
         args.out.mkdir(parents=True, exist_ok=True)
         for name, contents in files.items():

@@ -176,9 +176,14 @@ def validate_document(doc: dict) -> None:
             if "univariate" in col:
                 u=col["univariate"]
                 if not isinstance(u,dict) or not isinstance(u.get("statistics"),dict) or not isinstance(u.get("charts"),list):raise ValueError("invalid univariate profile")
+                if 'top_n_suppression' in u and not isinstance(u['top_n_suppression'],str):raise ValueError('invalid top-N suppression')
                 for chart in u["charts"]:
                     if not isinstance(chart,dict) or any(not isinstance(chart.get(k),str) or not chart[k] for k in ("kind","title","x_label","y_label")):raise ValueError("invalid chart labels")
                     if chart["kind"] not in {"bar","time","histogram","box","ecdf"}:raise ValueError("unsupported chart kind")
+                    if 'coverage_counts' in chart:
+                        coverage=chart['coverage_counts']
+                        if not isinstance(coverage,dict) or any(type(coverage.get(k)) is not int or coverage[k]<0 for k in ('positive','zeros','negatives','invalid')) or chart.get('scale')!='log10':raise ValueError('invalid log coverage')
+                        if sum(x.get('count',0) for x in chart.get('data',[]) if isinstance(x,dict))!=coverage['positive']:raise ValueError('inconsistent log coverage')
                     if chart["kind"]=='ecdf':
                         points=chart.get('points')
                         if not isinstance(points,list) or not points or len(points)>200:raise ValueError('invalid ECDF points')
