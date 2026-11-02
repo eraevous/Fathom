@@ -30,6 +30,9 @@ def test_pdf_content_and_determinism(make_profile):
     assert b'First rows' in pdf and b'Last rows' in pdf and b'Random rows' in pdf
     assert b'Dataset summary' in pdf
     assert status['formats']['pdf']['status']=='written'
+    from fathom.profiler import compare
+    files,_=export_bundle(compare(p,p),['pdf'])
+    assert b'Contexts' in files['report.pdf'] and b'Measured deltas' in files['report.pdf']
 
 
 def test_pptx_content_charts_and_determinism(make_profile):
@@ -41,6 +44,10 @@ def test_pptx_content_charts_and_determinism(make_profile):
     assert any('Dataset summary' in slide.shapes.title.text for slide in deck.slides if slide.shapes.title)
     assert any(shape.has_chart for slide in deck.slides for shape in slide.shapes)
     with zipfile.ZipFile(io.BytesIO(data)) as z:assert all(x.date_time==(1980,1,1,0,0,0) for x in z.infolist())
+    from fathom.profiler import compare
+    files,_=export_bundle(compare(p,p),['pptx'])
+    deck=pptx.Presentation(io.BytesIO(files['report.pptx']))
+    assert any(s.shapes.title.text.startswith('Measured deltas') for s in deck.slides)
 
 
 def test_cli_export_fresh_process_bytes(make_profile,tmp_path):

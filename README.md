@@ -2,7 +2,7 @@
 
 Fathom turns raw or semi-cleaned tabular data into understanding someone can use and pass on: an enhanced data dictionary, a diagnostic EDA engine and a repeatable working record. It answers what is in a dataset, what can't be known from it, and what it is good for.
 
-**Status: report and univariate slice.** Fathom is the successor to Data Guide.
+**Status: report, univariate, special-type and optional-export slices.** Fathom is the successor to Data Guide.
 It starts from guiding documents and decisions, with no earlier implementation,
 and is built with [AEC](https://github.com/eraevous/AEC) and Spec Kit.
 
@@ -115,12 +115,38 @@ and labelled axes. Repeated identifier/title and unusual-zero findings remain
 conditional review suggestions. See [spec003](specs/003-report-and-univariate/spec.md)
 and its [found/missed ledger and proposed FT-R14 changes](specs/003-report-and-univariate/validation.md).
 
+## Special types and optional exports
+
+Phone, email, URL and latitude/longitude readings are inferred and retain human
+overrides. Local syntax, repeated-digit placeholders, test-like emails, domains
+and independent degree ranges produce counts/examples and review suggestions.
+No ownership, deliverability, reachability, geocoding or sensitive-data tags are
+inferred; the application performs no network lookup.
+
+```bash
+.venv/bin/pip install -e '.[exports]'  # or [pdf] / [pptx] independently
+.venv/bin/guide profile tests/fixtures/special/planted.csv --out reports/special
+.venv/bin/guide export reports/special/guide-profile.json --out reports/exports
+```
+
+Export works solely from the saved artifact. HTML/Markdown are always available;
+`export-status.json` records each requested binary as written or unavailable, its
+serializer version, artifact hash, PDF unsupported-glyph replacement count and
+slide count. Missing extras do not crash. PDF includes the summarized findings
+and all sample windows; wide samples split into column batches. Bundled-font
+unsupported characters become `?` with an explicit notice; exact text stays in
+core views/JSON. PowerPoint has summary, key finding topics and native charts;
+it does not carry the full dictionary/sample tables. Metadata and nested workbook
+ZIP times are fixed. Bytes are repeatable with identical dependency versions.
+See [spec004](specs/004-special-types-and-exports/spec.md) and its
+[found/missed ledger](specs/004-special-types-and-exports/validation.md).
+
 ## Scope and limits
 
 This is a local, in-memory, single CSV/wide slice under `DG-D1`'s data-to-decisions
 definition. It does **not** complete the April connector/CLI checklist. Globs,
 Excel/JSON/database connectors, long tables, interactive guidance, broader EDA,
-dashboards, PDF and narrative generation are deferred. Explicit long contracts
+dashboards and narrative generation are deferred. Explicit long contracts
 are rejected. No data is changed or transmitted by the application.
 
 Comparisons state both source contexts, dates, declared transformations and other

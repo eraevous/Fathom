@@ -17,7 +17,7 @@ def finding_topics(d):
     repeated={f['id'] for _,items in groups for f in items}
     for kind,title in KINDS:
         messages=[message for message,items in groups if items and items[0]['kind']==kind]
-        messages += [f['message'] for f in d['findings'] if f['kind']==kind and f['id'] not in repeated]
+        messages += [f['message'] for f in d.get('findings',[]) if f['kind']==kind and f['id'] not in repeated]
         if messages:yield title,messages
 
 
@@ -160,7 +160,7 @@ def pptx_bytes(d):
     topics(title,[description,basis,'Rule-based observations; suggested actions need human review.'])
     if d['kind']=='profile':topics('Dataset summary',[name+': '+value for name,value,_ in summary_rows(d)])
     else:
-        for key in ('contexts','context_differences','deltas','limitations'):topics(key.replace('_',' ').capitalize(),[str(d[key])])
+        for name,key in [('Contexts','contexts'),('Context differences','context_differences'),('Measured deltas','deltas'),('Limitations','limitations')]:topics(name,[str(d[key])])
     for name,messages in finding_topics(d):topics(name,messages)
     for ch in chart_topics(d):
         s=slide(ch['title']);data=ch.get('data',[])

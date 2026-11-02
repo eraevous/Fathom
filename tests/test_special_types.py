@@ -59,3 +59,20 @@ def test_values_only_recognition_and_coordinate_boundaries(make_profile):
     assert p['columns'][0]['special']['invalid']==0
     dates=make_profile('x\n2026-01-01\n2026-02-01\n2026-03-01\n').document
     assert dates['columns'][0]['effective_type']=='temporal'
+
+
+def test_builder_acceptance_tables():
+    from pathlib import Path
+    from fathom.connectors import CSVConnector
+    from fathom.profiler import profile
+    root=Path(__file__).parent/'fixtures'/'special'
+    d=profile(CSVConnector(root/'planted.csv').load()).document
+    by={c['name']:c['special'] for c in d['columns'] if 'special' in c}
+    assert {k:v['invalid'] for k,v in by.items()}=={'phone':1,'email':1,'website':2,'latitude':1,'longitude':1}
+    assert by['phone']['placeholders']==by['email']['test_values']==1
+    from fathom.renderers import render_html,render_markdown
+    for view in (render_html,render_markdown):
+        text=view(profile(CSVConnector(root/'planted.csv').load()))
+        assert 'repeated-digit placeholder' in text and 'test-like address' in text and 'local syntax/range policy' in text
+    clean=profile(CSVConnector(root/'clean.csv').load()).document
+    assert not any(f['kind']=='action' and f['generator']=='rule:special-v1' for f in clean['findings'])
