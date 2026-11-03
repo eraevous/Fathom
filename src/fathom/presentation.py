@@ -121,3 +121,12 @@ def markdown_table(table):
     def cell(v):return re.sub(r'([\\`*_{}\[\]()#!])',r'\\\1',escape(str(v),quote=False).replace('|','&#124;').replace('\n',' '))
     lines=['**'+cell(table['caption'])+'**','', '| '+' | '.join(map(cell,table['headers']))+' |','| '+' | '.join('---:' if i in table['numeric'] else '---' for i in range(len(table['headers'])))+' |']
     return '\n'.join(lines+['| '+' | '.join(map(cell,row))+' |' for row in table['rows']])+'\n'
+
+
+def original_tick(chart,value):
+    """Transformed log coordinate -> original-unit formatted label; never invent units."""
+    if chart.get('scale')=='log10':
+        import math
+        try:value=10**value
+        except OverflowError:value=float.fromhex('0x1.fffffffffffffp+1023')
+    return tick_label(value)

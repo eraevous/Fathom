@@ -1,0 +1,9 @@
+target: outcome
+pair_budget: 3
+columns:
+  outcome:
+    type: categorical
+  predictor:
+    type: categorical
+  sometimes_missing:
+    type: categorical

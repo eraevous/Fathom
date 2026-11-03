@@ -1,0 +1,8 @@
+target: target
+group_by: group
+pair_budget: 3
+columns:
+  known_rank_leak:
+    exclude_from_target: true
+  group:
+    type: categorical

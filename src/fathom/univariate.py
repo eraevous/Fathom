@@ -101,8 +101,14 @@ def numeric_profile(values,name,units):
         charts.append(chart('ecdf',f'Empirical cumulative distribution of {name}',axis,'Finite values at or below X (%)',points=points,omitted_points=omitted,n=n))
         positives=[x for x in nums if x>0]
         if len(positives)>=2 and len(set(positives))>1 and skew is not None and skew>=2:
-            charts.append(histogram([math.log10(x) for x in positives],f'Positive log10 distribution of {name}','log10 '+axis,scale='log10',
-                                    coverage_counts={'positive':len(positives),'zeros':sum(x==0 for x in nums),'negatives':sum(x<0 for x in nums),'invalid':len(values)-n}))
+            coverage={'positive':len(positives),'zeros':sum(x==0 for x in nums),'negatives':sum(x<0 for x in nums),'invalid':len(values)-n}
+            charts.append(histogram([math.log10(x) for x in positives],f'Positive log distribution of {name}',axis+' (log scale)',scale='log10',coverage_counts=coverage))
+            points=[];cumulative=0
+            for value,count in sorted(Counter(positives).items()):
+                cumulative+=count;points.append({'x':math.log10(value),'cumulative':cumulative/len(positives),'count':cumulative})
+            omitted=max(0,len(points)-200)
+            if omitted:points=[points[round(i*(len(points)-1)/199)] for i in range(200)]
+            charts.append(chart('ecdf',f'Positive log ECDF of {name}',axis+' (log scale)','Positive values at or below X (%)',points=points,omitted_points=omitted,n=len(positives),scale='log10',coverage_counts=coverage))
     return stats,charts
 
 

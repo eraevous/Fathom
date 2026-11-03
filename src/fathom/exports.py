@@ -10,7 +10,8 @@ import zipfile
 from xml.sax.saxutils import escape
 
 from .renderers import KINDS, repetition_groups, sample_cell, scalar, summary_rows
-from .presentation import formatted, column_tables, structured_tables, formatted_examples, display_charts, top_n_reason
+from .presentation import formatted, column_tables, structured_tables, formatted_examples, display_charts, top_n_reason, original_tick
+from .target import target_tables
 
 
 def finding_topics(d):
@@ -30,12 +31,12 @@ def identity(d):
 
 
 def chart_topics(d):
-    return ([d['missingness_patterns']['chart']] if d.get('missingness_patterns') else [])+[ch for col in d.get('columns',[]) for ch in display_charts(col)]
+    return d.get('target_analysis',{}).get('charts',[])+([d['missingness_patterns']['chart']] if d.get('missingness_patterns') else [])+[ch for col in d.get('columns',[]) for ch in display_charts(col)]
 
 
 def summary_chart_topics(d):
     """Presentation budget only: cover columns before taking extra chart variants."""
-    selected=[]
+    selected=list(d.get('target_analysis',{}).get('charts',[])[:5])
     if d.get('missingness_patterns') and d['overview']['missing_cells']:
         selected.append(d['missingness_patterns']['chart'])
     action_columns={name for f in d.get('findings',[]) if f['kind']=='action' for name in f.get('columns',[])}
@@ -46,7 +47,7 @@ def summary_chart_topics(d):
         if not charts:continue
         priority=lambda ch:0 if ch.get('scale')=='log10' else {'time':1,'histogram':2,'bar':3,'ecdf':4,'box':5}.get(ch['kind'],6)
         selected.append(min(charts,key=priority))
-        if len(selected)==7:break
+        if len(selected)>=7:break
     return selected
 
 
@@ -55,6 +56,8 @@ def summary_topics(d):
         yield 'Dataset summary',[name+': '+value for name,value,_ in summary_rows(d)]
         messages=dict(finding_topics(d))
         for title in ('Suggested actions','Observations','Open questions'):
+            if title=='Observations' and d.get('target_analysis',{}).get('ranked'):
+                ta=d['target_analysis'];yield 'Target ranking (descriptive, not causal)',[r['column']+': '+r['measure']+' '+formatted(r['value'])+'; n='+str(r['n'])+('; selected' if r['selected'] else '; beyond detail budget') for r in ta['ranked'][:5]]+['Full ranking, exclusions and group summaries in the report.'];continue
             items=messages.get(title,[])
             yield title,[x[:210]+('… [see full report]' if len(x)>210 else '') for x in items[:5]]+[f'Showing {min(5,len(items))} of {len(items)} items; all evidence and uncertainty remain in the full report.']
     else:
@@ -98,7 +101,12 @@ def pdf_bytes(d):
     story.extend([p(title,'Title'),p(description),p(basis),p('Unsupported characters are replaced with ?. Exact source text remains in HTML/Markdown and JSON.')])
 
     class Chart(Flowable):
-        def __init__(self,ch):super().__init__();self.ch=ch;self.width=480;self.height=250 if ch['kind']!='bar' else max(200,110+len(ch.get('data',[]))*12)
+        def __init__(self,ch):
+            super().__init__();self.ch=ch;self.width=480
+            if ch['kind'] in {'scatter','group_box','rates'}:
+                from .target_marks import plot_marks
+                self.height=min(600,plot_marks(ch)[1]*480/560+50)
+            else:self.height=140 if ch['kind']=='box' else 250 if ch['kind']!='bar' else max(200,110+len(ch.get('data',[]))*12)
         def draw(self):
             c=self.canv;ch=self.ch;c.setFont(font,8)
             from .charts import linear_ticks, count_ticks
@@ -106,14 +114,26 @@ def pdf_bytes(d):
             def wrapped(value,y):
                 import textwrap
                 for line in textwrap.wrap(text(value),100):c.drawString(10,y,line);y-=10
-            wrapped('Y: '+ch['y_label'],self.height-10);wrapped('X: '+ch['x_label'],20)
+            if ch['kind']!='box':wrapped('Y: '+ch['y_label'],self.height-10)
+            wrapped('X: '+ch['x_label'],20)
+            if ch['kind'] in {'scatter','group_box','rates'}:
+                from .target_marks import plot_marks
+                w,h,marks=plot_marks(ch);factor=min(480/w,(self.height-50)/h)
+                for kind,*v in marks:
+                    if kind=='line':c.setStrokeColor(colors.HexColor(v[4]));c.line(v[0]*factor,self.height-30-v[1]*factor,v[2]*factor,self.height-30-v[3]*factor)
+                    elif kind=='rect':c.setFillColor(colors.HexColor(v[4]));c.rect(v[0]*factor,self.height-30-(v[1]+v[3])*factor,v[2]*factor,v[3]*factor,fill=1,stroke=0)
+                    elif kind=='circle':c.setFillColor(colors.HexColor(v[3]));c.circle(v[0]*factor,self.height-30-v[1]*factor,v[2]*factor,fill=1,stroke=0)
+                    else:
+                        c.setFillColor(colors.HexColor('#193e42'));c.setFont(font,v[4]*factor)
+                        draw={'start':c.drawString,'middle':c.drawCentredString,'end':c.drawRightString}[v[3]];draw(v[0]*factor,self.height-30-v[1]*factor,text(v[2]))
+                return
             c.setFillColor(colors.HexColor('#216e73'));data=ch.get('data',[])
             if ch['kind']=='box':
                 b=ch['box'];scale=max(abs(b['min']),abs(b['max']),1);lo=b['min']/scale;span=b['max']/scale-lo
                 def x(v):return 55+390*((v/scale-lo)/span if span else .5)
-                c.line(x(b['min']),150,x(b['max']),150);c.rect(x(b['q1']),130,max(1,x(b['q3'])-x(b['q1'])),40,fill=0);c.line(x(b['median']),130,x(b['median']),170)
-                for i,k in enumerate(('min','q1','median','q3','max')):c.drawString(40,110-i*10,text(k+': '+formatted(b[k])))
-                for value in linear_ticks(b['min'],b['max']):c.drawCentredString(x(value),190,tick_label(value))
+                c.line(x(b['min']),100,x(b['max']),100);c.rect(x(b['q1']),93,max(1,x(b['q3'])-x(b['q1'])),14,fill=0);c.line(x(b['median']),93,x(b['median']),107)
+                for i,k in enumerate(('min','q1','median','q3','max')):c.drawString(40,65-i*8,text(k+': '+formatted(b[k])))
+                for value in linear_ticks(b['min'],b['max']):c.drawCentredString(x(value),120,tick_label(value))
             elif ch['kind']=='ecdf':
                 points=ch['points'];lo,hi=points[0]['x'],points[-1]['x'];scale=max(abs(lo),abs(hi),1);span=hi/scale-lo/scale
                 def x(v):return 55+390*((v/scale-lo/scale)/span if span else .5)
@@ -122,7 +142,7 @@ def pdf_bytes(d):
                 for point in points:
                     path.lineTo(x(point['x']),45+135*previous);path.lineTo(x(point['x']),45+135*point['cumulative']);previous=point['cumulative']
                 c.drawPath(path)
-                for value in linear_ticks(lo,hi):c.drawCentredString(x(value),35,tick_label(value))
+                for value in linear_ticks(lo,hi):c.drawCentredString(x(value),35,original_tick(ch,value))
                 for value in linear_ticks(0,1):c.drawRightString(48,45+135*value,formatted(value,True))
             elif data:
                 maximum=max(x['count'] for x in data) or 1
@@ -138,13 +158,16 @@ def pdf_bytes(d):
                     for value in count_ticks(maximum):c.drawRightString(48,45+135*value/maximum,tick_label(value))
                     if ch['kind']=='histogram':
                         lo,hi=data[0]['low'],data[-1]['high'];scale=max(abs(lo),abs(hi),1);span=hi/scale-lo/scale
-                        for value in linear_ticks(lo,hi):c.drawCentredString(55+390*((value/scale-lo/scale)/span if span else .5),35,tick_label(value))
+                        for value in linear_ticks(lo,hi):c.drawCentredString(55+390*((value/scale-lo/scale)/span if span else .5),35,original_tick(ch,value))
                     else:
                         for i in sorted(set(round(j*(len(data)-1)/4) for j in range(5))):c.drawCentredString(55+390*((i+.5)/len(data)),35,text(data[i]['label']))
             if ch.get('omitted_periods'):c.drawString(30,18,str(ch['omitted_periods'])+' middle periods omitted; see saved profile.')
 
     def pdf_chart(ch):
         story.append(KeepTogether([p(ch['title'],'Heading3'),Chart(ch)]))
+        if ch['kind'] in {'scatter','group_box','rates'}:
+            from .target_marks import coverage_note
+            story.append(p(coverage_note(ch)))
         if ch.get('omitted_points'):story.append(p(f"Approximate ECDF display: {ch['omitted_points']} distinct points omitted."))
         if 'coverage' in ch:story.append(p('Top10 coverage: '+formatted(ch['coverage'],True)+'; other is the remainder.'))
         if ch.get('coverage_counts'):
@@ -193,6 +216,11 @@ def pdf_bytes(d):
     if d['kind']=='profile':
         heading('Relations')
         story.append(p(d['selection'].get('ranking_rule','Ranking not recorded.')))
+        ta=d.get('target_analysis');story.append(p(ta['reason']+' '+ta['grouping_policy']+' '+ta['warning'] if ta else 'Target analysis unavailable in legacy artifact.'))
+        for t in target_tables(d):
+            story.append(p(t['caption'],'Heading3'));table([t['headers'],*t['rows']],[490/len(t['headers'])]*len(t['headers']),t['numeric'])
+        if ta:
+            for ch in ta['charts']:pdf_chart(ch)
         for pair in d['bivariate']:
             story.append(p(f"{pair['left']} × {pair['right']}: {pair['method']}; {pair['uncertainty']}"))
             for t in structured_tables('Relationship statistics',pair['statistics']):
@@ -260,10 +288,31 @@ def pptx_bytes(d,full=False):
         for name,messages in finding_topics(d):topics(name,messages)
     for ch in chosen:
         s=slide(ch['title']);data=ch.get('data',[])
-        if ch['kind']=='box':
+        if ch['kind'] in {'scatter','group_box','rates'}:
+            from .target_marks import plot_marks,coverage_note
+            from pptx.dml.color import RGBColor
+            w,h,marks=plot_marks(ch);factor=min(11.8/w,4.7/h);offset=(13.333-w*factor)/2
+            for kind,*v in marks:
+                if kind=='text':
+                    box=s.shapes.add_textbox(Inches(offset+v[0]*factor-.65 if v[3]=='middle' else offset+v[0]*factor-1.6 if v[3]=='end' else offset+v[0]*factor),Inches(1.5+v[1]*factor-.16),Inches(1.3 if v[3]=='middle' else 1.6 if v[3]=='end' else 6),Inches(.4))
+                    box.text_frame.text=v[2]
+                    for para in box.text_frame.paragraphs:para.font.size=Pt(max(8,min(13,v[4]*factor*72)));para.alignment=PP_ALIGN.CENTER if v[3]=='middle' else PP_ALIGN.RIGHT if v[3]=='end' else PP_ALIGN.LEFT
+                    continue
+                if kind=='line':
+                    x,y,x2,y2,color=v;ww=max(.008,abs(x2-x)*factor);hh=max(.008,abs(y2-y)*factor)
+                    shape=s.shapes.add_shape(MSO_SHAPE.RECTANGLE,Inches(offset+min(x,x2)*factor),Inches(1.5+min(y,y2)*factor),Inches(ww),Inches(hh))
+                elif kind=='rect':
+                    x,y,ww,hh,color=v;shape=s.shapes.add_shape(MSO_SHAPE.RECTANGLE,Inches(offset+x*factor),Inches(1.5+y*factor),Inches(max(.001,ww*factor)),Inches(hh*factor))
+                else:
+                    x,y,r,color=v;shape=s.shapes.add_shape(MSO_SHAPE.OVAL,Inches(offset+(x-r)*factor),Inches(1.5+(y-r)*factor),Inches(2*r*factor),Inches(2*r*factor))
+                shape.fill.solid();shape.fill.fore_color.rgb=RGBColor.from_string(color.removeprefix('#'));shape.line.fill.background()
+                for style in shape._element.xpath('./p:style'):shape._element.remove(style)
+            box=s.shapes.add_textbox(Inches(.6),Inches(6.2),Inches(12),Inches(1));box.text_frame.word_wrap=True;box.text_frame.text='X: '+ch['x_label']+'; Y: '+ch['y_label']+'\n'+coverage_note(ch)
+            for para in box.text_frame.paragraphs:para.font.size=Pt(11)
+        elif ch['kind']=='box':
             b=ch['box'];scale=max(abs(b['min']),abs(b['max']),1);lo=b['min']/scale;span=b['max']/scale-lo
             def x(v):return Inches(1+11*((v/scale-lo)/span if span else .5))
-            for a,z,y,h in [('min','max',3.5,.03),('q1','q3',3,.9),('median','median',3,.9)]:
+            for a,z,y,h in [('min','max',3.4,.02),('q1','q3',3.3,.2),('median','median',3.3,.2)]:
                 s.shapes.add_shape(MSO_SHAPE.RECTANGLE,x(b[a]),Inches(y),max(Inches(.02),x(b[z])-x(b[a])),Inches(h))
             from .charts import linear_ticks
             from .presentation import tick_label
@@ -273,16 +322,16 @@ def pptx_bytes(d,full=False):
                 label.text_frame.text=tick_label(value)
                 for paragraph in label.text_frame.paragraphs:
                     paragraph.font.size=Pt(12);paragraph.alignment=PP_ALIGN.CENTER
-            s.shapes.add_textbox(Inches(1),Inches(5),Inches(11),Inches(1)).text_frame.text='X: '+ch['x_label']+'; Y: '+ch['y_label']+'\n'+'; '.join(k+': '+formatted(b[k]) for k in ('min','q1','median','q3','max'))
+            s.shapes.add_textbox(Inches(1),Inches(5),Inches(11),Inches(1)).text_frame.text='X: '+ch['x_label']+'\n'+'; '.join(k+': '+formatted(b[k]) for k in ('min','q1','median','q3','max'))
         elif data or ch['kind']=='ecdf':
             if ch['kind']=='ecdf':
                 values=XyChartData();series=values.add_series('Cumulative share');previous=0
                 for point in ch['points']:
-                    series.add_data_point(point['x'],previous*100)
-                    series.add_data_point(point['x'],point['cumulative']*100);previous=point['cumulative']
+                    series.add_data_point(10**point['x'] if ch.get('scale')=='log10' else point['x'],previous*100)
+                    series.add_data_point(10**point['x'] if ch.get('scale')=='log10' else point['x'],point['cumulative']*100);previous=point['cumulative']
                 chart_type=XL_CHART_TYPE.XY_SCATTER_LINES_NO_MARKERS
             else:
-                categories=[formatted(v['low'])+' – '+formatted(v['high']) if ch['kind']=='histogram' else str(v['label']) for v in data]
+                categories=[original_tick(ch,v['low'])+' – '+original_tick(ch,v['high']) if ch['kind']=='histogram' else str(v['label']) for v in data]
                 # Native office engines otherwise expand long categories off-slide.
                 shortened=[v if len(v)<=42 else v[:41]+'…' for v in categories]
                 values=CategoryChartData();values.categories=shortened;values.add_series('Values (count)',[v['count'] for v in data])
@@ -293,8 +342,16 @@ def pptx_bytes(d,full=False):
             chart.value_axis.has_title=True;chart.value_axis.axis_title.text_frame.text=ch['x_label'] if ch['kind']=='bar' else ch['y_label']
             chart.category_axis.tick_labels.font.size=Pt(12);chart.value_axis.tick_labels.font.size=Pt(12)
             chart.value_axis.tick_labels.number_format='#,##0.###'
-            if ch['kind']=='ecdf':chart.category_axis.tick_labels.number_format='#,##0.###'
-            if ch['kind']=='ecdf':chart.value_axis.minimum_scale=0;chart.value_axis.maximum_scale=100
+            if ch['kind']=='ecdf':
+                import math
+                raw=[10**p['x'] if ch.get('scale')=='log10' else p['x'] for p in ch['points']]
+                fmt='[>=1000000000]0.##,,,"B";[>=1000000]0.##,,"M";#,##0.###' if max(raw)>=1e9 else '[>=1000000]0.##,,"M";[>=1000]0.##,"K";0.###'
+                chart.category_axis.tick_labels.number_format='0.##E+0' if any(0<abs(x)<.001 for x in raw) else fmt
+            if ch['kind']=='ecdf':
+                chart.value_axis.minimum_scale=0;chart.value_axis.maximum_scale=100
+                if ch.get('scale')=='log10':
+                    from pptx.oxml.xmlchemy import OxmlElement
+                    log=OxmlElement('c:logBase');log.set('val','10');chart.category_axis._element.scaling.insert(0,log)
             else:
                 chart.value_axis.minimum_scale=0
                 chart.plots[0].has_data_labels=True;labels=chart.plots[0].data_labels;labels.position=XL_DATA_LABEL_POSITION.OUTSIDE_END;labels.font.size=Pt(11);labels.number_format='#,##0;-#,##0;'

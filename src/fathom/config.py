@@ -25,8 +25,8 @@ def mapping(value: object, name: str, allowed: set[str]) -> dict:
 def validate_config(raw: dict | None = None, columns: list[str] | None = None) -> dict:
     cfg = dict(mapping({} if raw is None else raw, "config", {
         "question", "target", "pair_budget", "columns", "row_unit", "generating_process",
-        "missingness_mechanism", "decisions", "context", "schema", "title", "description", "sample_rows", "sample_seed", "sample_text_limit"}))
-    for key in ("question", "target", "row_unit", "generating_process", "missingness_mechanism", "title", "description"):
+        "missingness_mechanism", "decisions", "context", "schema", "title", "description", "sample_rows", "sample_seed", "sample_text_limit", "group_by"}))
+    for key in ("question", "target", "row_unit", "generating_process", "missingness_mechanism", "title", "description", "group_by"):
         text(cfg.get(key), key, nullable=True)
     for key,default,low,high in (("sample_rows",20,0,100),("sample_seed",0,0,2**32-1),("sample_text_limit",120,20,1000)):
         value=cfg.get(key,default)
@@ -39,7 +39,8 @@ def validate_config(raw: dict | None = None, columns: list[str] | None = None) -
     metadata = mapping(cfg.get("columns", {}), "columns", set(columns) if columns is not None else set(cfg.get("columns", {})) if isinstance(cfg.get("columns", {}), dict) else set())
     for name, item in metadata.items():
         text(name, "column name")
-        mapping(item, f"columns.{name}", {"type", "meaning", "date_format", "units", "role"})
+        mapping(item, f"columns.{name}", {"type", "meaning", "date_format", "units", "role", "exclude_from_target"})
+        if "exclude_from_target" in item and type(item["exclude_from_target"]) is not bool:raise ValueError("exclude_from_target must be boolean")
         if "type" in item and (not isinstance(item["type"], str) or item["type"] not in TYPES):
             raise ValueError(f"columns.{name}.type is unsupported")
         if "date_format" in item:
@@ -52,6 +53,7 @@ def validate_config(raw: dict | None = None, columns: list[str] | None = None) -
     cfg["columns"] = metadata
     if columns is not None and cfg.get("target") is not None and cfg["target"] not in columns:
         raise ValueError("target references an unknown column")
+    if columns is not None and cfg.get("group_by") is not None and cfg["group_by"] not in columns:raise ValueError("group_by references an unknown column")
     context = mapping(cfg.get("context", {}), "context", {"snapshot_date", "source", "transformations", "other_changes"})
     snapshot = context.get("snapshot_date")
     if snapshot is not None:

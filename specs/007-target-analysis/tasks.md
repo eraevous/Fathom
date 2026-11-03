@@ -2,21 +2,21 @@
 
 ## Setup
 
-- [ ] T001 Record spec/plan/clarifications and provisional AEC requirement; verify purpose/check gates in specs/007-target-analysis before code (FR-001–008).
+- [x] T001 Record spec/plan/clarifications and provisional AEC requirement; verify purpose/check gates in specs/007-target-analysis before code (FR-001–008).
 
 ## US1 — rank target relationships
 
-- [ ] T002 [US1] Write exact measure/clean-decoy, exclusion, budget/reservation, config and legacy tests in tests/test_target.py (FR-001,002,003,006).
-- [ ] T003 [US1] Implement core target.py measures/config.py declarations and profiler.py selection integration; models.py validation and presentation tables (FR-001,002,003,006).
+- [x] T002 [US1] Write exact measure/clean-decoy, exclusion, budget/reservation, config and legacy tests in tests/test_target.py (FR-001,002,003,006).
+- [x] T003 [US1] Implement core target.py measures/config.py declarations and profiler.py selection integration; models.py validation and presentation tables (FR-001,002,003,006).
 
 ## US2 — review groups
 
-- [ ] T004 [US2] Test and implement target.py group counts/shares/valid/missing/rates/rest contrasts, n<5cautions and evidenced findings in tests/test_target.py (FR-004).
-- [ ] T005 [US2] Implement target_marks.py bounded scatter/group-box/rates and renderers.py/exports.py artifact-only tables/plots (FR-004,005).
+- [x] T004 [US2] Test and implement target.py group counts/shares/valid/missing/rates/rest contrasts, n<5cautions and evidenced findings in tests/test_target.py (FR-004).
+- [x] T005 [US2] Implement target_marks.py bounded scatter/group-box/rates and renderers.py/exports.py artifact-only tables/plots (FR-004,005).
 
 ## US3 — distribution polish
 
-- [ ] T006 [US3] Test/implement original-unit log ticks, positive log ECDF, slim box/noY and static sticky statistics in univariate.py/charts.py/renderers.py/exports.py (FR-007).
+- [x] T006 [US3] Test/implement original-unit log ticks, positive log ECDF, slim box/noY and static sticky statistics in univariate.py/charts.py/renderers.py/exports.py (FR-007).
 
 ## Verification / publish
 

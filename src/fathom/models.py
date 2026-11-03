@@ -147,11 +147,37 @@ def validate_document(doc: dict) -> None:
         validate_config({"context": doc["context"], "schema": doc["schema"],
                          **{k: working.get(k) for k in ("row_unit", "generating_process", "missingness_mechanism")},
                          "decisions": working.get("decisions", []),
-                         **{k: doc["purpose"].get(k) for k in ("question", "target")}}, names)
+                         **{k: doc["purpose"].get(k) for k in ("question", "target", "group_by")}}, names)
         selection = doc["selection"]
         if (not isinstance(selection.get("selected"), list) or not isinstance(selection.get("excluded"), list)
                 or type(selection.get("budget")) is not int or not 0 <= selection["budget"] <= 20):
             raise ValueError("invalid artifact selection")
+        if len(doc['bivariate'])>selection['budget'] or len(selection['selected'])>selection['budget']:raise ValueError('pair budget exceeded')
+        if 'target_analysis' in doc:
+            ta=doc['target_analysis']
+            if not isinstance(ta,dict) or ta.get('status') not in {'active','skipped'} or any(not isinstance(ta.get(k),str) for k in ('reason','warning','grouping_policy')):raise ValueError('invalid target status')
+            if any(not isinstance(ta.get(k),list) for k in ('ranked','excluded','charts','groups')):raise ValueError('invalid target collections')
+            if len(ta['charts'])>len(doc['bivariate']) or len(ta['groups'])>len(doc['bivariate']):raise ValueError('target detail budget exceeded')
+            for r in ta['ranked']:
+                if not isinstance(r,dict) or r.get('column') not in names or type(r.get('n')) is not int or r['n']<2 or type(r.get('rank')) is not int or r['rank']<1 or type(r.get('selected')) is not bool or type(r.get('value')) not in (int,float) or not -1<=r['value']<=1 or type(r.get('strength')) not in (int,float) or not 0<=r['strength']<=1 or r.get('measure') not in {'Pearson r','Correlation ratio eta',"Cramer's V"}:raise ValueError('invalid target ranking')
+            for s in ta['groups']:
+                if not isinstance(s,dict) or s.get('group_column') not in names or s.get('value_column') not in names or not isinstance(s.get('groups'),list) or len(s['groups'])>20:raise ValueError('invalid target groups')
+                for g in s['groups']:
+                    if not isinstance(g,dict) or any(type(g.get(k)) is not int or g[k]<0 for k in ('n','valid','missing','rest_n','rest_valid')) or g['valid']+g['missing']!=g['n'] or type(g.get('share')) not in (int,float) or not 0<=g['share']<=1 or type(g.get('small')) is not bool:raise ValueError('invalid target group count')
+            for ch in ta['charts']:
+                if not isinstance(ch,dict) or ch.get('kind') not in {'scatter','group_box','rates'} or any(not isinstance(ch.get(k),str) for k in ('title','x_label','y_label')):raise ValueError('invalid target chart')
+                if ch['kind']=='scatter':
+                    if not isinstance(ch.get('points'),list) or not 1<=len(ch['points'])<=200 or any(not isinstance(p,dict) or any(type(p.get(k)) not in (int,float) for k in ('x','y')) for p in ch['points']):raise ValueError('invalid scatter points')
+                    if any(ch.get(k) not in {'linear','log10'} for k in ('x_scale','y_scale')) or any((ch['x_scale']=='log10' and p['x']<=0) or (ch['y_scale']=='log10' and p['y']<=0) for p in ch['points']):raise ValueError('invalid scatter scale')
+                else:
+                    if not isinstance(ch.get('data'),list) or not 1<=len(ch['data'])<=20 or any(not isinstance(r,dict) or not isinstance(r.get('label'),str) or type(r.get('n')) is not int or r['n']<0 for r in ch['data']):raise ValueError('invalid grouped chart')
+                    if ch['kind']=='group_box':
+                        if ch.get('x_scale') not in {'linear','log10'}:raise ValueError('invalid grouped box scale')
+                        for row in ch['data']:
+                            box=row.get('box')
+                            if box is not None:
+                                if not isinstance(box,dict) or any(type(box.get(k)) not in (int,float) for k in ('min','q1','median','q3','max')) or sorted(box[k] for k in ('min','q1','median','q3','max'))!=[box[k] for k in ('min','q1','median','q3','max')] or (ch['x_scale']=='log10' and box['min']<=0):raise ValueError('invalid grouped box values')
+                    if ch['kind']=='rates' and (not isinstance(ch.get('levels'),list) or not 1<=len(ch['levels'])<=20 or any(not isinstance(r.get('rates'),dict) or set(r['rates'])!=set(ch['levels']) or any(type(v) not in (int,float) or not 0<=v<=1 for v in r['rates'].values()) or abs(sum(r['rates'].values())-(1 if r['n'] else 0))>1e-8 for r in ch['data'])):raise ValueError('invalid target rates')
         if "dataset" in doc:
             identity=doc["dataset"]
             if not isinstance(identity,dict):raise ValueError("invalid dataset identity")
@@ -173,6 +199,7 @@ def validate_document(doc: dict) -> None:
                 for key in ('invalid_examples','placeholder_examples','test_examples'):
                     if not isinstance(s.get(key),list) or any(not isinstance(v,str) for v in s[key]):raise ValueError('invalid special examples')
                 if not isinstance(s.get('domains'),list) or any(not isinstance(v,dict) or not isinstance(v.get('value'),str) or type(v.get('count')) is not int or v['count']<0 for v in s['domains']):raise ValueError('invalid special domains')
+            if "exclude_from_target" in col and type(col["exclude_from_target"]) is not bool:raise ValueError("invalid exclusion declaration")
             if "univariate" in col:
                 u=col["univariate"]
                 if not isinstance(u,dict) or not isinstance(u.get("statistics"),dict) or not isinstance(u.get("charts"),list):raise ValueError("invalid univariate profile")
@@ -183,7 +210,9 @@ def validate_document(doc: dict) -> None:
                     if 'coverage_counts' in chart:
                         coverage=chart['coverage_counts']
                         if not isinstance(coverage,dict) or any(type(coverage.get(k)) is not int or coverage[k]<0 for k in ('positive','zeros','negatives','invalid')) or chart.get('scale')!='log10':raise ValueError('invalid log coverage')
-                        if sum(x.get('count',0) for x in chart.get('data',[]) if isinstance(x,dict))!=coverage['positive']:raise ValueError('inconsistent log coverage')
+                        if chart['kind']=='ecdf':
+                            if not chart.get('points') or chart['points'][-1].get('count')!=coverage['positive'] or chart.get('n')!=coverage['positive']:raise ValueError('inconsistent log ECDF coverage')
+                        elif sum(x.get('count',0) for x in chart.get('data',[]) if isinstance(x,dict))!=coverage['positive']:raise ValueError('inconsistent log coverage')
                     if chart["kind"]=='ecdf':
                         points=chart.get('points')
                         if not isinstance(points,list) or not points or len(points)>200:raise ValueError('invalid ECDF points')
