@@ -1,0 +1,42 @@
+{
+  "before-html-1280.png": {
+    "height": 900,
+    "kind": "actual Chromium viewport",
+    "topic": "positive_amount column entry",
+    "width": 1280
+  },
+  "before-html-390.png": {
+    "height": 900,
+    "kind": "actual Chromium viewport",
+    "topic": "positive_amount column entry",
+    "width": 390
+  },
+  "before-pdf-1280.png": {
+    "height": 1657,
+    "kind": "actual export raster",
+    "page": 9,
+    "total_pages": 23,
+    "width": 1280
+  },
+  "before-pdf-390.png": {
+    "height": 505,
+    "kind": "actual export raster",
+    "page": 9,
+    "total_pages": 23,
+    "width": 390
+  },
+  "before-pptx-1280.png": {
+    "height": 721,
+    "kind": "LibreOffice-rendered actual PPTX raster",
+    "page": 20,
+    "total_pages": 34,
+    "width": 1280
+  },
+  "before-pptx-390.png": {
+    "height": 220,
+    "kind": "LibreOffice-rendered actual PPTX raster",
+    "page": 20,
+    "total_pages": 34,
+    "width": 390
+  }
+}

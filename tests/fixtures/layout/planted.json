@@ -1,0 +1,13 @@
+{
+  "rows": 36,
+  "planted": [
+    "one zero gross",
+    "one repeated title",
+    "one two-digit/future date",
+    "8 jointly missing a/b rows",
+    "positive skew and large formatted amount",
+    "14 categories with Other remainder",
+    "long text length",
+    "three non-date time-named columns"
+  ]
+}

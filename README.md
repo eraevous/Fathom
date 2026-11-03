@@ -2,7 +2,7 @@
 
 Fathom turns raw or semi-cleaned tabular data into understanding someone can use and pass on: an enhanced data dictionary, a diagnostic EDA engine and a repeatable working record. It answers what is in a dataset, what can't be known from it, and what it is good for.
 
-**Status: report, univariate, special-type and optional-export slices.** Fathom is the successor to Data Guide.
+**Status: plots and review-layout slice.** Fathom is the successor to Data Guide.
 It starts from guiding documents and decisions, with no earlier implementation,
 and is built with [AEC](https://github.com/eraevous/AEC) and Spec Kit.
 
@@ -140,6 +140,21 @@ it does not carry the full dictionary/sample tables. Metadata and nested workboo
 ZIP times are fixed. Bytes are repeatable with identical dependency versions.
 See [spec004](specs/004-special-types-and-exports/spec.md) and its
 [found/missed ledger](specs/004-special-types-and-exports/validation.md).
+
+## Plots and review layout
+
+Column entries now span the content width, with formatted overview tables and
+inline static plots. More statistics use value/count/share tables; raw evidence
+stays disclosed. Numeric ECDF/eligible additional log views, category remainder and
+coverage, string lengths, calendar bars and exact row-missingness patterns come
+from the saved artifact. Time alone no longer suggests a date. Old artifacts and
+optional exports remain supported; no new runtime dependency.
+
+Charts have a fixed drawing area and may require panning on phones. Fixed PDF pages
+and slides require zoom; dynamic layouts remain future work under DG-D7. See
+[spec005](specs/005-plots-and-layout/spec.md), its
+[builder found/missed ledger](specs/005-plots-and-layout/validation.md) and
+[visual-review gallery and open issues](specs/005-plots-and-layout/review/README.md).
 
 ## Scope and limits
 
