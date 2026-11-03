@@ -14,7 +14,7 @@ resolution and final PR update. Existing dependencies only. No protected-doc edi
 - [x] F07 r4451047624: per-kind Chart values with full labels and precise plotted values.
 - [x] F08 r4451047641:20groups×20levels PowerPoint layout without label overlaps; ordinary deck decoy.
 - [x] F09 full/core/fresh bytes/AEC/affected screenshots, protected-prefix check, append evidence.
-- [ ] F10 fast-forward publish same branch preserving main merge; reply/resolve8threads; update PR15 then stop.
+- [x] F10 fast-forward publish same branch preserving main merge; reply/resolve8threads; update PR15 then stop.
 
 ## Verification completed before publication
 
@@ -32,3 +32,9 @@ resolution and final PR update. Existing dependencies only. No protected-doc edi
 - F10 is the final remote sequence: fast-forward existing branch preserving the
   authorized two-parent main merge, verify CI/tree, reply+resolve the8threads,
   update PR description with CLA unticked and stop. No PR merge/main push/force.
+
+Remote completion: tested tree published at d557a71; push and PR tests/AEC all
+passed. Every authorized review thread has a one-line repair reply and is resolved
+(the rates thread was already resolved before this round's reply). This checklist
+completion is documentation only. Final PR-description update/CLA untick is the
+last action of the round, immediately after its publication.
