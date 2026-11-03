@@ -1,0 +1,298 @@
+{
+  "boxes-html-plot-1280.png": {
+    "document_width": 1280,
+    "format": "HTML",
+    "topic": "plot",
+    "width": 1280
+  },
+  "boxes-html-plot-390.png": {
+    "document_width": 390,
+    "format": "HTML",
+    "topic": "plot",
+    "width": 390
+  },
+  "boxes-html-values-1280.png": {
+    "format": "HTML",
+    "topic": "Chart values disclosure",
+    "width": 1280
+  },
+  "boxes-html-values-390.png": {
+    "format": "HTML",
+    "topic": "Chart values disclosure",
+    "width": 390
+  },
+  "boxes-pdf-panel-1-1280.png": {
+    "format": "pdf",
+    "page": 11,
+    "pages": 11,
+    "renderer": "ReportLab/PyMuPDF",
+    "width": 1280
+  },
+  "boxes-pdf-panel-1-390.png": {
+    "format": "pdf",
+    "page": 11,
+    "pages": 11,
+    "renderer": "ReportLab/PyMuPDF",
+    "width": 390
+  },
+  "boxes-pptx-panel-1-1280.png": {
+    "format": "pptx",
+    "page": 6,
+    "pages": 8,
+    "renderer": "LibreOffice Impress/PyMuPDF",
+    "width": 1280
+  },
+  "boxes-pptx-panel-1-390.png": {
+    "format": "pptx",
+    "page": 6,
+    "pages": 8,
+    "renderer": "LibreOffice Impress/PyMuPDF",
+    "width": 390
+  },
+  "high-cardinality-html-plot-1280.png": {
+    "document_width": 1280,
+    "format": "HTML",
+    "topic": "plot",
+    "width": 1280
+  },
+  "high-cardinality-html-plot-390.png": {
+    "document_width": 390,
+    "format": "HTML",
+    "topic": "plot",
+    "width": 390
+  },
+  "high-cardinality-pdf-panel-1-1280.png": {
+    "format": "pdf",
+    "page": 19,
+    "pages": 20,
+    "renderer": "ReportLab/PyMuPDF",
+    "width": 1280
+  },
+  "high-cardinality-pdf-panel-1-390.png": {
+    "format": "pdf",
+    "page": 19,
+    "pages": 20,
+    "renderer": "ReportLab/PyMuPDF",
+    "width": 390
+  },
+  "high-cardinality-pptx-panel-1-1280.png": {
+    "format": "pptx",
+    "page": 6,
+    "pages": 12,
+    "renderer": "LibreOffice Impress/PyMuPDF",
+    "width": 1280
+  },
+  "high-cardinality-pptx-panel-1-390.png": {
+    "format": "pptx",
+    "page": 6,
+    "pages": 12,
+    "renderer": "LibreOffice Impress/PyMuPDF",
+    "width": 390
+  },
+  "high-cardinality-pptx-panel-2-1280.png": {
+    "format": "pptx",
+    "page": 7,
+    "pages": 12,
+    "renderer": "LibreOffice Impress/PyMuPDF",
+    "width": 1280
+  },
+  "high-cardinality-pptx-panel-2-390.png": {
+    "format": "pptx",
+    "page": 7,
+    "pages": 12,
+    "renderer": "LibreOffice Impress/PyMuPDF",
+    "width": 390
+  },
+  "high-cardinality-pptx-panel-3-1280.png": {
+    "format": "pptx",
+    "page": 8,
+    "pages": 12,
+    "renderer": "LibreOffice Impress/PyMuPDF",
+    "width": 1280
+  },
+  "high-cardinality-pptx-panel-3-390.png": {
+    "format": "pptx",
+    "page": 8,
+    "pages": 12,
+    "renderer": "LibreOffice Impress/PyMuPDF",
+    "width": 390
+  },
+  "high-cardinality-pptx-panel-4-1280.png": {
+    "format": "pptx",
+    "page": 9,
+    "pages": 12,
+    "renderer": "LibreOffice Impress/PyMuPDF",
+    "width": 1280
+  },
+  "high-cardinality-pptx-panel-4-390.png": {
+    "format": "pptx",
+    "page": 9,
+    "pages": 12,
+    "renderer": "LibreOffice Impress/PyMuPDF",
+    "width": 390
+  },
+  "high-cardinality-pptx-panel-5-1280.png": {
+    "format": "pptx",
+    "page": 10,
+    "pages": 12,
+    "renderer": "LibreOffice Impress/PyMuPDF",
+    "width": 1280
+  },
+  "high-cardinality-pptx-panel-5-390.png": {
+    "format": "pptx",
+    "page": 10,
+    "pages": 12,
+    "renderer": "LibreOffice Impress/PyMuPDF",
+    "width": 390
+  },
+  "rates-html-plot-1280.png": {
+    "document_width": 1280,
+    "format": "HTML",
+    "topic": "plot",
+    "width": 1280
+  },
+  "rates-html-plot-390.png": {
+    "document_width": 390,
+    "format": "HTML",
+    "topic": "plot",
+    "width": 390
+  },
+  "rates-html-values-1280.png": {
+    "format": "HTML",
+    "topic": "Chart values disclosure",
+    "width": 1280
+  },
+  "rates-html-values-390.png": {
+    "format": "HTML",
+    "topic": "Chart values disclosure",
+    "width": 390
+  },
+  "rates-pdf-panel-1-1280.png": {
+    "format": "pdf",
+    "page": 9,
+    "pages": 9,
+    "renderer": "ReportLab/PyMuPDF",
+    "width": 1280
+  },
+  "rates-pdf-panel-1-390.png": {
+    "format": "pdf",
+    "page": 9,
+    "pages": 9,
+    "renderer": "ReportLab/PyMuPDF",
+    "width": 390
+  },
+  "rates-pptx-panel-1-1280.png": {
+    "format": "pptx",
+    "page": 6,
+    "pages": 8,
+    "renderer": "LibreOffice Impress/PyMuPDF",
+    "width": 1280
+  },
+  "rates-pptx-panel-1-390.png": {
+    "format": "pptx",
+    "page": 6,
+    "pages": 8,
+    "renderer": "LibreOffice Impress/PyMuPDF",
+    "width": 390
+  },
+  "scatter-html-plot-1280.png": {
+    "document_width": 1280,
+    "format": "HTML",
+    "topic": "plot",
+    "width": 1280
+  },
+  "scatter-html-plot-390.png": {
+    "document_width": 390,
+    "format": "HTML",
+    "topic": "plot",
+    "width": 390
+  },
+  "scatter-html-values-1280.png": {
+    "format": "HTML",
+    "topic": "Chart values disclosure",
+    "width": 1280
+  },
+  "scatter-html-values-390.png": {
+    "format": "HTML",
+    "topic": "Chart values disclosure",
+    "width": 390
+  },
+  "scatter-pdf-panel-1-1280.png": {
+    "format": "pdf",
+    "page": 11,
+    "pages": 11,
+    "renderer": "ReportLab/PyMuPDF",
+    "width": 1280
+  },
+  "scatter-pdf-panel-1-390.png": {
+    "format": "pdf",
+    "page": 11,
+    "pages": 11,
+    "renderer": "ReportLab/PyMuPDF",
+    "width": 390
+  },
+  "scatter-pptx-panel-1-1280.png": {
+    "format": "pptx",
+    "page": 6,
+    "pages": 8,
+    "renderer": "LibreOffice Impress/PyMuPDF",
+    "width": 1280
+  },
+  "scatter-pptx-panel-1-390.png": {
+    "format": "pptx",
+    "page": 6,
+    "pages": 8,
+    "renderer": "LibreOffice Impress/PyMuPDF",
+    "width": 390
+  },
+  "tiny-html-plot-1280.png": {
+    "document_width": 1280,
+    "format": "HTML",
+    "topic": "plot",
+    "width": 1280
+  },
+  "tiny-html-plot-390.png": {
+    "document_width": 390,
+    "format": "HTML",
+    "topic": "plot",
+    "width": 390
+  },
+  "tiny-html-values-1280.png": {
+    "format": "HTML",
+    "topic": "Chart values disclosure",
+    "width": 1280
+  },
+  "tiny-html-values-390.png": {
+    "format": "HTML",
+    "topic": "Chart values disclosure",
+    "width": 390
+  },
+  "tiny-pdf-panel-1-1280.png": {
+    "format": "pdf",
+    "page": 10,
+    "pages": 10,
+    "renderer": "ReportLab/PyMuPDF",
+    "width": 1280
+  },
+  "tiny-pdf-panel-1-390.png": {
+    "format": "pdf",
+    "page": 10,
+    "pages": 10,
+    "renderer": "ReportLab/PyMuPDF",
+    "width": 390
+  },
+  "tiny-pptx-panel-1-1280.png": {
+    "format": "pptx",
+    "page": 6,
+    "pages": 8,
+    "renderer": "LibreOffice Impress/PyMuPDF",
+    "width": 1280
+  },
+  "tiny-pptx-panel-1-390.png": {
+    "format": "pptx",
+    "page": 6,
+    "pages": 8,
+    "renderer": "LibreOffice Impress/PyMuPDF",
+    "width": 390
+  }
+}

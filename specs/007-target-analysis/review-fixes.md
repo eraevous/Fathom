@@ -13,5 +13,22 @@ resolution and final PR update. Existing dependencies only. No protected-doc edi
 - [x] F06 r4451047707: required integer coverage counts, typed optional counts; legacy/zero decoys.
 - [x] F07 r4451047624: per-kind Chart values with full labels and precise plotted values.
 - [x] F08 r4451047641:20groups×20levels PowerPoint layout without label overlaps; ordinary deck decoy.
-- [ ] F09 full/core/fresh bytes/AEC/affected screenshots, protected-prefix check, append evidence.
+- [x] F09 full/core/fresh bytes/AEC/affected screenshots, protected-prefix check, append evidence.
 - [ ] F10 fast-forward publish same branch preserving main merge; reply/resolve8threads; update PR15 then stop.
+
+## Verification completed before publication
+
+- Regression file:32fail on3367ab3,32pass after repair. Full196pass;
+  core188pass/8optional skips. Existing tests retained.
+- Fresh-process summary/full HTML/Markdown/PDF/PPTX/status bytes match.
+- FT-R17:47actual affected-view screenshots at1280/390 in
+  [gallery](review-fixes-gallery/README.md), all8cases fixed with remaining general
+  phone/legacy/font limits disclosed.
+- AEC:2276edges/35files,0skipped; check0errors/0warnings. Impact15structural
+  change events,24affected/47unaffected. Stale/review marks are structural prompts;
+  historical evidence remains historical, new claim supported by new tests/views.
+- Appended only FT-TA-C2@1, FT-TA-E4@1, FT-TA-E5@1; verified3367ab3record
+  prefix and all protected docs/decision passages unchanged.
+- F10 is the final remote sequence: fast-forward existing branch preserving the
+  authorized two-parent main merge, verify CI/tree, reply+resolve the8threads,
+  update PR description with CLA unticked and stop. No PR merge/main push/force.
