@@ -1,0 +1,13 @@
+title: Synthetic catalog review
+description: Authored examples for plot and layout review.
+sample_rows: 3
+sample_seed: 23
+context:
+  snapshot_date: 2026-11-01
+columns:
+  gross:
+    units: USD
+    role: quantity
+  positive_amount:
+    units: recorded units
+    role: quantity
