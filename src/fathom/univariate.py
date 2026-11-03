@@ -99,8 +99,10 @@ def numeric_profile(values,name,units):
         omitted=max(0,len(points)-200)
         if omitted:points=[points[round(i*(len(points)-1)/199)] for i in range(200)]
         charts.append(chart('ecdf',f'Empirical cumulative distribution of {name}',axis,'Finite values at or below X (%)',points=points,omitted_points=omitted,n=n))
-        if lo>0 and skew is not None and skew>=2:
-            charts.append(histogram([math.log10(x) for x in nums],f'Log10 distribution of {name}','log10 '+axis,scale='log10'))
+        positives=[x for x in nums if x>0]
+        if len(positives)>=2 and len(set(positives))>1 and skew is not None and skew>=2:
+            charts.append(histogram([math.log10(x) for x in positives],f'Positive log10 distribution of {name}','log10 '+axis,scale='log10',
+                                    coverage_counts={'positive':len(positives),'zeros':sum(x==0 for x in nums),'negatives':sum(x<0 for x in nums),'invalid':len(values)-n}))
     return stats,charts
 
 
@@ -204,7 +206,7 @@ def temporal_profile(values,name,cfg,meta):
         if omitted:chart_data=chart_data[:30]+chart_data[-30:]
         charts=[chart('time',f'Record counts over time for {name}',f'Calendar {chart_period} (parsed dates)','Rows (count)',data=chart_data,omitted_periods=omitted,period=chart_period)]
         for key,basis in [('weekday_counts','weekday'),('month_counts','month')]:
-            charts.append(chart('bar',f'{basis.capitalize()} counts for {name}','Parsed dates (count)',basis.capitalize(),data=[{'label':k,'count':v} for k,v in stats[key].items()],calendar=basis))
+            charts.append(chart('bar',f'{basis.capitalize()} counts for {name}','Parsed dates (count)',basis.capitalize(),data=[{'label':k.capitalize(),'count':v} for k,v in stats[key].items()],calendar=basis))
     return stats,charts
 
 
@@ -219,6 +221,9 @@ def enrich_columns(columns,rows,raw_rows,cfg,emit,findings):
         if role is None:
             role='identifier' if name in cfg['schema'].get('key',[]) or re.search(r'(^id$|_id$|key|code|title|name)',name,re.I) else 'quantity' if re.search(r'(gross|amount|revenue|cost|price)',name,re.I) else None
         col['univariate']={'statistics':stats,'charts':charts,'role':role,'role_basis':basis if role else 'unknown','units':{'value':meta['units'],'generator':'human'} if meta.get('units') else None}
+        if role=='identifier' or (typ not in {'numeric','latitude','longitude','temporal'} and len(values)>=5 and len(set(values))/len(values)>=.9):
+            col['univariate']['top_n_suppression']='Identifier-like values; values rarely repeat.' if role=='identifier' else 'Values rarely repeat (at least 90% distinct among nonmissing values).'
+            charts[:]=[c for c in charts if not (c['kind']=='bar' and 'coverage' in c)]
         def notice(rule,message,evidence,action=None,kind='observation'):
             fid=f'u-{i}-{rule}'
             emit(fid,kind,message,[{'path':f'columns.{i}.univariate','value':evidence}],

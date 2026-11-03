@@ -4,14 +4,17 @@ from html import escape
 import re
 
 
-def formatted(value, share=False):
+def formatted(value, share=False, units=None):
     if value is None:return 'Unavailable'
     if isinstance(value,bool):return 'Yes' if value else 'No'
     if isinstance(value,(float,int)):
         if share:return f'{value:.1%}'
         if value==0:return '0'
-        if abs(value)>=1e12 or abs(value)<.001:return f'{value:.3g}'
-        return f'{value:,.3f}'.rstrip('0').rstrip('.') if isinstance(value,float) else f'{value:,}'
+        if abs(value)>=1e12 or abs(value)<.001:return f'{value:.4g}'
+        if type(value) is int:return f'{value:,}'
+        precision=5 if units and ('degree' in units.casefold() or '°' in units) else 0 if abs(value)>=10000 else 1 if abs(value)>=100 else 2 if abs(value)>=1 else 3
+        text=f'{value:,.{precision}f}'
+        return text.rstrip('0').rstrip('.') if '.' in text else text
     return str(value)
 
 
@@ -33,15 +36,18 @@ def structured_tables(caption,value):
     return [metric_table(caption,{'value':value})]
 
 
-def title(key):return str(key).replace('_',' ').capitalize()
+def title(key):return str(key).upper() if key in {'q1','q3'} else str(key).replace('_',' ').capitalize()
+
+
+METRIC_ORDER=('rows','valid','missing','invalid','distinct','min','q1','median','q3','mean','max','population_std','span_days','skewness','excess_kurtosis','zeros','zero_share','negatives','negative_share')
 
 
 def metric_table(caption,values,units=None):
     rows=[]
-    for key in sorted(values,key=lambda k:(0,float(k)) if str(k).isdigit() else (1,str(k))):
+    for key in sorted(values,key=lambda k:(0,METRIC_ORDER.index(k)) if k in METRIC_ORDER else (1,float(k)) if str(k).isdigit() else (2,str(k))):
         value=values[key]
         if isinstance(value,(dict,list)):continue
-        rows.append([title(key),formatted(value, key=='share' or key.endswith('_share'))])
+        rows.append([title(key),formatted(value, key=='share' or key.endswith('_share'),units)])
     return {'caption':caption+(' — '+units if units else ''),'headers':['Measure','Value'],'rows':rows,'numeric':[1]}
 
 
@@ -54,7 +60,12 @@ def frequency_table(caption,items,denominator):
 def column_tables(col):
     u=col.get('univariate',{});s=u.get('statistics',{});unit=u.get('units')
     unit=(unit['value']+' (human)') if unit else 'units unknown'
-    tables=[metric_table('Column overview',{'rows':col['count'],'missing':col['missing'],'distinct':col['distinct'],**col['statistics']},unit if col['effective_type'] in {'numeric','latitude','longitude'} else None)]
+    overview={'rows':col['count'],'valid':col['statistics'].get('valid',col['count']-col['missing']),'missing':col['missing'],'distinct':col['distinct'],**col['statistics']}
+    if s.get('percentiles'):
+        overview.update(q1=s['percentiles']['25'],q3=s['percentiles']['75'])
+    for key in ('zeros','negatives'):
+        if isinstance(s.get(key),dict):overview.update({key:s[key]['count'],key.removesuffix('s')+'_share':s[key]['share']})
+    tables=[metric_table('Column overview',overview,unit if col['effective_type'] in {'numeric','latitude','longitude'} else None)]
     scalar_keys=('finite','integers','non_integers','skewness','excess_kurtosis','entropy_bits','rare_level_count','earliest','latest','span_days','valid','invalid','two_digit_years','ambiguous_dates','placeholder_dates','after_reference','beyond_fixed_year_2100','lag1_count_autocorrelation')
     values={k:s[k] for k in scalar_keys if k in s}
     if values:tables.append(metric_table('Univariate statistics',values))
@@ -69,6 +80,32 @@ def column_tables(col):
         special=col['special'];tables.append(metric_table('Local syntax/range checks',{k:special[k] for k in ('valid','invalid','placeholders','test_values')}))
         if special['domains']:tables.append(frequency_table('Most common valid domains',special['domains'],special['valid']))
     return [t for t in tables if t['rows']]
+
+
+def formatted_examples(col):
+    from .parsing import finite_number
+    numeric=col['effective_type'] in {'numeric','latitude','longitude'} and col.get('univariate',{}).get('role')!='identifier'
+    units='degrees' if col['effective_type'] in {'latitude','longitude'} else (col.get('univariate',{}).get('units') or {}).get('value')
+    return [formatted(n,units=units) if numeric and (n:=finite_number(v)) is not None else v[:120]+('… [truncated]' if len(v)>120 else '') for v in col['examples']]
+
+
+def top_n_reason(col):
+    u=col.get('univariate',{})
+    if u.get('top_n_suppression'):return u['top_n_suppression']
+    if u.get('role')=='identifier':return 'Identifier-like values; values rarely repeat.'
+    n=col['count']-col['missing']
+    return 'Values rarely repeat (at least 90% distinct).' if col['effective_type'] not in {'numeric','latitude','longitude','temporal'} and n>=5 and col['distinct']/n>=.9 else None
+
+
+def display_charts(col):
+    charts=[ch for ch in col.get('univariate',{}).get('charts',[]) if not (top_n_reason(col) and ch['kind']=='bar' and 'coverage' in ch)]
+    return [{**ch,'data':[{**item,'label':item['label'].capitalize()} for item in ch['data']]} if ch.get('calendar')=='month' else ch for ch in charts]
+
+
+def tick_label(value):
+    for magnitude,suffix in ((1e12,'T'),(1e9,'B'),(1e6,'M'),(1e3,'K')):
+        if abs(value)>=magnitude:return f'{value/magnitude:.3g}'+suffix
+    return formatted(value)
 
 
 def html_table(table):

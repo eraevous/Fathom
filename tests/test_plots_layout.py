@@ -19,7 +19,8 @@ def test_numeric_ecdf_log_and_clean_decoys(make_profile):
     ecdf=next(c for c in charts if c['kind']=='ecdf')
     assert ecdf['points']==[{'x':x,'cumulative':count/8,'count':count} for x,count in [(1.,2),(2.,3),(3.,4),(4.,5),(5.,6),(6.,7),(10000.,8)]]
     assert any(c.get('scale')=='log10' for c in charts)
-    for values in ('0\n1\n2\n3\n4\n5\n6\n10000','-1\n1\n2\n3\n4\n5\n6\n10000','3\n3\n3','1\n2\n3\n4'):
+    # FT-R18 now permits zero/negative exclusions with explicit coverage.
+    for values in ('0\n0\n0','-1\n-2\n0','3\n3\n3','1\n2\n3\n4'):
         charts=make_profile('x\n'+values+'\n').document['columns'][0]['univariate']['charts']
         assert not any(c.get('scale')=='log10' for c in charts)
     assert sum(c['count'] for c in charts[0]['data'])==4
@@ -34,11 +35,11 @@ def test_ecdf_display_bound(make_profile):
 
 def test_category_remainder_and_text_length(make_profile):
     vals=['Other','[Other values — remainder]']+[f'category{i}' for i in range(13)]
-    p=make_profile(csv_text(['group'],[[v] for v in vals]),{'columns':{'group':{'type':'categorical'}}})
+    p=make_profile(csv_text(['group'],[[v] for v in vals for _ in range(2)]),{'columns':{'group':{'type':'categorical'}}})
     ch=next(c for c in p.document['columns'][0]['univariate']['charts'] if c.get('coverage'))
     assert len(ch['data'])==11 and ch['data'][-1]['is_other']
     assert len({x['label'] for x in ch['data']})==11
-    assert sum(x['count'] for x in ch['data'])==15 and ch['coverage']==10/15
+    assert sum(x['count'] for x in ch['data'])==30 and ch['coverage']==10/15
     assert sum(x['share'] for x in ch['data'])==pytest.approx(1)
     p=make_profile(csv_text(['note'],[[''],[' '],['ab'],['abcd']]))
     ch=next(c for c in p.document['columns'][0]['univariate']['charts'] if c.get('measure')=='string_length')
@@ -80,7 +81,7 @@ def test_column_inline_tables_formatting_and_raw_disclosure(make_profile):
     p=make_profile('amount,category\n10014234,A\n47.23671133,B\n47.23671133,A\n',{'columns':{'amount':{'units':'USD'}}})
     html=render_html(p);md=render_markdown(p)
     assert 'class="column-entry"' in html and 'Raw evidence' in html
-    assert '10,014,234' in html and '47.237' in html and 'USD' in html
+    assert '10,014,234' in html and '47.24' in html and 'USD' in html
     assert 'Value</th>' in html and 'Share</th>' in html and 'class="num"' in html
     assert '10,014,234' in md
     assert '<script' not in html
@@ -115,7 +116,7 @@ def test_export_new_chart_kinds_use_numeric_xy_and_pdf(make_profile):
     from fathom.exports import export_bundle
     from pptx.enum.chart import XL_CHART_TYPE
     p=make_profile('x\n1\n2\n1000\n')
-    files,_=export_bundle(p,['pdf','pptx'])
+    files,_=export_bundle(p,['pdf','pptx'],deck='full')
     deck=pptx.Presentation(io.BytesIO(files['report.pptx']))
     xy=[sh.chart for slide in deck.slides for sh in slide.shapes if sh.has_chart and sh.chart.chart_type==XL_CHART_TYPE.XY_SCATTER_LINES_NO_MARKERS]
     assert len(xy)==1

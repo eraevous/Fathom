@@ -1,0 +1,20 @@
+[
+  {
+    "name": "movies",
+    "url": "https://raw.githubusercontent.com/vega/vega-datasets/af04748b6112c4d89ff6b1ee549acf1cb3a0fcb0/data/movies.json",
+    "source_sha256": "e63c499759e3b07b49563e036f55290f87feb56def8703ec049ca305ab1523d3",
+    "csv_sha256": "ca04ea9380392b14796ce49aed8afcf3bb794321d0dd90f39ef18d40e3caf4b1",
+    "rows": 3201,
+    "columns": 16,
+    "conversion": "JSON object order, underscore headers replaced by spaces, null to empty; CSV normalized quoting/LF"
+  },
+  {
+    "name": "college",
+    "url": "https://raw.githubusercontent.com/fivethirtyeight/data/2193710ce09c272ce9f16a214d8402a2787d0251/college-majors/recent-grads.csv",
+    "source_sha256": "754566bc1b3717e03d0da656971dacee733e45e2f6a30a902f8260cc536b0f37",
+    "csv_sha256": "082c1e313354eab8f79b3ff37ef4691f498633c760f6d75eeeeea4b061da11cf",
+    "rows": 173,
+    "columns": 21,
+    "conversion": "CSV normalized quoting/LF only"
+  }
+]

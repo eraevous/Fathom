@@ -1,0 +1,42 @@
+{
+  "after-college-1280": {
+    "all_columns_open": 52463,
+    "default": 8669,
+    "document_width": 1280
+  },
+  "after-college-390": {
+    "all_columns_open": 56455,
+    "default": 9296,
+    "document_width": 390
+  },
+  "after-movies-1280": {
+    "all_columns_open": 45082,
+    "default": 16861,
+    "document_width": 1280
+  },
+  "after-movies-390": {
+    "all_columns_open": 47406,
+    "default": 17930,
+    "document_width": 390
+  },
+  "before-college-1280": {
+    "all_columns_open": 75832,
+    "default": 75832,
+    "document_width": 1280
+  },
+  "before-college-390": {
+    "all_columns_open": 76710,
+    "default": 76710,
+    "document_width": 390
+  },
+  "before-movies-1280": {
+    "all_columns_open": 60186,
+    "default": 60186,
+    "document_width": 1280
+  },
+  "before-movies-390": {
+    "all_columns_open": 65403,
+    "default": 65403,
+    "document_width": 390
+  }
+}
