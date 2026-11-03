@@ -122,6 +122,15 @@ def axis_label(col,log=False):
     return col['name']+(' ('+units['value']+')' if units else '')+(' (log scale)' if log else '')
 
 
+def geometry_percentile(values,p):
+    """Unrounded normalized quantile for geometry; statistical percentile stays rounded."""
+    ordered=sorted(values);position=(len(ordered)-1)*p/100
+    lo=int(position);hi=min(lo+1,len(ordered)-1);weight=position-lo
+    scale=max(abs(ordered[lo]),abs(ordered[hi])) or 1
+    value=(ordered[lo]/scale*(1-weight)+ordered[hi]/scale*weight)*scale
+    return min(ordered[hi],max(ordered[lo],value))
+
+
 def relationship_chart(rows,columns,pair):
     ix,iy=[next(i for i,c in enumerate(columns) if c['name']==name) for name in (pair['left'],pair['right'])]
     xcol,ycol=columns[ix],columns[iy];a,b=xcol['effective_type'],ycol['effective_type'];cases=[(cell(r[ix],a),cell(r[iy],b)) for r in rows]
@@ -142,11 +151,11 @@ def relationship_chart(rows,columns,pair):
         else:
             for g in sorted(set(x for x,_ in complete)):
                 values=[y for x,y in complete if x==g];groups.append({'label':g,'n':len(values),'rates':{v:safe(values.count(v)/len(values)) for v in levels}})
-        return {**base,'kind':'rates','data':groups,'levels':levels,'x_label':pair['left']+(' (four equal-width bins)' if a in NUMERIC else ''),'y_label':'Target category share among complete cases','plotted':n}
+        return {**base,'kind':'rates','data':groups,'levels':levels,'x_label':'Target category share among complete cases','y_label':pair['left']+(' (four equal-width bins)' if a in NUMERIC else ''),'plotted':n}
     groups=[];log=has_log(ycol)
     for g in sorted(set(x for x,_ in complete)):
         raw=[y for x,y in complete if x==g];values=[v for v in raw if not log or v>0]
-        groups.append({'label':g,'n':len(raw),'box':{k:percentile(values,p) for k,p in [('min',0),('q1',25),('median',50),('q3',75),('max',100)]} if values else None})
+        groups.append({'label':g,'n':len(values),'excluded_nonpositive':len(raw)-len(values),'box':{k:geometry_percentile(values,p) for k,p in [('min',0),('q1',25),('median',50),('q3',75),('max',100)]} if values else None})
     return {**base,'kind':'group_box','data':groups,'x_label':axis_label(ycol,log),'y_label':pair['left'],'x_scale':'log10' if log else 'linear','omitted_nonpositive':sum(y<=0 for _,y in complete) if log else 0,'plotted':sum(y>0 for _,y in complete) if log else n}
 
 

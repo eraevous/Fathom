@@ -243,6 +243,31 @@ def normalized_zip(data):
     return output.getvalue()
 
 
+def target_slide_views(chart):
+    """Bound tall target panels for an8pt floor; preserve all groups/levels in full views."""
+    if chart['kind'] not in {'group_box','rates'}:return [chart]
+    from .target_marks import plot_marks
+    if plot_marks(chart)[1]<=650:return [chart]
+    rows=chart['data'];views=[];separate_legend=chart['kind']=='rates' and len(chart['levels'])>5
+    domain=None
+    if chart['kind']=='group_box':
+        boxes=[r['box'] for r in rows if r.get('box')]
+        if boxes:domain=(min(b['min'] for b in boxes),max(b['max'] for b in boxes))
+    for start in range(0,len(rows),8):
+        end=min(start+8,len(rows));view={**chart,'data':rows[start:end],
+            'title':chart['title']+f' — groups {start+1}–{end}/{len(rows)}',
+            'show_legend':not separate_legend,'scope_note':f'Panel shows groups {start+1}–{end} of {len(rows)}; coverage counts describe the whole relationship.'}
+        if domain:view['x_domain']=domain
+        views.append(view)
+    if separate_legend:
+        for start in range(0,len(chart['levels']),10):
+            end=min(start+10,len(chart['levels']))
+            views.append({**chart,'kind':'target_legend','data':[],
+                'legend_indices':list(range(start,end)),
+                'title':chart['title']+f' — legend {start+1}–{end}/{len(chart["levels"])}'})
+    return views
+
+
 def pptx_bytes(d,full=False):
     from pptx import Presentation
     from pptx.chart.data import CategoryChartData, XyChartData
@@ -270,9 +295,15 @@ def pptx_bytes(d,full=False):
                 current.append(part);length+=len(part)
         if current or not chunks:chunks.append(current)
         for i,chunk in enumerate(chunks):slide(name+(f' ({i+1}/{len(chunks)})' if len(chunks)>1 else ''),chunk)
-    available=chart_topics(d);chosen=available if full else summary_chart_topics(d)
+    available=chart_topics(d);requested=available if full else summary_chart_topics(d)
+    chosen=[];remaining=7
+    for ch in requested:
+        cost=len(target_slide_views(ch))
+        if full or cost<=remaining:
+            chosen.append(ch);remaining-=cost
+    views=[view for ch in chosen for view in target_slide_views(ch)]
     if not full:
-        slide(title,[description,basis,f'Summary deck: {len(chosen)} of {len(available)} charts; bounded findings. Use --deck full for all topics.','Rule-based observations; suggested actions need human review.'])
+        slide(title,[description,basis,f'Summary deck: {len(chosen)} of {len(available)} charts; bounded findings. Multi-panel charts share the7chart-slide budget. Use --deck full for all topics.','Rule-based observations; suggested actions need human review.'])
         for name,lines in summary_topics(d):slide(name,lines)
     else:
         topics(title,[description,basis,'Full deck: all available topics and charts. Rule-based observations require review.'])
@@ -286,17 +317,33 @@ def pptx_bytes(d,full=False):
             topics(name,lines)
     if full:
         for name,messages in finding_topics(d):topics(name,messages)
-    for ch in chosen:
+    for ch in views:
         s=slide(ch['title']);data=ch.get('data',[])
-        if ch['kind'] in {'scatter','group_box','rates'}:
+        if ch['kind']=='target_legend':
+            from .target_marks import PALETTE
+            from pptx.dml.color import RGBColor
+            for i,index in enumerate(ch['legend_indices']):
+                shape=s.shapes.add_shape(MSO_SHAPE.RECTANGLE,Inches(.9),Inches(1.75+i*.36),Inches(.16),Inches(.16))
+                shape.fill.solid();shape.fill.fore_color.rgb=RGBColor.from_string(PALETTE[index].removeprefix('#'));shape.line.fill.background()
+                for style in shape._element.xpath('./p:style'):shape._element.remove(style)
+                label=s.shapes.add_textbox(Inches(1.2),Inches(1.7+i*.36),Inches(11.3),Inches(.3));label.text_frame.text=ch['levels'][index]
+                label.text_frame.margin_top=0;label.text_frame.margin_bottom=0
+                for para in label.text_frame.paragraphs:para.font.size=Pt(14)
+            note=s.shapes.add_textbox(Inches(.7),Inches(6.3),Inches(12),Inches(.5));note.text_frame.text='Target category colors are shared across every group panel; full labels are retained here.'
+            for para in note.text_frame.paragraphs:para.font.size=Pt(12)
+        elif ch['kind'] in {'scatter','group_box','rates'}:
             from .target_marks import plot_marks,coverage_note
             from pptx.dml.color import RGBColor
             w,h,marks=plot_marks(ch);factor=min(11.8/w,4.7/h);offset=(13.333-w*factor)/2
             for kind,*v in marks:
                 if kind=='text':
-                    box=s.shapes.add_textbox(Inches(offset+v[0]*factor-.65 if v[3]=='middle' else offset+v[0]*factor-1.6 if v[3]=='end' else offset+v[0]*factor),Inches(1.5+v[1]*factor-.16),Inches(1.3 if v[3]=='middle' else 1.6 if v[3]=='end' else 6),Inches(.4))
-                    box.text_frame.text=v[2]
-                    for para in box.text_frame.paragraphs:para.font.size=Pt(max(8,min(13,v[4]*factor*72)));para.alignment=PP_ALIGN.CENTER if v[3]=='middle' else PP_ALIGN.RIGHT if v[3]=='end' else PP_ALIGN.LEFT
+                    size=max(8,min(13,v[4]*factor*72))
+                    width=min(1.3,max(.3,len(v[2])*size*.65/72+.1)) if v[3]=='middle' else 1.6 if v[3]=='end' else 6
+                    left=offset+v[0]*factor-(width/2 if v[3]=='middle' else width if v[3]=='end' else 0)
+                    box=s.shapes.add_textbox(Inches(left),Inches(1.5+v[1]*factor)-Pt(size),Inches(width),Pt(size*1.15))
+                    box.text_frame.text=v[2];box.text_frame.word_wrap=False
+                    box.text_frame.margin_top=0;box.text_frame.margin_bottom=0;box.text_frame.margin_left=0;box.text_frame.margin_right=0
+                    for para in box.text_frame.paragraphs:para.font.size=Pt(size);para.alignment=PP_ALIGN.CENTER if v[3]=='middle' else PP_ALIGN.RIGHT if v[3]=='end' else PP_ALIGN.LEFT
                     continue
                 if kind=='line':
                     x,y,x2,y2,color=v;ww=max(.008,abs(x2-x)*factor);hh=max(.008,abs(y2-y)*factor)
@@ -307,7 +354,7 @@ def pptx_bytes(d,full=False):
                     x,y,r,color=v;shape=s.shapes.add_shape(MSO_SHAPE.OVAL,Inches(offset+(x-r)*factor),Inches(1.5+(y-r)*factor),Inches(2*r*factor),Inches(2*r*factor))
                 shape.fill.solid();shape.fill.fore_color.rgb=RGBColor.from_string(color.removeprefix('#'));shape.line.fill.background()
                 for style in shape._element.xpath('./p:style'):shape._element.remove(style)
-            box=s.shapes.add_textbox(Inches(.6),Inches(6.2),Inches(12),Inches(1));box.text_frame.word_wrap=True;box.text_frame.text='X: '+ch['x_label']+'; Y: '+ch['y_label']+'\n'+coverage_note(ch)
+            box=s.shapes.add_textbox(Inches(.6),Inches(6.2),Inches(12),Inches(1));box.text_frame.word_wrap=True;box.text_frame.text='X: '+ch['x_label']+'; Y: '+ch['y_label']+'\n'+coverage_note(ch)+(' '+ch['scope_note'] if ch.get('scope_note') else '')
             for para in box.text_frame.paragraphs:para.font.size=Pt(11)
         elif ch['kind']=='box':
             b=ch['box'];scale=max(abs(b['min']),abs(b['max']),1);lo=b['min']/scale;span=b['max']/scale-lo
@@ -369,7 +416,7 @@ def pptx_bytes(d,full=False):
                 box=s.shapes.add_textbox(Inches(.7),Inches(6.6),Inches(12),Inches(.65));box.text_frame.text=' '.join(notes)
                 for paragraph in box.text_frame.paragraphs:paragraph.font.size=Pt(12)
     output=io.BytesIO();deck.save(output)
-    return normalized_zip(output.getvalue()),{'slides':len(deck.slides),'mode':'full' if full else 'summary','included_charts':len(chosen),'omitted_charts':len(available)-len(chosen)}
+    return normalized_zip(output.getvalue()),{'slides':len(deck.slides),'mode':'full' if full else 'summary','included_charts':len(chosen),'omitted_charts':len(available)-len(chosen),'chart_slides':len(views)}
 
 
 def export_bundle(result,formats,deck='summary'):

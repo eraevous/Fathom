@@ -1,0 +1,4 @@
+target: amount
+columns:
+  g:
+    type: categorical

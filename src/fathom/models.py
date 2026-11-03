@@ -14,6 +14,38 @@ def canonical_json(value: object) -> str:
     return json.dumps(value, ensure_ascii=False, sort_keys=True, indent=2, allow_nan=False) + "\n"
 
 
+def validate_target_payload(ta,purpose_target,names,total_rows):
+    """Validate fields consumed by target tables and coverage before any renderer runs."""
+    def count(v):return type(v) is int and v>=0
+    def number(v):return v is None or type(v) in (int,float)
+    def share(v):return v is None or type(v) in (int,float) and 0<=v<=1
+    if 'target' not in ta or ta['target']!=purpose_target or (ta['target'] is not None and (not isinstance(ta['target'],str) or ta['target'] not in names)):
+        raise ValueError('target analysis must match purpose.target')
+    for entry in ta['excluded']:
+        if not isinstance(entry,dict) or entry.get('column') not in names or not isinstance(entry.get('reason'),str):raise ValueError('invalid target exclusion')
+    for summary in ta['groups']:
+        if not isinstance(summary,dict) or not count(summary.get('share_denominator')) or summary['share_denominator']!=total_rows or not count(summary.get('group_missing')) or summary['group_missing']>total_rows or not isinstance(summary.get('value_type'),str) or summary.get('value_type') not in {'numeric','latitude','longitude','categorical','boolean'} or not isinstance(summary.get('groups'),list):raise ValueError('invalid target summary fields')
+        for group in summary['groups']:
+            if not isinstance(group,dict) or not isinstance(group.get('value'),str) or not isinstance(group.get('statistics'),dict) or not isinstance(group.get('contrasts'),list) or 'missing_share' not in group or not share(group['missing_share']):raise ValueError('invalid target group fields')
+            stats=group['statistics']
+            if summary['value_type'] in {'numeric','latitude','longitude'}:
+                if any(k not in {'mean','median','min','max'} or not number(v) for k,v in stats.items()) or (group.get('valid',0) and not {'mean','median','min','max'}<=stats.keys()):raise ValueError('invalid numeric group statistics')
+            else:
+                rates=stats.get('rates')
+                if not isinstance(rates,list) or len(rates)>20:raise ValueError('invalid group rates')
+                for rate in rates:
+                    if not isinstance(rate,dict) or not isinstance(rate.get('value'),str) or not count(rate.get('count')) or 'share' not in rate or not share(rate['share']):raise ValueError('invalid group rate entry')
+            for contrast in group['contrasts']:
+                if not isinstance(contrast,dict) or any(not isinstance(contrast.get(k),str) for k in ('measure','basis')) or any(k not in contrast or not number(contrast[k]) for k in ('group','rest')):raise ValueError('invalid group contrast')
+    for chart in ta['charts']:
+        if not isinstance(chart,dict) or not isinstance(chart.get('kind'),str) or chart['kind'] not in {'scatter','group_box','rates'} or not count(chart.get('n')) or not count(chart.get('total_rows')) or chart['total_rows']!=total_rows or chart['n']>total_rows:raise ValueError('invalid target chart coverage')
+        for key in ('plotted','omitted_nonpositive','omitted_points'):
+            if key in chart and (not count(chart[key]) or chart[key]>chart['n']):raise ValueError('invalid target chart optional count')
+        if chart.get('kind')=='group_box' and isinstance(chart.get('data'),list):
+            for row in chart['data']:
+                if isinstance(row,dict) and 'excluded_nonpositive' in row and not count(row['excluded_nonpositive']):raise ValueError('invalid box exclusion count')
+
+
 @dataclass(frozen=True)
 class SchemaContract:
     mode: str = "unknown"
@@ -155,9 +187,10 @@ def validate_document(doc: dict) -> None:
         if len(doc['bivariate'])>selection['budget'] or len(selection['selected'])>selection['budget']:raise ValueError('pair budget exceeded')
         if 'target_analysis' in doc:
             ta=doc['target_analysis']
-            if not isinstance(ta,dict) or ta.get('status') not in {'active','skipped'} or any(not isinstance(ta.get(k),str) for k in ('reason','warning','grouping_policy')):raise ValueError('invalid target status')
+            if not isinstance(ta,dict) or not isinstance(ta.get('status'),str) or ta.get('status') not in {'active','skipped'} or any(not isinstance(ta.get(k),str) for k in ('reason','warning','grouping_policy')):raise ValueError('invalid target status')
             if any(not isinstance(ta.get(k),list) for k in ('ranked','excluded','charts','groups')):raise ValueError('invalid target collections')
             if len(ta['charts'])>len(doc['bivariate']) or len(ta['groups'])>len(doc['bivariate']):raise ValueError('target detail budget exceeded')
+            validate_target_payload(ta,doc['purpose'].get('target'),names,doc['overview']['rows'])
             for r in ta['ranked']:
                 if not isinstance(r,dict) or r.get('column') not in names or type(r.get('n')) is not int or r['n']<2 or type(r.get('rank')) is not int or r['rank']<1 or type(r.get('selected')) is not bool or type(r.get('value')) not in (int,float) or not -1<=r['value']<=1 or type(r.get('strength')) not in (int,float) or not 0<=r['strength']<=1 or r.get('measure') not in {'Pearson r','Correlation ratio eta',"Cramer's V"}:raise ValueError('invalid target ranking')
             for s in ta['groups']:
@@ -168,11 +201,11 @@ def validate_document(doc: dict) -> None:
                 if not isinstance(ch,dict) or ch.get('kind') not in {'scatter','group_box','rates'} or any(not isinstance(ch.get(k),str) for k in ('title','x_label','y_label')):raise ValueError('invalid target chart')
                 if ch['kind']=='scatter':
                     if not isinstance(ch.get('points'),list) or not 1<=len(ch['points'])<=200 or any(not isinstance(p,dict) or any(type(p.get(k)) not in (int,float) for k in ('x','y')) for p in ch['points']):raise ValueError('invalid scatter points')
-                    if any(ch.get(k) not in {'linear','log10'} for k in ('x_scale','y_scale')) or any((ch['x_scale']=='log10' and p['x']<=0) or (ch['y_scale']=='log10' and p['y']<=0) for p in ch['points']):raise ValueError('invalid scatter scale')
+                    if any(not isinstance(ch.get(k),str) or ch.get(k) not in {'linear','log10'} for k in ('x_scale','y_scale')) or any((ch['x_scale']=='log10' and p['x']<=0) or (ch['y_scale']=='log10' and p['y']<=0) for p in ch['points']):raise ValueError('invalid scatter scale')
                 else:
                     if not isinstance(ch.get('data'),list) or not 1<=len(ch['data'])<=20 or any(not isinstance(r,dict) or not isinstance(r.get('label'),str) or type(r.get('n')) is not int or r['n']<0 for r in ch['data']):raise ValueError('invalid grouped chart')
                     if ch['kind']=='group_box':
-                        if ch.get('x_scale') not in {'linear','log10'}:raise ValueError('invalid grouped box scale')
+                        if not isinstance(ch.get('x_scale'),str) or ch.get('x_scale') not in {'linear','log10'}:raise ValueError('invalid grouped box scale')
                         for row in ch['data']:
                             box=row.get('box')
                             if box is not None:

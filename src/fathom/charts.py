@@ -19,7 +19,7 @@ def count_ticks(maximum):
 
 def svg_chart(chart):
     if chart['kind'] in {'scatter','group_box','rates'}:
-        from .target_marks import plot_marks,coverage_note
+        from .target_marks import plot_marks,coverage_note,chart_values
         w,h,marks=plot_marks(chart);out=[]
         for mark in marks:
             kind,*v=mark
@@ -27,7 +27,7 @@ def svg_chart(chart):
             elif kind=='rect':out.append(f'<rect x="{v[0]}" y="{v[1]}" width="{v[2]}" height="{v[3]}" fill="{v[4]}"/>')
             elif kind=='circle':out.append(f'<circle cx="{v[0]}" cy="{v[1]}" r="{v[2]}" fill="{v[3]}" opacity=".65"/>')
             else:out.append(f'<text x="{v[0]}" y="{v[1]}" text-anchor="{v[3]}" style="font-size:{v[4]}px">{escape(v[2])}</text>')
-        return '<figure class="chart target-chart"><h4>'+escape(chart['title'])+'</h4>'+f'<svg role="img" data-kind="{chart["kind"]}" aria-label="{escape(chart["title"],quote=True)}" viewBox="0 0 {w} {h}">'+''.join(out)+'</svg><div class="axis-captions"><p>X: '+escape(chart['x_label'])+'</p><p>Y: '+escape(chart['y_label'])+'</p></div><figcaption>'+escape(coverage_note(chart))+'</figcaption></figure>'
+        return '<figure class="chart target-chart"><h4>'+escape(chart['title'])+'</h4>'+f'<svg role="img" data-kind="{chart["kind"]}" aria-label="{escape(chart["title"],quote=True)}" viewBox="0 0 {w} {h}">'+''.join(out)+'</svg><div class="axis-captions"><p>X: '+escape(chart['x_label'])+'</p><p>Y: '+escape(chart['y_label'])+'</p></div><figcaption>'+escape(coverage_note(chart))+'</figcaption><details><summary>Chart values</summary>'+html_table(chart_values(chart))+'</details></figure>'
     def e(v):return escape(str(v))
     kind=chart['kind'];data=chart.get('data',[]);width=560
     labels=[]

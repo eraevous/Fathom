@@ -6,8 +6,8 @@ by this handoff despite AGENTS' general never-merge rule. No rebase/PR merge/for
 
 1. Log boxes label positive plotted n and excluded nonpositive n; linear boxes
    retain all complete cases. Cautions follow plotted n, complete group summaries
-   unchanged. Legacy saved boxes without per-box exclusions retain their old count
-   with explicit unavailable exclusion metadata, never inferred from quartiles.
+   unchanged. Legacy saved boxes without per-box exclusions keep their stored data but display
+   plotted counts/exclusions as unavailable, never inferred from quartiles.
 2. Separate unrounded normalized interpolation for grouped-box geometry only;
    existing rounded statistical percentile contract unchanged.
 3. Rate captions match horizontal shares/vertical predictor groups or bins in
@@ -23,8 +23,8 @@ by this handoff despite AGENTS' general never-merge rule. No rebase/PR merge/for
 6. Paginate tall PowerPoint target plots into readable group panels and a separate
    legend when necessary. Normal decks/layouts unchanged; explicit panel/continuation
    labels and scope notices. Keep all supported groups/levels, no shrink below8pt
-   to conceal overlap. Summary topics/charts stay bounded but pagination can add
-   slides for one selected plot; disclose this exception to the prior12-slide cap.
+   to conceal overlap. Summary pagination shares the existing7chart-slide budget; later charts can
+   be omitted visibly, preserving the12-slide cap. Full decks retain all panels.
 
 Each of the eight review comments receives a before-failing/after-passing regression
 and clean decoys where meaningful. Re-run full/core/bytes/AEC and actual affected
