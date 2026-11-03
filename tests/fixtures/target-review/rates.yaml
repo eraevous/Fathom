@@ -1,0 +1,6 @@
+target: target
+columns:
+  g:
+    type: categorical
+  target:
+    type: categorical

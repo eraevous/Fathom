@@ -2,7 +2,7 @@
 
 Fathom turns raw or semi-cleaned tabular data into understanding someone can use and pass on: an enhanced data dictionary, a diagnostic EDA engine and a repeatable working record. It answers what is in a dataset, what can't be known from it, and what it is good for.
 
-**Status: report-polish slice.** Fathom is the successor to Data Guide.
+**Status: target-analysis and distribution-polish slice.** Fathom is the successor to Data Guide.
 It starts from guiding documents and decisions, with no earlier implementation,
 and is built with [AEC](https://github.com/eraevous/AEC) and Spec Kit.
 
@@ -46,17 +46,29 @@ human decisions/rationales, and profile context. See the
 [synthetic example](tests/fixtures/review.yaml) and [CLI contract](specs/001-data-review/contracts/cli.md).
 Unknown keys and column references fail before output is written.
 
-Existing target-related value routes and quality missingness contrasts share the
-budget. They rank by declared focus, descriptive strength, case count and lexical
-ties, rather than input column order. Near-duplicate and near-constant value
-columns are excluded. Numeric pairs retain complete-case Pearson coefficients;
-category/boolean × numeric pairs retain group counts and means. Quality contrasts
-show group sizes and missing rates, including without a target. Ranking and
-exclusions are disclosed; associations never establish causation. No new general
-target-analysis methods are included in this slice.
-Optional `pip install -e '.[stats]'` adds SciPy p-values with stated assumptions.
-Without it, coefficients/counts remain available and p-values are labelled unavailable.
-P-values do not choose review actions.
+A declared target produces a descriptive ranking: Pearson r for numeric pairs,
+correlation ratio eta for category/numeric, and Cramer's V for category/category.
+The table shows each measure, signed value, complete cases and selection; unlike
+measures are a priority heuristic, not interchangeable effect sizes or causation.
+Constant/near-constant/copy and identifier-like predictors have explicit exclusions.
+`columns.NAME.exclude_from_target: true` marks known leakage/unwanted predictors;
+unmarked derived predictors may remain ranked. Unique continuous numbers stay eligible.
+
+Target pairs and quality missingness contrasts share pair_budget0–20. Light target
+candidate ranking is separate from selected detail. Selected category-bearing pairs
+carry within-group count/share/valid/missing, means/medians or rates, marked contrasts
+and n<5cautions. For numeric targets one category slot is reserved at budget>=2;
+`group_by` can name a category and reserve it at budget1. Group summaries remain
+pair-local; this does not summarize every column under every grouping. The report
+discloses the reservation and exclusions. No target gives an explicit skipped reason
+and keeps documentation/QA fallback. Selected numeric relationships have bounded
+scatter views; categories use group boxes or target rates by group/bin. No target
+versus two-predictor or model-based analysis is added.
+
+Optional `pip install -e '.[stats]'` retains existing Pearson p-values with stated
+assumptions. Without it, core measures/counts remain available; p-values never select
+relationships. See [spec007 and found/missed ledger](specs/007-target-analysis/validation.md)
+and its [visual review](specs/007-target-analysis/review/README.md).
 
 Inferred types retain uncalibrated confidence, reasons and alternative readings.
 Human overrides take effect without erasing inference. Leading-zero codes remain
@@ -154,7 +166,9 @@ Column headers start collapsed. Expanded entries place compact statistics beside
 plots, stacking at phone width; charts scale without horizontal page overflow.
 Intermediate formatted ticks, wrapping horizontal HTML/PDF axis captions and a
 separate box summary avoid crowded annotations. Skewed columns with zeros retain
-a positive-only log view with explicit exclusion counts. Identifier-like/near-unique
+a positive-only log histogram and ECDF with explicit exclusion counts and original-value
+ticks. Single-variable box plots are slim strips; desktop statistics stay in view
+while plots scroll (the statistics panel itself can scroll). Identifier-like/near-unique
 top-N charts are replaced by a repetition explanation.
 
 PowerPoint defaults to a summary of at most12slides, with omitted chart counts;

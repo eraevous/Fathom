@@ -3,7 +3,7 @@
 from html import escape
 import textwrap
 
-from .presentation import formatted, html_table, tick_label
+from .presentation import formatted, html_table, tick_label, original_tick
 
 
 def linear_ticks(lo,hi,count=5):
@@ -18,6 +18,16 @@ def count_ticks(maximum):
 
 
 def svg_chart(chart):
+    if chart['kind'] in {'scatter','group_box','rates'}:
+        from .target_marks import plot_marks,coverage_note,chart_values
+        w,h,marks=plot_marks(chart);out=[]
+        for mark in marks:
+            kind,*v=mark
+            if kind=='line':out.append(f'<line x1="{v[0]}" y1="{v[1]}" x2="{v[2]}" y2="{v[3]}" stroke="{v[4]}"/>')
+            elif kind=='rect':out.append(f'<rect x="{v[0]}" y="{v[1]}" width="{v[2]}" height="{v[3]}" fill="{v[4]}"/>')
+            elif kind=='circle':out.append(f'<circle cx="{v[0]}" cy="{v[1]}" r="{v[2]}" fill="{v[3]}" opacity=".65"/>')
+            else:out.append(f'<text x="{v[0]}" y="{v[1]}" text-anchor="{v[3]}" style="font-size:{v[4]}px">{escape(v[2])}</text>')
+        return '<figure class="chart target-chart"><h4>'+escape(chart['title'])+'</h4>'+f'<svg role="img" data-kind="{chart["kind"]}" aria-label="{escape(chart["title"],quote=True)}" viewBox="0 0 {w} {h}">'+''.join(out)+'</svg><div class="axis-captions"><p>X: '+escape(chart['x_label'])+'</p><p>Y: '+escape(chart['y_label'])+'</p></div><figcaption>'+escape(coverage_note(chart))+'</figcaption><details><summary>Chart values</summary>'+html_table(chart_values(chart))+'</details></figure>'
     def e(v):return escape(str(v))
     kind=chart['kind'];data=chart.get('data',[]);width=560
     labels=[]
@@ -25,7 +35,7 @@ def svg_chart(chart):
         lines=textwrap.wrap(str(d['label']) or '[empty]',14)
         labels.append(lines[:2]+[lines[2][:12]+'…'] if len(lines)>3 else lines)
     heights=[max(38,len(x)*22+10) for x in labels]
-    height=50+sum(heights) if kind=='bar' else 270
+    height=50+sum(heights) if kind=='bar' else 110 if kind=='box' else 270
     out=[f'<svg role="img" aria-label="{escape(chart["title"],quote=True)}" viewBox="0 0 {width} {height}"><title>{e(chart["title"])}</title>']
     def text(x,y,value,anchor='start',cls=''):
         out.append(f'<text x="{x}" y="{y}" text-anchor="{anchor}"'+(f' class="{cls}"' if cls else '')+'>'+e(value)+'</text>')
@@ -41,7 +51,7 @@ def svg_chart(chart):
             out += [f'<rect x="175" y="{center-10}" width="{end-175}" height="20" fill="#216e73"><title>{e(d["label"])}: {d["count"]}</title></rect>']
             text(end+8,center+6,tick_label(d['count']));y+=h
     elif kind in {'box','ecdf'} or data:
-        left,right,bottom,top=65,515,220,20
+        left,right,bottom,top=65,515,80 if kind=='box' else 220,20
         if kind=='box':lo,hi=chart['box']['min'],chart['box']['max']
         elif kind=='ecdf':lo,hi=chart['points'][0]['x'],chart['points'][-1]['x']
         elif kind=='histogram':lo,hi=data[0]['low'],data[-1]['high']
@@ -56,10 +66,10 @@ def svg_chart(chart):
                 text(left+(right-left)*((i+.5)/len(data)),255,label,'middle','tick-label')
         else:
             for value in ticks:
-                x=px(value);grid(x,top,x,bottom);text(x,255,tick_label(value),'middle','tick-label')
+                x=px(value);grid(x,top,x,bottom);text(x,102 if kind=='box' else 255,original_tick(chart,value),'middle','tick-label')
         if kind=='box':
-            b=chart['box'];y=120
-            out += [f'<line x1="{px(lo)}" y1="{y}" x2="{px(hi)}" y2="{y}" stroke="#193e42"/><rect x="{px(b["q1"])}" y="90" width="{max(1,px(b["q3"])-px(b["q1"]))}" height="60" fill="#c3ded8" stroke="#216e73"/><line x1="{px(b["median"])}" y1="90" x2="{px(b["median"])}" y2="150" stroke="#193e42"/>']
+            b=chart['box'];y=48
+            out += [f'<line x1="{px(lo)}" y1="{y}" x2="{px(hi)}" y2="{y}" stroke="#193e42"/><rect x="{px(b["q1"])}" y="38" width="{max(1,px(b["q3"])-px(b["q1"]))}" height="20" fill="#c3ded8" stroke="#216e73"/><line x1="{px(b["median"])}" y1="38" x2="{px(b["median"])}" y2="58" stroke="#193e42"/>']
         else:
             maximum=1 if kind=='ecdf' else max((d['count'] for d in data),default=1) or 1
             for value in (linear_ticks(0,1) if kind=='ecdf' else count_ticks(maximum)):
@@ -82,10 +92,10 @@ def svg_chart(chart):
     if chart.get('omitted_points'):notes.append(f"Approximate ECDF display: {chart['omitted_points']:,} distinct points omitted.")
     if chart.get('scale')=='log10':
         counts=chart.get('coverage_counts')
-        notes.append((f"Positive values: {counts['positive']:,}. Zeros excluded: {counts['zeros']:,}. Negatives excluded: {counts['negatives']:,}. Invalid excluded: {counts['invalid']:,}." if counts else 'Legacy log coverage counts unavailable.')+' Additional log10 view; linear view retained.')
+        notes.append((f"Positive values: {counts['positive']:,}. Zeros excluded: {counts['zeros']:,}. Negatives excluded: {counts['negatives']:,}. Invalid excluded: {counts['invalid']:,}." if counts else 'Legacy log coverage counts unavailable.')+' Positive-only denominator; original-unit ticks on log scale; linear view retained.')
     rows=[[d['label'],formatted(d['count'])] for d in data]
-    if kind=='ecdf':rows=[[formatted(p['x']),formatted(p['cumulative'],True)] for p in chart['points']]
+    if kind=='ecdf':rows=[[original_tick(chart,p['x']),formatted(p['cumulative'],True)] for p in chart['points']]
     if kind=='box':rows=[[k.upper() if k in {'q1','q3'} else k.capitalize(),formatted(chart['box'][k])] for k in ('min','q1','median','q3','max')]
     table=html_table({'caption':'Five-number summary' if kind=='box' else 'Plotted values','headers':['Value','Cumulative share' if kind=='ecdf' else 'Measurement' if kind=='box' else 'Count'],'rows':rows,'numeric':[1]})
     summary='<div class="box-summary">'+table+'</div>' if kind=='box' else '<details><summary>Chart values</summary>'+table+'</details>'
-    return '<figure class="chart"><h4>'+e(chart['title'])+'</h4>'+''.join(out)+'<div class="axis-captions"><p><strong>X:</strong> '+e(chart['x_label'])+'</p><p><strong>Y:</strong> '+e(chart['y_label'])+'</p></div>'+''.join('<figcaption>'+e(n)+'</figcaption>' for n in notes)+summary+'</figure>'
+    return '<figure class="chart"><h4>'+e(chart['title'])+'</h4>'+''.join(out)+'<div class="axis-captions"><p><strong>X:</strong> '+e(chart['x_label'])+'</p>'+('' if kind=='box' else '<p><strong>Y:</strong> '+e(chart['y_label'])+'</p>')+'</div>'+''.join('<figcaption>'+e(n)+'</figcaption>' for n in notes)+summary+'</figure>'

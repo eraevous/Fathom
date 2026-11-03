@@ -6,6 +6,7 @@ import re
 
 from .models import ProfilingResult
 from .charts import svg_chart
+from .target import target_tables
 from .presentation import formatted, column_tables, html_table, markdown_table, metric_table, structured_tables, formatted_examples, display_charts, top_n_reason
 from pathlib import Path
 
@@ -228,9 +229,15 @@ def render_html(result: ProfilingResult):
             if not fs: out.append('<p>None recorded.</p>')
         out += ['</div></section><section><h2>Relations</h2><p>'+escape(d['selection'].get('ranking_rule','Legacy input-order selection; no relevance ranking recorded.'))+'</p>',
                 '<p>Selected '+str(len(d['bivariate']))+' relationship(s); budget '+str(d['selection']['budget'])+'.</p>']
+        ta=d.get('target_analysis')
+        out += ['<p>'+escape(ta['reason']+' '+ta['grouping_policy']+' '+ta['warning'] if ta else 'Target detail unavailable in legacy artifact; rerun profiling to compute it.')+'</p>']
+        out += ['<div class="target-tables"><p>Wide target tables scroll horizontally on narrow screens.</p>']+[html_table(t) for t in target_tables(d)]+['</div>']
+        if ta:out += [svg_chart(ch) for ch in ta['charts']]
+        if ta:out += ['<details><summary>Selected pair statistics and method details</summary>']
         for pair in d['bivariate']:
             out += ['<article><h3>'+escape(pair['left'])+' × '+escape(pair['right'])+'</h3><p>'+escape(pair['method'])+' · '+escape(pair['semantics'])+'</p>',
                     ''.join(html_table(t) for t in structured_tables('Relationship statistics',pair['statistics'])),'<p>'+escape(pair['uncertainty'])+'</p></article>']
+        if ta:out += ['</details>']
         out += ['<details><summary>Ranking and exclusions</summary>',readable_html(d['selection']),'</details>']
         if 'quality' in d:
             out += ['<details><summary>Quality rules and screening coverage</summary>',readable_html(d['quality']),'</details>']
@@ -239,7 +246,7 @@ def render_html(result: ProfilingResult):
         out += ['<section><h2>Labelled annotations</h2>',readable_html(d['annotations']),'</section>']
     css='''body{font:16px/1.55 system-ui,sans-serif;background:#f5f8f7;color:#193e42;max-width:1120px;padding:32px;margin:auto}h1{font-size:44px;margin-bottom:8px}h2{border-bottom:2px solid #28777c;padding-bottom:7px;margin-top:40px}h3{margin-top:24px}section{margin-bottom:30px}.opening{background:white;padding:24px;border:1px solid #d5e1df;border-radius:8px}table{border-collapse:collapse;width:100%;background:white}td,th{padding:10px;text-align:left;border-bottom:1px solid #d5e1df;vertical-align:top}td{overflow-wrap:anywhere}article{background:white;border-left:3px solid #b9d3cf;padding:8px 16px;margin:10px 0}article>p{margin:7px 0}details{margin:8px 0}summary{cursor:pointer;color:#12656b;font-weight:600}details[open]{padding-bottom:10px}a{color:#12656b}small{color:#4d676b}dt{font-weight:600;margin-top:8px}dd{margin-left:20px;overflow-wrap:anywhere}ul{padding-left:24px}.sample-scroll{overflow-x:auto}.sample-scroll td{min-width:90px;max-width:260px;white-space:pre-wrap}svg{width:100%;max-width:800px}svg text{font:13px system-ui,sans-serif}label{cursor:pointer;font-weight:600;margin-left:8px}.summary-view{background:#e9f2ee;padding:12px;margin-top:12px}.repetitive{display:none}.repetitive:target{display:block}#full-view:checked ~ .summary-view{display:none}#full-view:checked ~ .full-view .summary-view{display:none}#full-view:checked ~ .full-view .repetitive{display:block}@media(max-width:700px){body{padding:12px}td,th{padding:6px;font-size:14px}.opening{padding:12px}}@media print{body{background:white;padding:0}details{break-inside:avoid}.repetitive{display:block}}'''
     css += '.column-entry{box-sizing:border-box;width:100%;border:1px solid #d5e1df;border-radius:6px;padding:20px;margin:24px 0}.column-entry h3{margin-top:0;overflow-wrap:anywhere}.review-table{table-layout:fixed;margin:12px 0 20px}.review-table td,.review-table th{padding:6px 10px}caption{text-align:left;font-weight:600;padding:8px 0}.num{text-align:right;font-variant-numeric:tabular-nums}.table-scroll{overflow-x:auto;max-width:100%}.chart{margin:20px 0;max-width:100%;overflow-x:auto}.chart svg{width:720px;max-width:none;display:block}.chart svg text{font:15px system-ui,sans-serif}.chart-title{font-weight:600}figcaption{font-size:14px;margin:8px 0;color:#4d676b}p{overflow-wrap:anywhere}'
-    css += '.column-entry{padding:12px 16px;margin:10px 0}.column-entry>summary{display:list-item}.column-entry>summary h3{display:inline;margin:0 16px 0 0;font-size:18px}.column-entry>summary span{font-size:14px;font-weight:400;color:#4d676b}.column-grid{display:grid;grid-template-columns:minmax(230px,.75fr) minmax(0,1.25fr);gap:24px;align-items:start}.column-statistics{min-width:0;max-width:360px}.column-plots{min-width:0}.review-table{max-width:420px}.chart{max-width:760px}.chart svg{width:100%;max-width:100%;height:auto}.chart svg text{font:18px system-ui,sans-serif}.chart h4{font-size:16px;margin:8px 0}.axis-captions p{margin:3px 0;font-size:14px;overflow-wrap:anywhere}.box-summary{max-width:320px}.chart{overflow:visible;margin:10px 0 20px}.column-entry .table-scroll{max-width:100%}@media(max-width:800px){.column-grid{grid-template-columns:minmax(0,1fr)}.column-entry{padding:10px}.column-statistics{max-width:100%}}@media(max-width:500px){.chart svg text{font-size:22px}}'
+    css += '.target-chart .review-table{max-width:none;min-width:680px;table-layout:auto}.target-chart .review-table .num{white-space:nowrap}.target-tables td{white-space:pre-line}.target-tables .review-table{max-width:none;min-width:640px;table-layout:auto}.column-entry{padding:12px 16px;margin:10px 0}.column-entry>summary{display:list-item}.column-entry>summary h3{display:inline;margin:0 16px 0 0;font-size:18px}.column-entry>summary span{font-size:14px;font-weight:400;color:#4d676b}.column-grid{display:grid;grid-template-columns:minmax(230px,.75fr) minmax(0,1.25fr);gap:24px;align-items:start}.column-statistics{min-width:0;max-width:360px;position:sticky;top:12px;max-height:65vh;overflow-y:auto}.column-plots{min-width:0}.review-table{max-width:420px}.chart{max-width:760px}.chart svg{width:100%;max-width:100%;height:auto}.chart svg text{font:18px system-ui,sans-serif}.chart h4{font-size:16px;margin:8px 0}.axis-captions p{margin:3px 0;font-size:14px;overflow-wrap:anywhere}.box-summary{max-width:320px}.chart{overflow:visible;margin:10px 0 20px}.column-entry .table-scroll{max-width:100%}@media(max-width:800px){.column-grid{grid-template-columns:minmax(0,1fr)}.column-entry{padding:10px}.column-statistics{max-width:100%;position:static;max-height:none;overflow:visible}}@media(max-width:500px){.chart svg text{font-size:22px}}'
     return '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Fathom — '+escape(d['kind'])+'</title><style>'+css+'</style></head><body>'+'\n'.join(out)+'</body></html>\n'
 
 
@@ -288,6 +295,10 @@ def render_markdown(result: ProfilingResult):
             lines += ['</details>','']
         lines += ['## Relations','',md_text(d['selection'].get('ranking_rule','Legacy input-order selection; no relevance ranking recorded.')),'',
                   f"Selected {len(d['bivariate'])} relationship(s); budget {d['selection']['budget']}.",'']
+        ta=d.get('target_analysis')
+        lines += [md_text(ta['reason']+' '+ta['grouping_policy']+' '+ta['warning'] if ta else 'Target detail unavailable in legacy artifact.'),'']
+        lines += [markdown_table(t) for t in target_tables(d)]
+        if ta:lines += [svg_chart(ch) for ch in ta['charts']]
         for pair in d['bivariate']:
             lines += ['### '+md_text(pair['left'])+' × '+md_text(pair['right']),'',md_text(pair['method']+' · '+pair['semantics']),'','\n'.join(markdown_table(t) for t in structured_tables('Relationship statistics',pair['statistics'])),md_text(pair['uncertainty']),'']
         lines += ['<details><summary>Ranking and exclusions</summary>','',readable_md(d['selection']),'</details>','']
