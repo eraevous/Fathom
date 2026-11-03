@@ -1,0 +1,46 @@
+{
+  "after-college-1280": {
+    "height": 17019,
+    "width": 1280
+  },
+  "after-college-390": {
+    "height": 17521,
+    "width": 390
+  },
+  "after-late-1280": {
+    "height": 11368,
+    "width": 1280
+  },
+  "after-late-390": {
+    "height": 12872,
+    "width": 390
+  },
+  "after-movies-1280": {
+    "height": 18868,
+    "width": 1280
+  },
+  "after-movies-390": {
+    "height": 19848,
+    "width": 390
+  },
+  "after-planted-1280": {
+    "height": 10019,
+    "width": 1280
+  },
+  "after-planted-390": {
+    "height": 10880,
+    "width": 390
+  },
+  "before-movies-1280": {
+    "height": 14304,
+    "width": 1280
+  },
+  "before-movies-390": {
+    "height": 15434,
+    "width": 390
+  },
+  "sticky-check": {
+    "height": 585,
+    "statistics_y": 12
+  }
+}

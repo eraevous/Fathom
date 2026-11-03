@@ -168,7 +168,7 @@ def pdf_bytes(d):
         if ch['kind'] in {'scatter','group_box','rates'}:
             from .target_marks import coverage_note
             story.append(p(coverage_note(ch)))
-        if ch.get('omitted_points'):story.append(p(f"Approximate ECDF display: {ch['omitted_points']} distinct points omitted."))
+        if ch.get('omitted_points') and ch['kind']=='ecdf':story.append(p(f"Approximate ECDF display: {ch['omitted_points']} distinct points omitted."))
         if 'coverage' in ch:story.append(p('Top10 coverage: '+formatted(ch['coverage'],True)+'; other is the remainder.'))
         if ch.get('coverage_counts'):
             s=ch['coverage_counts'];story.append(p(f"Positive log view: {s['positive']:,} positives; zeros excluded: {s['zeros']:,}; negatives excluded: {s['negatives']:,}; invalid excluded: {s['invalid']:,}."))
@@ -218,7 +218,7 @@ def pdf_bytes(d):
         story.append(p(d['selection'].get('ranking_rule','Ranking not recorded.')))
         ta=d.get('target_analysis');story.append(p(ta['reason']+' '+ta['grouping_policy']+' '+ta['warning'] if ta else 'Target analysis unavailable in legacy artifact.'))
         for t in target_tables(d):
-            story.append(p(t['caption'],'Heading3'));table([t['headers'],*t['rows']],[490/len(t['headers'])]*len(t['headers']),t['numeric'])
+            story.append(p(t['caption'],'Heading3'));table([t['headers'],*t['rows']],[90,35,40,55,170,100] if len(t['headers'])==6 else [490/len(t['headers'])]*len(t['headers']),t['numeric'])
         if ta:
             for ch in ta['charts']:pdf_chart(ch)
         for pair in d['bivariate']:

@@ -27,3 +27,8 @@
 7. Inherit PR#14 authorized duplicate FT-R18 removal untouched; never edit existing
    records/decisions ourselves. Spec/records precede code. Main rebase after#14merge,
    no main push/force/PR merge. Builder checks are not independent acceptance.
+8. Group valid/missing counts use effective-type parsing: unavailable includes raw
+   blanks and incompatible numeric/boolean values. Separate per-group invalid counts
+   are not supplied yet; dictionary invalid totals/raw evidence remain. This field-
+   naming limitation is disclosed in validation rather than treating coercion as a
+   domain fact or silently changing raw data.

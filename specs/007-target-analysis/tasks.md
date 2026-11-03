@@ -20,9 +20,9 @@
 
 ## Verification / publish
 
-- [ ] T007 Create tests/fixtures/target planted/clean/late synthetic tables and sourced public target configs; inspect report-only found/missed ledger in specs/007-target-analysis/validation.md (FR-008).
-- [ ] T008 Capture and visually inspect actual HTML/PDF/PowerPoint1280/390 in specs/007-target-analysis/review; fix or list open problems with practice comparison (FR-005,007,008).
-- [ ] T009 Run full/core and fresh-process bytes; append AEC claim/evaluation/evidence, edges/check/impact, protected-prefix verification; rebase after#14merges and publish one CLA-unticked PR then stop (FR-006,008).
+- [x] T007 Create tests/fixtures/target planted/clean/late synthetic tables and sourced public target configs; inspect report-only found/missed ledger in specs/007-target-analysis/validation.md (FR-008).
+- [x] T008 Capture and visually inspect actual HTML/PDF/PowerPoint1280/390 in specs/007-target-analysis/review; fix or list open problems with practice comparison (FR-005,007,008).
+- [x] T009 Run full/core and fresh-process bytes; append AEC claim/evaluation/evidence, edges/check/impact, protected-prefix verification; rebase after#14merges and publish one CLA-unticked PR then stop (FR-006,008).
 
 Dependency sequence:T001→T002→T003→T004→T005→T006→T007→T008→T009.
 Read-only research/tests in independent environments may run concurrently; shared

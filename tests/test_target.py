@@ -88,6 +88,7 @@ def test_log_ecdf_original_ticks_slim_box_and_sticky_statistics(make_profile):
 def test_budgeted_plots_all_types_and_exports(make_profile):
     p=make_profile('x,g,target\n1,A,10\n2,A,14\n3,A,15\n4,B,24\n5,B,25\n6,B,30\n',{'target':'target'})
     charts=p.document['target_analysis']['charts']
+    assert all('independent paired observations' in pair['uncertainty'] for pair in p.document['bivariate'] if pair['method']=='pearson')
     assert {c['kind'] for c in charts}=={'scatter','group_box'}
     assert all(c['title'] in render_html(p) for c in charts)
     from fathom.exports import export_bundle

@@ -81,7 +81,7 @@ def target_candidates(rows,columns,cfg,quality):
                    'groups':[{'value':g,'n':len(v),'mean':safe(statistics.mean(v))} for g,v in sorted(groups.items())],'eta':measure['value']}
         else:method='categorical_association';stats={'n':len(cases),'cramers_v':measure['value']}
         pairs.append({'left':name,'right':target,'method':method,'statistics':stats,'association':measure,
-                      'generator':'rule:target-v1','semantics':'human-declared' if c['override'] and tc['override'] else 'inferred','uncertainty':WARNING})
+                      'generator':'rule:target-v1','semantics':'human-declared' if c['override'] and tc['override'] else 'inferred','uncertainty':WARNING+(' Optional Pearson p-values assume independent paired observations and a suitable null model; the table cannot establish these assumptions.' if method=='pearson' else '')})
     return selection,pairs
 
 
@@ -180,8 +180,8 @@ def target_tables(d):
     for s in ta['groups']:
         rows=[]
         for g in s['groups']:
-            stats=g['statistics'];detail='; '.join(k+': '+formatted(v) for k,v in stats.items() if k!='rates')
-            if 'rates' in stats:detail='; '.join(r['value']+': '+formatted(r['share'],True)+f" ({r['count']}/{g['valid']})" for r in stats['rates'])
+            stats=g['statistics'];detail='\n'.join(k+': '+formatted(v) for k,v in stats.items() if k!='rates')
+            if 'rates' in stats:detail='\n'.join(r['value']+': '+formatted(r['share'],True)+f" ({r['count']}/{g['valid']})" for r in stats['rates'])
             rows.append([g['value'],formatted(g['n']),formatted(g['share'],True),f"{g['valid']} / {g['missing']}",detail,('too small to read reliably; ' if g['small'] else '')+('marked descriptive contrast' if g['contrasts'] else 'No marked contrast')])
         tables.append({'caption':f"{s['value_column']} within {s['group_column']} — shares of {s['share_denominator']} rows; {s['group_missing']} missing grouping rows",'headers':['Group','Count','Share','Valid / missing','Key statistics / rates','Caution'],'rows':rows,'numeric':[1,2]})
     return tables

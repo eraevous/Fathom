@@ -1,0 +1,325 @@
+{
+  "after-college-group-1280.png": {
+    "format": "HTML",
+    "topic": "group",
+    "width": 1280
+  },
+  "after-college-group-390.png": {
+    "format": "HTML",
+    "topic": "group",
+    "width": 390
+  },
+  "after-college-pdf-target-1280.png": {
+    "format": "pdf",
+    "page": 90,
+    "pages": 94,
+    "renderer": "actual ReportLab PDF",
+    "width": 1280
+  },
+  "after-college-pdf-target-390.png": {
+    "format": "pdf",
+    "page": 90,
+    "pages": 94,
+    "renderer": "actual ReportLab PDF",
+    "width": 390
+  },
+  "after-college-pptx-target-1280.png": {
+    "format": "pptx",
+    "page": 6,
+    "pages": 12,
+    "renderer": "actual LibreOffice Impress/PyMuPDF",
+    "width": 1280
+  },
+  "after-college-pptx-target-390.png": {
+    "format": "pptx",
+    "page": 6,
+    "pages": 12,
+    "renderer": "actual LibreOffice Impress/PyMuPDF",
+    "width": 390
+  },
+  "after-college-ranking-1280.png": {
+    "format": "HTML",
+    "topic": "ranking",
+    "width": 1280
+  },
+  "after-college-ranking-390.png": {
+    "format": "HTML",
+    "topic": "ranking",
+    "width": 390
+  },
+  "after-college-scatter-1280.png": {
+    "format": "HTML",
+    "topic": "scatter",
+    "width": 1280
+  },
+  "after-college-scatter-390.png": {
+    "format": "HTML",
+    "topic": "scatter",
+    "width": 390
+  },
+  "after-late-pdf-target-1280.png": {
+    "format": "pdf",
+    "page": 18,
+    "pages": 20,
+    "renderer": "actual ReportLab PDF",
+    "width": 1280
+  },
+  "after-late-pdf-target-390.png": {
+    "format": "pdf",
+    "page": 18,
+    "pages": 20,
+    "renderer": "actual ReportLab PDF",
+    "width": 390
+  },
+  "after-late-pptx-target-1280.png": {
+    "format": "pptx",
+    "page": 6,
+    "pages": 12,
+    "renderer": "actual LibreOffice Impress/PyMuPDF",
+    "width": 1280
+  },
+  "after-late-pptx-target-390.png": {
+    "format": "pptx",
+    "page": 6,
+    "pages": 12,
+    "renderer": "actual LibreOffice Impress/PyMuPDF",
+    "width": 390
+  },
+  "after-late-ranking-1280.png": {
+    "format": "HTML",
+    "topic": "ranking",
+    "width": 1280
+  },
+  "after-late-ranking-390.png": {
+    "format": "HTML",
+    "topic": "ranking",
+    "width": 390
+  },
+  "after-late-rates-1280.png": {
+    "format": "HTML",
+    "topic": "rates",
+    "width": 1280
+  },
+  "after-late-rates-390.png": {
+    "format": "HTML",
+    "topic": "rates",
+    "width": 390
+  },
+  "after-movies-box-1280.png": {
+    "format": "HTML",
+    "topic": "box",
+    "width": 1280
+  },
+  "after-movies-box-390.png": {
+    "format": "HTML",
+    "topic": "box",
+    "width": 390
+  },
+  "after-movies-group-1280.png": {
+    "format": "HTML",
+    "topic": "group",
+    "width": 1280
+  },
+  "after-movies-group-390.png": {
+    "format": "HTML",
+    "topic": "group",
+    "width": 390
+  },
+  "after-movies-log-1280.png": {
+    "format": "HTML",
+    "topic": "log",
+    "width": 1280
+  },
+  "after-movies-log-390.png": {
+    "format": "HTML",
+    "topic": "log",
+    "width": 390
+  },
+  "after-movies-log-ecdf-1280.png": {
+    "format": "HTML",
+    "topic": "log-ecdf",
+    "width": 1280
+  },
+  "after-movies-log-ecdf-390.png": {
+    "format": "HTML",
+    "topic": "log-ecdf",
+    "width": 390
+  },
+  "after-movies-pdf-box-1280.png": {
+    "format": "pdf",
+    "page": 8,
+    "pages": 60,
+    "renderer": "actual ReportLab PDF",
+    "width": 1280
+  },
+  "after-movies-pdf-box-390.png": {
+    "format": "pdf",
+    "page": 8,
+    "pages": 60,
+    "renderer": "actual ReportLab PDF",
+    "width": 390
+  },
+  "after-movies-pdf-log-ecdf-1280.png": {
+    "format": "pdf",
+    "page": 10,
+    "pages": 60,
+    "renderer": "actual ReportLab PDF",
+    "width": 1280
+  },
+  "after-movies-pdf-log-ecdf-390.png": {
+    "format": "pdf",
+    "page": 10,
+    "pages": 60,
+    "renderer": "actual ReportLab PDF",
+    "width": 390
+  },
+  "after-movies-pdf-target-1280.png": {
+    "format": "pdf",
+    "page": 55,
+    "pages": 60,
+    "renderer": "actual ReportLab PDF",
+    "width": 1280
+  },
+  "after-movies-pdf-target-390.png": {
+    "format": "pdf",
+    "page": 55,
+    "pages": 60,
+    "renderer": "actual ReportLab PDF",
+    "width": 390
+  },
+  "after-movies-pptx-box-1280.png": {
+    "format": "PPTX full",
+    "page": 30,
+    "pages": 72,
+    "renderer": "LibreOffice Impress/PyMuPDF",
+    "width": 1280
+  },
+  "after-movies-pptx-box-390.png": {
+    "format": "PPTX full",
+    "page": 30,
+    "pages": 72,
+    "renderer": "LibreOffice Impress/PyMuPDF",
+    "width": 390
+  },
+  "after-movies-pptx-log-ecdf-1280.png": {
+    "format": "PPTX full",
+    "page": 33,
+    "pages": 72,
+    "renderer": "LibreOffice Impress/PyMuPDF",
+    "width": 1280
+  },
+  "after-movies-pptx-log-ecdf-390.png": {
+    "format": "PPTX full",
+    "page": 33,
+    "pages": 72,
+    "renderer": "LibreOffice Impress/PyMuPDF",
+    "width": 390
+  },
+  "after-movies-pptx-target-1280.png": {
+    "format": "pptx",
+    "page": 6,
+    "pages": 12,
+    "renderer": "actual LibreOffice Impress/PyMuPDF",
+    "width": 1280
+  },
+  "after-movies-pptx-target-390.png": {
+    "format": "pptx",
+    "page": 6,
+    "pages": 12,
+    "renderer": "actual LibreOffice Impress/PyMuPDF",
+    "width": 390
+  },
+  "after-movies-ranking-1280.png": {
+    "format": "HTML",
+    "topic": "ranking",
+    "width": 1280
+  },
+  "after-movies-ranking-390.png": {
+    "format": "HTML",
+    "topic": "ranking",
+    "width": 390
+  },
+  "after-movies-scatter-1280.png": {
+    "format": "HTML",
+    "topic": "scatter",
+    "width": 1280
+  },
+  "after-movies-scatter-390.png": {
+    "format": "HTML",
+    "topic": "scatter",
+    "width": 390
+  },
+  "after-movies-sticky-1280.png": {
+    "format": "HTML",
+    "topic": "statistics stay visible beside last plot",
+    "width": 1280
+  },
+  "after-planted-group-1280.png": {
+    "format": "HTML",
+    "topic": "group",
+    "width": 1280
+  },
+  "after-planted-group-390.png": {
+    "format": "HTML",
+    "topic": "group",
+    "width": 390
+  },
+  "after-planted-pdf-target-1280.png": {
+    "format": "pdf",
+    "page": 26,
+    "pages": 28,
+    "renderer": "actual ReportLab PDF",
+    "width": 1280
+  },
+  "after-planted-pdf-target-390.png": {
+    "format": "pdf",
+    "page": 26,
+    "pages": 28,
+    "renderer": "actual ReportLab PDF",
+    "width": 390
+  },
+  "after-planted-pptx-target-1280.png": {
+    "format": "pptx",
+    "page": 6,
+    "pages": 12,
+    "renderer": "actual LibreOffice Impress/PyMuPDF",
+    "width": 1280
+  },
+  "after-planted-pptx-target-390.png": {
+    "format": "pptx",
+    "page": 6,
+    "pages": 12,
+    "renderer": "actual LibreOffice Impress/PyMuPDF",
+    "width": 390
+  },
+  "after-planted-ranking-1280.png": {
+    "format": "HTML",
+    "topic": "ranking",
+    "width": 1280
+  },
+  "after-planted-ranking-390.png": {
+    "format": "HTML",
+    "topic": "ranking",
+    "width": 390
+  },
+  "after-planted-scatter-1280.png": {
+    "format": "HTML",
+    "topic": "scatter",
+    "width": 1280
+  },
+  "after-planted-scatter-390.png": {
+    "format": "HTML",
+    "topic": "scatter",
+    "width": 390
+  },
+  "before-movies-ranking-1280.png": {
+    "format": "HTML",
+    "topic": "ranking",
+    "width": 1280
+  },
+  "before-movies-ranking-390.png": {
+    "format": "HTML",
+    "topic": "ranking",
+    "width": 390
+  }
+}
