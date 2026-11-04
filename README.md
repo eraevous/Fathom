@@ -110,6 +110,16 @@ gap are only partially found or missed. See the complete
 [builder found/missed ledger](specs/002-data-quality/validation.md) and
 [slice-2 intent note](codex_++/intents/2026-11-01__data-quality.intent.md).
 
+What it finds at row level (spec010; counts plus the first 10 row positions, each
+paired with a question, never a cleaning step):
+
+- wholly blank rows, and rows with every numeric column blank; positions of repeated rows;
+- "looks like k rows per `col`", with the columns constant within that grouping;
+- date values outside the dominant month/year or beyond quartiles ± 3×IQR, and repeated
+  event timestamps;
+- declared `intervals: [{start: a, end: b}]`: end before/equal to start and durations
+  in seconds (full date-time parsed); two undeclared date columns only raise a question.
+
 Old version-1 artifacts remain renderable. New completeness measurements requiring
 raw rows are explicitly unavailable there. The quality helper uses no new optional
 dependency. FT-R7 target methods and FT-R8 switchable chart axes remain later work.

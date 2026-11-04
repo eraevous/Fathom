@@ -25,7 +25,7 @@ def mapping(value: object, name: str, allowed: set[str]) -> dict:
 def validate_config(raw: dict | None = None, columns: list[str] | None = None) -> dict:
     cfg = dict(mapping({} if raw is None else raw, "config", {
         "question", "target", "pair_budget", "columns", "row_unit", "generating_process",
-        "missingness_mechanism", "decisions", "context", "schema", "title", "description", "sample_rows", "sample_seed", "sample_text_limit", "group_by"}))
+        "missingness_mechanism", "decisions", "context", "schema", "title", "description", "sample_rows", "sample_seed", "sample_text_limit", "group_by", "intervals"}))
     for key in ("question", "target", "row_unit", "generating_process", "missingness_mechanism", "title", "description", "group_by"):
         text(cfg.get(key), key, nullable=True)
     for key,default,low,high in (("sample_rows",20,0,100),("sample_seed",0,0,2**32-1),("sample_text_limit",120,20,1000)):
@@ -53,6 +53,18 @@ def validate_config(raw: dict | None = None, columns: list[str] | None = None) -
     cfg["columns"] = metadata
     if columns is not None and cfg.get("target") is not None and cfg["target"] not in columns:
         raise ValueError("target references an unknown column")
+    intervals = cfg.get("intervals", [])
+    if not isinstance(intervals, list):
+        raise ValueError("intervals must be a list of {start, end} mappings")
+    for item in intervals:
+        mapping(item, "intervals item", {"start", "end"})
+        for key in ("start", "end"):
+            text(item.get(key), f"intervals.{key}")
+        if item["start"] == item["end"]:
+            raise ValueError("intervals start and end must be different columns")
+        if columns is not None and (item["start"] not in columns or item["end"] not in columns):
+            raise ValueError("intervals reference an unknown column")
+    cfg["intervals"] = [{"start": i["start"], "end": i["end"]} for i in intervals]
     if columns is not None and cfg.get("group_by") is not None and cfg["group_by"] not in columns:raise ValueError("group_by references an unknown column")
     context = mapping(cfg.get("context", {}), "context", {"snapshot_date", "source", "transformations", "other_changes"})
     snapshot = context.get("snapshot_date")
