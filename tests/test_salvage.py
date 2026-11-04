@@ -236,7 +236,7 @@ def test_dark_mode_overrides_kind_tags_and_no_script():
     html = render_html(ProfilingResult(d))
     assert "@media (prefers-color-scheme:dark){:root:not([data-theme=light]){" in html
     assert ":root[data-theme=dark]{" in html and "color-scheme:light dark" in html
-    assert "@media print{:root{" in html and "<script" not in html.lower()
+    assert "@media print{:root," in html and "<script" not in html.lower()
     assert re.search(r'<article id="q-missing-test-0" class="finding kind-observation"><p><span class="kind-tag">Observation</span>', html)
     for kind in ("observation", "interpretation", "hypothesis", "action", "question"):
         assert f"--kind-{kind}:" in html and f'class="kind-heading kind-{kind}"' in html

@@ -27,6 +27,11 @@ KIND_COLOURS = {
 CATEGORICAL = ["#216e73", "#ab5130", "#7564a3", "#397db5", "#6d8430", "#b34867", "#5b777e", "#9d7428", "#5974bd", "#906a75",
                "#248b81", "#bd6440", "#79538a", "#427448", "#a64d4d", "#507e99", "#8c852e", "#7b657f", "#468568", "#967454"]
 
+# Dark HTML series preserve hue families while clearing the3:1 graphics review floor.
+# Fixed exports and portable SVG attributes retain CATEGORICAL above.
+DARK_CATEGORICAL = ["#5cb8bd", "#d1a18d", "#b3a9cc", "#92b7d6", "#afbb8d", "#d59aac", "#a5b4b8", "#c9b38a", "#a4b3db", "#c2adb3",
+                    "#87bfb9", "#dba995", "#b59fc0", "#97b39b", "#ce9d9d", "#9fb8c7", "#c0bc8c", "#b6aaba", "#99bcac", "#c5b29e"]
+
 LIGHT = THEMES["light"]
 
 
@@ -42,7 +47,8 @@ def contrast(foreground, background):
 
 def tokens(theme):
     return ";".join(f"--{name.replace('_', '-')}:{value}" for name, value in THEMES[theme].items()) + ";" + \
-        ";".join(f"--kind-{kind}:{value}" for kind, value in KIND_COLOURS[theme].items())
+        ";".join(f"--kind-{kind}:{value}" for kind, value in KIND_COLOURS[theme].items()) + ";" + \
+        ";".join(f"--series-{i}:{value}" for i, value in enumerate(CATEGORICAL if theme == "light" else DARK_CATEGORICAL))
 
 
 def theme_css():
@@ -51,8 +57,10 @@ def theme_css():
     SVG marks keep light colour attributes (portable in Markdown); HTML maps them to tokens here."""
     marks = "".join(f'svg [{attr}="{value}"]{{{attr}:var(--{name.replace("_", "-")})}}'
                     for name, value in LIGHT.items() for attr in ("fill", "stroke"))
+    marks += "".join(f'svg [{attr}="{value}"]{{{attr}:var(--series-{i})}}'
+                     for i, value in enumerate(CATEGORICAL) for attr in ("fill", "stroke"))
     return (":root{color-scheme:light dark;" + tokens("light") + "}"
             "@media (prefers-color-scheme:dark){:root:not([data-theme=light]){color-scheme:dark;" + tokens("dark") + "}}"
             ":root[data-theme=dark]{color-scheme:dark;" + tokens("dark") + "}"
             ":root[data-theme=light]{color-scheme:light}"
-            "@media print{:root{" + tokens("light") + "}}" + marks + "svg text{fill:var(--ink)}")
+            "@media print{:root,:root[data-theme=dark],:root:not([data-theme=light]){" + tokens("light") + "}}" + marks + "svg text{fill:var(--ink)}")
