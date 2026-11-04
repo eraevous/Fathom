@@ -1,6 +1,6 @@
 # Plan: Configurator page
 
-Python 3.12; no new dependency (page JS is inline, hand-written). New module
+Python >=3.12 (project floor; tested on 3.13); no new dependency (page JS is inline, hand-written). New module
 `src/fathom/configure.py`; CLI `configure` subcommand; `config.read_config` split out of
 `load_config` so the page can keep a passed-through raw config.
 

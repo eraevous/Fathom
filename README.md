@@ -99,7 +99,8 @@ distinct values, parsed date formats) with controls for a type override, a
 `date_format`, and `exclude_from_target`; a target selector whose candidates carry only
 observable reasons ("numeric; 96.0% populated; 14 distinct"); temporal column pairs as
 unticked interval suggestions; histogram `bins` (default: square root of n, capped at
-10); `pair_budget`, `sample_rows`; optional report `sections` (`samples`,
+10; a declared value applies to every histogram, including string lengths and the
+positive log view); `pair_budget`, `sample_rows`; optional report `sections` (`samples`,
 `missingness_patterns`); and the question and row unit. Every control starts at the
 system default; a suggestion applies only when you tick it. The page writes YAML live
 (Copy or Download), using only keys `guide profile --config` accepts, and a separate

@@ -203,22 +203,23 @@ def config_yaml(schema: dict, sel: dict) -> str:
 
 
 YAML_JS = r"""
+function own(o,k){return o!=null&&Object.prototype.hasOwnProperty.call(o,k)?o[k]:undefined;}
 function stripWs(s){return s.replace(/^[ \t\n\r]+|[ \t\n\r]+$/g,'');}
 function configDocument(schema,sel){
-  var out={},k;
-  for(k in schema.base){out[k]=schema.base[k];}
+  var out={};
+  Object.keys(schema.base).forEach(function(k){out[k]=schema.base[k];});
   ['question','row_unit'].forEach(function(k){var v=sel[k];if(typeof v==='string'&&stripWs(v)){out[k]=stripWs(v);}});
   var names=schema.columns.map(function(c){return c.name;});
   if(typeof sel.target==='string'&&names.indexOf(sel.target)>=0){out.target=sel.target;}
   Object.keys(schema.knobs).forEach(function(k){var v=sel[k],kn=schema.knobs[k];if(typeof v==='number'&&Number.isInteger(v)&&kn.min<=v&&v<=kn.max){out[k]=v;}});
   var sections={},any=false;
-  schema.sections.forEach(function(s){if((sel.sections||{})[s.key]===false){sections[s.key]=false;any=true;}});
+  schema.sections.forEach(function(s){if(own(sel.sections,s.key)===false){sections[s.key]=false;any=true;}});
   if(any){out.sections=sections;}
   var intervals=(sel.intervals||[]).filter(function(p){return names.indexOf(p[0])>=0&&names.indexOf(p[1])>=0&&p[0]!==p[1];}).map(function(p){return {start:p[0],end:p[1]};});
   if(intervals.length){out.intervals=intervals;}
   var columns=new Map();
   names.forEach(function(n){
-    var chosen=(sel.columns||{})[n]||{},entry={},extra=schema.base_columns[n]||{};
+    var chosen=own(sel.columns,n)||{},entry={},extra=own(schema.base_columns,n)||{};
     if(schema.types.indexOf(chosen.type)>=0){entry.type=chosen.type;}
     if(schema.date_formats.indexOf(chosen.date_format)>=0){entry.date_format=chosen.date_format;}
     if(chosen.exclude_from_target===true){entry.exclude_from_target=true;}
@@ -281,17 +282,18 @@ function key(el){return el.getAttribute('data-key');}
 function colName(el){return schema.columns[Number(el.getAttribute('data-col'))].name;}
 function asInt(el){var t=stripWs(el.value);if(t===''){return null;}if(!/^-?[0-9]+$/.test(t)){return NaN;}return Number(t);}
 function selections(){
-  var sel={question:null,row_unit:null,target:null,pair_budget:null,sample_rows:null,bins:null,sections:{},intervals:[],columns:{}};
+  var sel={question:null,row_unit:null,target:null,pair_budget:null,sample_rows:null,bins:null,sections:Object.create(null),intervals:[],columns:Object.create(null)};
   $('[data-text]').forEach(function(el){sel[el.getAttribute('data-text')]=el.value;});
   var t=document.getElementById('target');sel.target=t.value===''?null:schema.target_options[Number(t.value)];
   $('[data-int]').forEach(function(el){var v=asInt(el);sel[el.getAttribute('data-int')]=(v===null||isNaN(v))?null:v;});
   $('[data-section]').forEach(function(el){sel.sections[el.getAttribute('data-section')]=el.checked;});
   $('[data-interval]').forEach(function(el){if(el.checked){var p=schema.interval_options[Number(el.getAttribute('data-interval'))];sel.intervals.push([p.start,p.end]);}});
-  $('[data-col]').forEach(function(el){var n=colName(el),f=el.getAttribute('data-field');sel.columns[n]=sel.columns[n]||{};
+  $('[data-col]').forEach(function(el){var n=colName(el),f=el.getAttribute('data-field');if(!own(sel.columns,n)){sel.columns[n]=Object.create(null);}
     if(f==='exclude_from_target'){if(el.checked){sel.columns[n].exclude_from_target=true;}}else if(el.value!==''){sel.columns[n][f]=el.value;}});
   return sel;
 }
 function valueOf(el){return el.type==='checkbox'?el.checked:el.value;}
+function typedValue(el){if(el.hasAttribute('data-int')){var v=asInt(el);return v===null?null:isNaN(v)?el.value:v;}return valueOf(el);}
 function stateOf(el){
   var k=key(el),v=valueOf(el),d=el.getAttribute('data-default');
   if(origin[k]==='suggested'&&String(v)===el.getAttribute('data-suggested')){return 'suggested';}
@@ -301,7 +303,7 @@ function stateOf(el){
 }
 function manifest(){
   var controls=$('[data-key]').filter(function(el){return el.tagName!=='OUTPUT';}).map(function(el){
-    var item={control:el.getAttribute('data-label'),value:el.id==='target'?selections().target:valueOf(el),state:stateOf(el)};
+    var item={control:el.getAttribute('data-label'),value:el.id==='target'?selections().target:typedValue(el),state:stateOf(el)};
     if(el.hasAttribute('data-interval')){var p=schema.interval_options[Number(el.getAttribute('data-interval'))];item.interval={start:p.start,end:p.end};}
     if(el.hasAttribute('data-col')){item.column=colName(el);}
     if(item.state==='suggested'){item.suggestion_reason=el.getAttribute('data-reason');}
@@ -348,7 +350,7 @@ input[type=text]{width:100%;box-sizing:border-box}.state{display:inline-block;fo
 .sug{color:var(--sug);font-size:13px}pre{background:var(--card);border:1px solid var(--line);padding:12px;overflow-x:auto;white-space:pre}
 .bar{position:sticky;top:0;background:var(--bg);padding:8px 0;z-index:1}button,a.btn{display:inline-block;margin-bottom:6px;font:inherit;background:var(--accent);color:var(--bg);border:0;border-radius:4px;padding:6px 12px;margin-right:8px;text-decoration:none;cursor:pointer}
 .legend span{margin-right:10px}#warnings{color:#b3261e}
-.cols{min-width:780px}.facts{min-width:190px;overflow-wrap:normal;word-break:normal}.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,360px);gap:24px;align-items:start}@media(max-width:860px){.grid{grid-template-columns:minmax(0,1fr)}}
+.cols select{width:100%}.facts{min-width:150px}.sug small{display:block}.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,360px);gap:24px;align-items:start}@media(max-width:860px){.grid{grid-template-columns:minmax(0,1fr)}}
 .yaml-pane{position:sticky;top:12px}"""
 
 
@@ -416,10 +418,10 @@ def render_page(schema: dict) -> str:
             iv = ic.get(field)
             label = f"columns[{i}].{field}"
             cell = (f'<select data-col="{i}" data-field="{field}"' + control_attrs(k, label, "", iv, s and s["value"], s and s["reason"]) + '>'
-                    + '<option value="">(default' + (': inferred ' + escape(c["inferred_type"]) if field == "type" else ': inferred formats') + ')</option>'
+                    + '<option value="">(default)</option>'
                     + ''.join(f'<option value="{attr(o)}"' + (' selected' if o == iv else '') + f'>{escape(o)}</option>' for o in options) + '</select>' + state(k))
             if s:
-                cell += f'<br><label class="sug"><input type="checkbox" data-accept="{attr(k)}"> suggested: {escape(s["value"])} — {escape(s["reason"])}</label>'
+                cell += f'<br><label class="sug"><input type="checkbox" data-accept="{attr(k)}"> suggested: {escape(s["value"])}<small>{escape(s["reason"])}</small></label>'
             cells.append('<td>' + cell + '</td>')
         k = f"col:{i}:exclude_from_target"
         iv = ic.get("exclude_from_target")
@@ -439,7 +441,7 @@ def render_page(schema: dict) -> str:
     h.append('</div></section>')
     # Knobs
     h.append('<section><h2>Bins, budget and samples</h2><div class="card">')
-    labels = {"bins": ("Histogram bins", schema["bin_rule_default"]), "pair_budget": ("Relationship pair budget", "5"), "sample_rows": ("Sample rows per view", "20")}
+    labels = {"bins": ("Histogram bins (every histogram: values, positive log view, string lengths)", schema["bin_rule_default"]), "pair_budget": ("Relationship pair budget", "5"), "sample_rows": ("Sample rows per view", "20")}
     for k, knob in schema["knobs"].items():
         name, default_text = labels[k]
         iv = init.get(k)

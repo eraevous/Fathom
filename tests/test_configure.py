@@ -111,7 +111,8 @@ node = shutil.which("node")
 @pytest.mark.skipif(node is None, reason="node not installed; Python generator is still tested")
 def test_embedded_javascript_generator_matches_python(tmp_path):
     csv_path = tmp_path / "evil.csv"
-    csv_path.write_text('"' + EVIL + '","' + QUOTED.replace('"', '""') + '",on,plain\n' + "".join(f"{i},v{i % 3},{i % 2},x{i}\n" for i in range(12)), encoding="utf-8")
+    csv_path.write_text('"' + EVIL + '","' + QUOTED.replace('"', '""') + '",on,plain,__proto__,constructor,prototype\n'
+                        + "".join(f"{i},v{i % 3},{i % 2},x{i},p{i % 2},c{i % 3},{i}\n" for i in range(12)), encoding="utf-8")
     _, page = page_for(tmp_path, csv_path)
     schema = schema_from_page(page)
     selections = [
@@ -119,6 +120,7 @@ def test_embedded_javascript_generator_matches_python(tmp_path):
         {"question": "q: \"x\" \\ é", "target": EVIL, "bins": 12, "sections": {"samples": False},
          "columns": {QUOTED: {"type": "categorical"}, "on": {"exclude_from_target": True, "date_format": "ISO"}}},
         {"row_unit": "   ", "pair_budget": 0, "sample_rows": 100, "intervals": [[EVIL, "on"], ["on", "on"]], "columns": {"plain": {"type": "string"}}},
+        {"target": "constructor", "columns": {"__proto__": {"type": "string", "exclude_from_target": True}, "prototype": {"type": "categorical"}}},
     ]
     script = yaml_js_from_page(page) + "\nconst [schema, sels] = JSON.parse(require('fs').readFileSync(0, 'utf8'));\nprocess.stdout.write(JSON.stringify(sels.map(s => configYaml(schema, s))));"
     out = subprocess.run([node, "-e", script], input=json.dumps([schema, selections]), text=True, capture_output=True)
@@ -127,6 +129,10 @@ def test_embedded_javascript_generator_matches_python(tmp_path):
     names = [c["name"] for c in schema["columns"]]
     cfg = roundtrip(tmp_path, schema, selections[1], names)
     assert cfg["target"] == EVIL and cfg["columns"][QUOTED] == {"type": "categorical"} and cfg["columns"]["on"]["exclude_from_target"] is True
+    cfg = roundtrip(tmp_path, schema, selections[3], names)
+    assert cfg["target"] == "constructor" and "type" not in cfg
+    assert cfg["columns"] == {"__proto__": {"type": "string", "exclude_from_target": True}, "prototype": {"type": "categorical"}}
+    assert "plain" not in cfg["columns"]
 
 
 def test_hostile_column_names_are_escaped(tmp_path):
@@ -179,3 +185,11 @@ def test_bins_and_sections_validation_and_default_disclosure(make_profile):
     hist = next(ch for ch in doc["columns"][0]["univariate"]["charts"] if ch["kind"] == "histogram")
     assert len(hist["data"]) == 8 and hist["bin_rule"].startswith("sqrt(n)")
     assert doc["report"] == {"generator": "system default", "bins": None, "bin_rule": hist["bin_rule"], "omitted_sections": []}
+
+
+def test_validate_echoes_bins_and_sections(tmp_path):
+    cfg = tmp_path / "c.yaml"
+    cfg.write_text("bins: 6\nsections: {samples: false}\n", encoding="utf-8")
+    r = run("validate", unseen_csv(tmp_path / "u.csv"), "--config", cfg)
+    resolved = json.loads(r.stdout)["resolved"]
+    assert resolved["bins"] == 6 and resolved["sections"] == {"missingness_patterns": True, "samples": False}

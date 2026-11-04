@@ -71,7 +71,7 @@ def main(argv: list[str] | None = None) -> int:
                             **{k: cfg.get(k) for k in ("question", "target", "group_by", "pair_budget", "row_unit")},
                             "exclude_from_target": sorted(n for n, m in cfg["columns"].items() if m.get("exclude_from_target")),
                             "column_overrides": {n: sorted(m) for n, m in sorted(cfg["columns"].items())},
-                            "intervals": cfg["intervals"]}
+                            "intervals": cfg["intervals"], "bins": cfg["bins"], "sections": cfg["sections"]}
                 print(canonical_json({**asdict(data.schema), "resolved": resolved}), end="")
                 return 0
             result = profile(data, cfg)
