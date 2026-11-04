@@ -51,12 +51,12 @@ def main(argv: list[str] | None = None) -> int:
             if args.command == "validate":
                 # The resolved schema keys stay at top level (CLI contract); "resolved" echoes
                 # the human declarations that profile will use. Inference is not run here.
-                resolved = {"rows": len(data.frame), "columns": len(data.frame.columns),
+                values = {n: {k: m[k] for k in ("type", "date_format", "role", "units", "exclude_from_target") if k in m}
+                          for n, m in sorted(cfg["columns"].items())}
+                resolved = {"column_override_values": values, "rows": len(data.frame), "columns": len(data.frame.columns),
                             **{k: cfg.get(k) for k in ("question", "target", "group_by", "pair_budget", "row_unit")},
                             "exclude_from_target": sorted(n for n, m in cfg["columns"].items() if m.get("exclude_from_target")),
                             "column_overrides": {n: sorted(m) for n, m in sorted(cfg["columns"].items())}}
-                resolved["column_override_values"] = {n: {k: m[k] for k in ("type", "date_format", "role", "units", "exclude_from_target") if k in m}
-                                                      for n, m in sorted(cfg["columns"].items())}
                 print(canonical_json({**asdict(data.schema), "resolved": resolved}), end="")
                 return 0
             result = profile(data, cfg)
