@@ -12,7 +12,7 @@ from statistics import NormalDist, median, quantiles
 from .parsing import finite_number, parse_date, parse_datetime
 
 GRAINS = ("hour", "day", "week", "month")
-SEASONAL = {"hour": (24, 168), "day": (7,), "week": (52,), "month": (12,)}  # calendar cycles, not domain meaning
+CALENDAR = {"hour": (24, 168), "day": (7,), "week": (52,), "month": (12,)}  # calendar cycles, not domain meaning
 DEFAULT_LAG = {"hour": 168, "day": 28, "week": 26, "month": 24}
 MIN_N, MAX_PERIODS, TOP_N = 30, 100_000, 5
 RULES = {
@@ -22,17 +22,21 @@ RULES = {
                    "whose values sum to 0 is a zero; event series: a period with no row is an absent event (0 counted), and the "
                    "table cannot say whether the process was observed then",
     "frequency": "zero share = zero periods / observed periods; inter-event interval = periods from one non-zero period to the "
-                 "next (mean is the ADI alias)",
+                 "next with no missing period between them (mean is the ADI alias); intervals that span a missing period are counted "
+                 "separately and excluded",
     "amplitude": "quantiles (inclusive) of non-zero period values; CV2 = (population sd / mean)^2 of non-zero values",
     "wavelength": "ACF r_k = sum over pairs observed at t and t+k of (x_t-m)(x_t+k-m) / sum over observed (x_t-m)^2; PACF by "
                   "Durbin-Levinson; per-lag 95% band +/-1.96/sqrt(n); dominant lag = supported local ACF peak above the band",
     "duration": "run lengths in periods of consecutive zero and consecutive non-zero periods; a missing period ends a run",
-    "reliability": f"n < {MIN_N} observed periods: insufficient; zero variance: undefined; lag > n/4: poorly supported",
+    "reliability": f"n < {MIN_N} observed periods: insufficient (applies to every signal, including zero periods and bursts); "
+                   "zero variance: undefined; lag > n/4: poorly supported",
+    "cycle": "present when a dominant ACF lag >= 2 (supported local peak above the per-lag band) also exceeds the family-wise band",
     "signal": "present when the largest |r| over supported lags exceeds the family-wise band z(1-0.025/L)/sqrt(n) "
               "(Bonferroni over L supported lags); absent otherwise; insufficient evidence under the reliability rule",
     "auto": "auto = every granularity at or coarser than the timestamps' resolution (hour needs a time of day) with "
             f"2..{MAX_PERIODS:,} periods in span",
-    "by": f"by: the top N groups by row count (default {TOP_N}, ties by value); other groups and rows with a missing key are counted, not analysed",
+    "by": f"by: the top N groups by row count (default {TOP_N}, ties by value); other groups and rows with a missing key are counted, not analysed; "
+          "each group's span runs from its own first to its own last timestamp",
     "spectral": "periodogram peak (scipy.signal.periodogram, mean removed) on gap-free series only; requires the stats extra",
 }
 
@@ -177,7 +181,10 @@ def analyse_grain(points, grain, mode, max_lag, deps):
     nonzero = [v for v in observed if v != 0]
     zero_n = len(observed) - len(nonzero)
     idx = [i for i, v in enumerate(x) if v not in (None, 0)]
-    gaps = [b - a for a, b in zip(idx, idx[1:])]
+    gaps, spanning = [], 0
+    for a, b in zip(idx, idx[1:]):
+        if any(x[t] is None for t in range(a + 1, b)): spanning += 1
+        else: gaps.append(b - a)
     rl = runs(states)
     amp = summary(nonzero)
     cv2 = None
@@ -187,13 +194,13 @@ def analyse_grain(points, grain, mode, max_lag, deps):
     indicator = [None if v is None else float(v != 0) for v in x]
     lag = max_lag or DEFAULT_LAG[grain]
     values_corr, occurrence_corr = correlogram(x, lag), correlogram(indicator, lag)
-    seasonal = []
-    for s in SEASONAL[grain]:
+    calendar = []
+    for s in CALENDAR[grain]:
         entry = {"lag": s, "acf": None, "status": "beyond max_lag or series"}
         if values_corr["status"] == "computed" and s <= values_corr["max_lag"]:
             entry = {"lag": s, "acf": values_corr["lags"][s - 1]["acf"], "outside_band": values_corr["lags"][s - 1]["acf_outside_band"],
                      "status": "supported" if s <= values_corr["supported_max_lag"] else "poorly supported (lag > n/4)"}
-        seasonal.append(entry)
+        calendar.append(entry)
     return {
         "granularity": grain, "periods_in_span": len(x), "first_period": label(floor(first, grain), grain),
         "last_period": label(end, grain), "observed_periods": len(observed),
@@ -203,9 +210,9 @@ def analyse_grain(points, grain, mode, max_lag, deps):
         "rows_present_no_value_periods": sum(1 for k in periods if rows[k] and not with_value[k]) if mode == "values" else 0,
         "frequency": {"zero_periods": zero_n, "nonzero_periods": len(nonzero),
                       "zero_share": r10(zero_n / len(observed)) if observed else None,
-                      "inter_event_interval": summary(gaps), "adi": r10(sum(gaps) / len(gaps)) if gaps else None},
+                      "inter_event_interval": summary(gaps), "intervals_spanning_missing": spanning, "adi": r10(sum(gaps) / len(gaps)) if gaps else None},
         "amplitude": {"nonzero": amp, "cv2": cv2},
-        "wavelength": {"values": values_corr, "occurrence": occurrence_corr, "seasonal_lags": seasonal,
+        "wavelength": {"values": values_corr, "occurrence": occurrence_corr, "calendar_lags": calendar,
                        "spectral": spectral(x, deps)},
         "duration": {"zero_runs": summary(rl["zero"]), "nonzero_runs": summary(rl["nonzero"]),
                      "longest_zero_run": max(rl["zero"], default=0), "longest_nonzero_run": max(rl["nonzero"], default=0)},
@@ -218,7 +225,7 @@ def signals(grains):
     """Per signal, the granularities where it is present, absent, or lacks evidence; each with its rule."""
     out = []
     def add(name, rule, verdicts):
-        groups = {"present": [], "absent": [], "insufficient evidence": []}
+        groups = {"present": [], "absent": [], "undefined": [], "insufficient evidence": []}
         for g, v in verdicts: groups[v].append(g)
         out.append({"signal": name, "rule": rule, **groups, "notes": notes})
     notes = {}
@@ -226,7 +233,10 @@ def signals(grains):
         for kind in ("values", "occurrence"):
             c = g["wavelength"][kind]
             if c["status"] != "computed": notes[f"{g['granularity']} {kind}"] = c["note"]
-    def corr_verdict(c): return "insufficient evidence" if c["status"] != "computed" or c["signal"] == "insufficient" else c["signal"]
+    def corr_verdict(c):
+        if c["status"] == "undefined": return "undefined"
+        return "insufficient evidence" if c["status"] != "computed" or c["signal"] == "insufficient" else c["signal"]
+    def enough(g): return g["observed_periods"] >= MIN_N
     add("autocorrelation in values", RULES["signal"], [(g["granularity"], corr_verdict(g["wavelength"]["values"])) for g in grains])
     add("autocorrelation in occurrence (non-zero indicator)", RULES["signal"],
         [(g["granularity"], corr_verdict(g["wavelength"]["occurrence"])) for g in grains])
@@ -234,11 +244,11 @@ def signals(grains):
         c = g["wavelength"]["values"]
         if corr_verdict(c) != "present": return corr_verdict(c)
         return "present" if any(d["lag"] >= 2 and d["acf"] > c["family_band"] for d in c["dominant_lags"]) else "absent"
-    add("repeating cycle (dominant ACF peak at lag >= 2 above the family-wise band)", RULES["wavelength"], [(g["granularity"], cycle(g)) for g in grains])
+    add("repeating cycle (dominant ACF peak at lag >= 2 above the family-wise band)", RULES["cycle"], [(g["granularity"], cycle(g)) for g in grains])
     add("zero periods", "observed periods whose value is 0 (event series: no event)",
-        [(g["granularity"], "insufficient evidence" if not g["observed_periods"] else "present" if g["frequency"]["zero_periods"] else "absent") for g in grains])
+        [(g["granularity"], "insufficient evidence" if not enough(g) else "present" if g["frequency"]["zero_periods"] else "absent") for g in grains])
     add("bursts (non-zero runs of >= 2 periods separated by zeros)", RULES["duration"],
-        [(g["granularity"], "insufficient evidence" if not g["observed_periods"] else
+        [(g["granularity"], "insufficient evidence" if not enough(g) else
           "present" if g["frequency"]["zero_periods"] and g["duration"]["longest_nonzero_run"] >= 2 else "absent") for g in grains])
     return out
 
@@ -328,17 +338,43 @@ def time_series(rows, columns, cfg, emit):
             entry = {"time": item["time"], "value": item.get("value"), "by": None, "groups": [analyse(rows, names, cfg, item, deps)]}
         result["series"].append(entry)
         describe(si, entry, emit)
-    temporal = [c["name"] for c in columns if c["effective_type"] == "temporal"]
-    numeric = [c["name"] for c in columns if c["effective_type"] == "numeric"]
-    if not cfg.get("time_series") and temporal and numeric:
-        result["question"] = {"temporal_columns": temporal, "numeric_columns": numeric[:10]}
+    if not cfg.get("time_series"):
+        result["question"] = undeclared(rows, columns, cfg)
+    if result["question"]:
+        q = result["question"]
+        temporal, numeric = [t["column"] for t in q["temporal_columns"]], q["numeric_columns"]
         emit("ts-undeclared", "question",
-             f"Date/time column(s) {', '.join(temporal)} and numeric column(s) {', '.join(numeric[:5])}{' …' if len(numeric) > 5 else ''} exist; "
-             "is any of them a time series? Declare it under `time_series` (value: null counts events) to measure temporal structure.",
-             [{"path": "time_series.question", "value": result["question"]}],
+             f"{', '.join(f'{t['column']} ({t['distinct_periods']:,} distinct {t['granularity']}s)' for t in q['temporal_columns'])}: "
+             "would counts of rows over time (time_series with value: null) be useful"
+             + (f", or totals of {', '.join(numeric[:5])}{' …' if len(numeric) > 5 else ''} over time" if numeric else "")
+             + "? Declare it under `time_series` to measure temporal structure.",
+             [{"path": "time_series.question", "value": q}],
              "No series is inferred from column names or types; what a series measures is a domain declaration.", "rule:timeseries-v1",
              rule="time_series_undeclared", columns=temporal + numeric[:10])
     return result
+
+
+def undeclared(rows, columns, cfg):
+    """Ask only when a temporal column spans >= MIN_N distinct periods at its finest valid granularity."""
+    found = []
+    for j, c in enumerate(columns):
+        if c["effective_type"] != "temporal": continue
+        fmt = cfg["columns"].get(c["name"], {}).get("date_format")
+        parsed = [p for r in rows if r[j] is not None and (p := parse_time(r[j], fmt)) is not None]
+        if not parsed: continue
+        grain = "hour" if all(t for _, t in parsed) else "day"
+        distinct = len({floor(dt, grain) for dt, _ in parsed})
+        if distinct >= MIN_N: found.append({"column": c["name"], "granularity": grain, "distinct_periods": distinct})
+    if not found: return None
+    numeric = []
+    for j, c in enumerate(columns):
+        if c["effective_type"] != "numeric" or cfg["columns"].get(c["name"], {}).get("role") == "identifier": continue
+        values = [n for r in rows if r[j] is not None and (n := finite_number(r[j])) is not None]
+        if values and all(v == int(v) for v in values) and len(set(values)) / len(values) >= .95: continue  # identifier-like
+        numeric.append(c["name"])
+    return {"temporal_columns": found, "numeric_columns": numeric[:10],
+            "rule": f"temporal column with >= {MIN_N} distinct periods at its finest valid granularity (hour if every value carries a "
+                    "time of day, else day); numeric columns listed unless role identifier or integer-valued with distinct ratio >= 0.95"}
 
 
 def series_name(entry, s):
@@ -353,7 +389,7 @@ def describe(si, entry, emit):
         parts = [f"{p['rows_with_parsed_time']:,} of {p['raw_rows']:,} rows with a parsed {entry['time']}",
                  f"{p['distinct_timestamps']:,} distinct timestamps ({p['duplicate_timestamp_rows']:,} rows repeat an earlier one)"]
         for sig in s["signals"]:
-            bits = [f"{k} at {', '.join(sig[k])}" for k in ("present", "absent", "insufficient evidence") if sig[k]]
+            bits = [f"{k} at {', '.join(sig[k])}" for k in ("present", "absent", "undefined", "insufficient evidence") if sig[k]]
             parts.append(sig["signal"].split(" (")[0] + ": " + "; ".join(bits))
         fid = f"ts-{si}-{gi}"
         emit(fid, "observation", f"Temporal structure of {name}: " + "; ".join(parts) + ".",

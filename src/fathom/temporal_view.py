@@ -46,11 +46,12 @@ def sparsity_table(s):
     spec = [
         ("Frequency", "zero share", lambda g: formatted(g["frequency"]["zero_share"], True) if g["frequency"]["zero_share"] is not None else None),
         ("Frequency", "mean inter-event interval (ADI), periods", lambda g: g["frequency"]["adi"]),
+        ("Frequency", "intervals spanning a missing period (excluded)", lambda g: g["frequency"]["intervals_spanning_missing"]),
         ("Amplitude", "non-zero median [p25–p75]", lambda g: f"{formatted(g['amplitude']['nonzero']['median'])} [{formatted(g['amplitude']['nonzero']['p25'])}–{formatted(g['amplitude']['nonzero']['p75'])}]"),
         ("Amplitude", "CV² of non-zero values", lambda g: g["amplitude"]["cv2"]),
         ("Wavelength", "values ACF", lambda g: corr_text(g["wavelength"]["values"])),
         ("Wavelength", "occurrence ACF", lambda g: corr_text(g["wavelength"]["occurrence"])),
-        ("Wavelength", "calendar lags", lambda g: "; ".join(f"{x['lag']}: " + (f"{x['acf']:.2f}, {x['status']}" if x["acf"] is not None else x["status"]) for x in g["wavelength"]["seasonal_lags"])),
+        ("Wavelength", "calendar lags", lambda g: "; ".join(f"{x['lag']}: " + (f"{x['acf']:.2f}, {x['status']}" if x["acf"] is not None else x["status"]) for x in g["wavelength"]["calendar_lags"])),
         ("Wavelength", "periodogram peak (periods)", lambda g: formatted(g["wavelength"]["spectral"]["peak_period"]) if g["wavelength"]["spectral"]["status"] == "computed" else "not computed: " + g["wavelength"]["spectral"]["reason"]),
         ("Duration", "zero runs: median / longest", lambda g: f"{formatted((g['duration']['zero_runs'] or {}).get('median'))} / {g['duration']['longest_zero_run']}"),
         ("Duration", "non-zero runs (bursts): median / longest", lambda g: f"{formatted((g['duration']['nonzero_runs'] or {}).get('median'))} / {g['duration']['longest_nonzero_run']}"),
@@ -60,8 +61,8 @@ def sparsity_table(s):
 
 
 def signal_table(s):
-    rows = [[x["signal"], ", ".join(x["present"]) or "—", ", ".join(x["absent"]) or "—", ", ".join(x["insufficient evidence"]) or "—", x["rule"]] for x in s["signals"]]
-    return {"caption": "Signals: present / absent / insufficient evidence (with the rule)", "headers": ["Signal", "Present", "Absent", "Insufficient evidence", "Rule"], "rows": rows, "numeric": []}
+    rows = [[x["signal"], ", ".join(x["present"]) or "—", ", ".join(x["absent"]) or "—", ", ".join(x["undefined"]) or "—", ", ".join(x["insufficient evidence"]) or "—", x["rule"]] for x in s["signals"]]
+    return {"caption": "Signals: present / absent / undefined / insufficient evidence (with the rule)", "headers": ["Signal", "Present", "Absent", "Undefined", "Insufficient evidence", "Rule"], "rows": rows, "numeric": []}
 
 
 def lag_table(g):

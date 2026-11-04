@@ -48,7 +48,7 @@ def test_pure_periodic_series_peaks_at_its_period(make_profile):
     g = grain(series(d), "day")
     c = g["wavelength"]["values"]
     assert c["status"] == "computed" and c["n"] == 140 and c["dominant_lags"][0]["lag"] == 7
-    assert c["lags"][6]["acf"] > 0.9 and g["wavelength"]["seasonal_lags"][0]["status"] == "supported"
+    assert c["lags"][6]["acf"] > 0.9 and g["wavelength"]["calendar_lags"][0]["status"] == "supported"
     assert signal(series(d), "repeating cycle")["present"] == ["day"]
     assert any("peaks at lag 7" in f["message"] for f in ts_findings(d, "question"))
 
@@ -88,7 +88,8 @@ def test_constant_series_is_undefined_and_warned(make_profile):
     s = series(make_profile(daily([4] * 40), declare()).document)
     c = grain(s, "day")["wavelength"]["values"]
     assert c["status"] == "undefined" and "constant" in c["note"]
-    assert signal(s, "autocorrelation in values")["insufficient evidence"] == ["day"]
+    assert signal(s, "autocorrelation in values")["undefined"] == ["day"]
+    assert signal(s, "autocorrelation in values")["insufficient evidence"] == []
     assert "day values" in signal(s, "autocorrelation in values")["notes"]
 
 
@@ -123,7 +124,7 @@ def test_event_counts_from_timestamps_with_hour_and_day(make_profile):
     assert s["mode"] == "events" and [g["granularity"] for g in s["granularities"]] == ["hour", "day", "week", "month"]
     h = grain(s, "hour")
     assert h["periods_in_span"] == 960 and h["absent_event_periods"] == 0
-    assert h["wavelength"]["seasonal_lags"][0]["acf"] > 0.9 and h["wavelength"]["values"]["dominant_lags"][0]["lag"] == 24
+    assert h["wavelength"]["calendar_lags"][0]["acf"] > 0.9 and h["wavelength"]["values"]["dominant_lags"][0]["lag"] == 24
     assert grain(s, "week")["wavelength"]["values"]["status"] == "insufficient"
 
 
@@ -162,9 +163,38 @@ def test_report_has_temporal_section_with_stem_plots(make_profile):
 
 
 def test_undeclared_series_asks_one_question(make_profile):
-    d = make_profile(daily(list(range(40)))).document
+    d = make_profile(daily([i % 5 for i in range(40)])).document
     q = [f for f in ts_findings(d) if f["rule"] == "time_series_undeclared"]
     assert len(q) == 1 and q[0]["kind"] == "question" and d["time_series"]["series"] == []
+    assert q[0]["message"].startswith("when (40 distinct days): would counts of rows over time (time_series with value: null)")
+    assert "totals of amount" in q[0]["message"]
+
+
+def test_undeclared_pure_timestamps_offer_event_counts(make_profile):
+    d = make_profile("stamp\n" + "".join(f"{(BASE + timedelta(hours=h)).isoformat(sep=' ')}\n" for h in range(35))).document
+    q = d["time_series"]["question"]
+    assert q["temporal_columns"] == [{"column": "stamp", "granularity": "hour", "distinct_periods": 35}] and q["numeric_columns"] == []
+
+
+def test_undeclared_question_quiet_on_few_periods_and_skips_identifier_like(make_profile):
+    few = make_profile(daily([1, 2, 3] * 3)).document  # 9 days < 30
+    assert few["time_series"]["question"] is None
+    lines = ["when,order_id,amount"] + [f"{(BASE + timedelta(days=i)).date().isoformat()},{1000 + i},{i % 3}" for i in range(40)]
+    q = make_profile("\n".join(lines) + "\n").document["time_series"]["question"]
+    assert q["numeric_columns"] == ["amount"]  # order_id: integers, all distinct
+
+
+def test_inter_event_interval_does_not_span_missing_periods(make_profile):
+    values = [2 + i % 3 for i in range(40)]
+    g = grain(series(make_profile(daily(values, skip=range(10, 25)), declare()).document), "day")  # gaps only, no zeros
+    assert g["frequency"]["zero_periods"] == 0 and g["frequency"]["adi"] == 1
+    assert g["frequency"]["intervals_spanning_missing"] == 1 and g["frequency"]["inter_event_interval"]["max"] == 1
+
+
+def test_zero_and_burst_signals_need_thirty_periods(make_profile):
+    s = series(make_profile(daily([0, 3, 4] * 8 + [0]), declare()).document)  # 25 periods
+    for name in ("zero periods", "bursts"):
+        assert signal(s, name)["insufficient evidence"] == ["day"] and signal(s, name)["present"] == []
 
 
 def test_decoys_stay_silent(make_profile):

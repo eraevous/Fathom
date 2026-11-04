@@ -21,3 +21,15 @@
    declared; it is one question line and names the columns. If this proves noisy, Zach decides.
 10. Commit attribution uses the session's model line (Opus 5.5) as in the system attribution
     reminder; the launching message asked for a different model name, which would misattribute.
+
+## Review follow-up (fresh-context review of 56ea773, relayed by the coordinator)
+
+11. Inter-event intervals stop at a missing period, as runs do; spanning intervals are counted
+    (`intervals_spanning_missing`) and excluded. Missing and zero stay unmerged in frequency too.
+12. The 30-period rule now covers the zero-period and burst signals (narrower reading than
+    exempting them as descriptive counts; the counts stay in the dimension table).
+13. "Undefined" (constant) is its own signal state, separate from insufficient evidence.
+14. `seasonal_lags` renamed `calendar_lags` before any consumer relies on it (artifact is the interface).
+15. The undeclared question now needs a temporal column with >= 30 distinct periods at its finest
+    valid granularity, offers event counts first, and leaves out identifier-like numeric columns
+    (role identifier, or integer-valued with distinct ratio >= 0.95, computed locally).
