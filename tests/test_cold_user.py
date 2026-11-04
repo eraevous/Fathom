@@ -52,6 +52,11 @@ def test_datetime_column_gets_date_profile_not_identifier_exclusion(tmp_path, ca
     stats = col["univariate"]["statistics"]
     assert (stats["earliest"], stats["latest"], stats["span_days"]) == ("2019-03-01", "2019-03-06", 5)
     assert stats["parse_formats"] == {"ISO_DATETIME": 6} and "time of day is not analysed" in stats["parse_basis"]
+    md = (tmp_path / "out" / "report.md").read_text()
+    html = (tmp_path / "out" / "report.html").read_text()
+    note = "analysed by calendar date only; time of day excluded"
+    assert md.count(note) == 2 and html.count(note) == 2  # column line + "What the data cannot tell"
+    assert "Date-time columns \\(pickup\\) are " + note in md
     reason = {e["column"]: e["reason"] for e in d["target_analysis"]["excluded"]}["pickup"]
     assert "identifier" not in reason and "temporal" in reason
 
@@ -62,6 +67,7 @@ def test_text_decoy_stays_string(tmp_path, capsys):
     assert code == 0, err
     d = json.loads((tmp_path / "out" / "guide-profile.json").read_text())
     assert d["columns"][0]["effective_type"] == "string"
+    assert "time of day excluded" not in (tmp_path / "out" / "report.md").read_text()  # decoy
 
 
 def test_date_format_override_counts_invalid(tmp_path, capsys):
@@ -72,6 +78,8 @@ def test_date_format_override_counts_invalid(tmp_path, capsys):
     stats = json.loads((tmp_path / "out" / "guide-profile.json").read_text())["columns"][0]["univariate"]["statistics"]
     assert stats["invalid"] == 1 and stats["invalid_examples"] == ["2019-02-30 10:00:00"]
     assert stats["parse_basis"].startswith("human format override")
+    code, out, _ = run(["validate", table(tmp_path, rows), "--config", cfg], capsys)
+    assert json.loads(out)["resolved"]["column_override_values"] == {"pickup": {"date_format": "ISO_DATETIME"}}
 
 
 def test_override_errors_name_accepted_values():
@@ -99,6 +107,8 @@ def test_profile_and_validate_echo_resolved_settings(tmp_path, capsys):
     lines = out.splitlines()
     assert len(lines) == 2 and "guide-profile.json" in lines[0] and "report.html" in lines[0]
     assert lines[1] == "guide: question: What drives tip?; target: tip; excluded from target: pickup; row unit: one trip"
+    _, quiet, _ = run(["profile", table(tmp_path), "--out", tmp_path / "none"], capsys)
+    assert quiet.splitlines()[1] == "guide: question: none declared; target: not declared; row unit: unknown (not declared)"
     code2, out2, _ = run(["profile", table(tmp_path), "--config", cfg, "--out", tmp_path / "out"], capsys)
     assert out2 == out  # deterministic, no timestamp
     code, out, _ = run(["validate", table(tmp_path), "--config", cfg], capsys)
@@ -121,7 +131,7 @@ def test_export_without_extras_names_missing_extra(tmp_path, capsys, monkeypatch
     monkeypatch.setattr(builtins, "__import__", no_extras)
     code, out, err = run(["export", tmp_path / "p" / "guide-profile.json", "--out", tmp_path / "e"], capsys)
     assert code == 0  # FT-R13 / spec004 FR-005: degraded, not failed
-    assert "pip install 'fathom-guide[pdf]'" in err and "pip install 'fathom-guide[pptx]'" in err
+    assert err.count("pip install -e '.[exports]'") == 2 and "pdf not written" in err and "pptx not written" in err
     assert not (tmp_path / "e" / "report.pdf").exists()
     monkeypatch.setattr(builtins, "__import__", real)
     import fathom.exports

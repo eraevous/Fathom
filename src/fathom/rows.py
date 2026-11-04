@@ -119,13 +119,13 @@ def repeated_keys(rows, columns, n, observe):
                  "constant_within_key_count": len(constant), "same_grouping": same[:10]}
         reported.append(value)
         listed = ", ".join(constant[:10]) + (f" and {len(constant)-10} more" if len(constant) > 10 else "")
-        message = (f"{name} values repeat {k} times each: {count:,} of {len(groups):,} values appear exactly {k} times, covering "
-                   f"{covered:,} of {keyed:,} nonmissing rows ({covered/keyed:.1%})"
+        message = (f"Most nonmissing rows belong to groups of exactly {k} by {name}: {covered:,} of {keyed:,} ({covered/keyed:.1%}), "
+                   f"from {count:,} of {len(groups):,} {name} values"
                    + (f"; within each {name} value, {listed} never change" if constant else "")
                    + (f"; {', '.join(same[:10])} splits rows into exactly the same groups" if same else "")
                    + ("" if constant or same else "; no other column is constant within each value") + ".")
         observe(f"rows-key-{index}", "repeated_key", [name] + constant[:10], message, value,
-                f"Is {name} an entity key with {k} rows each (alternatives, repeated measures, periods)? If so, rows are not independent within it.")
+                f"Is {name} an entity key with {k} rows each (alternatives, repeated measures, periods)? Would analysis need to account for this grouping?")
     return reported
 
 

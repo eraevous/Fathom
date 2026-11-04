@@ -21,7 +21,7 @@
    Full date-times are parsed for this check only (date-only values read as midnight,
    counted in `date_only_pairs`); the FT-R14 date profile keeps calendar dates.
 7. Zero-share generalisation not built: no accepted spec allows it; PR #19's proposal
-   (docs/decisions/2026-11-04-proposed-contrast-threshold.md §2) is left as is.
+   (codex_++/intents/2026-11-04__contrast-threshold-proposal.intent.md §2) is left as is.
 8. Existing `duplicates` finding keeps its id; its message gains repeating-row positions.
    Nothing new enters pair selection, ranking or charts.
 
@@ -34,3 +34,7 @@
 10. Day-resolution limit of the outlier rules is stated in the finding, README and spec.
 11. Repeated-key wording changed to "`col` values repeat k times each" (less claim-like).
 12. FT-ROW2-R1@2 relates to FT-R14 with `serves` rather than `implements`.
+13. Cross-family review: repeated-key line reads "most nonmissing rows belong to groups of
+    exactly k by <col>" with coverage; question asks whether analysis must account for the
+    grouping; temporal checks are described as observations of selected structures.
+    Merged #19 head 0ab3b07 (no rebase); proposal path updated to its new intent location.

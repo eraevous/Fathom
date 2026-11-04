@@ -52,7 +52,7 @@ def test_regular_multiplicity_reports_key_and_within_key_constants(make_profile)
     assert (key["column"], key["k"], key["keys_with_k_rows"], key["share"]) == ("person", 3, 12, 1.0)
     assert key["constant_within_key"] == ["group"] and key["same_grouping"] == ["alias"]
     message = by_rule(d, "repeated_key")[0]["message"]
-    assert message.startswith("person values repeat 3 times each: 12 of 12 values appear exactly 3 times")
+    assert message.startswith("Most nonmissing rows belong to groups of exactly 3 by person: 36 of 36 (100.0%), from 12 of 12 person values")
     assert "within each person value, group never change; alias splits rows into exactly the same groups" in message
     assert by_rule(d, "repeated_key")[0]["kind"] == "observation"
 

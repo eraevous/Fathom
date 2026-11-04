@@ -19,9 +19,9 @@ Python 3.12+. The package is `fathom-guide`; it installs one command, `guide`
 question, target and row unit they resolved. Column `type` overrides use the names
 `numeric`, `categorical`, `boolean`, `temporal` (dates), `string`, `phone`, `email`,
 `url`, `latitude` and `longitude`; `date_format` takes `ISO`, `ISO_DATETIME`
-(`YYYY-MM-DD HH:MM[:SS]`, profiled by calendar date), `MDY`, `DMY` or `MON_D_Y`,
-not strftime patterns. `guide export` without the `[exports]` extra still exits 0
-and says on stderr which extra to install.
+(`YYYY-MM-DD HH:MM[:SS]` or with a `T` separator, profiled by calendar date), `MDY`, `DMY` or `MON_D_Y`,
+not strftime patterns. `guide export` without the extra still exits 0 and says on stderr
+to run `pip install -e '.[exports]'` from the clone (the package is not on PyPI).
 
 ```bash
 git clone https://github.com/eraevous/fathom.git && cd fathom
@@ -115,8 +115,9 @@ header excluded; each paired with a question, never a cleaning step):
 
 - wholly blank rows, and rows not wholly blank but empty in every numeric column (needs
   >=2 numeric columns); positions of repeated rows;
-- "`col` values repeat k times each", with the columns that never change within a value;
-- date values outside the dominant month/year or beyond quartiles ± 3×IQR, and repeated
+- "most nonmissing rows belong to groups of exactly k by `col`" (with the coverage share),
+  and the columns that never change within a group;
+- observations of selected temporal structures (not anomaly detection): date values outside the dominant month/year or beyond quartiles ± 3×IQR, and repeated
   event timestamps. Day resolution: same-day stragglers, and stragglers inside the
   dominant month/year, are not detected;
 - declared `intervals: [{start: a, end: b}]`: end before/equal to start and durations

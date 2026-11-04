@@ -31,13 +31,13 @@ blank rows are not wholly blank.
 ### US2 — Repeated-key structure (P1)
 Given a column in which values repeat with one regular multiplicity k (modal group size
 2..20, >=10 distinct keys, groups of size k cover >=90% of nonmissing rows), Fathom says
-"looks like k rows per <col>" with the share, and lists columns constant within every
-group of that key that vary between keys. Phrased as a question, never as a declared key.
+"most nonmissing rows belong to groups of exactly k by <col>" with the coverage share, and lists columns constant within every
+group of that key that vary between keys. Phrased as a question ("would analysis need to account for this grouping?"), never as a declared key.
 Decoy: a column whose values repeat irregularly is silent. Columns with the identical
 partition are reported as the same grouping, not as separate keys.
 
-### US3 — Temporal structure (P1)
-On temporal columns: (a) values outside the dominant calendar month or year when >=99%
+### US3 — Observations of selected temporal structures (P1)
+Not anomaly detection: these observe a few named structures. On temporal columns: (a) values outside the dominant calendar month or year when >=99%
 of values share it, and values beyond Q1 - 3xIQR / Q3 + 3xIQR (IQR > 0); (b) duplicate
 timestamps when values carry a time of day and >=90% of values are distinct; (c) declared
 intervals `intervals: [{start: a, end: b}]` give end < start, end == start, and the
@@ -60,7 +60,7 @@ suffix, fractional seconds) are counted in the message and raise a question, and
 - FR-004: No interval inferred from column names (domain meaning); declaration required.
 - FR-005: Deterministic ordering; no runtime dates; core dependencies only.
 - FR-006: Zero-share finding is NOT generalised: no accepted spec allows it; the PR #19
-  proposal (docs/decisions/2026-11-04-proposed-contrast-threshold.md §2) stands untouched.
+  proposal (codex_++/intents/2026-11-04__contrast-threshold-proposal.intent.md §2) stands untouched.
 - FR-007: README gains one short "What it finds" bullet list addition.
 
 ## Out of scope

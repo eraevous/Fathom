@@ -16,6 +16,6 @@
    explicit in export-status.json and exit0") and FT-R13@1. The stderr line serves
    FR-005's "no silent success".
 6. Contrast threshold and zero-share: recorded choices / outside scope; proposals in
-   docs/decisions/2026-11-04-proposed-contrast-threshold.md. No behaviour change.
+   codex_++/intents/2026-11-04__contrast-threshold-proposal.intent.md. No behaviour change.
 7. Records append after main's last line; open PR #16 also appends, so the second to
    merge needs a trivial append-order rebase and an edges regeneration.
