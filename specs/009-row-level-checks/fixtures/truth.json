@@ -1,0 +1,73 @@
+{
+  "empty-values": {
+    "blank_value_rows": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9
+    ],
+    "rows": 18
+  },
+  "empty-values-clean": {
+    "blank_value_rows": [],
+    "rows": 18
+  },
+  "mixed-units": {
+    "cue_labels": [
+      "East Asia & Pacific",
+      "Europe & Central Asia",
+      "Latin America & Caribbean",
+      "Middle East & North Africa",
+      "Sub-Saharan Africa"
+    ],
+    "rows": 12
+  },
+  "mixed-units-clean": {
+    "cue_labels": [],
+    "rows": 12
+  },
+  "repeated-key": {
+    "groups": 210,
+    "size_distribution": {
+      "4": 210
+    }
+  },
+  "repeated-key-clean": {
+    "groups": 840,
+    "size_distribution": {
+      "1": 840
+    }
+  },
+  "zero-concentration": {
+    "rows": 840,
+    "rows_per_mode": {
+      "1": 210,
+      "2": 210,
+      "3": 210,
+      "4": 210
+    },
+    "zero_counts": {
+      "4": 210
+    }
+  },
+  "zero-concentration-clean": {
+    "rows": 840,
+    "rows_per_mode": {
+      "1": 210,
+      "2": 210,
+      "3": 210,
+      "4": 210
+    },
+    "zero_counts": {
+      "1": 53,
+      "2": 53,
+      "3": 52,
+      "4": 52
+    }
+  }
+}
