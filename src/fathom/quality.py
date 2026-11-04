@@ -7,6 +7,11 @@ import re
 import statistics
 
 
+def stored(n):
+    from .univariate import stored as rule
+    return rule(n)
+
+
 def finite(value):
     from .parsing import finite_number
     return finite_number(value)
@@ -111,7 +116,7 @@ def quality_profile(rows, columns, cfg, emit):
             displacement = abs(mu-med)
             if abs(skew) >= 2 and displacement >= .5 * (iqr or max(abs(med), 1e-12)):
                 diagnostic(prefix + "-skew", "skew", [name], f"{name} is strongly skewed: mean {statistics.mean(nums):.6g} differs from median {statistics.median(nums):.6g}, so the mean may not describe a typical row.",
-                           {"finite_count": len(nums), "standardized_third_moment": round(skew, 10), "mean": statistics.mean(nums), "median": statistics.median(nums)},
+                           {"finite_count": len(nums), "standardized_third_moment": stored(skew), "mean": statistics.mean(nums), "median": statistics.median(nums)},
                            f"Inspect the tail of {name} and report median alongside mean before choosing a typical-value summary.")
         if typ == "temporal":
             dates = sorted({date.fromisoformat(v) for v in values if calendar_date(v) is not None})
@@ -228,8 +233,8 @@ def quality_profile(rows, columns, cfg, emit):
             spread = max(g["rate"] for g in gs)-min(g["rate"] for g in gs)
             if spread >= .3:
                 missing_candidates.append({"left": missing_name, "right": group_name, "method": "missingness_by_group",
-                    "statistics": {"n": sum(sizes.values()), "groups": gs, "spread": round(spread,10), **basis},
-                    "strength": round(spread,10), "generator": "rule:quality-v1", "semantics": "inferred" if not gcol["override"] else "human-declared",
+                    "statistics": {"n": sum(sizes.values()), "groups": gs, "spread": stored(spread), **basis},
+                    "strength": stored(spread), "generator": "rule:quality-v1", "semantics": "inferred" if not gcol["override"] else "human-declared",
                     "uncertainty": "Observed missing-rate contrast, not a missingness mechanism or causation; grouping can be inferred."})
 
     summary = {"rows": n, "columns": p, "complete_rows": {"count": sum(all(x is not None for x in r) for r in rows), "share": share(sum(all(x is not None for x in r) for r in rows),n)},

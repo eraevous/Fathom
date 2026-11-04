@@ -13,16 +13,31 @@ from .parsing import finite_number, parse_date, MONTH_NAMES
 PERCENTILES=(1,5,25,33,50,66,75,95,99)
 
 
-def safe(n):
-    return round(n,10) if n is not None and math.isfinite(n) else None
+def stored(n,figures=6):
+    """Stored-number rule (spec 008 FR-001): at least `figures` significant figures, never fewer than 10 decimals."""
+    if n is None or not math.isfinite(n):return None
+    if n==0:return n
+    return round(n,max(10,figures-1-math.floor(math.log10(abs(n)))))
 
 
-def percentile(values,p):
+def geometry(n):
+    """Scale-aware chart geometry (FR-002): 12 significant figures, so tiny charts keep their shape."""
+    return stored(n,12)
+
+
+safe=stored
+
+
+def percentile(values,p,rule=None):
     if not values: return None
     ordered=sorted(values);position=(len(ordered)-1)*p/100
     lo=int(position);hi=min(lo+1,len(ordered)-1);w=position-lo
     scale=max(abs(ordered[lo]),abs(ordered[hi]),1)
-    return safe((ordered[lo]/scale*(1-w)+ordered[hi]/scale*w)*scale)
+    return (rule or stored)((ordered[lo]/scale*(1-w)+ordered[hi]/scale*w)*scale)
+
+
+def raw_percentile(values,p):
+    return percentile(values,p,geometry)
 
 
 def common(counter,least=False,limit=10):
@@ -89,10 +104,10 @@ def numeric_profile(values,name,units):
         cs=[0]*bins
         for x in nums:
             i=min(bins-1,int(((x/scale-a)/(b-a))*bins)) if b!=a else 0;cs[i]+=1
-        data=[{'label':f'{edges[i]:.5g} to {edges[i+1]:.5g}','low':safe(edges[i]),'high':safe(edges[i+1]),'count':cs[i]} for i in range(bins)]
+        data=[{'label':f'{edges[i]:.5g} to {edges[i+1]:.5g}','low':geometry(edges[i]),'high':geometry(edges[i+1]),'count':cs[i]} for i in range(bins)]
         axis=f'{name} ({units or "recorded values; units unknown"})'
         charts=[chart('histogram',f'Distribution of {name}',axis,'Rows (count)',data=data),
-                chart('box',f'Five-number view of {name}',axis,'Column',box={'min':safe(lo),'q1':percentiles['25'],'median':percentiles['50'],'q3':percentiles['75'],'max':safe(hi)})]
+                chart('box',f'Five-number view of {name}',axis,'Column',box={'min':geometry(lo),'q1':raw_percentile(nums,25),'median':raw_percentile(nums,50),'q3':raw_percentile(nums,75),'max':geometry(hi)})]
         cumulative=0;points=[]
         for x,count in sorted(Counter(nums).items()):
             cumulative+=count;points.append({'x':x,'cumulative':cumulative/n,'count':cumulative})
@@ -117,7 +132,7 @@ def histogram(nums,title,x_label,**metadata):
     scale=max(abs(lo),abs(hi),1);a,b=lo/scale,hi/scale
     edges=[(a+(b-a)*i/bins)*scale for i in range(bins+1)];counts=[0]*bins
     for x in nums:counts[min(bins-1,int((x/scale-a)/(b-a)*bins)) if b!=a else 0]+=1
-    return chart('histogram',title,x_label,'Values (count)',data=[{'label':f'{edges[i]:.5g} to {edges[i+1]:.5g}','low':safe(edges[i]),'high':safe(edges[i+1]),'count':c} for i,c in enumerate(counts)],**metadata)
+    return chart('histogram',title,x_label,'Values (count)',data=[{'label':f'{edges[i]:.5g} to {edges[i+1]:.5g}','low':geometry(edges[i]),'high':geometry(edges[i+1]),'count':c} for i,c in enumerate(counts)],**metadata)
 
 
 def missingness_patterns(columns,rows):

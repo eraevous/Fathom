@@ -11,7 +11,9 @@ from .config import validate_config
 from .models import GuideDataFrame, ProfilingResult
 from .quality import quality_profile, copy_evidence
 from .parsing import finite_number, parse_date
-from .univariate import enrich_columns, identity_and_samples, missingness_patterns
+from .univariate import enrich_columns, identity_and_samples, missingness_patterns, stored
+
+SCHEMA_VERSION = 2
 from .special import infer_special, enrich_special
 
 
@@ -28,7 +30,7 @@ def iso_date(value: str) -> str | None:
 
 
 def rounded(n: float | None) -> float | None:
-    return round(n, 10) if n is not None and math.isfinite(n) else None
+    return stored(n)
 
 
 def infer(values: list[str], name="", meta=None) -> dict:
@@ -175,7 +177,7 @@ def profile(data: GuideDataFrame, config: dict | None = None) -> ProfilingResult
             finding(f"pair-{index}-review", "action", f"Investigate collection differences across {pair['right']} before choosing a missing-value treatment for {pair['left']}.",
                     [{"finding": f"pair-{index}"}], "A descriptive contrast does not establish the missingness mechanism.", "rule:quality-v1",
                     rule="conditional_missingness", columns=[pair["left"],pair["right"]])
-    return ProfilingResult({"schema_version": 1, "kind": "profile", "source": data.source,
+    return ProfilingResult({"schema_version": SCHEMA_VERSION, "kind": "profile", "source": data.source,
         "schema": asdict(schema), "context": cfg["context"],
         "purpose": {"question": cfg.get("question"), "target": cfg.get("target"), "group_by":cfg.get("group_by"),
                     "mode": "declared" if cfg.get("question") or cfg.get("target") else "documentation_qa",
@@ -269,7 +271,7 @@ def compare(before: ProfilingResult, after: ProfilingResult) -> ProfilingResult:
     differences = {key: {"before": contexts["before"][key], "after": contexts["after"][key]}
                    for key in contexts["before"] if contexts["before"][key] != contexts["after"][key]}
     ac, bc = {c["name"]: c for c in a["columns"]}, {c["name"]: c for c in b["columns"]}
-    return ProfilingResult({"schema_version": 1, "kind": "comparison", "contexts": contexts,
+    return ProfilingResult({"schema_version": SCHEMA_VERSION, "kind": "comparison", "contexts": contexts,
         "context_differences": differences,
         "deltas": {**{key: b["overview"][key] - a["overview"][key] for key in ("rows", "columns", "missing_cells", "duplicate_rows")},
                    "columns_added": [name for name in bc if name not in ac],

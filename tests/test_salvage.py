@@ -75,11 +75,17 @@ def test_stored_rule_is_six_figures_with_ten_decimal_floor():
 def test_normal_and_offset_decoys_do_not_change(name):
     """Decoys: main's saved artifacts must be reproduced apart from the version and the additive test block."""
     main = json.loads((S / name.replace(".csv", ".main-profile.json")).read_text())
-    now = copy.deepcopy(run(name))
+    now = json.loads(ProfilingResult(run(name)).to_json())
     assert main["schema_version"] == 1 and now["schema_version"] == 2
     for doc in (main, now):
         doc.pop("schema_version"); doc["source"].pop("origin")
         doc["quality"].pop("missingness_tests", None); doc["quality"]["rules"].pop("missingness_varies_with", None)
+    if name == "offset.csv":
+        # The one disclosed difference: evenly spaced values have zero skew; the computed
+        # value is float noise, which 10 decimals truncated to -7e-10 and 6 figures keep.
+        skew = [c["univariate"]["statistics"].pop("skewness") for c in (main["columns"][0], now["columns"][0])]
+        assert skew[0] == -7e-10 and math.isclose(skew[1], skew[0], rel_tol=.05) and abs(skew[1]) < 1e-9
+        assert main["columns"][0]["univariate"]["statistics"]["skew_interpretation"] == now["columns"][0]["univariate"]["statistics"]["skew_interpretation"]
     assert now == main  # equal artifacts imply equal chart geometry, so normal-scale SVGs are unchanged
 
 

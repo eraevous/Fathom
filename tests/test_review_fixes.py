@@ -36,7 +36,7 @@ def test_r4451047591_tiny_positive_geometry_preserves_statistics(make_profile):
     p=make_profile('g,amount\n'+'A,1e-12\n'*9+'B,1e-7\n',{'target':'amount','columns':{'g':{'type':'categorical'}}})
     chart=next(c for c in p.document['target_analysis']['charts'] if c['kind']=='group_box')
     assert chart['x_scale']=='log10' and chart['data'][0]['box']['median']==1e-12
-    assert percentile([1e-12]*9,50)==0  # Existing statistical rounding is unchanged.
+    assert percentile([1e-12]*9,50)==1e-12  # Spec 008 (DEC-043): stored statistics keep 6 significant figures.
     ordinary=box_chart([1,2,3,4]);assert ordinary['data'][0]['box']['median']==2.5
     assert 'Chart values' in svg_chart(chart)
 
