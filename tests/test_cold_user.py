@@ -52,6 +52,11 @@ def test_datetime_column_gets_date_profile_not_identifier_exclusion(tmp_path, ca
     stats = col["univariate"]["statistics"]
     assert (stats["earliest"], stats["latest"], stats["span_days"]) == ("2019-03-01", "2019-03-06", 5)
     assert stats["parse_formats"] == {"ISO_DATETIME": 6} and "time of day is not analysed" in stats["parse_basis"]
+    md = (tmp_path / "out" / "report.md").read_text()
+    html = (tmp_path / "out" / "report.html").read_text()
+    note = "analysed by calendar date only; time of day excluded"
+    assert md.count(note) == 2 and html.count(note) == 2  # column line + "What the data cannot tell"
+    assert "Date-time columns \\(pickup\\) are " + note in md
     reason = {e["column"]: e["reason"] for e in d["target_analysis"]["excluded"]}["pickup"]
     assert "identifier" not in reason and "temporal" in reason
 
@@ -62,6 +67,7 @@ def test_text_decoy_stays_string(tmp_path, capsys):
     assert code == 0, err
     d = json.loads((tmp_path / "out" / "guide-profile.json").read_text())
     assert d["columns"][0]["effective_type"] == "string"
+    assert "time of day excluded" not in (tmp_path / "out" / "report.md").read_text()  # decoy
 
 
 def test_date_format_override_counts_invalid(tmp_path, capsys):
@@ -72,6 +78,8 @@ def test_date_format_override_counts_invalid(tmp_path, capsys):
     stats = json.loads((tmp_path / "out" / "guide-profile.json").read_text())["columns"][0]["univariate"]["statistics"]
     assert stats["invalid"] == 1 and stats["invalid_examples"] == ["2019-02-30 10:00:00"]
     assert stats["parse_basis"].startswith("human format override")
+    code, out, _ = run(["validate", table(tmp_path, rows), "--config", cfg], capsys)
+    assert json.loads(out)["resolved"]["column_override_values"] == {"pickup": {"date_format": "ISO_DATETIME"}}
 
 
 def test_override_errors_name_accepted_values():
