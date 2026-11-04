@@ -27,4 +27,4 @@ stderr line removes the silent part). Byte-identical outputs; CLI echo has no cl
 ## Diagnoses (no behaviour change)
 
 Contrast threshold and zero-share findings: see
-`docs/decisions/2026-11-04-proposed-contrast-threshold.md`.
+`codex_++/intents/2026-11-04__contrast-threshold-proposal.intent.md`.

@@ -19,9 +19,9 @@ Python 3.12+. The package is `fathom-guide`; it installs one command, `guide`
 question, target and row unit they resolved. Column `type` overrides use the names
 `numeric`, `categorical`, `boolean`, `temporal` (dates), `string`, `phone`, `email`,
 `url`, `latitude` and `longitude`; `date_format` takes `ISO`, `ISO_DATETIME`
-(`YYYY-MM-DD HH:MM[:SS]`, profiled by calendar date), `MDY`, `DMY` or `MON_D_Y`,
-not strftime patterns. `guide export` without the `[exports]` extra still exits 0
-and says on stderr which extra to install.
+(`YYYY-MM-DD HH:MM[:SS]` or with a `T` separator, profiled by calendar date), `MDY`, `DMY` or `MON_D_Y`,
+not strftime patterns. `guide export` without the extra still exits 0 and says on stderr
+to run `pip install -e '.[exports]'` from the clone (the package is not on PyPI).
 
 ```bash
 git clone https://github.com/eraevous/fathom.git && cd fathom

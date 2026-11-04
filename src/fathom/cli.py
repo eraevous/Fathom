@@ -20,8 +20,10 @@ def summary_line(d: dict) -> str:
     """One deterministic line of what profile resolved; no timestamps."""
     purpose, record, ta = d.get("purpose") or {}, d.get("working_record") or {}, d.get("target_analysis") or {}
     excluded = [e["column"] for e in ta.get("excluded", []) if e.get("reason") != "target column"]
-    return (f"guide: question: {purpose.get('question') or 'none declared'}; target: {ta.get('target') or 'none'}; "
-            f"excluded from target: {', '.join(excluded) or 'none'}; row unit: {record.get('row_unit') or 'unknown (not declared)'}")
+    target = (f"target: {ta['target']}; excluded from target: {', '.join(excluded) or 'none'}"
+              if ta.get("target") else "target: not declared")
+    return (f"guide: question: {purpose.get('question') or 'none declared'}; {target}; "
+            f"row unit: {record.get('row_unit') or 'unknown (not declared)'}")
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -82,7 +84,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.command == "export":
             for fmt, item in sorted(status["formats"].items()):
                 if item["status"] == "unavailable":
-                    print(f"guide: {fmt} not written: optional extra missing; install with: pip install 'fathom-guide[{fmt}]' (or '.[{fmt}]' from a clone)", file=sys.stderr)
+                    print(f"guide: {fmt} not written: optional extra missing; from the repository clone run: pip install -e '.[exports]'", file=sys.stderr)
         return 0
     except (ValueError, OSError, UnicodeError, csv.Error, yaml.YAMLError) as exc:
         print(f"guide: {exc}", file=sys.stderr)

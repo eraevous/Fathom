@@ -99,6 +99,8 @@ def test_profile_and_validate_echo_resolved_settings(tmp_path, capsys):
     lines = out.splitlines()
     assert len(lines) == 2 and "guide-profile.json" in lines[0] and "report.html" in lines[0]
     assert lines[1] == "guide: question: What drives tip?; target: tip; excluded from target: pickup; row unit: one trip"
+    _, quiet, _ = run(["profile", table(tmp_path), "--out", tmp_path / "none"], capsys)
+    assert quiet.splitlines()[1] == "guide: question: none declared; target: not declared; row unit: unknown (not declared)"
     code2, out2, _ = run(["profile", table(tmp_path), "--config", cfg, "--out", tmp_path / "out"], capsys)
     assert out2 == out  # deterministic, no timestamp
     code, out, _ = run(["validate", table(tmp_path), "--config", cfg], capsys)
@@ -121,7 +123,7 @@ def test_export_without_extras_names_missing_extra(tmp_path, capsys, monkeypatch
     monkeypatch.setattr(builtins, "__import__", no_extras)
     code, out, err = run(["export", tmp_path / "p" / "guide-profile.json", "--out", tmp_path / "e"], capsys)
     assert code == 0  # FT-R13 / spec004 FR-005: degraded, not failed
-    assert "pip install 'fathom-guide[pdf]'" in err and "pip install 'fathom-guide[pptx]'" in err
+    assert err.count("pip install -e '.[exports]'") == 2 and "pdf not written" in err and "pptx not written" in err
     assert not (tmp_path / "e" / "report.pdf").exists()
     monkeypatch.setattr(builtins, "__import__", real)
     import fathom.exports

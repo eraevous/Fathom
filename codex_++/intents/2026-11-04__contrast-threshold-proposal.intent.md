@@ -7,8 +7,8 @@ date: 2026-11-04
 # Proposal for Zach: group-contrast threshold and zero-share findings
 
 This is an agent proposal, not Zach's words or a committed decision. No behaviour
-changed. New proposal file authorized by the spec009 cold-user handoff; existing
-passages untouched.
+changed. Kept under codex_++/intents/ because docs/decisions/ holds Zach's own
+words (AGENTS.md).
 
 ## 1. "No marked contrast" for color × tip
 
