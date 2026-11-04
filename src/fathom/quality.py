@@ -39,6 +39,77 @@ def copy_evidence(left, right):
     return {"agreement":agreement,"jointly_present":len(joint),"joint_agreement":joint_agreement,"near":near}
 
 
+MISSINGNESS_TEST = {"family_alpha": .01, "correction": "Bonferroni", "min_cramers_v": .15, "min_group_size": 10,
+                    "max_groups": 20, "expected_count_rule": "Cochran: no expected cell below 1 and at most 20% of cells below 5"}
+
+
+def chi_square_sf(x, df):
+    """Upper tail of the chi-square distribution: regularized gamma Q(df/2, x/2), standard library only."""
+    if x <= 0:
+        return 1.0
+    a, z = df / 2, x / 2
+    log_front = -z + a * math.log(z) - math.lgamma(a)
+    if z < a + 1:
+        term = total = 1 / a; k = a
+        for _ in range(10000):
+            k += 1; term *= z / k; total += term
+            if abs(term) < abs(total) * 1e-16:
+                break
+        return max(0.0, 1 - total * math.exp(log_front))
+    tiny = 1e-300; b = z + 1 - a; c = 1 / tiny; d = 1 / b; h = d
+    for i in range(1, 10000):
+        an = -i * (i - a); b += 2
+        d = an * d + b; d = tiny if abs(d) < tiny else d
+        c = b + an / c; c = tiny if abs(c) < tiny else c
+        d = 1 / d; delta = d * c; h *= delta
+        if abs(delta - 1) < 1e-16:
+            break
+    return h * math.exp(log_front)
+
+
+def missingness_table_test(groups):
+    """Chi-square test of a missing/present x group table, or the reason it was not run."""
+    rule = MISSINGNESS_TEST
+    if not 2 <= len(groups) <= rule["max_groups"]:
+        return {"skipped": "group count outside 2..20"}
+    if min(g["n"] for g in groups) < rule["min_group_size"]:
+        return {"skipped": "group below minimum size"}
+    n = sum(g["n"] for g in groups); missing = sum(g["missing"] for g in groups)
+    if missing in (0, n):
+        return {"skipped": "no missing/present contrast within grouped rows"}
+    cells = [(observed, g["n"] * total / n) for g in groups
+             for observed, total in ((g["missing"], missing), (g["n"] - g["missing"], n - missing))]
+    if min(e for _, e in cells) < 1 or sum(e < 5 for _, e in cells) > .2 * len(cells):
+        return {"skipped": "expected counts too small"}
+    chi = sum((o - e) ** 2 / e for o, e in cells)
+    return {"n": n, "chi_square": chi, "df": len(groups) - 1, "p_value": chi_square_sf(chi, len(groups) - 1),
+            "cramers_v": math.sqrt(chi / n)}
+
+
+def scan_missingness(tables):
+    """Bonferroni over the tests actually run; report only p below alpha/m and V at or above the floor."""
+    rule = MISSINGNESS_TEST; evaluated, skipped = [], Counter()
+    for table in tables:
+        result = missingness_table_test(table["groups"])
+        if "skipped" in result:
+            skipped[result["skipped"]] += 1
+        else:
+            evaluated.append({**table, **result})
+    m = len(evaluated); threshold = rule["family_alpha"] / m if m else None
+    reported = sorted((e for e in evaluated if e["p_value"] < threshold and e["cramers_v"] >= rule["min_cramers_v"]),
+                      key=lambda e: (e["p_value"], -e["cramers_v"], e["column"], e["group_column"]))
+    results = [{"column": e["column"], "group_column": e["group_column"], "grouping": e["grouping"], "n": e["n"],
+                "groups": [{**g, "rate": stored(g["missing"] / g["n"])} for g in e["groups"]],
+                "chi_square": stored(e["chi_square"]), "df": e["df"], "p_value": stored(e["p_value"]),
+                "bonferroni_p": stored(min(1.0, e["p_value"] * m)), "cramers_v": stored(e["cramers_v"])} for e in reported[:20]]
+    block = {"method": "Pearson chi-square test of independence between a column's missing indicator and a screened grouping column",
+             **rule, "tests": m, "per_test_alpha": stored(threshold), "skipped": dict(sorted(skipped.items())),
+             "unadjusted_below_0_05": sum(e["p_value"] < .05 for e in evaluated), "reported": len(reported),
+             "results": results, "omitted_results": max(0, len(reported) - 20),
+             "role": "Observation only: never selects pairs, charts or actions; thresholds are disclosed, not a missingness mechanism."}
+    return block, evaluated
+
+
 def quality_profile(rows, columns, cfg, emit):
     """Return additive summary, screening evidence and quality pair candidates."""
     n, p = len(rows), len(columns)
@@ -54,6 +125,7 @@ def quality_profile(rows, columns, cfg, emit):
         "redundancy": "exact vectors; affine normalized numeric fingerprints to 1e-8; repeated-category partition recoding; near-copy row AND jointly-present agreement>=0.95 with n>=5 and >=5 jointly-present cells",
         "co_missing": "identical nonempty missing-row masks",
         "conditional_missingness": "2..20 groups, each n>=3, missing-rate spread>=0.30; first 20 grouping columns, target first then lexical",
+        "missingness_varies_with": "Pearson chi-square, missing indicator x group; 2..20 groups, each n>=10, Cochran expected counts; Bonferroni over tests run, family alpha 0.01; Cramer V>=0.15; observation only, never an action",
         "temporal_gap": ">=4 dates; modal positive day interval occurs>=2 and >=half intervals; gap>1.5x cadence",
         "skew": "n>=8; absolute standardized third moment>=2 and mean/median displacement>=half IQR (relative fallback for zero IQR)",
     }
@@ -204,6 +276,7 @@ def quality_profile(rows, columns, cfg, emit):
 
     target = cfg.get("target")
     grouping_names = sorted(names, key=lambda x: (x!=target, x))[:20]
+    test_tables = []
     for missing_name in names:
         raw = vectors[missing_name]
         if not 0 < sum(x is None for x in raw) < n:
@@ -227,15 +300,31 @@ def quality_profile(rows, columns, cfg, emit):
             for v, label in zip(raw, labels):
                 if label is not None:
                     sizes[label] += 1; missing[label] += v is None
-            if not 2<=len(sizes)<=20 or min(sizes.values())<3:
+            if not 2<=len(sizes)<=20:
                 continue
             gs = [{"value": k, "n": sizes[k], "missing": missing[k], "rate": missing[k]/sizes[k]} for k in sorted(sizes)]
+            test_tables.append({"column": missing_name, "group_column": group_name, "grouping": basis["grouping"],
+                                "groups": [{k: g[k] for k in ("value", "n", "missing")} for g in gs]})
+            if min(sizes.values())<3:
+                continue
             spread = max(g["rate"] for g in gs)-min(g["rate"] for g in gs)
             if spread >= .3:
                 missing_candidates.append({"left": missing_name, "right": group_name, "method": "missingness_by_group",
                     "statistics": {"n": sum(sizes.values()), "groups": gs, "spread": stored(spread), **basis},
                     "strength": stored(spread), "generator": "rule:quality-v1", "semantics": "inferred" if not gcol["override"] else "human-declared",
                     "uncertainty": "Observed missing-rate contrast, not a missingness mechanism or causation; grouping can be inferred."})
+
+    missingness_tests, _ = scan_missingness(test_tables)
+    for i, result in enumerate(missingness_tests["results"]):
+        rates = [g["rate"] for g in result["groups"]]
+        emit(f"q-missing-test-{i}", "observation",
+             f"Missingness in {result['column']} varies with {result['group_column']}: missing share {min(rates):.1%} to {max(rates):.1%} across "
+             f"{len(rates)} groups (n={result['n']}; Cramér's V {result['cramers_v']:.2f}; chi-square p={result['p_value']:.2g}, below the "
+             f"Bonferroni threshold {missingness_tests['per_test_alpha']:.2g} for {missingness_tests['tests']} tests).",
+             [{"path": f"quality.missingness_tests.results.{i}", "value": result}],
+             "Association between missingness and groups in this snapshot under disclosed thresholds; not a missingness mechanism, "
+             "cause or defect, and it selects no action.", "rule:missingness-test-v1",
+             rule="missingness_varies_with", columns=[result["column"], result["group_column"]])
 
     summary = {"rows": n, "columns": p, "complete_rows": {"count": sum(all(x is not None for x in r) for r in rows), "share": share(sum(all(x is not None for x in r) for r in rows),n)},
         "complete_columns": {"count": sum(c["missing"]==0 for c in columns), "share": share(sum(c["missing"]==0 for c in columns),p)},
@@ -264,4 +353,4 @@ def quality_profile(rows, columns, cfg, emit):
                 "grouping_columns_screened": grouping_names, "grouping_column_limit": 20, "omitted_grouping_columns": max(0,p-20),
                 "grouping_columns_excluded": [{"column": name, "reason": "grouping-column screening limit"} for name in names if name not in grouping_names],
                 "eligible_missingness_candidates": len(missing_candidates), "reported_missingness_candidates": 0}
-    return summary, {"rules": rules, "coverage": coverage, "value_exclusions": blocked}, missing_candidates
+    return summary, {"rules": rules, "coverage": coverage, "value_exclusions": blocked, "missingness_tests": missingness_tests}, missing_candidates
