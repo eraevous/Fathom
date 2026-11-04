@@ -24,3 +24,13 @@
    (docs/decisions/2026-11-04-proposed-contrast-threshold.md §2) is left as is.
 8. Existing `duplicates` finding keeps its id; its message gains repeating-row positions.
    Nothing new enters pair selection, ranking or charts.
+
+## Review follow-up (fresh-context review of 247f894)
+
+9. Interval pairs that do not parse are counted ("N of M complete pairs parsed; K not
+   strict ISO") and raise a question; with nothing parsed no ordering counts are printed.
+   Accepting US formats, offsets or fractional seconds would widen the parser; narrower
+   reading kept and disclosed.
+10. Day-resolution limit of the outlier rules is stated in the finding, README and spec.
+11. Repeated-key wording changed to "`col` values repeat k times each" (less claim-like).
+12. FT-ROW2-R1@2 relates to FT-R14 with `serves` rather than `implements`.

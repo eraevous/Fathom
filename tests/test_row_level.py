@@ -19,7 +19,7 @@ def test_blank_and_numeric_blank_rows_with_positions(make_profile):
     d = make_profile(body).document
     assert d["row_structure"]["blank_rows"] == {"count": 2, "share": 2 / 6, "positions": [2, 5]}
     assert d["row_structure"]["numeric_blank_rows"]["positions"] == [3]  # z has a=3: decoy
-    assert "2 of 6 rows have no value in any column (rows 2, 5)" in by_rule(d, "blank_rows")[0]["message"]
+    assert "2 of 6 rows have no value in any column (1-based rows 2, 5)" in by_rule(d, "blank_rows")[0]["message"]
     assert [f["rule"] for f in rows_findings(d, "question")] == ["blank_rows", "numeric_blank_rows"]
 
 
@@ -32,7 +32,7 @@ def test_partly_blank_rows_are_quiet(make_profile):
 def test_duplicate_rows_gain_positions(make_profile):
     d = make_profile("a,b\n1,x\n2,y\n1,x\n1,x\n").document
     dup = next(f for f in d["findings"] if f["id"] == "duplicates")
-    assert dup["message"].endswith("Repeating rows: 3, 4.")
+    assert dup["message"].endswith("Repeating rows (1-based): 3, 4.")
     assert d["row_structure"]["duplicate_rows"] == {"count": 2, "positions": [3, 4]}
 
 
@@ -52,8 +52,8 @@ def test_regular_multiplicity_reports_key_and_within_key_constants(make_profile)
     assert (key["column"], key["k"], key["keys_with_k_rows"], key["share"]) == ("person", 3, 12, 1.0)
     assert key["constant_within_key"] == ["group"] and key["same_grouping"] == ["alias"]
     message = by_rule(d, "repeated_key")[0]["message"]
-    assert message.startswith("Looks like 3 rows per person: 12 of 12 values appear exactly 3 times")
-    assert "group constant within it; same grouping as alias" in message
+    assert message.startswith("person values repeat 3 times each: 12 of 12 values appear exactly 3 times")
+    assert "within each person value, group never change; alias splits rows into exactly the same groups" in message
     assert by_rule(d, "repeated_key")[0]["kind"] == "observation"
 
 
@@ -134,3 +134,37 @@ def test_row_checks_never_act_and_are_deterministic(make_profile):
     second = make_profile(keyed([3] * 12)).to_json()
     assert first == second
     assert not rows_findings(make_profile(keyed([3] * 12)).document, "action")
+
+
+INTERVAL = {"intervals": [{"start": "start", "end": "end"}]}
+
+
+def test_fully_parsed_interval_has_no_unparsed_note(make_profile):
+    d = make_profile(TRIPS, INTERVAL).document
+    message = by_rule(d, "interval")[0]["message"]
+    assert "4 of 4 complete pairs parsed" in message and "not strict ISO" not in message
+    assert d["row_structure"]["intervals"][0]["unparsed_pairs"] == 0
+
+
+@pytest.mark.parametrize("start,end", [
+    ("03/01/2019 10:00", "03/01/2019 10:05"),          # US format
+    ("2019-03-01T10:00:00Z", "2019-03-01T10:05:00Z"),  # Z suffix
+    ("2019-03-01 10:00:00.5", "2019-03-01 10:05:00.5"),  # fractional seconds
+])
+def test_unparsed_interval_shapes_are_not_reported_as_clean(make_profile, start, end):
+    body = "start,end\n" + f"{start},{end}\n" * 3
+    d = make_profile(body, INTERVAL).document
+    item = d["row_structure"]["intervals"][0]
+    assert (item["pairs"], item["unparsed_pairs"], item["complete_pairs"]) == (0, 3, 3)
+    message = by_rule(d, "interval")[0]["message"]
+    assert "none of 3 complete pairs could be parsed" in message and "0 end before start" not in message
+    assert [f for f in rows_findings(d, "question") if f["rule"] == "interval"]
+
+
+def test_partly_parsed_interval_states_unparsed_count_and_asks(make_profile):
+    body = TRIPS + "03/03/2021 10:00,03/03/2021 10:05,2\n"
+    d = make_profile(body, INTERVAL).document
+    message = by_rule(d, "interval")[0]["message"]
+    assert "4 of 5 complete pairs parsed" in message and "1 of 5 pairs are not strict ISO" in message
+    question = next(f for f in rows_findings(d, "question") if f["rule"] == "interval")
+    assert "1 unparsed" in question["message"]

@@ -6,14 +6,19 @@
 pandas showed row-level structure Fathom missed (dropoff == pickup, duplicate pickup
 timestamps, a pickup outside the bulk month; blank rows and k-rows-per-key structure
 in the fathom-002 table).
-Serves: P0@2, DG-RA@1, DG-RB@1, DG-RC@1, DG-RE@1, DG-RF@1, FT-R14@1. Proposed: FT-ROW2-R1@1.
+Serves: P0@2, DG-RA@1, DG-RB@1, DG-RC@1, DG-RE@1, DG-RF@1, FT-R14@1. Proposed: FT-ROW2-R1@2 (supersedes @1).
 
 Relation to open PR #17 (spec-only `specs/009-row-level-checks`, unaccepted): this slice
-builds a narrower, structure-only subset (wholly blank rows; repeated-key multiplicity
-and within-key constants). It does not build #17's year-heading value scope, aggregate
-label cues, one-positive-per-key or conditional zeros. Where #17 sets a threshold this
-slice reuses it (modal group size 2..20 covering >=90% of keyed rows; at most 10 example
-positions; 1-based data-row positions).
+builds a structure-only subset (blank rows; repeated-key multiplicity and within-key
+constants). It does not build #17's aggregate label cues, one-positive-per-key or
+conditional zeros. It reuses #17's modal group size 2..20 covering >=90% of keyed rows,
+at most 10 example positions and 1-based data-row positions, and departs from #17 in
+three places (builder readings, for Zach to reconcile):
+1. Key candidates are screened by repeat pattern over every column, not by name cues
+   (`id`, `individual`, ...), because name cues would read domain meaning into names.
+2. A key needs >=10 distinct values (#17: >=3), so small balanced designs stay quiet.
+3. #17's year-heading value scope is replaced by "not wholly blank, empty in every
+   numeric column (>=2 numeric columns)".
 
 ## User scenarios
 
@@ -39,6 +44,11 @@ intervals `intervals: [{start: a, end: b}]` give end < start, end == start, and 
 duration distribution in seconds, parsed from the full date-time and disclosed as such.
 With >=2 temporal columns and no declared interval, one question only. Decoys: clean date
 column silent; undeclared pair produces the question and no counts.
+Limits: (a) works at day resolution, and the period rule fires only for values across a
+month/year boundary, so same-day or same-month stragglers are never reported. (c) only
+strict ISO date/date-time pairs are measured; unparsed pairs (MM/DD/YYYY, Z/offset
+suffix, fractional seconds) are counted in the message and raise a question, and
+"0 of 0" is never shown as a clean result.
 
 ## Requirements
 - FR-001: Each new finding is an observation (counts, share, rule text, <=10 positions)

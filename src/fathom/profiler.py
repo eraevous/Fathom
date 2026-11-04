@@ -158,7 +158,7 @@ def profile(data: GuideDataFrame, config: dict | None = None) -> ProfilingResult
     structure = row_structure(rows, columns, cfg, finding)
     if structure["duplicate_rows"]["count"]:
         dup = next(f for f in findings if f["id"] == "duplicates")
-        dup["message"] += " Repeating rows: " + ", ".join(map(str, structure["duplicate_rows"]["positions"])) + (" …" if duplicates > 10 else "") + "."
+        dup["message"] += " Repeating rows (1-based): " + ", ".join(map(str, structure["duplicate_rows"]["positions"])) + (f", first 10 of {duplicates}" if duplicates > 10 else "") + "."
         dup["evidence"].append({"path": "row_structure.duplicate_rows", "value": structure["duplicate_rows"]})
     enrich_columns(columns,rows,data.raw_rows if data.raw_rows is not None else rows,cfg,finding,findings)
     enrich_special(columns,rows,finding)
