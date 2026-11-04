@@ -10,7 +10,7 @@ import sys
 import pytest
 
 from fathom.config import load_config, validate_config
-from fathom.configure import config_yaml, schema_from_page, yaml_js_from_page
+from fathom.configure import config_yaml, loader_knows, schema_from_page, yaml_digest, yaml_js_from_page
 
 EVIL = '</script><img src=x onerror=alert(1)>'
 QUOTED = 'say "hi"\nthere \'now\' é😀'
@@ -122,10 +122,10 @@ def test_embedded_javascript_generator_matches_python(tmp_path):
         {"row_unit": "   ", "pair_budget": 0, "sample_rows": 100, "intervals": [[EVIL, "on"], ["on", "on"]], "columns": {"plain": {"type": "string"}}},
         {"target": "constructor", "columns": {"__proto__": {"type": "string", "exclude_from_target": True}, "prototype": {"type": "categorical"}}},
     ]
-    script = yaml_js_from_page(page) + "\nconst [schema, sels] = JSON.parse(require('fs').readFileSync(0, 'utf8'));\nprocess.stdout.write(JSON.stringify(sels.map(s => configYaml(schema, s))));"
+    script = yaml_js_from_page(page) + "\nconst QUOTED_TEXT = " + json.dumps(QUOTED * 9) + ";\nconst [schema, sels] = JSON.parse(require('fs').readFileSync(0, 'utf8'));\nprocess.stdout.write(JSON.stringify(sels.map(s => [configYaml(schema, s), sha256Hex(configYaml(schema, s))]).concat([[QUOTED_TEXT, sha256Hex(QUOTED_TEXT)]])));"
     out = subprocess.run([node, "-e", script], input=json.dumps([schema, selections]), text=True, capture_output=True)
     assert out.returncode == 0, out.stderr
-    assert json.loads(out.stdout) == [config_yaml(schema, s) for s in selections]
+    assert json.loads(out.stdout) == [[config_yaml(schema, s), yaml_digest(config_yaml(schema, s))] for s in selections] + [[QUOTED * 9, yaml_digest(QUOTED * 9)]]
     names = [c["name"] for c in schema["columns"]]
     cfg = roundtrip(tmp_path, schema, selections[1], names)
     assert cfg["target"] == EVIL and cfg["columns"][QUOTED] == {"type": "categorical"} and cfg["columns"]["on"]["exclude_from_target"] is True
@@ -193,3 +193,12 @@ def test_validate_echoes_bins_and_sections(tmp_path):
     r = run("validate", unseen_csv(tmp_path / "u.csv"), "--config", cfg)
     resolved = json.loads(r.stdout)["resolved"]
     assert resolved["bins"] == 6 and resolved["sections"] == {"missingness_patterns": True, "samples": False}
+
+
+def test_time_series_status_is_detected_not_assumed(tmp_path):
+    known = loader_knows("time_series")
+    assert loader_knows("bins") and not loader_knows("no_such_key")
+    out, page = page_for(tmp_path, unseen_csv(tmp_path / "u.csv"))
+    status = next(e for e in schema_from_page(page)["extension_points"] if e["key"] == "time_series")["status"]
+    assert status.startswith("Not yet offered by this page.") and ("accepts `time_series`" in status) == known
+    assert "not an audit certificate" in page and "yaml_sha256" in page

@@ -105,7 +105,10 @@ positive log view); `pair_budget`, `sample_rows`; optional report `sections` (`s
 system default; a suggestion applies only when you tick it. The page writes YAML live
 (Copy or Download), using only keys `guide profile --config` accepts, and a separate
 `config-manifest.json` saying which values were default, suggested or selected. The
-manifest is advisory; Fathom does not read it. Evidentiary thresholds are shown
+manifest also carries the sha256 of the exact YAML bytes it
+describes; it is advisory, not an audit certificate, and Fathom does not read it.
+Controls not yet offered by the page (for example `time_series`) may be declared
+directly in YAML if the installed Fathom supports them; `guide configure` prints which. Evidentiary thresholds are shown
 read-only with their record ids; no control suppresses a finding. An omitted section
 is named under "What the data cannot tell" as omitted by configuration, and stays in
 `guide-profile.json`.

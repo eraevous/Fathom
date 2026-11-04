@@ -57,6 +57,9 @@ def main(argv: list[str] | None = None) -> int:
             for name, contents in (("configure.html", page), ("configure-profile.json", result.to_json())):
                 (args.out / name).write_text(contents, encoding="utf-8", newline="\n")
             print(f"guide: wrote {args.out / 'configure-profile.json'}, {args.out / 'configure.html'}")
+            from .configure import loader_knows
+            print("guide: time_series: " + ("accepted by this Fathom's config loader; not yet offered by the page (declare it directly in YAML)"
+                                            if loader_knows("time_series") else "not accepted by this Fathom's config loader; not offered by the page"))
             return 0
         if args.command in {"profile", "validate"}:
             cfg = load_config(args.config)

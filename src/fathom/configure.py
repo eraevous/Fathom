@@ -7,12 +7,13 @@ The page carries inline JavaScript by design; reports stay script-free.
 """
 
 from collections import Counter
+import hashlib
 import json
 import re
 from html import escape
 from pathlib import Path
 
-from .config import BINS_RANGE, OPTIONAL_SECTIONS
+from .config import BINS_RANGE, OPTIONAL_SECTIONS, validate_config
 from .models import TYPES
 from .parsing import DATE_FORMATS, parse_date, parse_datetime
 from .rows import RULES as ROW_RULES
@@ -37,8 +38,23 @@ FIXED_RULES = [
     {"name": "Date parsing", "rule": "two-digit years pivot at 69; ambiguous numeric dates read MDY unless date_format is declared; alternatives kept", "source": "FT-UNI-R1@2 (spec003)"},
     *({"name": "Row structure: " + k.replace("_", " "), "rule": v, "source": "FT-ROW2-R1@2"} for k, v in ROW_RULES.items()),
 ]
+def loader_knows(key: str) -> bool:
+    """Whether the installed config loader accepts a top-level key (checked at generation time)."""
+    try:
+        validate_config({key: None})
+        return True
+    except ValueError as exc:
+        return not str(exc).startswith("config must be a mapping with keys")
+
+
+def time_series_status() -> str:
+    known = loader_knows("time_series")
+    return ("Not yet offered by this page. " + ("The installed Fathom's config loader accepts `time_series`, so it may be declared directly in YAML."
+            if known else "The installed Fathom's config loader does not accept `time_series`; it may be declared directly in YAML once a Fathom that supports it is installed."))
+
+
 EXTENSION_POINTS = [
-    {"key": "time_series", "status": "Not offered: the config loader on this branch has no time-series or granularity key. A control is added when the loader knows the key."},
+    {"key": "time_series", "status": None},
     {"key": "exclude (drop a column)", "status": "Not offered: removing a column from profiling would suppress its findings. Use exclude_from_target to keep a column out of target comparisons."},
 ]
 
@@ -105,7 +121,8 @@ def build_schema(doc: dict, frame, raw_config: dict | None) -> dict:
             "knobs": {k: {"default": d, "min": lo, "max": hi} for k, (d, lo, hi) in INT_KNOBS.items()},
             "bin_rule_default": BIN_RULE,
             "sections": [{"key": k, "title": OPTIONAL_SECTIONS[k], "default": True} for k in sorted(OPTIONAL_SECTIONS)],
-            "fixed_rules": FIXED_RULES, "extension_points": EXTENSION_POINTS,
+            "fixed_rules": FIXED_RULES,
+            "extension_points": [{**e, "status": e["status"] or time_series_status()} for e in EXTENSION_POINTS],
             "base": base, "base_columns": base_columns, "initial": initial,
             "key_order": KEY_ORDER, "column_key_order": COLUMN_KEY_ORDER, "nested_key_order": NESTED_KEY_ORDER, "reserved": sorted(RESERVED)}
 
@@ -197,6 +214,11 @@ def yaml_lines(value, indent: int, path: list, schema: dict) -> list:
     return lines
 
 
+def yaml_digest(text: str) -> str:
+    """sha256 of the exact UTF-8 bytes the page's Download produces (mirrored by sha256Hex in YAML_JS)."""
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
 def config_yaml(schema: dict, sel: dict) -> str:
     doc = config_document(schema, sel)
     return "\n".join(yaml_lines(doc, 0, [], schema)) + "\n" if doc else "{}\n"
@@ -270,6 +292,26 @@ function yamlLines(value,indent,path,schema){
   }
   return lines;
 }
+function sha256Hex(text){
+  var b=Array.from(new TextEncoder().encode(text)),K=[],H=[],i,j,p=2,n=0;
+  function frac(x){return (x-Math.floor(x))*4294967296|0;}
+  while(n<64){for(j=2;j*j<=p;j++){if(p%j===0){break;}}if(j*j>p){if(n<8){H[n]=frac(Math.pow(p,1/2));}K[n]=frac(Math.pow(p,1/3));n++;}p++;}
+  var len=b.length*8;b.push(0x80);while(b.length%64!==56){b.push(0);}
+  for(i=7;i>=0;i--){b.push(i>3?0:(len>>>(i*8))&255);}
+  function r(x,c){return (x>>>c)|(x<<(32-c));}
+  for(i=0;i<b.length;i+=64){
+    var w=[],a=H.slice(),t;
+    for(j=0;j<64;j++){
+      if(j<16){w[j]=(b[i+4*j]<<24)|(b[i+4*j+1]<<16)|(b[i+4*j+2]<<8)|b[i+4*j+3];}
+      else{var s0=r(w[j-15],7)^r(w[j-15],18)^(w[j-15]>>>3),s1=r(w[j-2],17)^r(w[j-2],19)^(w[j-2]>>>10);w[j]=(w[j-16]+s0+w[j-7]+s1)|0;}
+      var S1=r(a[4],6)^r(a[4],11)^r(a[4],25),ch=(a[4]&a[5])^(~a[4]&a[6]),t1=(a[7]+S1+ch+K[j]+w[j])|0;
+      var S0=r(a[0],2)^r(a[0],13)^r(a[0],22),mj=(a[0]&a[1])^(a[0]&a[2])^(a[1]&a[2]),t2=(S0+mj)|0;
+      a=[(t1+t2)|0,a[0],a[1],a[2],(a[3]+t1)|0,a[4],a[5],a[6]];
+    }
+    for(j=0;j<8;j++){H[j]=(H[j]+a[j])|0;}
+  }
+  return H.map(function(x){return (x>>>0).toString(16).padStart(8,'0');}).join('');
+}
 function configYaml(schema,sel){var doc=configDocument(schema,sel);return size(doc)?yamlLines(doc,0,[],schema).join('\n')+'\n':'{}\n';}
 """
 
@@ -308,7 +350,9 @@ function manifest(){
     if(el.hasAttribute('data-col')){item.column=colName(el);}
     if(item.state==='suggested'){item.suggestion_reason=el.getAttribute('data-reason');}
     return item;});
-  return {kind:'fathom-config-manifest',advisory:'Provenance of each control on the configure page. Advisory only: Fathom does not read this file.',
+  var y=configYaml(schema,selections());
+  return {kind:'fathom-config-manifest',advisory:'Provenance of each control on the configure page. Advisory only: Fathom does not read this file, and it is not an audit certificate; it records what the page showed, not what anyone verified.',
+          yaml_sha256:sha256Hex(y),yaml_sha256_basis:'sha256 of the exact UTF-8 bytes of the downloaded fathom.yaml',
           dataset:schema.dataset,controls:controls};
 }
 function refresh(){
@@ -464,7 +508,7 @@ def render_page(schema: dict) -> str:
     h.append('</tbody></table></div><h3>Not offered yet</h3><ul>' + ''.join('<li><b>' + escape(e["key"]) + '</b>: ' + escape(e["status"]) + '</li>' for e in schema["extension_points"]) + '</ul></section>')
     # YAML pane
     h.append('</div><div class="yaml-pane"><section><h2>Generated YAML</h2><div class="bar"><button id="copy" type="button">Copy</button><a class="btn" id="download" download="fathom.yaml" href="#">Download YAML</a><a class="btn" id="manifest" download="config-manifest.json" href="#">Download manifest</a></div>'
-             '<pre id="yaml"></pre><p class="muted">Only system-default values are left out. Run <code>guide profile DATA.csv --config fathom.yaml --out DIR</code>. The manifest records which values were default, suggested or selected; it is advisory and Fathom does not read it.</p>'
+             '<pre id="yaml"></pre><p class="muted">Only system-default values are left out. Run <code>guide profile DATA.csv --config fathom.yaml --out DIR</code>. The manifest records which values were default, suggested or selected, and the sha256 of this YAML; it is advisory, not an audit certificate, and Fathom does not read it.</p>'
              '<noscript><p>JavaScript is off, so the YAML cannot be generated here. Write the keys by hand; see the README.</p></noscript></section></div></div>')
     return ('<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
             '<title>Configure Fathom</title><style>' + CSS + '</style></head><body>' + '\n'.join(h)
