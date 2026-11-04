@@ -25,7 +25,7 @@ Acceptance: the 200-value fixture `tests/fixtures/salvage/tiny.csv` (mean 0, sd 
 min/max/mean/median/population SD is nonzero and within 5e-6 relative of the exact
 value. A normal-scale decoy (`normal.csv`) and a large-offset decoy (`offset.csv`,
 epoch-second-like integers) produce the same stored statistics as main, byte for
-byte, apart from the schema version.
+byte, apart from the schema version. Symmetric columns still store skewness 0.
 
 ### US2 — Missingness that varies with a group is reported, noise is not (P1)
 
@@ -66,7 +66,11 @@ numeric grouping columns (median split); the target column. Themes: print, a
 - **FR-001**: Stored finite statistics keep at least 6 significant figures. Values
   are rounded to `max(10, 5 - floor(log10|x|))` decimal places: the previous 10
   decimals wherever |x| ≥ 1e-4, 6 significant figures below that. Zero and
-  non-finite handling is unchanged.
+  non-finite handling is unchanged. Dimensionless coefficients computed on
+  normalized values (skewness, excess kurtosis, lag-1 autocorrelation, Pearson r,
+  eta, Cramér's V) keep 10 decimals: below 1e-10 they are floating-point noise, and
+  under 6 figures a symmetric column would report "Skewness 2.961e-16" instead of 0
+  (seen on tests/fixtures/clean.csv). p-values use the significant-figure rule.
 - **FR-002**: Chart geometry is scale-aware: the same rule with 12 significant
   figures, so tiny-scale histograms and boxes keep their shape while normal-scale
   geometry (and so every normal-scale SVG) is unchanged.

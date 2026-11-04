@@ -6,7 +6,7 @@ import statistics
 
 from .parsing import finite_number
 from .quality import copy_evidence
-from .univariate import percentile, safe
+from .univariate import percentile, safe, coefficient
 from .presentation import formatted
 
 NUMERIC={'numeric','latitude','longitude'}
@@ -29,7 +29,7 @@ def association(a,b,cases):
         sx=max(abs(x) for x in xs) or 1;sy=max(abs(y) for y in ys) or 1
         try:value=statistics.correlation([x/sx for x in xs],[y/sy for y in ys])
         except (ArithmeticError,statistics.StatisticsError):return None
-        return {'measure':'Pearson r','value':safe(value),'strength':safe(abs(value))}
+        return {'measure':'Pearson r','value':coefficient(value),'strength':coefficient(abs(value))}
     if (a in CATEGORY and b in NUMERIC) or (b in CATEGORY and a in NUMERIC):
         groups=defaultdict(list);pairs=cases if a in CATEGORY else [(y,x) for x,y in cases]
         scale=max(abs(v) for _,v in pairs) or 1
@@ -38,12 +38,12 @@ def association(a,b,cases):
         total=math.fsum((v-mean)**2 for v in nums)
         between=math.fsum(len(v)*(statistics.mean(v)-mean)**2 for v in groups.values())
         value=math.sqrt(min(1,max(0,between/total))) if total else None
-        return {'measure':'Correlation ratio eta','value':safe(value),'strength':safe(value)} if value is not None else None
+        return {'measure':'Correlation ratio eta','value':coefficient(value),'strength':coefficient(value)} if value is not None else None
     if a in CATEGORY and b in CATEGORY:
         cx,cy=Counter(xs),Counter(ys);counts=Counter(cases);n=len(cases)
         chi=math.fsum((counts[x,y]-cx[x]*cy[y]/n)**2/(cx[x]*cy[y]/n) for x in cx for y in cy)
         value=math.sqrt(min(1,max(0,chi/n/min(len(cx)-1,len(cy)-1))))
-        return {'measure':"Cramer's V",'value':safe(value),'strength':safe(value)}
+        return {'measure':"Cramer's V",'value':coefficient(value),'strength':coefficient(value)}
     return None
 
 

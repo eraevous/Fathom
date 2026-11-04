@@ -15,6 +15,9 @@ Trade-offs and readings (narrower reading where documents are silent):
    only |x| < 1e-4, which is where the reported bug lives, and leaves every
    normal-scale artifact byte-identical. **Open for Zach:** accept, or ask for the
    literal rule (one line in `univariate.stored`).
+   Dimensionless coefficients on normalized values (skew, kurtosis, r, eta, V,
+   lag-1) stay at 10 decimals: the first implementation stored clean.csv's
+   symmetric-column skewness as 2.96059e-16 (shown "2.961e-16" instead of "0").
 2. **Geometry** uses the same rule at 12 figures, not raw floats, so normal-scale
    SVG/PDF/PPTX bytes do not move and tiny charts keep their shape.
 3. **Schema 2** marks the precision change; nothing else in the shape changed except

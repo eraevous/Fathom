@@ -6,12 +6,17 @@ import re
 
 from .models import ProfilingResult
 from .charts import svg_chart
+from .palette import THEMES, KIND_COLOURS, theme_css
 from .target import target_tables
 from .presentation import formatted, column_tables, html_table, markdown_table, metric_table, structured_tables, formatted_examples, display_charts, top_n_reason
 from pathlib import Path
 
 KINDS = (("observation", "Observations"), ("interpretation", "Interpretations"),
          ("hypothesis", "Hypotheses"), ("action", "Suggested actions"), ("question", "Open questions"))
+PALETTE = {"themes": THEMES, "kinds": KIND_COLOURS}  # the recorded palette; values live in fathom.palette
+KIND_CSS = ('.kind-tag{display:inline-block;font-size:12px;line-height:1.5;font-weight:700;letter-spacing:.04em;text-transform:uppercase;'
+            'padding:0 8px;margin-right:8px;border:1px solid currentColor;border-radius:999px;background:var(--panel);vertical-align:1px}'
+            + ''.join(f'.kind-{k} .kind-tag,.kind-heading.kind-{k}{{color:var(--kind-{k})}}article.kind-{k}{{border-left-color:var(--kind-{k})}}' for k, _ in KINDS))
 
 
 def md_text(value):
@@ -151,10 +156,14 @@ def bars(items, title):
                       'y_label':'Column' if 'column' in title else 'Value','data':[{'label':k,'count':v} for k,v in items]}) if items else ''
 
 
+def kind_tag(kind):
+    return '<span class="kind-tag">'+escape(kind.capitalize())+'</span>'
+
+
 def finding_html(f, repeated_ids):
     fid=escape(f['id'],quote=True)
-    cls='finding repetitive' if repetitive(f,repeated_ids) else 'finding'
-    out=[f'<article id="{fid}" class="{cls}"><p>{escape(f["message"])}</p><details><summary>Evidence and uncertainty</summary>']
+    cls=('finding repetitive' if repetitive(f,repeated_ids) else 'finding')+' kind-'+escape(f['kind'],quote=True)
+    out=[f'<article id="{fid}" class="{cls}"><p>{kind_tag(f["kind"])}{escape(f["message"])}</p><details><summary>Evidence and uncertainty</summary>']
     for item in f['evidence']:
         if 'finding' in item:
             ref=escape(item['finding'],quote=True)
@@ -219,11 +228,11 @@ def render_html(result: ProfilingResult):
         summaries=repetition_groups(d)
         repeated_ids={f['id'] for _,items in summaries for f in items}
         for kind,title in KINDS:
-            out.append('<h3>'+title+'</h3>')
+            out.append(f'<h3 class="kind-heading kind-{kind}">'+title+'</h3>')
             for message,items in summaries:
                 if not items or items[0]['kind']!=kind: continue
                 links=''.join('<p><a href="#'+escape(f['id'],quote=True)+'">Original item</a>: '+escape(f['message'])+'</p>'+readable_html({'evidence':f['evidence'],'generator':f['generator'],'uncertainty':f['uncertainty'],'provenance':f['provenance']}) for f in items)
-                out.append('<div class="summary-view"><p>'+escape(message)+'</p><details><summary>Evidence, uncertainty and original items</summary>'+links+'</details></div>')
+                out.append(f'<div class="summary-view"><p class="kind-{kind}">'+kind_tag(kind)+escape(message)+'</p><details><summary>Evidence, uncertainty and original items</summary>'+links+'</details></div>')
             fs=[f for f in d['findings'] if f['kind']==kind]
             out.extend(finding_html(f,repeated_ids) for f in fs)
             if not fs: out.append('<p>None recorded.</p>')
@@ -244,9 +253,9 @@ def render_html(result: ProfilingResult):
         out += ['</section>']
     if d.get('annotations'):
         out += ['<section><h2>Labelled annotations</h2>',readable_html(d['annotations']),'</section>']
-    css='''body{font:16px/1.55 system-ui,sans-serif;background:#f5f8f7;color:#193e42;max-width:1120px;padding:32px;margin:auto}h1{font-size:44px;margin-bottom:8px}h2{border-bottom:2px solid #28777c;padding-bottom:7px;margin-top:40px}h3{margin-top:24px}section{margin-bottom:30px}.opening{background:white;padding:24px;border:1px solid #d5e1df;border-radius:8px}table{border-collapse:collapse;width:100%;background:white}td,th{padding:10px;text-align:left;border-bottom:1px solid #d5e1df;vertical-align:top}td{overflow-wrap:anywhere}article{background:white;border-left:3px solid #b9d3cf;padding:8px 16px;margin:10px 0}article>p{margin:7px 0}details{margin:8px 0}summary{cursor:pointer;color:#12656b;font-weight:600}details[open]{padding-bottom:10px}a{color:#12656b}small{color:#4d676b}dt{font-weight:600;margin-top:8px}dd{margin-left:20px;overflow-wrap:anywhere}ul{padding-left:24px}.sample-scroll{overflow-x:auto}.sample-scroll td{min-width:90px;max-width:260px;white-space:pre-wrap}svg{width:100%;max-width:800px}svg text{font:13px system-ui,sans-serif}label{cursor:pointer;font-weight:600;margin-left:8px}.summary-view{background:#e9f2ee;padding:12px;margin-top:12px}.repetitive{display:none}.repetitive:target{display:block}#full-view:checked ~ .summary-view{display:none}#full-view:checked ~ .full-view .summary-view{display:none}#full-view:checked ~ .full-view .repetitive{display:block}@media(max-width:700px){body{padding:12px}td,th{padding:6px;font-size:14px}.opening{padding:12px}}@media print{body{background:white;padding:0}details{break-inside:avoid}.repetitive{display:block}}'''
-    css += '.column-entry{box-sizing:border-box;width:100%;border:1px solid #d5e1df;border-radius:6px;padding:20px;margin:24px 0}.column-entry h3{margin-top:0;overflow-wrap:anywhere}.review-table{table-layout:fixed;margin:12px 0 20px}.review-table td,.review-table th{padding:6px 10px}caption{text-align:left;font-weight:600;padding:8px 0}.num{text-align:right;font-variant-numeric:tabular-nums}.table-scroll{overflow-x:auto;max-width:100%}.chart{margin:20px 0;max-width:100%;overflow-x:auto}.chart svg{width:720px;max-width:none;display:block}.chart svg text{font:15px system-ui,sans-serif}.chart-title{font-weight:600}figcaption{font-size:14px;margin:8px 0;color:#4d676b}p{overflow-wrap:anywhere}'
-    css += '.target-chart .review-table{max-width:none;min-width:680px;table-layout:auto}.target-chart .review-table .num{white-space:nowrap}.target-tables td{white-space:pre-line}.target-tables .review-table{max-width:none;min-width:640px;table-layout:auto}.column-entry{padding:12px 16px;margin:10px 0}.column-entry>summary{display:list-item}.column-entry>summary h3{display:inline;margin:0 16px 0 0;font-size:18px}.column-entry>summary span{font-size:14px;font-weight:400;color:#4d676b}.column-grid{display:grid;grid-template-columns:minmax(230px,.75fr) minmax(0,1.25fr);gap:24px;align-items:start}.column-statistics{min-width:0;max-width:360px;position:sticky;top:12px;max-height:65vh;overflow-y:auto}.column-plots{min-width:0}.review-table{max-width:420px}.chart{max-width:760px}.chart svg{width:100%;max-width:100%;height:auto}.chart svg text{font:18px system-ui,sans-serif}.chart h4{font-size:16px;margin:8px 0}.axis-captions p{margin:3px 0;font-size:14px;overflow-wrap:anywhere}.box-summary{max-width:320px}.chart{overflow:visible;margin:10px 0 20px}.column-entry .table-scroll{max-width:100%}@media(max-width:800px){.column-grid{grid-template-columns:minmax(0,1fr)}.column-entry{padding:10px}.column-statistics{max-width:100%;position:static;max-height:none;overflow:visible}}@media(max-width:500px){.chart svg text{font-size:22px}}'
+    css=theme_css()+KIND_CSS+'''body{font:16px/1.55 system-ui,sans-serif;background:var(--surface);color:var(--ink);max-width:1120px;padding:32px;margin:auto}h1{font-size:44px;margin-bottom:8px}h2{border-bottom:2px solid var(--rule);padding-bottom:7px;margin-top:40px}h3{margin-top:24px}section{margin-bottom:30px}.opening{background:var(--panel);padding:24px;border:1px solid var(--border);border-radius:8px}table{border-collapse:collapse;width:100%;background:var(--panel)}td,th{padding:10px;text-align:left;border-bottom:1px solid var(--border);vertical-align:top}td{overflow-wrap:anywhere}article{background:var(--panel);border-left:3px solid var(--soft-border);padding:8px 16px;margin:10px 0}article>p{margin:7px 0}details{margin:8px 0}summary{cursor:pointer;color:var(--link);font-weight:600}details[open]{padding-bottom:10px}a{color:var(--link)}small{color:var(--muted)}dt{font-weight:600;margin-top:8px}dd{margin-left:20px;overflow-wrap:anywhere}ul{padding-left:24px}.sample-scroll{overflow-x:auto}.sample-scroll td{min-width:90px;max-width:260px;white-space:pre-wrap}svg{width:100%;max-width:800px}svg text{font:13px system-ui,sans-serif}label{cursor:pointer;font-weight:600;margin-left:8px}.summary-view{background:var(--tint);padding:12px;margin-top:12px}.repetitive{display:none}.repetitive:target{display:block}#full-view:checked ~ .summary-view{display:none}#full-view:checked ~ .full-view .summary-view{display:none}#full-view:checked ~ .full-view .repetitive{display:block}@media(max-width:700px){body{padding:12px}td,th{padding:6px;font-size:14px}.opening{padding:12px}}@media print{body{background:var(--panel);padding:0}details{break-inside:avoid}.repetitive{display:block}}'''
+    css += '.column-entry{box-sizing:border-box;width:100%;border:1px solid var(--border);border-radius:6px;padding:20px;margin:24px 0}.column-entry h3{margin-top:0;overflow-wrap:anywhere}.review-table{table-layout:fixed;margin:12px 0 20px}.review-table td,.review-table th{padding:6px 10px}caption{text-align:left;font-weight:600;padding:8px 0}.num{text-align:right;font-variant-numeric:tabular-nums}.table-scroll{overflow-x:auto;max-width:100%}.chart{margin:20px 0;max-width:100%;overflow-x:auto}.chart svg{width:720px;max-width:none;display:block}.chart svg text{font:15px system-ui,sans-serif}.chart-title{font-weight:600}figcaption{font-size:14px;margin:8px 0;color:var(--muted)}p{overflow-wrap:anywhere}'
+    css += '.target-chart .review-table{max-width:none;min-width:680px;table-layout:auto}.target-chart .review-table .num{white-space:nowrap}.target-tables td{white-space:pre-line}.target-tables .review-table{max-width:none;min-width:640px;table-layout:auto}.column-entry{padding:12px 16px;margin:10px 0}.column-entry>summary{display:list-item}.column-entry>summary h3{display:inline;margin:0 16px 0 0;font-size:18px}.column-entry>summary span{font-size:14px;font-weight:400;color:var(--muted)}.column-grid{display:grid;grid-template-columns:minmax(230px,.75fr) minmax(0,1.25fr);gap:24px;align-items:start}.column-statistics{min-width:0;max-width:360px;position:sticky;top:12px;max-height:65vh;overflow-y:auto}.column-plots{min-width:0}.review-table{max-width:420px}.chart{max-width:760px}.chart svg{width:100%;max-width:100%;height:auto}.chart svg text{font:18px system-ui,sans-serif}.chart h4{font-size:16px;margin:8px 0}.axis-captions p{margin:3px 0;font-size:14px;overflow-wrap:anywhere}.box-summary{max-width:320px}.chart{overflow:visible;margin:10px 0 20px}.column-entry .table-scroll{max-width:100%}@media(max-width:800px){.column-grid{grid-template-columns:minmax(0,1fr)}.column-entry{padding:10px}.column-statistics{max-width:100%;position:static;max-height:none;overflow:visible}}@media(max-width:500px){.chart svg text{font-size:22px}}'
     return '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Fathom — '+escape(d['kind'])+'</title><style>'+css+'</style></head><body>'+'\n'.join(out)+'</body></html>\n'
 
 

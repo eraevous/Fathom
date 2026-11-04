@@ -25,6 +25,12 @@ def geometry(n):
     return stored(n,12)
 
 
+def coefficient(n):
+    """Dimensionless coefficients computed on normalized values (skewness, kurtosis, r, eta, V): 10 decimals,
+    because anything smaller is floating-point noise, not a small-scale measurement (spec 008 FR-001)."""
+    return round(n,10) if n is not None and math.isfinite(n) else None
+
+
 safe=stored
 
 
@@ -84,8 +90,8 @@ def numeric_profile(values,name,units):
         scale=max(abs(x) for x in nums) or 1;normalized=[x/scale for x in nums]
         mu=statistics.mean(normalized);sd=statistics.pstdev(normalized)
         if sd:
-            skew=safe(statistics.mean(((x-mu)/sd)**3 for x in normalized))
-            kurt=safe(statistics.mean(((x-mu)/sd)**4 for x in normalized)-3)
+            skew=coefficient(statistics.mean(((x-mu)/sd)**3 for x in normalized))
+            kurt=coefficient(statistics.mean(((x-mu)/sd)**4 for x in normalized)-3)
     counts=Counter(v for v in values if finite_number(v) is not None)
     stats={'finite':n,'zeros':{'count':sum(x==0 for x in nums),'share':sum(x==0 for x in nums)/n if n else None},
            'negatives':{'count':sum(x<0 for x in nums),'share':sum(x<0 for x in nums)/n if n else None},
@@ -192,7 +198,7 @@ def temporal_profile(values,name,cfg,meta):
         else:
             period='year';years=Counter(d.year for d in dates);series=[years.get(y,0) for y in range(unique[0].year,unique[-1].year+1)]
     lag=None
-    if len(series)>=3 and len(set(series[:-1]))>1 and len(set(series[1:]))>1:lag=safe(statistics.correlation(series[:-1],series[1:]))
+    if len(series)>=3 and len(set(series[:-1]))>1 and len(set(series[1:]))>1:lag=coefficient(statistics.correlation(series[:-1],series[1:]))
     intervals=[(b-a).days for a,b in zip(unique,unique[1:])]
     gap_basis=statistics.median(intervals) if intervals else None
     gaps=[{'after':a.isoformat(),'before':b.isoformat(),'days':(b-a).days} for a,b in zip(unique,unique[1:]) if gap_basis and (b-a).days>3*gap_basis]

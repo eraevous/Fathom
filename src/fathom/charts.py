@@ -4,6 +4,7 @@ from html import escape
 import textwrap
 
 from .presentation import formatted, html_table, tick_label, original_tick
+from .palette import LIGHT as C
 
 
 def linear_ticks(lo,hi,count=5):
@@ -39,7 +40,7 @@ def svg_chart(chart):
     out=[f'<svg role="img" aria-label="{escape(chart["title"],quote=True)}" viewBox="0 0 {width} {height}"><title>{e(chart["title"])}</title>']
     def text(x,y,value,anchor='start',cls=''):
         out.append(f'<text x="{x}" y="{y}" text-anchor="{anchor}"'+(f' class="{cls}"' if cls else '')+'>'+e(value)+'</text>')
-    def grid(x1,y1,x2,y2):out.append(f'<line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke="#d5e1df"/>')
+    def grid(x1,y1,x2,y2):out.append(f'<line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke="{C["border"]}"/>')
     if kind=='bar':
         maximum=max((d['count'] for d in data),default=1) or 1
         for value in count_ticks(maximum):
@@ -48,7 +49,7 @@ def svg_chart(chart):
         for d,lines,h in zip(data,labels,heights):
             center=y+h/2;end=175+305*d['count']/maximum
             for i,line in enumerate(lines):text(165,center-(len(lines)-1)*10+i*22+6,line,'end')
-            out += [f'<rect x="175" y="{center-10}" width="{end-175}" height="20" fill="#216e73"><title>{e(d["label"])}: {d["count"]}</title></rect>']
+            out += [f'<rect x="175" y="{center-10}" width="{end-175}" height="20" fill="{C["accent"]}"><title>{e(d["label"])}: {d["count"]}</title></rect>']
             text(end+8,center+6,tick_label(d['count']));y+=h
     elif kind in {'box','ecdf'} or data:
         left,right,bottom,top=65,515,80 if kind=='box' else 220,20
@@ -69,7 +70,7 @@ def svg_chart(chart):
                 x=px(value);grid(x,top,x,bottom);text(x,102 if kind=='box' else 255,original_tick(chart,value),'middle','tick-label')
         if kind=='box':
             b=chart['box'];y=48
-            out += [f'<line x1="{px(lo)}" y1="{y}" x2="{px(hi)}" y2="{y}" stroke="#193e42"/><rect x="{px(b["q1"])}" y="38" width="{max(1,px(b["q3"])-px(b["q1"]))}" height="20" fill="#c3ded8" stroke="#216e73"/><line x1="{px(b["median"])}" y1="38" x2="{px(b["median"])}" y2="58" stroke="#193e42"/>']
+            out += [f'<line x1="{px(lo)}" y1="{y}" x2="{px(hi)}" y2="{y}" stroke="{C["ink"]}"/><rect x="{px(b["q1"])}" y="38" width="{max(1,px(b["q3"])-px(b["q1"]))}" height="20" fill="{C["accent_soft"]}" stroke="{C["accent"]}"/><line x1="{px(b["median"])}" y1="38" x2="{px(b["median"])}" y2="58" stroke="{C["ink"]}"/>']
         else:
             maximum=1 if kind=='ecdf' else max((d['count'] for d in data),default=1) or 1
             for value in (linear_ticks(0,1) if kind=='ecdf' else count_ticks(maximum)):
@@ -78,12 +79,12 @@ def svg_chart(chart):
             if kind=='ecdf':
                 path=f'M {px(lo)} {bottom}'
                 for point in chart['points']:path+=f' H {px(point["x"])} V {bottom-point["cumulative"]*(bottom-top)}'
-                out.append(f'<path d="{path}" fill="none" stroke="#216e73" stroke-width="2"/>')
+                out.append(f'<path d="{path}" fill="none" stroke="{C["accent"]}" stroke-width="2"/>')
             else:
                 barwidth=(right-left)/len(data)
                 for i,d in enumerate(data):
                     h=d['count']/maximum*(bottom-top)
-                    out.append(f'<rect x="{left+i*barwidth}" y="{bottom-h}" width="{max(.5,barwidth-2)}" height="{h}" fill="#216e73"><title>{e(d["label"])}: {d["count"]}</title></rect>')
+                    out.append(f'<rect x="{left+i*barwidth}" y="{bottom-h}" width="{max(.5,barwidth-2)}" height="{h}" fill="{C["accent"]}"><title>{e(d["label"])}: {d["count"]}</title></rect>')
     out.append('</svg>')
     notes=[]
     if kind=='time' and data:notes.append('Calendar range: '+data[0]['label']+' to '+data[-1]['label']+'. Day ticks omit the year; exact dates remain in chart values.')

@@ -69,6 +69,16 @@ def test_stored_rule_is_six_figures_with_ten_decimal_floor():
     assert stored(5e-320) == 5e-320
     assert geometry(1.234567890123456e-12) == 1.23456789012e-12 and geometry(33.75000000000001) == 33.75
     assert percentile([1e-12] * 9, 50) == 1e-12
+    from fathom.univariate import coefficient
+    assert coefficient(2.96059e-16) == 0 and coefficient(-7.12986e-10) == -7e-10   # dimensionless noise stays noise
+
+
+def test_symmetric_column_skewness_is_not_float_noise(make_profile):
+    """Decoy: evenly spaced values have zero skew; a 6-figure rule must not surface 1e-16 noise."""
+    d = make_profile("x\n" + "".join(f"{1730000123 + 97 * i}\n" for i in range(12))).document
+    assert abs(d["columns"][0]["univariate"]["statistics"]["skewness"]) < 1e-9
+    d = make_profile("x\n" + "".join(f"{i / 10}\n" for i in range(1, 12))).document
+    assert d["columns"][0]["univariate"]["statistics"]["skewness"] == 0
 
 
 @pytest.mark.parametrize("name", ["normal.csv", "offset.csv"])
@@ -80,12 +90,6 @@ def test_normal_and_offset_decoys_do_not_change(name):
     for doc in (main, now):
         doc.pop("schema_version"); doc["source"].pop("origin")
         doc["quality"].pop("missingness_tests", None); doc["quality"]["rules"].pop("missingness_varies_with", None)
-    if name == "offset.csv":
-        # The one disclosed difference: evenly spaced values have zero skew; the computed
-        # value is float noise, which 10 decimals truncated to -7e-10 and 6 figures keep.
-        skew = [c["univariate"]["statistics"].pop("skewness") for c in (main["columns"][0], now["columns"][0])]
-        assert skew[0] == -7e-10 and math.isclose(skew[1], skew[0], rel_tol=.05) and abs(skew[1]) < 1e-9
-        assert main["columns"][0]["univariate"]["statistics"]["skew_interpretation"] == now["columns"][0]["univariate"]["statistics"]["skew_interpretation"]
     assert now == main  # equal artifacts imply equal chart geometry, so normal-scale SVGs are unchanged
 
 

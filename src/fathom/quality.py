@@ -188,7 +188,7 @@ def quality_profile(rows, columns, cfg, emit):
             displacement = abs(mu-med)
             if abs(skew) >= 2 and displacement >= .5 * (iqr or max(abs(med), 1e-12)):
                 diagnostic(prefix + "-skew", "skew", [name], f"{name} is strongly skewed: mean {statistics.mean(nums):.6g} differs from median {statistics.median(nums):.6g}, so the mean may not describe a typical row.",
-                           {"finite_count": len(nums), "standardized_third_moment": stored(skew), "mean": statistics.mean(nums), "median": statistics.median(nums)},
+                           {"finite_count": len(nums), "standardized_third_moment": round(skew, 10), "mean": statistics.mean(nums), "median": statistics.median(nums)},
                            f"Inspect the tail of {name} and report median alongside mean before choosing a typical-value summary.")
         if typ == "temporal":
             dates = sorted({date.fromisoformat(v) for v in values if calendar_date(v) is not None})
