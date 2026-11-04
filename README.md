@@ -48,7 +48,8 @@ dependency availability produce byte-identical outputs. No runtime date is added
 
 ## Declare a question and keep a working record
 
-YAML configuration supports `question`, `target`, `pair_budget` (0–20, default 5),
+YAML configuration supports `question`, `target`, `pair_budget` (0–20, default 5), `bins` (1–50),
+`sections` (`samples`/`missingness_patterns`: true or false),
 column meanings/type overrides, row unit, generating process, missingness mechanism,
 human decisions/rationales, and profile context. See the
 [synthetic example](tests/fixtures/review.yaml) and [CLI contract](specs/001-data-review/contracts/cli.md).
@@ -84,6 +85,29 @@ strings by default; blank/whitespace cells are missing, while `NA`, `null` and `
 are literal values. Date inference recognizes strict ISO, English month names and slash dates with
 recorded ambiguity and a fixed two-digit-year pivot (69). Numeric
 overrides count incompatible/non-finite values rather than silently coercing them.
+
+## Configure
+
+```bash
+guide configure data.csv --out configure/            # optional: --config existing.yaml
+```
+
+writes `configure/configure.html`, a self-contained page (inline CSS and JavaScript,
+no network), and `configure/configure-profile.json`, the profile it was built from.
+The page lists each column's inferred type and observable facts (populated share,
+distinct values, parsed date formats) with controls for a type override, a
+`date_format`, and `exclude_from_target`; a target selector whose candidates carry only
+observable reasons ("numeric; 96.0% populated; 14 distinct"); temporal column pairs as
+unticked interval suggestions; histogram `bins` (default: square root of n, capped at
+10); `pair_budget`, `sample_rows`; optional report `sections` (`samples`,
+`missingness_patterns`); and the question and row unit. Every control starts at the
+system default; a suggestion applies only when you tick it. The page writes YAML live
+(Copy or Download), using only keys `guide profile --config` accepts, and a separate
+`config-manifest.json` saying which values were default, suggested or selected. The
+manifest is advisory; Fathom does not read it. Evidentiary thresholds are shown
+read-only with their record ids; no control suppresses a finding. An omitted section
+is named under "What the data cannot tell" as omitted by configuration, and stays in
+`guide-profile.json`.
 
 ## Data quality and readable reports
 

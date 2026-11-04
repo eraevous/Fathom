@@ -8,6 +8,11 @@ import yaml
 
 from .models import SchemaContract, TYPES
 
+# Optional report sections a configuration may omit (spec012). Findings, the dataset
+# summary, "What the data cannot tell" and provenance are never optional.
+OPTIONAL_SECTIONS = {"samples": "Sample rows", "missingness_patterns": "Missingness patterns"}
+BINS_RANGE = (1, 50)
+
 
 def text(value: object, name: str, nullable: bool = False) -> None:
     if nullable and value is None:
@@ -25,7 +30,7 @@ def mapping(value: object, name: str, allowed: set[str]) -> dict:
 def validate_config(raw: dict | None = None, columns: list[str] | None = None) -> dict:
     cfg = dict(mapping({} if raw is None else raw, "config", {
         "question", "target", "pair_budget", "columns", "row_unit", "generating_process",
-        "missingness_mechanism", "decisions", "context", "schema", "title", "description", "sample_rows", "sample_seed", "sample_text_limit", "group_by", "intervals"}))
+        "missingness_mechanism", "decisions", "context", "schema", "title", "description", "sample_rows", "sample_seed", "sample_text_limit", "group_by", "intervals", "bins", "sections"}))
     for key in ("question", "target", "row_unit", "generating_process", "missingness_mechanism", "title", "description", "group_by"):
         text(cfg.get(key), key, nullable=True)
     for key,default,low,high in (("sample_rows",20,0,100),("sample_seed",0,0,2**32-1),("sample_text_limit",120,20,1000)):
@@ -36,6 +41,14 @@ def validate_config(raw: dict | None = None, columns: list[str] | None = None) -
     if type(budget) is not int or not 0 <= budget <= 20:
         raise ValueError("pair_budget must be an integer from 0 to 20")
     cfg["pair_budget"] = budget
+    bins = cfg.get("bins")
+    if bins is not None and (type(bins) is not int or not BINS_RANGE[0] <= bins <= BINS_RANGE[1]):
+        raise ValueError(f"bins must be an integer from {BINS_RANGE[0]} to {BINS_RANGE[1]}")
+    cfg["bins"] = bins
+    sections = mapping(cfg.get("sections", {}), "sections", set(OPTIONAL_SECTIONS))
+    if any(type(v) is not bool for v in sections.values()):
+        raise ValueError("sections values must be true or false")
+    cfg["sections"] = {k: sections.get(k, True) for k in sorted(OPTIONAL_SECTIONS)}
     metadata = mapping(cfg.get("columns", {}), "columns", set(columns) if columns is not None else set(cfg.get("columns", {})) if isinstance(cfg.get("columns", {}), dict) else set())
     for name, item in metadata.items():
         text(name, "column name")
@@ -118,6 +131,11 @@ def validate_config(raw: dict | None = None, columns: list[str] | None = None) -
 def load_config(path: str | Path | None) -> dict:
     if path is None:
         return validate_config()
+    return validate_config(read_config(path))
+
+
+def read_config(path: str | Path) -> dict | None:
+    """The raw YAML mapping (strict loader, unvalidated); `load_config` validates it."""
     # BaseLoader keeps dates as strings; SafeLoader is used with its timestamp
     # resolver removed on a private subclass so ISO dates have the same wire type.
     class ConfigLoader(yaml.SafeLoader):
@@ -135,4 +153,4 @@ def load_config(path: str | Path | None) -> dict:
             result[key] = value
         return result
     ConfigLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, unique_mapping)
-    return validate_config(yaml.load(Path(path).read_text(encoding="utf-8"), Loader=ConfigLoader))
+    return yaml.load(Path(path).read_text(encoding="utf-8"), Loader=ConfigLoader)

@@ -115,9 +115,24 @@ def datetime_note(c):
     return DATETIME_NOTE if c.get('effective_type')=='temporal' and 'ISO_DATETIME' in formats else ''
 
 
+def omitted(d):
+    """Keys of optional sections omitted by configuration (spec012); legacy artifacts omit none."""
+    return {s['key'] for s in (d.get('report') or {}).get('omitted_sections', [])}
+
+
+def omitted_notes(d):
+    return [f"{s['title']} section omitted by configuration (sections.{s['key']}: false); the saved artifact still holds it."
+            for s in (d.get('report') or {}).get('omitted_sections', [])]
+
+
+def bins_note(d):
+    rule = (d.get('report') or {}).get('bin_rule')
+    return f'Histogram bins: {rule}.' if rule else ''
+
+
 def unknowns(d):
     questions = [f['message'] for f in d['findings'] if f['id'].startswith('unknown-')]
-    result = questions or ['Recorded context is supplied by humans; the table does not independently establish domain meaning, causation or fitness for use.']
+    result = (questions or ['Recorded context is supplied by humans; the table does not independently establish domain meaning, causation or fitness for use.']) + omitted_notes(d)
     dated = [c['name'] for c in d.get('columns', []) if datetime_note(c)]
     if dated:
         result = result + [f"Date-time columns ({', '.join(dated)}) are {DATETIME_NOTE}."]
@@ -180,14 +195,14 @@ def finding_html(f, repeated_ids):
 
 
 def dictionary_and_provenance_html(d):
-    out=['<section><h2>Dictionary</h2><p>Inferred readings are lexical and uncalibrated; meanings are human declarations or unknown.</p><p>Column details start collapsed. Expand a column to inspect its statistics and scaled plots. Exact plotted values remain available.</p>',
+    out=['<section><h2>Dictionary</h2><p>Inferred readings are lexical and uncalibrated; meanings are human declarations or unknown.</p><p>Column details start collapsed. Expand a column to inspect its statistics and scaled plots. Exact plotted values remain available.</p>'+('<p>'+escape(bins_note(d))+'</p>' if bins_note(d) else ''),
          bars([(c['name'],c['missing']) for c in d['columns'][:20]],'Missing cells by column (first 20)')]
-    masks=d.get('missingness_patterns')
+    masks=d.get('missingness_patterns') if 'missingness_patterns' not in omitted(d) else None
     if masks:
         out += [svg_chart(masks['chart']),'<p>'+escape(masks['basis'])+' '+str(masks['omitted_patterns'])+' patterns / '+str(masks['omitted_rows'])+' rows omitted; '+str(masks['omitted_columns'])+' columns beyond the display limit.</p>']
         out += ['<details><summary>Exact pattern table — counts and shares</summary>',html_table({'caption':'Exact row masks — share of all rows','headers':['Pattern / missing columns','Count','Share'],'numeric':[1,2],
                             'rows':[['P'+str(i+1)+': '+(', '.join(p['missing']) or 'Complete rows'),formatted(p['count']),formatted(p['share'],True)] for i,p in enumerate(masks['patterns'])]}),'</details>']
-    out += [samples_html(d)]
+    if 'samples' not in omitted(d):out += [samples_html(d)]
     for c in d['columns']:
         meaning=c['meaning']['value']+' (human)' if c['meaning'] else 'Unknown meaning'
         basis='human override; inferred '+c['inference']['type'] if c['override'] else 'inferred, not a domain fact'
@@ -264,8 +279,10 @@ def render_html(result: ProfilingResult):
 
 
 def dictionary_and_provenance_markdown(d):
-    lines=['## Dictionary','','Inferred readings are lexical and uncalibrated; meanings are human declarations or unknown.','',samples_markdown(d)]
-    if d.get('missingness_patterns'):lines += [svg_chart(d['missingness_patterns']['chart'])]
+    lines=['## Dictionary','','Inferred readings are lexical and uncalibrated; meanings are human declarations or unknown.','']
+    if bins_note(d):lines += [md_text(bins_note(d)),'']
+    if 'samples' not in omitted(d):lines += [samples_markdown(d)]
+    if d.get('missingness_patterns') and 'missingness_patterns' not in omitted(d):lines += [svg_chart(d['missingness_patterns']['chart'])]
     for c in d['columns']:
         meaning=c['meaning']['value']+' (human)' if c['meaning'] else 'Unknown meaning'
         lines += ['### '+md_text(c['name']),'',md_text(meaning+'; effective '+c['effective_type']+(' (human override)' if c['override'] else ' (inferred)')+('; '+datetime_note(c) if datetime_note(c) else '')),'',md_text('Examples: '+', '.join(formatted_examples(c))),'',charts_markdown(c),'',

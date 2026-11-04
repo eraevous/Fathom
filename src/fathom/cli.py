@@ -9,7 +9,7 @@ import sys
 import yaml
 
 from . import __version__
-from .config import load_config, validate_config
+from .config import load_config, read_config, validate_config
 from .connectors import CSVConnector
 from .models import ProfilingResult, SchemaContract, canonical_json
 from .profiler import compare, profile
@@ -30,13 +30,15 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="guide", description="Evidenced local table review")
     parser.add_argument("--version", action="version", version=f"guide {__version__}")
     commands = parser.add_subparsers(dest="command", required=True)
-    for command in ("profile", "render", "compare", "validate", "export"):
-        sub = commands.add_parser(command)
+    helps = {"configure": "write configure.html, a self-contained page that builds a YAML config from this table's profile "
+                          "(defaults, observable suggestions, explicit selections), and configure-profile.json, the profile it used"}
+    for command in ("profile", "render", "compare", "validate", "export", "configure"):
+        sub = commands.add_parser(command, help=helps.get(command), description=helps.get(command))
         sub.add_argument("input", type=Path)
         if command == "compare":
             sub.add_argument("after", type=Path)
-        if command in {"profile", "validate"}:
-            sub.add_argument("--config", type=Path)
+        if command in {"profile", "validate", "configure"}:
+            sub.add_argument("--config", type=Path, help="existing YAML config" + ("; its values start the page as 'existing config'" if command == "configure" else ""))
         if command != "validate":
             sub.add_argument("--out", type=Path, required=True)
         if command == "export":
@@ -44,6 +46,18 @@ def main(argv: list[str] | None = None) -> int:
             sub.add_argument("--deck",choices=("summary","full"),default="summary")
     args = parser.parse_args(argv)
     try:
+        if args.command == "configure":
+            from .configure import build_schema, render_page
+            raw = read_config(args.config) if args.config else None
+            cfg = validate_config(raw)
+            data = CSVConnector(args.input, SchemaContract(**cfg["schema"])).load()
+            result = profile(data, validate_config(cfg, list(data.frame.columns)))
+            page = render_page(build_schema(result.document, data.frame, raw))
+            args.out.mkdir(parents=True, exist_ok=True)
+            for name, contents in (("configure.html", page), ("configure-profile.json", result.to_json())):
+                (args.out / name).write_text(contents, encoding="utf-8", newline="\n")
+            print(f"guide: wrote {args.out / 'configure-profile.json'}, {args.out / 'configure.html'}")
+            return 0
         if args.command in {"profile", "validate"}:
             cfg = load_config(args.config)
             data = CSVConnector(args.input, SchemaContract(**cfg["schema"])).load()

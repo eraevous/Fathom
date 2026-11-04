@@ -191,7 +191,17 @@ def profile(data: GuideDataFrame, config: dict | None = None) -> ProfilingResult
         "overview": overview, "columns": columns, "findings": findings,
         "selection": selection, "bivariate": pairs, "dependencies": dependencies, "annotations": {},
         "dataset_summary": dataset_summary, "quality": quality, "dataset":dataset, "samples":samples,
-        "target_analysis":target_analysis,"row_structure":structure,"missingness_patterns":missingness_patterns(columns,rows)})
+        "target_analysis":target_analysis,"row_structure":structure,"missingness_patterns":missingness_patterns(columns,rows),
+        "report":report_settings(cfg)})
+
+
+def report_settings(cfg: dict) -> dict:
+    """Human rendering choices (spec012). Omitted sections stay computed in this artifact."""
+    from .config import OPTIONAL_SECTIONS
+    from .univariate import bin_rule
+    return {"generator": "human" if cfg.get("bins") or not all(cfg["sections"].values()) else "system default",
+            "bins": cfg.get("bins"), "bin_rule": bin_rule(cfg.get("bins")),
+            "omitted_sections": [{"key": k, "title": OPTIONAL_SECTIONS[k]} for k, on in cfg["sections"].items() if not on]}
 
 
 def select_pairs(rows: list, columns: list, cfg: dict, quality=None, quality_pairs=None) -> tuple[dict, list, dict]:
