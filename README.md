@@ -202,6 +202,31 @@ remains future work under DG-D7. See
 [slice-4 visual review](specs/005-plots-and-layout/review/README.md), plus
 [polish review and current open issues](specs/006-report-polish/review/README.md).
 
+## Time series
+
+Declare a series; Fathom never infers one from column names.
+
+```yaml
+time_series:
+  - time: pickup          # strict ISO date/date-time (or the column's date_format)
+    value: null           # null counts rows (events); a column sums its values
+    by: zone              # optional: top_n groups by row count (default 5, max 20)
+    granularities: [hour, day]   # or [auto]: hour/day/week/month as the span allows
+    max_lag: 48           # optional; defaults 168/28/26/24 by granularity
+```
+
+The report gains a **Temporal structure** section (artifact key `time_series`): the
+observation process (raw rows, distinct and repeated timestamps, missing observations
+vs explicit zeros vs periods with no event), the four sparsity dimensions per
+granularity — **frequency** (zero share, inter-event interval; ADI alias),
+**amplitude** (non-zero quantiles, CV²), **wavelength** (ACF/PACF of values and of
+the occurrence indicator, dominant and calendar lags, optional periodogram peak with
+the `stats` extra) and **duration** (zero-run and burst lengths) — ACF/PACF stem plots
+for two granularities, and a present / absent / insufficient-evidence summary with
+each rule. Fewer than 30 periods is insufficient; a constant series is undefined; lags
+beyond n/4 are marked poorly supported. Without a declaration, one question suggests
+one. See [spec011](specs/011-time-series/spec.md).
+
 ## Scope and limits
 
 This is a local, in-memory, single CSV/wide slice under `DG-D1`'s data-to-decisions

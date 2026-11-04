@@ -7,6 +7,7 @@ import re
 from .models import ProfilingResult
 from .charts import svg_chart
 from .target import target_tables
+from .temporal_view import temporal_html, temporal_markdown
 from .presentation import formatted, column_tables, html_table, markdown_table, metric_table, structured_tables, formatted_examples, display_charts, top_n_reason
 from pathlib import Path
 
@@ -240,7 +241,8 @@ def render_html(result: ProfilingResult):
             fs=[f for f in d['findings'] if f['kind']==kind]
             out.extend(finding_html(f,repeated_ids) for f in fs)
             if not fs: out.append('<p>None recorded.</p>')
-        out += ['</div></section><section><h2>Relations</h2><p>'+escape(d['selection'].get('ranking_rule','Legacy input-order selection; no relevance ranking recorded.'))+'</p>',
+        out += ['</div></section>',temporal_html(d)]
+        out += ['<section><h2>Relations</h2><p>'+escape(d['selection'].get('ranking_rule','Legacy input-order selection; no relevance ranking recorded.'))+'</p>',
                 '<p>Selected '+str(len(d['bivariate']))+' relationship(s); budget '+str(d['selection']['budget'])+'.</p>']
         ta=d.get('target_analysis')
         out += ['<p>'+escape(ta['reason']+' '+ta['grouping_policy']+' '+ta['warning'] if ta else 'Target detail unavailable in legacy artifact; rerun profiling to compute it.')+'</p>']
@@ -306,6 +308,7 @@ def render_markdown(result: ProfilingResult):
             lines += ['<details><summary>Full repetitive per-column findings</summary>','']
             for f in repeated: lines += markdown_finding(f)
             lines += ['</details>','']
+        lines += temporal_markdown(d)
         lines += ['## Relations','',md_text(d['selection'].get('ranking_rule','Legacy input-order selection; no relevance ranking recorded.')),'',
                   f"Selected {len(d['bivariate'])} relationship(s); budget {d['selection']['budget']}.",'']
         ta=d.get('target_analysis')
