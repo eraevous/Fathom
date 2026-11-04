@@ -123,7 +123,7 @@ def test_event_counts_from_timestamps_with_hour_and_day(make_profile):
     s = make_profile(*hourly_events()).document["time_series"]["series"][0]["groups"][0]
     assert s["mode"] == "events" and [g["granularity"] for g in s["granularities"]] == ["hour", "day", "week", "month"]
     h = grain(s, "hour")
-    assert h["periods_in_span"] == 960 and h["absent_event_periods"] == 0
+    assert h["periods_in_span"] == 960 and h["no_recorded_event_periods"] == 0
     assert h["wavelength"]["calendar_lags"][0]["acf"] > 0.9 and h["wavelength"]["values"]["dominant_lags"][0]["lag"] == 24
     assert grain(s, "week")["wavelength"]["values"]["status"] == "insufficient"
 
@@ -215,3 +215,32 @@ def test_decoys_stay_silent(make_profile):
 def test_invalid_declarations_are_refused(bad):
     with pytest.raises(ValueError):
         validate_config(bad, ["when", "amount"])
+
+
+def test_alternating_days_lag_one_is_not_estimable(make_profile):
+    values = [1 + (i // 2) % 3 for i in range(60)]
+    d = make_profile(daily(values, skip=range(1, 60, 2)), declare(max_lag=1)).document
+    s = series(d); c = grain(s, "day")["wavelength"]["values"]
+    assert c["n"] == 30 and c["lags"][0]["pairs"] == 0 and c["lags"][0]["acf"] is None
+    assert c["signal"] == "not estimable" and "not the same as near zero" in c["note"]
+    sig = signal(s, "autocorrelation in values")
+    assert sig["not estimable"] == ["day"] and sig["absent"] == [] and sig["present"] == []
+
+
+def test_random_missing_still_recovers_known_period(make_profile):
+    pattern = [10, 14, 18, 14, 10, 6, 2]
+    rng = random.Random(5)
+    skip = {i for i in range(280) if rng.random() < 0.2}
+    c = grain(series(make_profile(daily([pattern[i % 7] for i in range(280)], skip=skip), declare()).document), "day")["wavelength"]["values"]
+    assert not c["complete"] and c["not_estimable_lags"] == []
+    lag7 = c["lags"][6]
+    assert lag7["pairs"] < 273 and lag7["band"] == round(1.96 / math.sqrt(lag7["pairs"]), 10)
+    assert c["dominant_lags"][0]["lag"] == 7 and c["signal"] == "present"
+
+
+def test_weekly_default_reaches_52_when_span_allows(make_profile):
+    values = [5 + (i // 7) % 52 for i in range(7 * 110)]
+    g = grain(series(make_profile(daily(values), declare(grains=("week",))).document), "week")
+    assert g["wavelength"]["values"]["max_lag"] == 52 and g["wavelength"]["calendar_lags"][0]["acf"] is not None
+    short = grain(series(make_profile(daily(values[:7 * 60]), declare(grains=("week",))).document), "week")
+    assert short["wavelength"]["calendar_lags"][0]["status"] == "not evaluated at max_lag 26"

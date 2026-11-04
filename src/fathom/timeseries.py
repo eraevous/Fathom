@@ -19,7 +19,7 @@ RULES = {
     "regularise": "periods run from the floor of the first to the floor of the last parsed timestamp; value series sum parsed "
                   "values per period, event series count rows per period; week = ISO week starting Monday",
     "observation": "value series: a period with no row (or only rows without a parsed value) is a missing observation, a period "
-                   "whose values sum to 0 is a zero; event series: a period with no row is an absent event (0 counted), and the "
+                   "whose values sum to 0 is a zero; event series: a period with no row has no recorded event (0 counted), and the "
                    "table cannot say whether the process was observed then",
     "frequency": "zero share = zero periods / observed periods; inter-event interval = periods from one non-zero period to the "
                  "next with no missing period between them (mean is the ADI alias); intervals that span a missing period are counted "
@@ -31,8 +31,13 @@ RULES = {
     "reliability": f"n < {MIN_N} observed periods: insufficient (applies to every signal, including zero periods and bursts); "
                    "zero variance: undefined; lag > n/4: poorly supported",
     "cycle": "present when a dominant ACF lag >= 2 (supported local peak above the per-lag band) also exceeds the family-wise band",
-    "signal": "present when the largest |r| over supported lags exceeds the family-wise band z(1-0.025/L)/sqrt(n) "
-              "(Bonferroni over L supported lags); absent otherwise; insufficient evidence under the reliability rule",
+    "signal": "present when |r_k| exceeds the family-wise band z(1-0.025/L)/sqrt(n_k) at any supported lag (Bonferroni over the "
+              "L supported lags of this one correlogram; not adjusted across granularities, groups or values vs occurrence); "
+              "absent = not detected under this rule, not evidence of absence; insufficient evidence under the reliability rule",
+    "missingness": "valid pairs are counted per lag; a lag with fewer than max(10, n/4) valid pairs is not estimable (distinct from "
+                   "an estimate near 0) and never counts toward present or absent; with missing periods the bands use the per-lag "
+                   "valid pair count, n_k = pairs at lag k (complete series: n_k = n); PACF stops at the first non-estimable lag; "
+                   "supported = estimable and lag <= n/4",
     "auto": "auto = every granularity at or coarser than the timestamps' resolution (hour needs a time of day) with "
             f"2..{MAX_PERIODS:,} periods in span",
     "by": f"by: the top N groups by row count (default {TOP_N}, ties by value); other groups and rows with a missing key are counted, not analysed; "
@@ -90,17 +95,18 @@ def runs(states):
 
 
 def acf(x, max_lag):
-    """Pairwise-complete autocorrelation; x holds None for missing periods."""
+    """Pairwise-complete autocorrelation; x holds None for missing periods. Returns ([r_k], [valid pairs at k])."""
     obs = [v for v in x if v is not None]
     n = len(obs)
     m = sum(obs) / n
     c0 = sum((v - m) ** 2 for v in obs)
     if c0 <= 1e-12 * max(1.0, m * m) * n: return None
-    out = []
+    out, pairs = [], []
     for k in range(1, max_lag + 1):
-        out.append(sum((x[t] - m) * (x[t + k] - m) for t in range(len(x) - k)
-                       if x[t] is not None and x[t + k] is not None) / c0)
-    return out
+        valid = [t for t in range(len(x) - k) if x[t] is not None and x[t + k] is not None]
+        pairs.append(len(valid))
+        out.append(sum((x[t] - m) * (x[t + k] - m) for t in valid) / c0)
+    return out, pairs
 
 
 def pacf(r):
@@ -120,27 +126,44 @@ def pacf(r):
 
 def correlogram(x, max_lag):
     n = sum(v is not None for v in x)
-    supported = n // 4
+    complete = n == len(x)
     lag = min(max_lag, max(0, len(x) - 2))
-    base = {"n": n, "max_lag": lag, "supported_max_lag": min(lag, supported), "band": r10(1.96 / math.sqrt(n)) if n else None}
+    min_pairs = max(10, n / 4)
+    base = {"n": n, "max_lag": lag, "supported_max_lag": min(lag, n // 4), "band": r10(1.96 / math.sqrt(n)) if n else None,
+            "min_pairs": r10(min_pairs), "complete": complete}
     if n < MIN_N: return {**base, "status": "insufficient", "note": f"{n} observed periods (< {MIN_N}); ACF/PACF not computed"}
-    r = acf(x, lag) if lag else []
-    if r is None: return {**base, "status": "undefined", "note": "zero variance (constant series); ACF/PACF undefined"}
-    p = pacf(r)
-    band = 1.96 / math.sqrt(n)
-    L = base["supported_max_lag"]
-    family = NormalDist().inv_cdf(1 - 0.025 / L) / math.sqrt(n) if L else None
-    lags = [{"lag": k, "acf": r10(r[k - 1]), "pacf": r10(p[k - 1]) if k <= len(p) else None,
-             "acf_outside_band": abs(r[k - 1]) > band, "supported": k <= L} for k in range(1, lag + 1)]
-    peaks = [k for k in range(1, L + 1) if r[k - 1] > band and (k == 1 or r[k - 1] >= r[k - 2]) and (k == len(r) or r[k - 1] >= r[k])]
+    got = acf(x, lag) if lag else ([], [])
+    if got is None: return {**base, "status": "undefined", "note": "zero variance (constant series); ACF/PACF undefined"}
+    r, pairs = got
+    estimable = [pairs[k - 1] >= min_pairs for k in range(1, lag + 1)]
+    first_gap = next((k for k in range(1, lag + 1) if not estimable[k - 1]), lag + 1)
+    p = pacf(r[:first_gap - 1])  # Durbin-Levinson needs every earlier lag
+    supported = [k for k in range(1, lag + 1) if k <= n // 4 and estimable[k - 1]]
+    L = len(supported)
+    z = NormalDist().inv_cdf(1 - 0.025 / L) if L else None
+    def n_eff(k): return n if complete else pairs[k - 1]
+    band = {k: 1.96 / math.sqrt(n_eff(k)) for k in range(1, lag + 1) if pairs[k - 1]}
+    family = {k: z / math.sqrt(n_eff(k)) for k in supported}
+    ok = set(supported)
+    lags = [{"lag": k, "pairs": pairs[k - 1], "estimable": estimable[k - 1],
+             "acf": r10(r[k - 1]) if estimable[k - 1] else None, "pacf": r10(p[k - 1]) if k <= len(p) else None,
+             "band": r10(band.get(k)), "family_band": r10(family.get(k)), "acf_outside_band": estimable[k - 1] and abs(r[k - 1]) > band[k], "supported": k in ok} for k in range(1, lag + 1)]
+    def up(k): return k in ok and r[k - 1] > band[k]
+    peaks = [k for k in supported if up(k) and (k == 1 or not estimable[k - 2] or r[k - 1] >= r[k - 2]) and (k == lag or not estimable[k] or r[k - 1] >= r[k])]
     dominant = sorted(peaks, key=lambda k: (-r[k - 1], k))[:3]
-    biggest = max((abs(r[k - 1]) for k in range(1, L + 1)), default=0)
-    return {**base, "status": "computed", "family_band": r10(family), "lags": lags,
-            "significant_acf_lags": [k for k in range(1, L + 1) if abs(r[k - 1]) > band],
-            "significant_pacf_lags": [k for k in range(1, min(L, len(p)) + 1) if abs(p[k - 1]) > band],
-            "dominant_lags": [{"lag": k, "acf": r10(r[k - 1])} for k in dominant],
-            "max_abs_acf": r10(biggest), "signal": "present" if L and biggest > family else "absent" if L else "insufficient",
-            "pacf_computed_to": len(p)}
+    biggest = max((abs(r[k - 1]) for k in supported), default=0)
+    hit = any(abs(r[k - 1]) > family[k] for k in supported)
+    signal = "present" if hit else "absent" if L else "not estimable"
+    out = {**base, "status": "computed", "lags": lags, "not_estimable_lags": [k for k in range(1, lag + 1) if not estimable[k - 1]],
+           "band": r10(max((band[k] for k in supported), default=base["band"])),
+           "family_band": r10(max(family.values())) if family else None,
+           "significant_acf_lags": [k for k in supported if abs(r[k - 1]) > band[k]],
+           "significant_pacf_lags": [k for k in supported if k <= len(p) and abs(p[k - 1]) > band[k]],
+           "dominant_lags": [{"lag": k, "acf": r10(r[k - 1]), "family_band": r10(family[k])} for k in dominant],
+           "max_abs_acf": r10(biggest), "signal": signal, "pacf_computed_to": len(p)}
+    if signal == "not estimable":
+        out["note"] = f"no lag within n/4 has >= {min_pairs:g} valid pairs; autocorrelation not estimable (not the same as near zero)"
+    return out
 
 
 def spectral(x, deps):
@@ -192,12 +215,14 @@ def analyse_grain(points, grain, mode, max_lag, deps):
         mean = sum(nonzero) / len(nonzero)
         cv2 = r10((sum((v - mean) ** 2 for v in nonzero) / len(nonzero)) / mean ** 2)
     indicator = [None if v is None else float(v != 0) for v in x]
-    lag = max_lag or DEFAULT_LAG[grain]
+    lag = max_lag or (52 if grain == "week" and len(x) >= 104 else DEFAULT_LAG[grain])  # 52-week lag when the span allows
     values_corr, occurrence_corr = correlogram(x, lag), correlogram(indicator, lag)
     calendar = []
     for s in CALENDAR[grain]:
-        entry = {"lag": s, "acf": None, "status": "beyond max_lag or series"}
-        if values_corr["status"] == "computed" and s <= values_corr["max_lag"]:
+        entry = {"lag": s, "acf": None, "status": f"not evaluated at max_lag {values_corr['max_lag']}"}
+        if values_corr["status"] == "computed" and s <= values_corr["max_lag"] and not values_corr["lags"][s - 1]["estimable"]:
+            entry = {"lag": s, "acf": None, "status": "not estimable (too few valid pairs)"}
+        elif values_corr["status"] == "computed" and s <= values_corr["max_lag"]:
             entry = {"lag": s, "acf": values_corr["lags"][s - 1]["acf"], "outside_band": values_corr["lags"][s - 1]["acf_outside_band"],
                      "status": "supported" if s <= values_corr["supported_max_lag"] else "poorly supported (lag > n/4)"}
         calendar.append(entry)
@@ -206,7 +231,7 @@ def analyse_grain(points, grain, mode, max_lag, deps):
         "last_period": label(end, grain), "observed_periods": len(observed),
         "periods_with_rows": sum(1 for k in periods if rows[k]),
         "missing_periods": len(x) - len(observed) if mode == "values" else 0,
-        "absent_event_periods": sum(1 for k in periods if not rows[k]) if mode == "events" else 0,
+        "no_recorded_event_periods": sum(1 for k in periods if not rows[k]) if mode == "events" else 0,
         "rows_present_no_value_periods": sum(1 for k in periods if rows[k] and not with_value[k]) if mode == "values" else 0,
         "frequency": {"zero_periods": zero_n, "nonzero_periods": len(nonzero),
                       "zero_share": r10(zero_n / len(observed)) if observed else None,
@@ -225,16 +250,17 @@ def signals(grains):
     """Per signal, the granularities where it is present, absent, or lacks evidence; each with its rule."""
     out = []
     def add(name, rule, verdicts):
-        groups = {"present": [], "absent": [], "undefined": [], "insufficient evidence": []}
+        groups = {"present": [], "absent": [], "undefined": [], "not estimable": [], "insufficient evidence": []}
         for g, v in verdicts: groups[v].append(g)
         out.append({"signal": name, "rule": rule, **groups, "notes": notes})
     notes = {}
     for g in grains:
         for kind in ("values", "occurrence"):
             c = g["wavelength"][kind]
-            if c["status"] != "computed": notes[f"{g['granularity']} {kind}"] = c["note"]
+            if "note" in c: notes[f"{g['granularity']} {kind}"] = c["note"]
     def corr_verdict(c):
         if c["status"] == "undefined": return "undefined"
+        if c["status"] == "computed" and c["signal"] == "not estimable": return "not estimable"
         return "insufficient evidence" if c["status"] != "computed" or c["signal"] == "insufficient" else c["signal"]
     def enough(g): return g["observed_periods"] >= MIN_N
     add("autocorrelation in values", RULES["signal"], [(g["granularity"], corr_verdict(g["wavelength"]["values"])) for g in grains])
@@ -243,9 +269,9 @@ def signals(grains):
     def cycle(g):
         c = g["wavelength"]["values"]
         if corr_verdict(c) != "present": return corr_verdict(c)
-        return "present" if any(d["lag"] >= 2 and d["acf"] > c["family_band"] for d in c["dominant_lags"]) else "absent"
+        return "present" if any(d["lag"] >= 2 and d["acf"] > d["family_band"] for d in c["dominant_lags"]) else "absent"
     add("repeating cycle (dominant ACF peak at lag >= 2 above the family-wise band)", RULES["cycle"], [(g["granularity"], cycle(g)) for g in grains])
-    add("zero periods", "observed periods whose value is 0 (event series: no event)",
+    add("zero periods", "observed periods whose value is 0 (event series: no recorded event)",
         [(g["granularity"], "insufficient evidence" if not enough(g) else "present" if g["frequency"]["zero_periods"] else "absent") for g in grains])
     add("bursts (non-zero runs of >= 2 periods separated by zeros)", RULES["duration"],
         [(g["granularity"], "insufficient evidence" if not enough(g) else
@@ -258,7 +284,7 @@ def informative(grains):
     def score(g):
         c = g["wavelength"]["values"]
         if c["status"] != "computed": return None
-        hits = sum(1 for l in c["lags"] if l["supported"] and abs(l["acf"]) > c["family_band"])
+        hits = sum(1 for l in c["lags"] if l["supported"] and abs(l["acf"]) > l["family_band"])
         return (-hits, -c["n"], GRAINS.index(g["granularity"]))
     ranked = sorted((s, g["granularity"]) for g in grains if (s := score(g)) is not None)
     return [g for _, g in ranked[:2]]
@@ -389,23 +415,23 @@ def describe(si, entry, emit):
         parts = [f"{p['rows_with_parsed_time']:,} of {p['raw_rows']:,} rows with a parsed {entry['time']}",
                  f"{p['distinct_timestamps']:,} distinct timestamps ({p['duplicate_timestamp_rows']:,} rows repeat an earlier one)"]
         for sig in s["signals"]:
-            bits = [f"{k} at {', '.join(sig[k])}" for k in ("present", "absent", "undefined", "insufficient evidence") if sig[k]]
+            bits = [f"{k} at {', '.join(sig[k])}" for k in ("present", "absent", "undefined", "not estimable", "insufficient evidence") if sig[k]]
             parts.append(sig["signal"].split(" (")[0] + ": " + "; ".join(bits))
         fid = f"ts-{si}-{gi}"
         emit(fid, "observation", f"Temporal structure of {name}: " + "; ".join(parts) + ".",
              [{"path": f"time_series.series.{si}.groups.{gi}", "value": {"observation_process": p, "signals": s["signals"]}}],
              "Measured under disclosed rules on regularised periods; signals are statistical patterns, not causes.",
              "rule:timeseries-v1", rule="temporal_structure", columns=[c for c in (entry["time"], entry["value"], entry["by"]) if c])
-        gaps = [(g["granularity"], g["missing_periods"] or g["absent_event_periods"]) for g in s["granularities"] if g["missing_periods"] or g["absent_event_periods"]]
+        gaps = [(g["granularity"], g["missing_periods"] or g["no_recorded_event_periods"]) for g in s["granularities"] if g["missing_periods"] or g["no_recorded_event_periods"]]
         if gaps:
             g, k = gaps[0]
-            kind = "missing observations" if s["mode"] == "values" else "periods with no event"
+            kind = "missing observations" if s["mode"] == "values" else "periods with no recorded event"
             emit(fid + "-gaps", "question",
                  f"{name}: {k:,} {g} periods are {kind}. Was the process unobserved then, or did nothing occur? The table cannot tell.",
                  [{"finding": fid}], "Absence of rows is not evidence of absence of activity.", "rule:timeseries-v1",
                  rule="observation_gaps", columns=[entry["time"]])
         cycles = [(g["granularity"], d) for g in s["granularities"] if g["wavelength"]["values"]["status"] == "computed"
-                  for d in g["wavelength"]["values"]["dominant_lags"] if d["lag"] >= 2 and d["acf"] > g["wavelength"]["values"]["family_band"]]
+                  for d in g["wavelength"]["values"]["dominant_lags"] if d["lag"] >= 2 and d["acf"] > d["family_band"]]
         if cycles:
             g, d = cycles[0]
             emit(fid + "-cycle", "question",

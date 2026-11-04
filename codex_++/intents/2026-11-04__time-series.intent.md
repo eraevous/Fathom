@@ -33,3 +33,14 @@
 15. The undeclared question now needs a temporal column with >= 30 distinct periods at its finest
     valid granularity, offers event counts first, and leaves out identifier-like numeric columns
     (role identifier, or integer-valued with distinct ratio >= 0.95, computed locally).
+
+## Cross-family review follow-up (Kate, via the coordinator, of 8d840c8)
+
+16. Valid pairs per lag: < max(10, n/4) pairs is "not estimable", a state distinct from an estimate
+    near zero; never counts toward present/absent. Bands use n_k = pairs at lag k only when the
+    series has missing periods, so complete series keep the standard ±1.96/√n. The estimator still
+    divides by the full-sample sum of squares (shrinks with missingness; disclosed in E1@3).
+17. Event series say "no recorded event" (key `no_recorded_event_periods`).
+18. Bonferroni scope: within one correlogram; nothing is adjusted across granularities or groups.
+19. Weekly default lag rises to 52 when the span has >= 104 weeks; otherwise the 52-week calendar
+    lag reads "not evaluated at max_lag 26".

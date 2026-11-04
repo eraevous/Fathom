@@ -5,7 +5,10 @@ from html import escape
 from .presentation import formatted, html_table, markdown_table
 
 INTRO = ("Declared series only. Periods are regularised by aggregation; the four sparsity dimensions are measured per "
-         "granularity. Statements are patterns under the stated rules, not causes; questions go to the data owner.")
+         "granularity. Statements are patterns under the stated rules, not causes; questions go to the data owner. "
+         "\u201cAbsent\u201d means not detected under the rule, not evidence of absence; \u201cnot estimable\u201d means too few valid "
+         "pairs at a lag, which differs from an estimate near zero. Simultaneous (Bonferroni) bands apply within each correlogram only, "
+         "not across granularities, groups, or values vs occurrence.")
 
 
 def name(entry, s):
@@ -24,7 +27,7 @@ def process_table(s):
     ia = p["native_interarrival_seconds"]
     if ia: rows.append(["Native inter-arrival (s): median / max", f"{formatted(ia['median'])} / {formatted(ia['max'])}"])
     for g in s["granularities"]:
-        gap = (f"{g['missing_periods']:,} missing observations" if s["mode"] == "values" else f"{g['absent_event_periods']:,} with no event")
+        gap = (f"{g['missing_periods']:,} missing observations" if s["mode"] == "values" else f"{g['no_recorded_event_periods']:,} with no recorded event")
         tail = f"; {g['frequency']['zero_periods']:,} explicit zero" if s["mode"] == "values" else " (counted as 0)"
         rows.append([f"{g['granularity'].capitalize()} periods", f"{g['periods_in_span']:,} in span; {gap}{tail}"])
     for k in s["skipped_granularities"]: rows.append([f"{k['granularity'].capitalize()} skipped", k["reason"]])
@@ -34,6 +37,7 @@ def process_table(s):
 def corr_text(c):
     if c["status"] != "computed": return c["status"] + ": " + c["note"]
     dom = ", ".join(f"{d['lag']} ({d['acf']:.2f})" for d in c["dominant_lags"]) or "none"
+    if c["family_band"] is None: return f"n {c['n']}; signal {c['signal']}: {c.get('note', '')}"
     return f"n {c['n']}; signal {c['signal']} (max abs r {c['max_abs_acf']:.2f} vs family band {c['family_band']:.2f}); dominant lags {dom}"
 
 
@@ -61,16 +65,18 @@ def sparsity_table(s):
 
 
 def signal_table(s):
-    rows = [[x["signal"], ", ".join(x["present"]) or "—", ", ".join(x["absent"]) or "—", ", ".join(x["undefined"]) or "—", ", ".join(x["insufficient evidence"]) or "—", x["rule"]] for x in s["signals"]]
-    return {"caption": "Signals: present / absent / undefined / insufficient evidence (with the rule)", "headers": ["Signal", "Present", "Absent", "Undefined", "Insufficient evidence", "Rule"], "rows": rows, "numeric": []}
+    rows = [[x["signal"], ", ".join(x["present"]) or "—", ", ".join(x["absent"]) or "—", ", ".join(x["undefined"]) or "—", ", ".join(x["not estimable"]) or "—", ", ".join(x["insufficient evidence"]) or "—", x["rule"]] for x in s["signals"]]
+    return {"caption": "Signals: present / absent / undefined / not estimable / insufficient evidence (with the rule)", "headers": ["Signal", "Present", "Absent", "Undefined", "Not estimable", "Insufficient evidence", "Rule"], "rows": rows, "numeric": []}
 
 
 def lag_table(g):
     c = g["wavelength"]["values"]; o = g["wavelength"]["occurrence"]
     olags = {l["lag"]: l for l in o.get("lags", [])}
-    rows = [[str(l["lag"]), formatted(l["acf"]), formatted(l["pacf"]), "yes" if l["acf_outside_band"] else "", "" if l["supported"] else "poorly supported",
+    rows = [[str(l["lag"]), formatted(l["acf"]) if l["estimable"] else "not estimable", formatted(l["pacf"]), "yes" if l["acf_outside_band"] else "",
+             "" if l["supported"] else ("poorly supported" if l["estimable"] else f"{l['pairs']} valid pairs"),
              formatted(olags[l["lag"]]["acf"]) if l["lag"] in olags else "—"] for l in c["lags"]]
-    return {"caption": f"{g['granularity'].capitalize()} ACF/PACF (95% band ±{c['band']:.3f}; family band ±{c['family_band']:.3f})",
+    fam = f"{c['family_band']:.3f}" if c["family_band"] is not None else "n/a"
+    return {"caption": f"{g['granularity'].capitalize()} ACF/PACF (95% band ±{c['band']:.3f}; family band ±{fam}" + ("" if c["complete"] else "; widest per-lag bands, from valid pairs") + ")",
             "headers": ["Lag", "ACF", "PACF", "Outside 95% band", "Support", "Occurrence ACF"], "rows": rows, "numeric": [1, 2, 5]}
 
 
@@ -87,6 +93,7 @@ def stem(g, which):
         out.append(f'<line x1="{left}" y1="{py(v):.1f}" x2="{right}" y2="{py(v):.1f}" stroke="#d5e1df"/>')
         out.append(f'<text x="{left-6}" y="{py(v)+5:.1f}" text-anchor="end" class="tick-label">{v:g}</text>')
     for b, dash in ((c["band"], "5 4"), (c["family_band"], "2 3")):
+        if b is None: continue
         for sgn in (1, -1):
             out.append(f'<line x1="{left}" y1="{py(sgn*b):.1f}" x2="{right}" y2="{py(sgn*b):.1f}" stroke="#a0522d" stroke-dasharray="{dash}"/>')
     for k, v, ok in lags:
@@ -97,7 +104,7 @@ def stem(g, which):
         if 1 <= k <= L: out.append(f'<text x="{px(k):.1f}" y="{bottom+22}" text-anchor="middle" class="tick-label">{k}</text>')
     out.append("</svg>")
     note = ("Dashed: per-lag 95% band ±1.96/√n; dotted: family-wise band; pale stems: lags beyond n/4 (poorly supported). "
-            f"n = {c['n']} {g['granularity']} periods.")
+            f"n = {c['n']} {g['granularity']} periods." + ("" if c["complete"] else " Missing periods: bands drawn are the widest per-lag bands (valid pairs); not-estimable lags are omitted."))
     return ('<figure class="chart"><h4>' + escape(title) + "</h4>" + "".join(out) + '<div class="axis-captions"><p><strong>X:</strong> lag ('
             + escape(g["granularity"]) + 's)</p><p><strong>Y:</strong> ' + ("autocorrelation" if which == "acf" else "partial autocorrelation")
             + "</p></div><figcaption>" + escape(note) + "</figcaption></figure>")
