@@ -42,10 +42,10 @@ def validate_config(raw: dict | None = None, columns: list[str] | None = None) -
         mapping(item, f"columns.{name}", {"type", "meaning", "date_format", "units", "role", "exclude_from_target"})
         if "exclude_from_target" in item and type(item["exclude_from_target"]) is not bool:raise ValueError("exclude_from_target must be boolean")
         if "type" in item and (not isinstance(item["type"], str) or item["type"] not in TYPES):
-            raise ValueError(f"columns.{name}.type is unsupported")
+            raise ValueError(f"columns.{name}.type is unsupported; use one of: {', '.join(sorted(TYPES))} (dates are temporal)")
         if "date_format" in item:
             from .parsing import DATE_FORMATS
-            if not isinstance(item["date_format"],str) or item["date_format"] not in DATE_FORMATS: raise ValueError("unsupported date_format")
+            if not isinstance(item["date_format"],str) or item["date_format"] not in DATE_FORMATS: raise ValueError(f"columns.{name}.date_format is unsupported; use one of: {', '.join(sorted(DATE_FORMATS))} (named formats, not strftime patterns)")
         if "role" in item and (not isinstance(item["role"],str) or item["role"] not in {"identifier","quantity"}): raise ValueError("unsupported column role")
         if "units" in item: text(item["units"], "column units")
         if "meaning" in item:
