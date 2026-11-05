@@ -12,6 +12,10 @@ def records(raw):return [json.loads(l) for l in raw.splitlines() if l.strip() an
 def latest(rs):return {r['id']:r for r in rs}
 def ref(r):return r['id']+'@'+str(r['version'])
 def before():return (ROOT/'.aec/records.jsonl').read_bytes()[:AUDIT['original_prefix_bytes']]
+def at_migration():
+    """The ledger exactly as #18 left it; later appends (main's #19-#21 records, the follow-up) come after it."""
+    original=before().decode();return original+''.join(json.dumps(r,ensure_ascii=False)+'\n' for r in HELPER['migrate'](original)[0])
+FOLLOWUP=runpy.run_path(str(DOC/'followup.py'))
 
 def test_migration_is_append_only_and_preserves_assertions():
     assert hashlib.sha256(before()).hexdigest()==AUDIT['original_prefix_sha256']
@@ -44,7 +48,7 @@ def test_migration_is_deterministic_and_idempotent():
     original=before().decode();a,m=HELPER['migrate'](original);b,n=HELPER['migrate'](original)
     assert a==b and m==n
     data=original+''.join(json.dumps(r,ensure_ascii=False)+'\n' for r in a)
-    assert data==(ROOT/'.aec/records.jsonl').read_text()
+    assert (ROOT/'.aec/records.jsonl').read_text().startswith(data)  # append-only: later lines follow the migration
     assert HELPER['migrate'](data)==([],{})
     for name,sha in AUDIT['snapshot_sha256'].items():assert hashlib.sha256((DOC/'snapshots'/name).read_bytes()).hexdigest()==sha
 
@@ -63,18 +67,44 @@ def impact(rs):
 
 
 def test_pinned_impact_reaches_obligations_after_migration():
-    old,old_text=impact(records(before().decode()));new,new_text=impact(records((ROOT/'.aec/records.jsonl').read_text()))
+    old,old_text=impact(records(before().decode()));new,new_text=impact(records(at_migration()))
     assert old_text==(DOC/'before.md').read_text() and new_text==(DOC/'after.md').read_text()
     assert not {'FT-R7@2','FT-R18@1'} & old.impacts.keys()
     assert {'FT-R7@3','FT-R18@2'}<=new.impacts.keys()
     assert len(old.impacts)==28 and len(new.impacts)==42
+    # The reach survives later appends: the full ledger still reaches the same governing obligations.
+    now,_=impact(records((ROOT/'.aec/records.jsonl').read_text()))
+    assert {'FT-R7@3','FT-R18@2'}<=now.impacts.keys() and new.impacts.keys()<=now.impacts.keys()
+
+
+def ablated(raw):
+    rs=copy.deepcopy(records(raw));curr=latest(rs)
+    for rid in HELPER['PATHS']:
+        curr[rid]['relations']=[e for e in curr[rid]['relations'] if e['rel']!='implemented_by']
+    return impact(rs)
 
 
 def test_link_ablation_decoy_loses_governing_reach():
-    rs=copy.deepcopy(records((ROOT/'.aec/records.jsonl').read_text()));curr=latest(rs)
-    for rid in HELPER['PATHS']:
-        curr[rid]['relations']=[e for e in curr[rid]['relations'] if e['rel']!='implemented_by']
-    report,text=impact(rs)
+    report,text=ablated(at_migration())
     assert not {'FT-R7@3','FT-R18@2'} & report.impacts.keys()
     assert 'FT-TA-R1@3' in report.impacts
     assert text==(DOC/'ablated.md').read_text() and len(report.impacts)==30
+    report,_=ablated((ROOT/'.aec/records.jsonl').read_text())
+    assert not {'FT-R7@3','FT-R18@2'} & report.impacts.keys()
+
+
+def test_followup_is_append_only_relation_only_and_idempotent():
+    raw=(ROOT/'.aec/records.jsonl').read_text();marker='// 2026-11-05: records-link follow-up'
+    head=raw[:raw.index(marker)];tail=raw[raw.index(marker):]
+    new,mapping=FOLLOWUP['followup'](head)
+    assert len(new)==len(mapping)==12
+    assert tail.split('\n',1)[1]==''.join(json.dumps(r,ensure_ascii=False)+'\n' for r in new)
+    assert FOLLOWUP['followup'](raw)==([],{})
+    old={ref(r):r for r in records(head)}
+    for a,b in mapping.items():
+        previous,current=old[a],next(r for r in new if ref(r)==b)
+        assert {k:v for k,v in current.items() if k not in ('version','relations','migration_note')}=={k:v for k,v in previous.items() if k not in ('version','relations')}
+        assert {'rel':'supersedes','to':a} in current['relations']
+    current=latest(records(raw))
+    for rid in ('FT-CU-R1','FT-ROW2-R1','FT-TS1-R1'):
+        assert any(e['rel']=='implemented_by' and e['to'].startswith('code:') for e in current[rid]['relations']), rid

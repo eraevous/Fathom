@@ -62,7 +62,7 @@ def target_candidates(rows,columns,cfg,quality):
         elif name in blocked:reason='constant numeric input' if blocked[name]=='constant column' and a in NUMERIC else blocked[name]
         elif (a in CATEGORY and len(set(nonmissing))>20) or (b in CATEGORY and len(set(v for v in tv if v is not None))>20):reason='more than twenty groups; summary omitted'
         elif c.get('univariate',{}).get('role')=='identifier':reason='identifier-like column'
-        elif a not in NUMERIC and len(nonmissing)>=5 and len(set(nonmissing))/len(nonmissing)>=.9:reason='near-unique identifier-like category/text (>=90% distinct)'
+        elif a not in NUMERIC and a!='temporal' and len(nonmissing)>=5 and len(set(nonmissing))/len(nonmissing)>=.9:reason='near-unique identifier-like category/text (>=90% distinct)'
         elif not ((a in NUMERIC|CATEGORY) and (b in NUMERIC|CATEGORY)):reason=f'unsupported type pair: {a} × {b}'
         elif len(cases)<2:reason='fewer than two complete finite cases'
         else:

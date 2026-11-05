@@ -14,9 +14,17 @@ remain for review. Tests and merge do not accept requirements.
 
 ## Try it with synthetic data
 
-Python 3.12+:
+Python 3.12+. The package is `fathom-guide`; it installs one command, `guide`
+(`python -m fathom` is the same CLI). `guide profile` and `guide validate` echo the
+question, target and row unit they resolved. Column `type` overrides use the names
+`numeric`, `categorical`, `boolean`, `temporal` (dates), `string`, `phone`, `email`,
+`url`, `latitude` and `longitude`; `date_format` takes `ISO`, `ISO_DATETIME`
+(`YYYY-MM-DD HH:MM[:SS]` or with a `T` separator, profiled by calendar date), `MDY`, `DMY` or `MON_D_Y`,
+not strftime patterns. `guide export` without the extra still exits 0 and says on stderr
+to run `pip install -e '.[exports]'` from the clone (the package is not on PyPI).
 
 ```bash
+git clone https://github.com/eraevous/fathom.git && cd fathom
 python -m venv .venv
 .venv/bin/pip install -e '.[test]'
 .venv/bin/python -m pytest
@@ -101,6 +109,20 @@ sentinel review, while its unlisted 888, compound dummy label and intended month
 gap are only partially found or missed. See the complete
 [builder found/missed ledger](specs/002-data-quality/validation.md) and
 [slice-2 intent note](codex_++/intents/2026-11-01__data-quality.intent.md).
+
+What it finds at row level (spec010; counts plus the first 10 row positions, 1-based,
+header excluded; each paired with a question, never a cleaning step):
+
+- wholly blank rows, and rows not wholly blank but empty in every numeric column (needs
+  >=2 numeric columns); positions of repeated rows;
+- "most nonmissing rows belong to groups of exactly k by `col`" (with the coverage share),
+  and the columns that never change within a group;
+- observations of selected temporal structures (not anomaly detection): date values outside the dominant month/year or beyond quartiles ± 3×IQR, and repeated
+  event timestamps. Day resolution: same-day stragglers, and stragglers inside the
+  dominant month/year, are not detected;
+- declared `intervals: [{start: a, end: b}]`: end before/equal to start and durations
+  in seconds (full ISO date-time parsed; unparsed pairs are counted and asked about);
+  two undeclared date columns only raise a question.
 
 Old version-1 artifacts remain renderable. New completeness measurements requiring
 raw rows are explicitly unavailable there. The quality helper uses no new optional
@@ -197,6 +219,31 @@ and the report follows the system light/dark setting (`data-theme="light"` or
 `"dark"` on `<html>` overrides it). Colours come from one palette, `fathom/palette.py`.
 See [spec008](specs/008-salvage-decisions/spec.md) and its
 [visual review](specs/008-salvage-decisions/review/README.md).
+
+## Time series
+
+Declare a series; Fathom never infers one from column names.
+
+```yaml
+time_series:
+  - time: pickup          # strict ISO date/date-time (or the column's date_format)
+    value: null           # null counts rows (events); a column sums its values
+    by: zone              # optional: top_n groups by row count (default 5, max 20)
+    granularities: [hour, day]   # or [auto]: hour/day/week/month as the span allows
+    max_lag: 48           # optional; defaults 168/28/26/24 by granularity
+```
+
+The report gains a **Temporal structure** section (artifact key `time_series`): the
+observation process (raw rows, distinct and repeated timestamps, missing observations
+vs explicit zeros vs periods with no event), the four sparsity dimensions per
+granularity — **frequency** (zero share, inter-event interval; ADI alias),
+**amplitude** (non-zero quantiles, CV²), **wavelength** (ACF/PACF of values and of
+the occurrence indicator, dominant and calendar lags, optional periodogram peak with
+the `stats` extra) and **duration** (zero-run and burst lengths) — ACF/PACF stem plots
+for two granularities, and a present / absent / insufficient-evidence summary with
+each rule. Fewer than 30 periods is insufficient; a constant series is undefined; lags
+beyond n/4 are marked poorly supported. Without a declaration, one question suggests
+one. See [spec011](specs/011-time-series/spec.md).
 
 ## Scope and limits
 

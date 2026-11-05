@@ -891,6 +891,42 @@
     },
     "value_exclusions": {}
   },
+  "row_structure": {
+    "blank_rows": {
+      "count": 0,
+      "positions": [],
+      "share": 0.0
+    },
+    "duplicate_rows": {
+      "count": 0,
+      "positions": []
+    },
+    "example_limit": 10,
+    "interval_question": null,
+    "intervals": [],
+    "numeric_blank_rows": {
+      "count": 0,
+      "numeric_columns": [
+        "stamp"
+      ],
+      "positions": [],
+      "share": 0.0
+    },
+    "position_basis": "1-based data-row positions (header excluded)",
+    "repeated_keys": [],
+    "rules": {
+      "blank_rows": "every cell missing (connector blank) in the row",
+      "duplicate_rows": "row identical in every cell to an earlier row; positions are the later occurrences",
+      "duplicate_timestamps": "temporal column whose values carry a time of day, >=20 values and >=90% distinct; rows repeating an earlier value",
+      "interval": "declared intervals only; both cells strict ISO date or date-time (date-only read as midnight); duration=end-start in seconds",
+      "interval_question": ">=2 temporal columns and no declared interval",
+      "numeric_blank_rows": ">=2 inferred/declared numeric columns; row not wholly blank but missing in every numeric column",
+      "repeated_key": ">=10 distinct nonmissing values; modal group size k in 2..20; groups of size k cover >=90% of nonmissing rows; at most 3 keys, columns with an identical partition reported as the same grouping; within-key constant = one value (missing counts as a value) in every group of size >=2 and >=2 values between groups",
+      "temporal_fence": ">=20 dated values; calendar day ordinal below Q1-3xIQR or above Q3+3xIQR (inclusive quartiles), IQR>0. Day resolution: time of day is ignored, so same-day stragglers are not reported",
+      "temporal_period": ">=20 dated values; >=99% (and not all) fall in one calendar month, else one calendar year; values outside it reported. Day resolution: a straggler inside the dominant month/year is not reported"
+    },
+    "temporal": []
+  },
   "samples": {
     "columns": [
       "stamp"
@@ -1202,6 +1238,27 @@
     "status": "skipped",
     "target": null,
     "warning": "Descriptive complete-case association, not causation. Types/meanings may be inferred. Unlike measures are priority heuristics, not interchangeable effect sizes; sparse/small groups can inflate apparent association. Unmarked leakage cannot be inferred reliably from correlation."
+  },
+  "time_series": {
+    "declared": [],
+    "dependencies": {},
+    "question": null,
+    "rules": {
+      "amplitude": "quantiles (inclusive) of non-zero period values; CV2 = (population sd / mean)^2 of non-zero values",
+      "auto": "auto = every granularity at or coarser than the timestamps' resolution (hour needs a time of day) with 2..100,000 periods in span",
+      "by": "by: the top N groups by row count (default 5, ties by value); other groups and rows with a missing key are counted, not analysed; each group's span runs from its own first to its own last timestamp",
+      "cycle": "present when a dominant ACF lag >= 2 (supported local peak above the per-lag band) also exceeds the family-wise band",
+      "duration": "run lengths in periods of consecutive zero and consecutive non-zero periods; a missing period ends a run",
+      "frequency": "zero share = zero periods / observed periods; inter-event interval = periods from one non-zero period to the next with no missing period between them (mean is the ADI alias); intervals that span a missing period are counted separately and excluded",
+      "missingness": "valid pairs are counted per lag; a lag with fewer than max(10, n/4) valid pairs is not estimable (distinct from an estimate near 0) and never counts toward present or absent; with missing periods the bands use the per-lag valid pair count, n_k = pairs at lag k (complete series: n_k = n); PACF stops at the first non-estimable lag; supported = estimable and lag <= n/4",
+      "observation": "value series: a period with no row (or only rows without a parsed value) is a missing observation, a period whose values sum to 0 is a zero; event series: a period with no row has no recorded event (0 counted), and the table cannot say whether the process was observed then",
+      "regularise": "periods run from the floor of the first to the floor of the last parsed timestamp; value series sum parsed values per period, event series count rows per period; week = ISO week starting Monday",
+      "reliability": "n < 30 observed periods: insufficient (applies to every signal, including zero periods and bursts); zero variance: undefined; lag > n/4: poorly supported",
+      "signal": "present when |r_k| exceeds the family-wise band z(1-0.025/L)/sqrt(n_k) at any supported lag (Bonferroni over the L supported lags of this one correlogram; not adjusted across granularities, groups or values vs occurrence); absent = not detected under this rule, not evidence of absence; insufficient evidence under the reliability rule",
+      "spectral": "periodogram peak (scipy.signal.periodogram, mean removed) on gap-free series only; requires the stats extra",
+      "wavelength": "ACF r_k = sum over pairs observed at t and t+k of (x_t-m)(x_t+k-m) / sum over observed (x_t-m)^2; PACF by Durbin-Levinson; per-lag 95% band +/-1.96/sqrt(n); dominant lag = supported local ACF peak above the band"
+    },
+    "series": []
   },
   "working_record": {
     "decisions": [],

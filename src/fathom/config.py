@@ -25,7 +25,7 @@ def mapping(value: object, name: str, allowed: set[str]) -> dict:
 def validate_config(raw: dict | None = None, columns: list[str] | None = None) -> dict:
     cfg = dict(mapping({} if raw is None else raw, "config", {
         "question", "target", "pair_budget", "columns", "row_unit", "generating_process",
-        "missingness_mechanism", "decisions", "context", "schema", "title", "description", "sample_rows", "sample_seed", "sample_text_limit", "group_by"}))
+        "missingness_mechanism", "decisions", "context", "schema", "title", "description", "sample_rows", "sample_seed", "sample_text_limit", "group_by", "intervals", "time_series"}))
     for key in ("question", "target", "row_unit", "generating_process", "missingness_mechanism", "title", "description", "group_by"):
         text(cfg.get(key), key, nullable=True)
     for key,default,low,high in (("sample_rows",20,0,100),("sample_seed",0,0,2**32-1),("sample_text_limit",120,20,1000)):
@@ -42,10 +42,10 @@ def validate_config(raw: dict | None = None, columns: list[str] | None = None) -
         mapping(item, f"columns.{name}", {"type", "meaning", "date_format", "units", "role", "exclude_from_target"})
         if "exclude_from_target" in item and type(item["exclude_from_target"]) is not bool:raise ValueError("exclude_from_target must be boolean")
         if "type" in item and (not isinstance(item["type"], str) or item["type"] not in TYPES):
-            raise ValueError(f"columns.{name}.type is unsupported")
+            raise ValueError(f"columns.{name}.type is unsupported; use one of: {', '.join(sorted(TYPES))} (dates are temporal)")
         if "date_format" in item:
             from .parsing import DATE_FORMATS
-            if not isinstance(item["date_format"],str) or item["date_format"] not in DATE_FORMATS: raise ValueError("unsupported date_format")
+            if not isinstance(item["date_format"],str) or item["date_format"] not in DATE_FORMATS: raise ValueError(f"columns.{name}.date_format is unsupported; use one of: {', '.join(sorted(DATE_FORMATS))} (named formats, not strftime patterns)")
         if "role" in item and (not isinstance(item["role"],str) or item["role"] not in {"identifier","quantity"}): raise ValueError("unsupported column role")
         if "units" in item: text(item["units"], "column units")
         if "meaning" in item:
@@ -53,6 +53,42 @@ def validate_config(raw: dict | None = None, columns: list[str] | None = None) -
     cfg["columns"] = metadata
     if columns is not None and cfg.get("target") is not None and cfg["target"] not in columns:
         raise ValueError("target references an unknown column")
+    intervals = cfg.get("intervals", [])
+    if not isinstance(intervals, list):
+        raise ValueError("intervals must be a list of {start, end} mappings")
+    for item in intervals:
+        mapping(item, "intervals item", {"start", "end"})
+        for key in ("start", "end"):
+            text(item.get(key), f"intervals.{key}")
+        if item["start"] == item["end"]:
+            raise ValueError("intervals start and end must be different columns")
+        if columns is not None and (item["start"] not in columns or item["end"] not in columns):
+            raise ValueError("intervals reference an unknown column")
+    cfg["intervals"] = [{"start": i["start"], "end": i["end"]} for i in intervals]
+    series = cfg.get("time_series", [])
+    if not isinstance(series, list):
+        raise ValueError("time_series must be a list of {time, value, by, granularities, max_lag, top_n} mappings")
+    cleaned = []
+    for item in series:
+        mapping(item, "time_series item", {"time", "value", "by", "granularities", "max_lag", "top_n"})
+        text(item.get("time"), "time_series.time")
+        text(item.get("value"), "time_series.value", nullable=True)
+        text(item.get("by"), "time_series.by", nullable=True)
+        grains = item.get("granularities", ["auto"])
+        if not isinstance(grains, list) or not grains or any(g not in {"auto", "hour", "day", "week", "month"} for g in grains):
+            raise ValueError("time_series.granularities must be a nonempty list of auto, hour, day, week, month")
+        for key, low, high in (("max_lag", 1, 400), ("top_n", 1, 20)):
+            if item.get(key) is not None and (type(item[key]) is not int or not low <= item[key] <= high):
+                raise ValueError(f"time_series.{key} must be an integer from {low} to {high}")
+        used = [item["time"]] + [item[k] for k in ("value", "by") if item.get(k)]
+        if len(set(used)) != len(used):
+            raise ValueError("time_series time, value and by must be different columns")
+        if columns is not None and any(c not in columns for c in used):
+            raise ValueError("time_series references an unknown column")
+        cleaned.append({"time": item["time"], "value": item.get("value"), "by": item.get("by"),
+                        "granularities": sorted(set(grains), key=["auto", "hour", "day", "week", "month"].index),
+                        "max_lag": item.get("max_lag"), **({"top_n": item["top_n"]} if "top_n" in item else {})})
+    cfg["time_series"] = cleaned
     if columns is not None and cfg.get("group_by") is not None and cfg["group_by"] not in columns:raise ValueError("group_by references an unknown column")
     context = mapping(cfg.get("context", {}), "context", {"snapshot_date", "source", "transformations", "other_changes"})
     snapshot = context.get("snapshot_date")

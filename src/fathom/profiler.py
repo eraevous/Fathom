@@ -15,6 +15,8 @@ from .univariate import enrich_columns, identity_and_samples, missingness_patter
 
 SCHEMA_VERSION = 2
 from .special import infer_special, enrich_special
+from .rows import row_structure
+from .timeseries import time_series
 
 
 def number(value: str) -> float | None:
@@ -156,6 +158,12 @@ def profile(data: GuideDataFrame, config: dict | None = None) -> ProfilingResult
                     [{"path": "working_record." + key, "value": None}],
                     "Unknown; requires information from the data owner or generating process.")
     dataset_summary, quality, quality_pairs = quality_profile(rows, columns, cfg, finding)
+    structure = row_structure(rows, columns, cfg, finding)
+    if structure["duplicate_rows"]["count"]:
+        dup = next(f for f in findings if f["id"] == "duplicates")
+        dup["message"] += " Repeating rows (1-based): " + ", ".join(map(str, structure["duplicate_rows"]["positions"])) + (f", first 10 of {duplicates}" if duplicates > 10 else "") + "."
+        dup["evidence"].append({"path": "row_structure.duplicate_rows", "value": structure["duplicate_rows"]})
+    temporal_structure = time_series(rows, columns, cfg, finding)
     enrich_columns(columns,rows,data.raw_rows if data.raw_rows is not None else rows,cfg,finding,findings)
     enrich_special(columns,rows,finding)
     dataset,samples=identity_and_samples(data,cfg,columns)
@@ -187,7 +195,7 @@ def profile(data: GuideDataFrame, config: dict | None = None) -> ProfilingResult
         "overview": overview, "columns": columns, "findings": findings,
         "selection": selection, "bivariate": pairs, "dependencies": dependencies, "annotations": {},
         "dataset_summary": dataset_summary, "quality": quality, "dataset":dataset, "samples":samples,
-        "target_analysis":target_analysis,"missingness_patterns":missingness_patterns(columns,rows)})
+        "target_analysis":target_analysis,"row_structure":structure,"time_series":temporal_structure,"missingness_patterns":missingness_patterns(columns,rows)})
 
 
 def select_pairs(rows: list, columns: list, cfg: dict, quality=None, quality_pairs=None) -> tuple[dict, list, dict]:

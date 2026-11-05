@@ -6,7 +6,7 @@ import re
 
 MONTH_NAMES = ('january','february','march','april','may','june','july','august','september','october','november','december')
 MONTH_LOOKUP = {name:i+1 for i,name in enumerate(MONTH_NAMES)} | {name[:3]:i+1 for i,name in enumerate(MONTH_NAMES)}
-DATE_FORMATS = {'ISO','MON_D_Y','MDY','DMY'}
+DATE_FORMATS = {'ISO','ISO_DATETIME','MON_D_Y','MDY','DMY'}
 
 
 def finite_number(value):
@@ -35,6 +35,10 @@ def parse_date(value, hint=None):
     try:
         if re.fullmatch(r'\d{4}-\d{2}-\d{2}',text) and hint in (None,'ISO'):
             parsed=date.fromisoformat(text); fmt='ISO'
+        elif hint in (None,'ISO_DATETIME') and (match:=re.fullmatch(r'(\d{4}-\d{2}-\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?',text)):
+            # Calendar date of a strict ISO date-time; the time of day is not profiled.
+            if int(match[2])>23 or int(match[3])>59 or int(match[4] or 0)>59: return None
+            parsed=date.fromisoformat(match[1]); fmt='ISO_DATETIME'
         elif hint in (None,'MON_D_Y') and (match:=re.fullmatch(r'([A-Za-z]+)[\s-]+(\d{1,2})[,\s-]+(\d{2}|\d{4})',text)):
             month=MONTH_LOOKUP.get(match[1].casefold())
             if month is None: return None
@@ -54,4 +58,16 @@ def parse_date(value, hint=None):
             alternatives=sorted({v.isoformat() for _,v in options if v!=parsed})
         else: return None
         return {'date':parsed.isoformat(),'format':fmt,'two_digit_year':two,'alternatives':alternatives}
+    except (ValueError,OverflowError): return None
+
+
+def parse_datetime(value):
+    """Strict ISO date or date-time -> (datetime, has_time); used for row-level time checks only."""
+    from datetime import datetime
+    if not isinstance(value,str): return None
+    text=value.strip()
+    match=re.fullmatch(r'(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?',text)
+    if not match: return None
+    try:
+        return datetime(*(int(x) for x in match.groups(default='0'))), match[4] is not None
     except (ValueError,OverflowError): return None

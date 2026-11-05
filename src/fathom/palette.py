@@ -8,11 +8,16 @@ values. Kept apart from renderers.py only to avoid a renderers/charts import cyc
 THEMES = {
     "light": {"surface": "#f5f8f7", "panel": "#ffffff", "ink": "#193e42", "muted": "#4d676b",
               "link": "#12656b", "rule": "#28777c", "border": "#d5e1df", "grid": "#cbd9d7",
-              "accent": "#216e73", "accent_soft": "#c3ded8", "tint": "#e9f2ee", "soft_border": "#b9d3cf"},
+              "accent": "#216e73", "accent_soft": "#c3ded8", "tint": "#e9f2ee", "soft_border": "#b9d3cf",
+              "band": "#a0522d", "accent_faint": "#9bbfbc"},
     "dark": {"surface": "#0f1b1d", "panel": "#162427", "ink": "#dce9e7", "muted": "#a3b8b6",
              "link": "#7fd3d6", "rule": "#4fa3a7", "border": "#2d4347", "grid": "#2a3f43",
-             "accent": "#5cb8bd", "accent_soft": "#24484c", "tint": "#1b3135", "soft_border": "#3b5b5f"},
+             "accent": "#5cb8bd", "accent_soft": "#24484c", "tint": "#1b3135", "soft_border": "#3b5b5f",
+             "band": "#d9936a", "accent_faint": "#4a7a7d"},
 }
+
+# "band" (significance bands) and "accent_faint" (poorly supported stems) serve the spec011
+# temporal-structure stem plots merged from main; dark values clear 3:1 on the dark panel.
 
 # Finding kinds (DG-RA). Roles follow the salvage memo: observation blue, interpretation
 # purple, hypothesis amber, action green, question red; each passes WCAG AA on the panel.

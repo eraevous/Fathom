@@ -8,6 +8,7 @@ from .models import ProfilingResult
 from .charts import svg_chart
 from .palette import THEMES, KIND_COLOURS, theme_css
 from .target import target_tables
+from .temporal_view import temporal_html, temporal_markdown
 from .presentation import formatted, column_tables, html_table, markdown_table, metric_table, structured_tables, formatted_examples, display_charts, top_n_reason
 from pathlib import Path
 
@@ -111,9 +112,22 @@ def repetition_groups(d):
     return result
 
 
+DATETIME_NOTE='analysed by calendar date only; time of day excluded'
+
+
+def datetime_note(c):
+    """Fixed disclosure for columns parsed as ISO date-times (spec009); empty otherwise."""
+    formats=(c.get('univariate') or {}).get('statistics',{}).get('parse_formats') or {}
+    return DATETIME_NOTE if c.get('effective_type')=='temporal' and 'ISO_DATETIME' in formats else ''
+
+
 def unknowns(d):
     questions = [f['message'] for f in d['findings'] if f['id'].startswith('unknown-')]
-    return questions or ['Recorded context is supplied by humans; the table does not independently establish domain meaning, causation or fitness for use.']
+    result = questions or ['Recorded context is supplied by humans; the table does not independently establish domain meaning, causation or fitness for use.']
+    dated = [c['name'] for c in d.get('columns', []) if datetime_note(c)]
+    if dated:
+        result = result + [f"Date-time columns ({', '.join(dated)}) are {DATETIME_NOTE}."]
+    return result
 
 
 def sample_cell(value):
@@ -187,7 +201,7 @@ def dictionary_and_provenance_html(d):
     for c in d['columns']:
         meaning=c['meaning']['value']+' (human)' if c['meaning'] else 'Unknown meaning'
         basis='human override; inferred '+c['inference']['type'] if c['override'] else 'inferred, not a domain fact'
-        out += ['<details class="column-entry"><summary><h3>'+escape(c['name'])+'</h3> <span>'+escape(c['effective_type'])+' · '+formatted(c['missing'])+'/'+formatted(c['count'])+' missing · '+formatted(c['distinct'])+' distinct</span></summary><p>'+escape(meaning)+' ('+escape(basis)+')</p>',
+        out += ['<details class="column-entry"><summary><h3>'+escape(c['name'])+'</h3> <span>'+escape(c['effective_type'])+' · '+formatted(c['missing'])+'/'+formatted(c['count'])+' missing · '+formatted(c['distinct'])+' distinct'+(' · '+DATETIME_NOTE if datetime_note(c) else '')+'</span></summary><p>'+escape(meaning)+' ('+escape(basis)+')</p>',
                 '<p>Examples: '+escape(', '.join(formatted_examples(c)))+'</p><div class="column-grid"><div class="column-statistics">']
         tables=column_tables(c)
         primary=[t for t in tables if t['caption'].startswith(('Column overview','Univariate statistics','Percentiles','Most common nonmissing'))]
@@ -236,7 +250,8 @@ def render_html(result: ProfilingResult):
             fs=[f for f in d['findings'] if f['kind']==kind]
             out.extend(finding_html(f,repeated_ids) for f in fs)
             if not fs: out.append('<p>None recorded.</p>')
-        out += ['</div></section><section><h2>Relations</h2><p>'+escape(d['selection'].get('ranking_rule','Legacy input-order selection; no relevance ranking recorded.'))+'</p>',
+        out += ['</div></section>',temporal_html(d)]
+        out += ['<section><h2>Relations</h2><p>'+escape(d['selection'].get('ranking_rule','Legacy input-order selection; no relevance ranking recorded.'))+'</p>',
                 '<p>Selected '+str(len(d['bivariate']))+' relationship(s); budget '+str(d['selection']['budget'])+'.</p>']
         ta=d.get('target_analysis')
         out += ['<p>'+escape(ta['reason']+' '+ta['grouping_policy']+' '+ta['warning'] if ta else 'Target detail unavailable in legacy artifact; rerun profiling to compute it.')+'</p>']
@@ -264,7 +279,7 @@ def dictionary_and_provenance_markdown(d):
     if d.get('missingness_patterns'):lines += [svg_chart(d['missingness_patterns']['chart'])]
     for c in d['columns']:
         meaning=c['meaning']['value']+' (human)' if c['meaning'] else 'Unknown meaning'
-        lines += ['### '+md_text(c['name']),'',md_text(meaning+'; effective '+c['effective_type']+(' (human override)' if c['override'] else ' (inferred)')),'',md_text('Examples: '+', '.join(formatted_examples(c))),'',charts_markdown(c),'',
+        lines += ['### '+md_text(c['name']),'',md_text(meaning+'; effective '+c['effective_type']+(' (human override)' if c['override'] else ' (inferred)')+('; '+datetime_note(c) if datetime_note(c) else '')),'',md_text('Examples: '+', '.join(formatted_examples(c))),'',charts_markdown(c),'',
                   '<details><summary>Raw evidence</summary>','',readable_md(c),'</details>','']
     lines += ['## Provenance','','Source and context are recorded; technical details are collapsed.','','<details><summary>Provenance internals</summary>','',readable_md({'source':d['source'],'context':d['context'],'schema':d['schema'],'dependencies':d['dependencies'],'identity_basis':d.get('dataset',{}).get('basis',{})}),
               '### Working record (human declarations)','',readable_md(d['working_record']),'</details>','']
@@ -302,6 +317,7 @@ def render_markdown(result: ProfilingResult):
             lines += ['<details><summary>Full repetitive per-column findings</summary>','']
             for f in repeated: lines += markdown_finding(f)
             lines += ['</details>','']
+        lines += temporal_markdown(d)
         lines += ['## Relations','',md_text(d['selection'].get('ranking_rule','Legacy input-order selection; no relevance ranking recorded.')),'',
                   f"Selected {len(d['bivariate'])} relationship(s); budget {d['selection']['budget']}.",'']
         ta=d.get('target_analysis')

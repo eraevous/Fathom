@@ -209,7 +209,7 @@ def test_missingness_test_bytes_are_stable():
 
 def test_palette_is_the_single_colour_source():
     from fathom import palette
-    for module in ("renderers.py", "charts.py", "target_marks.py", "exports.py"):
+    for module in ("renderers.py", "charts.py", "target_marks.py", "exports.py", "temporal_view.py"):
         text = (SRC / module).read_text()
         assert not re.findall(r"#[0-9a-fA-F]{6}\b", text), module
     assert "white" not in re.findall(r"background:(\w+)", (SRC / "renderers.py").read_text())
