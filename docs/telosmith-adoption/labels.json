@@ -1,0 +1,424 @@
+{
+  "base": "95de071679524138e6e0553486ecb03870958463",
+  "changed_fields": [
+    "version",
+    "epistemic"
+  ],
+  "prefix_bytes": 281227,
+  "prefix_sha256": "f8919edb39aa842e6c181eb82d11c3b33740e2888d6d37633c75f03f20e8a9c5",
+  "records": [
+    {
+      "epistemic": "provisional",
+      "from": "AU-owner@1",
+      "reason": "Conservative label: no decision-file acceptance of this authority record found; existing governs and decided_by fields are unchanged.",
+      "to": "AU-owner@2"
+    },
+    {
+      "citations": [
+        {
+          "path": "docs/decisions/2026-11-01.md",
+          "quote": "The MVP here is data -> decisions"
+        }
+      ],
+      "epistemic": "committed",
+      "from": "DG-D1@1",
+      "to": "DG-D1@2"
+    },
+    {
+      "citations": [
+        {
+          "path": "docs/decisions/2026-11-01.md",
+          "quote": "Charter looks good, too"
+        }
+      ],
+      "epistemic": "committed",
+      "from": "DG-D2@1",
+      "to": "DG-D2@2"
+    },
+    {
+      "citations": [
+        {
+          "path": "docs/decisions/2026-11-01.md",
+          "quote": "The April design spec and plan: **Distil, don't copy.**"
+        }
+      ],
+      "epistemic": "committed",
+      "from": "DG-D3@1",
+      "to": "DG-D3@2"
+    },
+    {
+      "citations": [
+        {
+          "path": "docs/decisions/2026-11-01.md",
+          "quote": "Who builds: **Codex, cold.**"
+        },
+        {
+          "path": "docs/decisions/2026-11-01.md",
+          "quote": "Blow it away."
+        }
+      ],
+      "epistemic": "committed",
+      "from": "DG-D4@1",
+      "to": "DG-D4@2"
+    },
+    {
+      "citations": [
+        {
+          "path": "docs/decisions/2026-11-01-evening.md",
+          "quote": "That is what I would be interested in first, is data quality checks."
+        },
+        {
+          "path": "docs/decisions/2026-11-01-evening.md",
+          "quote": "For next steps, I would prefer some more advanced univariate analyses and visuals"
+        },
+        {
+          "path": "docs/decisions/2026-11-01-evening-2.md",
+          "quote": "Addendum to DGD5."
+        }
+      ],
+      "epistemic": "committed",
+      "from": "DG-D5@2",
+      "to": "DG-D5@3"
+    },
+    {
+      "citations": [
+        {
+          "path": "docs/decisions/2026-11-01-evening-5.md",
+          "quote": "Special types now, quality score off for now, and yes to the other export formats."
+        }
+      ],
+      "epistemic": "committed",
+      "from": "DG-D6@1",
+      "to": "DG-D6@2"
+    },
+    {
+      "citations": [
+        {
+          "path": "docs/decisions/2026-11-01-evening-6.md",
+          "quote": "Layouts will need to have some better dynamism in the future as well."
+        }
+      ],
+      "epistemic": "committed",
+      "from": "DG-D7@1",
+      "to": "DG-D7@2"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-C1@2",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-C1@3"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-CFG-C1@3",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-CFG-C1@4"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-CFG-E1@5",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-CFG-E1@6"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-CFG-V1@3",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-CFG-V1@4"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-CU-C1@2",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-CU-C1@3"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-CU-E1@2",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-CU-E1@3"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-CU-V1@2",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-CU-V1@3"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-DQ-C1@2",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-DQ-C1@3"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-DQ-E1@3",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-DQ-E1@4"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-DQ-E2@3",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-DQ-E2@4"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-DQ-V1@3",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-DQ-V1@4"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-E1@2",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-E1@3"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-PL-C1@2",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-PL-C1@3"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-PL-E1@2",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-PL-E1@3"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-PL-E2@2",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-PL-E2@3"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-PL-E3@2",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-PL-E3@3"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-PL-V1@2",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-PL-V1@3"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-PO-C1@2",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-PO-C1@3"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-PO-E1@2",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-PO-E1@3"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-PO-E2@2",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-PO-E2@3"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-PO-E3@2",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-PO-E3@3"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-PO-V1@2",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-PO-V1@3"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-ROW-E1@1",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-ROW-E1@2"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-ROW2-C1@3",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-ROW2-C1@4"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-ROW2-E1@3",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-ROW2-E1@4"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-ROW2-V1@3",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-ROW2-V1@4"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-SD-C1@2",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-SD-C1@3"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-SD-C2@2",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-SD-C2@3"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-SD-E1@2",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-SD-E1@3"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-SD-E2@2",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-SD-E2@3"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-SD-E3@2",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-SD-E3@3"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-SD-E4@2",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-SD-E4@3"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-SD-V1@2",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-SD-V1@3"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-SX-C1@2",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-SX-C1@3"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-SX-E1@2",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-SX-E1@3"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-SX-E2@2",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-SX-E2@3"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-SX-V1@2",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-SX-V1@3"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-TA-C1@2",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-TA-C1@3"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-TA-C2@2",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-TA-C2@3"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-TA-E1@2",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-TA-E1@3"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-TA-E2@2",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-TA-E2@3"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-TA-E3@2",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-TA-E3@3"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-TA-E4@2",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-TA-E4@3"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-TA-E5@2",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-TA-E5@3"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-TA-V1@2",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-TA-V1@3"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-TS1-C1@2",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-TS1-C1@3"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-TS1-E1@4",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-TS1-E1@5"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-TS1-V1@2",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-TS1-V1@3"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-UNI-C1@2",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-UNI-C1@3"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-UNI-E1@2",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-UNI-E1@3"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-UNI-E2@2",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-UNI-E2@3"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-UNI-V1@2",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-UNI-V1@3"
+    },
+    {
+      "epistemic": "provisional",
+      "from": "FT-V1@2",
+      "reason": "No local decision-file acceptance of this assertion found; builder claims, evaluations and observations are not owner commitment.",
+      "to": "FT-V1@3"
+    }
+  ]
+}
