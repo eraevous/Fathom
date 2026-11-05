@@ -29,3 +29,10 @@ Confusion numbering1–8 was not relayed; mapped topics closed: buried headline,
 unexplained unmarked contrasts and apparently inconsistent skew wording.
 
 Follow-ups (out of scope): native PowerPoint charts; reduce Brief boilerplate.
+
+PR26 CI follow-up: appended relation-only R1@2/C1@2/E1@2. Requirements hold
+implemented_by; claims depend_on requirement and code; evidence supports C1@2.
+followup(raw) now returns no migrations. Full extras with CI-pinned Telosmith0.5:
+380passed/2skipped (only frozen AEC0.4 impact-snapshot tests skip). Earlier382pass
+run preceded the final claim/evidence append and used AEC0.4; it did not validate
+that final ledger. The final full run includes the repaired ledger. No old lines edited.
