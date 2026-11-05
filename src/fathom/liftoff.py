@@ -108,7 +108,7 @@ def validate_liftoff(doc):
     if doc.get('row_structure',{}).get('intervals') or doc.get('time_series',{}).get('declared'):raise ValueError('liftoff must not apply declarations')
     if not isinstance(b.get('configuration'),dict) or not isinstance(b.get('automated_findings'),list) or not isinstance(b.get('coverage'),dict):raise ValueError('invalid liftoff fields')
     schema=b['configuration'];init=schema.get('initial')
-    if not isinstance(init,dict) or init.get('target') is not None or init.get('intervals') or schema.get('base')!={}:raise ValueError('liftoff controls must start unselected')
+    if not isinstance(init,dict) or init.get('target') is not None or init.get('intervals') or init.get('columns') or schema.get('base_columns') or schema.get('base')!={}:raise ValueError('liftoff controls must start unselected')
     if not isinstance(b.get('previews'),dict) or any(not isinstance(b['previews'].get(k),list) for k in ('intervals','time_series')):raise ValueError('invalid liftoff previews')
     for kind in ('intervals','time_series'):
         for p in b['previews'][kind]:
