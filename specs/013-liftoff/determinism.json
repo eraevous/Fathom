@@ -1,0 +1,16 @@
+{
+  "liftoff": {
+    "liftoff-profile.json": "f9392984ff0b78a5f425eeff41b79dcb4875fc5a6acfa4096f69ea8b5b2f7df9",
+    "liftoff.html": "1de7dd9eeef5cd04ed71f5de1a4067b667daff33e8c302565b2cd312c3a529b6"
+  },
+  "profile": {
+    "exports/export-status.json": "123ea943715e27d069907850ef7aff995cfcda327641aae64c03bf71a2f31f55",
+    "exports/report.html": "4b32ea85935d750d3b397075d88d4040e36f8689002918da2c23b360de88ac51",
+    "exports/report.md": "5df83237902d3d1b6779149d4ad1730db28910931794b5309f3b645919dfbbdf",
+    "exports/report.pdf": "5d43a79398f31054a8d810c17de4e31cfd563ba1b13a470ba090a48fa7ef597b",
+    "exports/report.pptx": "eebcdafd008b201795637580415a19cdb9c79e3484fbc4c319baef98c26e751b",
+    "guide-profile.json": "359903a1ae915f02849d7958fb6c27b99412c1fdc7fc1952c3c371e1ba5b56c5",
+    "report.html": "a1609bf8348777899c78f61d5c3b5c8cd5023a1ec0ab5457f65b38e5c04e7677",
+    "report.md": "78366d2b26df991797c1b3989a209f40bbe537fd4a9a61847256d6d0284d1ca0"
+  }
+}
