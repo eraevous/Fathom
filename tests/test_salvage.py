@@ -92,6 +92,8 @@ def test_normal_and_offset_decoys_do_not_change(name):
         doc["quality"].pop("missingness_tests", None); doc["quality"]["rules"].pop("missingness_varies_with", None)
         # spec012 (configurator) adds disclosure-only fields: the report settings block and each histogram's bin rule.
         doc.pop("report", None)
+        # spec015 adds evidence for failed skew gates; numeric results/verdicts stay identical.
+        doc["quality"].pop("skew_gates", None)
         for col in doc["columns"]:
             for ch in col.get("univariate", {}).get("charts", []):
                 ch.pop("bin_rule", None)

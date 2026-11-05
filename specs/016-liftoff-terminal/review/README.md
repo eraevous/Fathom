@@ -8,12 +8,12 @@ reviewed command legibility and existing form. Existing narrow form-column wrapp
 is outside this change; no report layout or analysis redesigned.
 
 Six new focused cases failed before implementation; full suite after all ledger
-appends:380passed/2frozen legacy-AEC snapshot skips with extras and Telosmith0.5.
+appends:386 passed / 2 frozen legacy-AEC snapshot skips with extras and Telosmith0.5.
 Tests cover exact Python/embedded-JS default YAML, actual terminal two-stage flow,
 no applied target/interval/series, three collision cases, truthful exclusion buckets,
 and identical files/stdout/stderr under all-socket denial. Existing offline suite passes.
-AEC:0errors/100inherited warnings;5,194edges/67files/0skipped. Impact22affected,
-96no-status-change/13structural pointers. followup(raw) returns nothing.
+AEC:0errors/100inherited warnings;5,333 edges / 70 files/0skipped. Impact22affected,
+99 no-status-change / 13structural pointers. followup(raw) returns nothing.
 
 Found: an untouched Liftoff page emits exactly {} plus newline via --yaml; users
 can run profile with it or edit declarations locally. Config exclusions are distinct
@@ -28,3 +28,5 @@ Confusion topics closed: browser-only second stage; exclusion language suggestin
 human exclusion for type/budget decisions; README spacing/order. The private eval's
 numbered1–8 mapping was not supplied. Execution review requested from Claude;
 no owner acceptance. Native PPTX charts and Brief boilerplate stay follow-ups.
+
+Main #26 was merged by Zach while this branch was open. Main e8d3814 was merged into this feature branch; every ledger line from both sides is retained, with main as exact prefix. Full extras suite after reconciliation: 386 passed / 2 frozen legacy skips. Screenshots were refreshed against the current main baseline; the fresh profile report is still byte-identical to that baseline. No PR merge or main push by the agent.
