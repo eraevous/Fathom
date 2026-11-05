@@ -7,12 +7,17 @@ from importlib.metadata import version
 from pathlib import Path
 import re
 import zipfile
-from xml.sax.saxutils import escape
+from html import escape as html_escape
 
 from .renderers import KINDS, omitted, omitted_notes, repetition_groups, sample_cell, scalar, summary_rows
 from .presentation import formatted, column_tables, structured_tables, formatted_examples, display_charts, top_n_reason, original_tick
 from .target import target_tables
 from .palette import LIGHT as C
+
+
+def escape(value):
+    """XML text escaping without saxutils' eager urllib.request import."""
+    return html_escape(value, quote=False)
 
 
 def finding_topics(d):

@@ -1,0 +1,282 @@
+{
+  "joined-metrics-dark-1280.png": {
+    "document_width": 1280,
+    "external_requests": [],
+    "height": 6310,
+    "mode": "dark",
+    "panel": "#162427",
+    "topic": "metrics",
+    "view": "joined",
+    "width": 1280
+  },
+  "joined-metrics-dark-390.png": {
+    "document_width": 390,
+    "external_requests": [],
+    "height": 11090,
+    "mode": "dark",
+    "panel": "#162427",
+    "topic": "metrics",
+    "view": "joined",
+    "width": 390
+  },
+  "joined-metrics-light-1280.png": {
+    "document_width": 1280,
+    "external_requests": [],
+    "height": 6310,
+    "mode": "light",
+    "panel": "#ffffff",
+    "topic": "metrics",
+    "view": "joined",
+    "width": 1280
+  },
+  "joined-metrics-light-390.png": {
+    "document_width": 390,
+    "external_requests": [],
+    "height": 11090,
+    "mode": "light",
+    "panel": "#ffffff",
+    "topic": "metrics",
+    "view": "joined",
+    "width": 390
+  },
+  "month-top-dark-1280.png": {
+    "document_width": 1280,
+    "external_requests": [],
+    "height": 1884,
+    "mode": "dark",
+    "panel": "#162427",
+    "topic": "top",
+    "view": "month",
+    "width": 1280
+  },
+  "month-top-dark-390.png": {
+    "document_width": 390,
+    "external_requests": [],
+    "height": 3008,
+    "mode": "dark",
+    "panel": "#162427",
+    "topic": "top",
+    "view": "month",
+    "width": 390
+  },
+  "month-top-light-1280.png": {
+    "document_width": 1280,
+    "external_requests": [],
+    "height": 1884,
+    "mode": "light",
+    "panel": "#ffffff",
+    "topic": "top",
+    "view": "month",
+    "width": 1280
+  },
+  "month-top-light-390.png": {
+    "document_width": 390,
+    "external_requests": [],
+    "height": 3008,
+    "mode": "light",
+    "panel": "#ffffff",
+    "topic": "top",
+    "view": "month",
+    "width": 390
+  },
+  "panel-boundaries-dark-1280.png": {
+    "document_width": 1280,
+    "external_requests": [],
+    "height": 4355,
+    "mode": "dark",
+    "panel": "#162427",
+    "topic": "boundaries",
+    "view": "panel",
+    "width": 1280
+  },
+  "panel-boundaries-dark-390.png": {
+    "document_width": 390,
+    "external_requests": [],
+    "height": 6623,
+    "mode": "dark",
+    "panel": "#162427",
+    "topic": "boundaries",
+    "view": "panel",
+    "width": 390
+  },
+  "panel-boundaries-light-1280.png": {
+    "document_width": 1280,
+    "external_requests": [],
+    "height": 4355,
+    "mode": "light",
+    "panel": "#ffffff",
+    "topic": "boundaries",
+    "view": "panel",
+    "width": 1280
+  },
+  "panel-boundaries-light-390.png": {
+    "document_width": 390,
+    "external_requests": [],
+    "height": 6623,
+    "mode": "light",
+    "panel": "#ffffff",
+    "topic": "boundaries",
+    "view": "panel",
+    "width": 390
+  },
+  "panel-frequency-dark-1280.png": {
+    "document_width": 1280,
+    "external_requests": [],
+    "height": 4355,
+    "mode": "dark",
+    "panel": "#162427",
+    "topic": "frequency",
+    "view": "panel",
+    "width": 1280
+  },
+  "panel-frequency-dark-390.png": {
+    "document_width": 390,
+    "external_requests": [],
+    "height": 6623,
+    "mode": "dark",
+    "panel": "#162427",
+    "topic": "frequency",
+    "view": "panel",
+    "width": 390
+  },
+  "panel-frequency-light-1280.png": {
+    "document_width": 1280,
+    "external_requests": [],
+    "height": 4355,
+    "mode": "light",
+    "panel": "#ffffff",
+    "topic": "frequency",
+    "view": "panel",
+    "width": 1280
+  },
+  "panel-frequency-light-390.png": {
+    "document_width": 390,
+    "external_requests": [],
+    "height": 6623,
+    "mode": "light",
+    "panel": "#ffffff",
+    "topic": "frequency",
+    "view": "panel",
+    "width": 390
+  },
+  "panel-top-dark-1280.png": {
+    "document_width": 1280,
+    "external_requests": [],
+    "height": 1814,
+    "mode": "dark",
+    "panel": "#162427",
+    "topic": "top",
+    "view": "panel",
+    "width": 1280
+  },
+  "panel-top-dark-390.png": {
+    "document_width": 390,
+    "external_requests": [],
+    "height": 2770,
+    "mode": "dark",
+    "panel": "#162427",
+    "topic": "top",
+    "view": "panel",
+    "width": 390
+  },
+  "panel-top-light-1280.png": {
+    "document_width": 1280,
+    "external_requests": [],
+    "height": 1814,
+    "mode": "light",
+    "panel": "#ffffff",
+    "topic": "top",
+    "view": "panel",
+    "width": 1280
+  },
+  "panel-top-light-390.png": {
+    "document_width": 390,
+    "external_requests": [],
+    "height": 2770,
+    "mode": "light",
+    "panel": "#ffffff",
+    "topic": "top",
+    "view": "panel",
+    "width": 390
+  },
+  "target-top-dark-1280.png": {
+    "document_width": 1280,
+    "external_requests": [],
+    "height": 48680,
+    "mode": "dark",
+    "panel": "#162427",
+    "topic": "top",
+    "view": "target",
+    "width": 1280
+  },
+  "target-top-dark-390.png": {
+    "document_width": 390,
+    "external_requests": [],
+    "height": 71366,
+    "mode": "dark",
+    "panel": "#162427",
+    "topic": "top",
+    "view": "target",
+    "width": 390
+  },
+  "target-top-light-1280.png": {
+    "document_width": 1280,
+    "external_requests": [],
+    "height": 48680,
+    "mode": "light",
+    "panel": "#ffffff",
+    "topic": "top",
+    "view": "target",
+    "width": 1280
+  },
+  "target-top-light-390.png": {
+    "document_width": 390,
+    "external_requests": [],
+    "height": 71366,
+    "mode": "light",
+    "panel": "#ffffff",
+    "topic": "top",
+    "view": "target",
+    "width": 390
+  },
+  "week-top-dark-1280.png": {
+    "document_width": 1280,
+    "external_requests": [],
+    "height": 1884,
+    "mode": "dark",
+    "panel": "#162427",
+    "topic": "top",
+    "view": "week",
+    "width": 1280
+  },
+  "week-top-dark-390.png": {
+    "document_width": 390,
+    "external_requests": [],
+    "height": 2840,
+    "mode": "dark",
+    "panel": "#162427",
+    "topic": "top",
+    "view": "week",
+    "width": 390
+  },
+  "week-top-light-1280.png": {
+    "document_width": 1280,
+    "external_requests": [],
+    "height": 1884,
+    "mode": "light",
+    "panel": "#ffffff",
+    "topic": "top",
+    "view": "week",
+    "width": 1280
+  },
+  "week-top-light-390.png": {
+    "document_width": 390,
+    "external_requests": [],
+    "height": 2840,
+    "mode": "light",
+    "panel": "#ffffff",
+    "topic": "top",
+    "view": "week",
+    "width": 390
+  }
+}

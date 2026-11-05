@@ -1,0 +1,13 @@
+series: [series]
+time: time
+value: value
+period: day
+exposure: exposure
+observation_state: state
+aggregation:
+  rule: sum
+  group_by: []
+thresholds:
+  - name: synthetic_volume
+    value: 30
+    per_days: 30

@@ -332,3 +332,44 @@ The narrow all-zero-category observation asks whether zeros are structural or
 unrecorded; it does not assert a mechanism or add a stage-two zero rule. Brief/
 conditional temporal exports to PDF/PPTX are not added. See
 [spec013](specs/013-liftoff/spec.md) and [validation](specs/013-liftoff/validation.md).
+
+### Offline installation and panel profiling
+
+Prepare wheels on a connected machine with the **same Python version, OS and CPU
+architecture** as the offline target. Build from the reviewed repository checkout:
+
+```bash
+python -m pip wheel --wheel-dir wheelhouse .
+# Optional existing statistics and Office serializers:
+python -m pip wheel --wheel-dir wheelhouse '.[stats,exports]'
+```
+
+Transfer the wheelhouse using an approved local process, then on the target:
+
+```bash
+python -m pip --disable-pip-version-check install --no-index --find-links wheelhouse fathom-guide
+# If the optional wheels were prepared:
+python -m pip --disable-pip-version-check install --no-index --find-links wheelhouse 'fathom-guide[stats,exports]'
+```
+
+No source build or package index is needed on the target. Keep the reviewed
+wheelhouse/version inventory for reproducibility. Fathom reads local files, has no
+telemetry or network connector, and its generated HTML embeds its resources.
+The offline regression harness denies socket creation before application import
+and compares command output bytes; it also checks page resources. Existing optional
+serializers may import unused standard-library URL helpers, but no network attempt
+is allowed. No current command needs even loopback sockets; no server is included.
+
+`guide panel LONG.csv --config panel.yaml --out DIR --aggregate week,month`
+profiles declared long panels. Configuration names the series key(s), ISO date,
+nonnegative value, native day/week/month period, and optional exposure/state columns.
+Windows separate training signals from evaluation-volume context. Missing, absent,
+closed and observed-zero periods remain distinct; unequal exposure is a separate flag.
+
+Outputs include `panel.json`, a static HTML/Markdown report and `series-signals.csv`.
+Optional generated views have separate artifacts and source/state/exposure lineage.
+Declared metric CSVs join by series/model/window/horizon with explicit unmatched keys;
+selected metrics reuse the existing target-analysis report. Metric disagreement is
+not failure; repeated series across models/windows are not independent evidence.
+No volume boundaries or metric definitions are supplied by default. See
+[spec014](specs/014-offline-panel/spec.md) and its [CLI contract](specs/014-offline-panel/contracts/cli.md).

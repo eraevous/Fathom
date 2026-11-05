@@ -1,0 +1,82 @@
+{
+  "annual_long": {
+    "closed": 0,
+    "missing": 0,
+    "observed": 1096,
+    "source_rows": 1096,
+    "volume": 16434,
+    "zeros": 0
+  },
+  "annual_short": {
+    "closed": 0,
+    "missing": 0,
+    "observed": 365,
+    "source_rows": 365,
+    "volume": 5473,
+    "zeros": 0
+  },
+  "bursts": {
+    "closed": 0,
+    "missing": 0,
+    "observed": 240,
+    "source_rows": 240,
+    "volume": 160,
+    "zeros": 232
+  },
+  "closures": {
+    "closed": 12,
+    "missing": 0,
+    "observed": 72,
+    "source_rows": 84,
+    "volume": 144,
+    "zeros": 0
+  },
+  "exposure": {
+    "closed": 0,
+    "missing": 0,
+    "observed": 84,
+    "source_rows": 84,
+    "volume": 378,
+    "zeros": 0
+  },
+  "low_poisson": {
+    "closed": 0,
+    "missing": 0,
+    "observed": 240,
+    "source_rows": 240,
+    "volume": 92,
+    "zeros": 155
+  },
+  "missing": {
+    "closed": 0,
+    "missing": 10,
+    "observed": 69,
+    "source_rows": 79,
+    "volume": 138,
+    "zeros": 0
+  },
+  "overdispersed": {
+    "closed": 0,
+    "missing": 0,
+    "observed": 240,
+    "source_rows": 240,
+    "volume": 549,
+    "zeros": 87
+  },
+  "regime": {
+    "closed": 0,
+    "missing": 0,
+    "observed": 120,
+    "source_rows": 120,
+    "volume": 512,
+    "zeros": 24
+  },
+  "weekly": {
+    "closed": 0,
+    "missing": 0,
+    "observed": 84,
+    "source_rows": 84,
+    "volume": 936,
+    "zeros": 0
+  }
+}
