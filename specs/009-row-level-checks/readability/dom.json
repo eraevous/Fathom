@@ -1,0 +1,62 @@
+{
+  "empty-values-1280": {
+    "columns_collapsed": true,
+    "document_width": 1280,
+    "pre_blocks": 0,
+    "section_order": [
+      "Dictionary",
+      "Provenance",
+      "Dataset summary",
+      "Findings",
+      "Relations"
+    ],
+    "source": "68890bf",
+    "source_hash_hidden": true,
+    "visible_text_characters": 5664
+  },
+  "empty-values-390": {
+    "columns_collapsed": true,
+    "document_width": 390,
+    "pre_blocks": 0,
+    "section_order": [
+      "Dictionary",
+      "Provenance",
+      "Dataset summary",
+      "Findings",
+      "Relations"
+    ],
+    "source": "68890bf",
+    "source_hash_hidden": true,
+    "visible_text_characters": 5664
+  },
+  "repeated-key-1280": {
+    "columns_collapsed": true,
+    "document_width": 1280,
+    "pre_blocks": 0,
+    "section_order": [
+      "Dictionary",
+      "Provenance",
+      "Dataset summary",
+      "Findings",
+      "Relations"
+    ],
+    "source": "68890bf",
+    "source_hash_hidden": true,
+    "visible_text_characters": 4610
+  },
+  "repeated-key-390": {
+    "columns_collapsed": true,
+    "document_width": 390,
+    "pre_blocks": 0,
+    "section_order": [
+      "Dictionary",
+      "Provenance",
+      "Dataset summary",
+      "Findings",
+      "Relations"
+    ],
+    "source": "68890bf",
+    "source_hash_hidden": true,
+    "visible_text_characters": 4610
+  }
+}
