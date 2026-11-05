@@ -1,0 +1,5 @@
+series: [entity, candidate]
+time: year
+value: value
+period: year
+date_format: YEAR

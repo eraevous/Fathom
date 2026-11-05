@@ -196,6 +196,7 @@ def text_profile(raw,name,bins=None):
 
 
 def temporal_profile(values,name,cfg,meta):
+    year_precision=meta.get('date_format')=='YEAR'
     parsed=[(v,p) for v in values if (p:=parse_date(v,meta.get('date_format'))) is not None]
     dates=[date.fromisoformat(p['date']) for _,p in parsed];n=len(dates);unique=sorted(set(dates))
     reference=cfg['context'].get('snapshot_date');ref=date.fromisoformat(reference) if reference else None
@@ -210,6 +211,8 @@ def temporal_profile(values,name,cfg,meta):
             series=[periods.get(f'{m//12:04}-{m%12+1:02}',0) for m in range(first,last+1)]
         else:
             period='year';years=Counter(d.year for d in dates);series=[years.get(y,0) for y in range(unique[0].year,unique[-1].year+1)]
+    if unique and year_precision:
+        period='year';years=Counter(d.year for d in dates);series=[years.get(y,0) for y in range(unique[0].year,unique[-1].year+1)]
     lag=None
     if len(series)>=3 and len(set(series[:-1]))>1 and len(set(series[1:]))>1:lag=coefficient(statistics.correlation(series[:-1],series[1:]))
     intervals=[(b-a).days for a,b in zip(unique,unique[1:])]
@@ -227,13 +230,15 @@ def temporal_profile(values,name,cfg,meta):
            'after_reference':sum(d>ref for d in dates) if ref else None,'beyond_fixed_year_2100':sum(d.year>2100 for d in dates),
            'reference_date':reference,'weekday_counts':dict(zip(('Mon','Tue','Wed','Thu','Fri','Sat','Sun'),[sum(d.weekday()==i for d in dates) for i in range(7)])),
            'month_counts':dict(zip(MONTH_NAMES,[sum(d.month==i for d in dates) for i in range(1,13)])),
-           'quarter_counts':{f'Q{i}':sum((d.month-1)//3+1==i for d in dates) for i in range(1,5)},'year_counts':dict(sorted(Counter(str(d.year) for d in dates).items())),
+           'quarter_counts':{f'Q{i}':sum((d.month-1)//3+1==i for d in dates) for i in range(1,5)},'year_counts':dict(sorted(Counter(f'{d.year:04d}' if year_precision else str(d.year) for d in dates).items())),
            'large_gaps':gaps[:20],'omitted_gaps':max(0,len(gaps)-20),'gap_rule':'more than three times median distinct-date spacing',
            'lag1_period':period,'lag1_count_autocorrelation':lag,'lag1_basis':'consecutive periods including zeros; descriptive, not a stationarity test'}
+    if year_precision:
+        stats.update(precision='year',parse_basis='Declared YEAR; 1 January anchor only, not observed month/day',weekday_counts={},month_counts={},quarter_counts={},placeholder_dates=0)
     charts=[]
     if unique:
         days=(unique[-1]-unique[0]).days
-        chart_period='day' if days<=60 else 'month' if days<=365*5 else 'year'
+        chart_period='year' if year_precision else 'day' if days<=60 else 'month' if days<=365*5 else 'year'
         if chart_period=='day':
             from datetime import timedelta
             observed=Counter(d.isoformat() for d in dates)
@@ -241,11 +246,11 @@ def temporal_profile(values,name,cfg,meta):
         elif chart_period=='month':
             chart_data=[{'label':f'{m//12:04}-{m%12+1:02}','count':periods.get(f'{m//12:04}-{m%12+1:02}',0)} for m in range(first,last+1)]
         else:
-            years=Counter(d.year for d in dates);chart_data=[{'label':str(y),'count':years.get(y,0)} for y in range(unique[0].year,unique[-1].year+1)]
+            years=Counter(d.year for d in dates);chart_data=[{'label':f'{y:04d}' if year_precision else str(y),'count':years.get(y,0)} for y in range(unique[0].year,unique[-1].year+1)]
         omitted=max(0,len(chart_data)-60)
         if omitted:chart_data=chart_data[:30]+chart_data[-30:]
         charts=[chart('time',f'Record counts over time for {name}',f'Calendar {chart_period} (parsed dates)','Rows (count)',data=chart_data,omitted_periods=omitted,period=chart_period)]
-        for key,basis in [('weekday_counts','weekday'),('month_counts','month')]:
+        for key,basis in ([] if year_precision else [('weekday_counts','weekday'),('month_counts','month')]):
             charts.append(chart('bar',f'{basis.capitalize()} counts for {name}','Parsed dates (count)',basis.capitalize(),data=[{'label':k.capitalize(),'count':v} for k,v in stats[key].items()],calendar=basis))
     return stats,charts
 

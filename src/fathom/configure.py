@@ -175,7 +175,7 @@ def config_document(schema: dict, sel: dict) -> dict:
         series = []
         for item in sel.get("time_series") or []:
             time, value, grains = item.get("time"), item.get("value"), item.get("granularities", ["auto"])
-            if time in offered and (value is None or value in schema["series_value_options"] and value != time) and isinstance(grains, list) and grains and all(g in ("auto","hour","day","week","month") for g in grains):
+            if time in offered and (value is None or value in schema["series_value_options"] and value != time) and isinstance(grains, list) and grains and all(g in ("auto","hour","day","week","month","year") for g in grains):
                 series.append({"time": time, "value": value, "granularities": grains})
         if series: out["time_series"] = series
     else:
@@ -290,7 +290,7 @@ function configDocument(schema,sel){
     var series=(sel.time_series||[]).map(function(item){
       var grains=own(item,'granularities');
       return {time:own(item,'time'),value:own(item,'value'),granularities:grains===undefined?['auto']:grains};
-    }).filter(function(item){return offered.indexOf(item.time)>=0&&(item.value==null||(schema.series_value_options.indexOf(item.value)>=0&&item.value!==item.time))&&Array.isArray(item.granularities)&&item.granularities.length&&item.granularities.every(function(g){return ['auto','hour','day','week','month'].indexOf(g)>=0;});}).map(function(item){return {time:item.time,value:item.value==null?null:item.value,granularities:item.granularities};});
+    }).filter(function(item){return offered.indexOf(item.time)>=0&&(item.value==null||(schema.series_value_options.indexOf(item.value)>=0&&item.value!==item.time))&&Array.isArray(item.granularities)&&item.granularities.length&&item.granularities.every(function(g){return ['auto','hour','day','week','month','year'].indexOf(g)>=0;});}).map(function(item){return {time:item.time,value:item.value==null?null:item.value,granularities:item.granularities};});
     if(series.length){out.time_series=series;}
   }
   else{
@@ -599,7 +599,7 @@ def render_page(schema: dict, brief: str | None = None, download_name: str = "fa
                 if name != item['column']: h.append(f'<option value="{j}">'+escape(name)+'</option>')
             h.append('</select></label>'+state(k+':value')+'</p>')
             h.append(f'<p><label>Granularity (only used when ticked) <select data-series-grain="{i}"'+control_attrs(k+':grain',f'time_series[{i}].granularity','auto')+'>')
-            h.extend('<option value="'+g+'">'+g+'</option>' for g in ('auto','hour','day','week','month'))
+            h.extend('<option value="'+g+'">'+g+'</option>' for g in ('auto','hour','day','week','month','year'))
             h.append('</select></label>'+state(k+':grain')+'</p>')
         h.append('</div></section>')
     else:

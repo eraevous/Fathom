@@ -1,0 +1,6 @@
+columns:
+  year: {type: temporal, date_format: YEAR}
+time_series:
+  - {time: year, value: value, by: entity, granularities: [year]}
+title: Synthetic annual observations
+description: Authored annual data with entity and candidate keys; no real observations.

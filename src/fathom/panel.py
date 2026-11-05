@@ -16,6 +16,7 @@ from .connectors import CSVConnector
 from .models import GuideDataFrame, ProfilingResult, SchemaContract, canonical_json
 from .panel_stats import advance, calendar, estimate, floor, summarize, usable
 from .profiler import profile
+from .parsing import parse_date, temporal_failure, temporal_failure_message
 
 RULES = {
     'eligibility': 'usable: observed finite nonnegative value, positive known exposure, complete bucket; missing/absent/closed break runs and positive gaps; unequal exposure is an orthogonal flag',
@@ -54,12 +55,14 @@ def read_table(path):
 
 
 def configuration(raw, names):
-    allowed = {'series', 'time', 'value', 'period', 'exposure', 'observation_state', 'windows', 'metrics', 'thresholds', 'aggregation', 'aggregate'}
+    allowed = {'series', 'time', 'value', 'period', 'date_format', 'exposure', 'observation_state', 'windows', 'metrics', 'thresholds', 'aggregation', 'aggregate'}
     if not isinstance(raw, dict) or set(raw) - allowed: raise ValueError('unknown panel configuration keys')
     cfg = dict(raw)
     ids = cfg.get('series')
     if not isinstance(ids, list) or not ids or any(not isinstance(n, str) or n not in names or n in {'model', 'window', 'horizon'} for n in ids) or len(set(ids)) != len(ids): raise ValueError('panel series must list known distinct columns outside reserved model/window/horizon keys')
-    if cfg.get('period') not in {'day', 'week', 'month'}: raise ValueError('panel period must be day, week or month')
+    if cfg.get('period') not in {'day', 'week', 'month', 'year'}: raise ValueError('panel period must be day, week, month or year')
+    if cfg.get('date_format') is not None and (not isinstance(cfg['date_format'],str) or cfg['date_format'] not in {'ISO','YEAR'}):raise ValueError('panel date_format must be ISO or YEAR')
+    if cfg.get('date_format')=='YEAR' and cfg['period']!='year':raise ValueError('date_format YEAR requires panel period year')
     roles = ids + [cfg.get('time'), cfg.get('value')] + [cfg[k] for k in ('exposure', 'observation_state') if k in cfg]
     if any(not isinstance(n, str) or n not in names for n in roles) or len(set(roles)) != len(roles): raise ValueError('panel roles require distinct known columns')
     agg = cfg.setdefault('aggregation', {'rule': 'sum', 'group_by': []})
@@ -90,11 +93,17 @@ def configuration(raw, names):
 def raw_panel(data, cfg):
     if not len(data.frame) or len(data.frame) > 200000: raise ValueError('panel needs 1..200000 input rows')
     series = defaultdict(dict);groups = {}
+    failure=temporal_failure(data.frame[cfg['time']].tolist(),cfg.get('date_format') or 'ISO',{'ISO','YEAR'})
+    if failure:raise ValueError(temporal_failure_message(cfg['time'],failure))
     for position, r in enumerate(data.frame.to_dict('records'), 1):
         key = tuple(r[n] for n in cfg['series'])
         if any(v is None for v in key): raise ValueError(f'missing series key at row {position}')
-        d = iso(r[cfg['time']]);bucket = floor(d, cfg['period'])
-        if d != bucket: raise ValueError('native week/month rows must be labelled by period start')
+        raw=r[cfg['time']]
+        parsed=parse_date(raw,'YEAR') if cfg.get('date_format')=='YEAR' else None
+        if cfg.get('date_format')=='YEAR' and parsed is None:
+            raise ValueError(temporal_failure_message(cfg['time'],temporal_failure([raw],'YEAR',{'ISO','YEAR'})))
+        d = iso(parsed['date'] if parsed else raw);bucket = floor(d, cfg['period'])
+        if d != bucket: raise ValueError('native week/month/year rows must be labelled by period start')
         if bucket in series[key]: raise ValueError('duplicate series/calendar period')
         value = number(r[cfg['value']], 'panel value')
         exposure = number(r.get(cfg.get('exposure')), 'exposure') if cfg.get('exposure') else 1.0
@@ -427,7 +436,7 @@ def validate_panel(d):
         if not isinstance(r, dict) or not isinstance(r.get('series'), list) or any(not isinstance(x, (str, type(None))) for x in r['series']) or any(not isinstance(r.get(k), str) for k in ('model', 'window', 'period', 'train_start', 'train_end')): raise ValueError('invalid panel row key')
         for name in ('duration', 'amplitude', 'frequency', 'wavelength', 'sbc', 'noise', 'volumes'):
             if not isinstance(r.get(name), dict): raise ValueError('invalid panel dimension')
-        if r['period'] not in {'day', 'week', 'month'} or len(r['series']) != len(d['configuration']['series']): raise ValueError('invalid panel row period/series')
+        if r['period'] not in {'day', 'week', 'month', 'year'} or len(r['series']) != len(d['configuration']['series']): raise ValueError('invalid panel row period/series')
         iso(r['train_start']);iso(r['train_end'])
         if iso(r['train_start']) > iso(r['train_end']): raise ValueError('invalid panel training bounds')
         if r.get('eval_start') is not None:

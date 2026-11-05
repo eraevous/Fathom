@@ -10,7 +10,7 @@ import statistics
 from .config import validate_config
 from .models import GuideDataFrame, ProfilingResult
 from .quality import quality_profile, copy_evidence
-from .parsing import finite_number, parse_date
+from .parsing import finite_number, parse_date, temporal_failure, temporal_failure_message
 from .univariate import enrich_columns, identity_and_samples, missingness_patterns, stored
 
 SCHEMA_VERSION = 2
@@ -78,8 +78,12 @@ def summarize(values: list[str], typ: str, meta=None) -> dict:
         return stats
     if typ == "temporal":
         dates = [d["date"] for v in values if (d := parse_date(v,(meta or {}).get("date_format"))) is not None]
-        return {"valid": len(dates), "invalid": len(values) - len(dates),
-                "min": min(dates) if dates else None, "max": max(dates) if dates else None}
+        stats={"valid": len(dates), "invalid": len(values) - len(dates),
+               "min": min(dates) if dates else None, "max": max(dates) if dates else None}
+        failure=temporal_failure(values,(meta or {}).get('date_format')) if not dates else None
+        if failure:stats['parse_failure']=failure
+        if (meta or {}).get('date_format')=='YEAR':stats['precision']='year; 1 January anchor, not an observed month/day'
+        return stats
     if typ == "boolean":
         return {"valid": sum(v.lower() in {"true", "false"} for v in values),
                 "invalid": sum(v.lower() not in {"true", "false"} for v in values),
@@ -145,9 +149,9 @@ def profile(data: GuideDataFrame, config: dict | None = None) -> ProfilingResult
                        [{"path": f"columns.{index}.missing", "value": col["missing"]}],
                        f"Inspect missing values in {name} and ask how absence was generated before choosing a treatment.")
         if stats.get("invalid", 0):
-            diagnostic(prefix + "-invalid", f"{name}: {stats['invalid']} values do not match the effective {typ} type.",
-                       [{"path": f"columns.{index}.statistics.invalid", "value": stats["invalid"]}],
-                       f"Review the type reading and incompatible values in {name}; do not coerce silently.")
+            diagnostic(prefix + "-invalid", temporal_failure_message(name,stats['parse_failure'],include_advice=False) if stats.get('parse_failure') else f"{name}: {stats['invalid']} values do not match the effective {typ} type.",
+                       [{"path": f"columns.{index}.statistics.invalid", "value": stats["invalid"]}]+([{"path":f"columns.{index}.statistics.parse_failure","value":stats['parse_failure']}] if stats.get('parse_failure') else []),
+                       temporal_failure_message(name,stats['parse_failure']) if stats.get('parse_failure') else f"Review the type reading and incompatible values in {name}; do not coerce silently.")
         if col["meaning"] is None:
             finding(prefix + "-meaning", "question", f"What is the domain meaning of {name}?",
                     [{"path": f"columns.{index}.meaning", "value": None}], "The table cannot establish domain meaning.")

@@ -224,7 +224,7 @@ def test_time_series_suggestions_are_unticked_with_observable_reasons(tmp_path):
     got = [(o["time"], o["value"]) for o in schema["series_suggestions"]]
     assert got == [("at", None), ("at", "amount")]          # id is identifier-like; `short` has 3 days (< 30 periods)
     assert schema["series_suggestions"][0]["reason"].startswith("at is temporal with 48 distinct hours (at least 30")
-    assert "zone" in schema["by_options"] and schema["ts_granularities"] == ["auto", "hour", "day", "week", "month"]
+    assert "zone" in schema["by_options"] and schema["ts_granularities"] == ["auto", "hour", "day", "week", "month", "year"]
     assert config_yaml(schema, schema["initial"]) == "{}\n"  # nothing preselected
     assert 'data-series="0" data-key' in page and "checked" not in page.split('data-series="0"')[1][:20]
 

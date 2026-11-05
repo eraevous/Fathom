@@ -1,12 +1,13 @@
 """Local, explicit parses; raw values and ambiguous readings remain available."""
 
 from datetime import date
+from numbers import Integral
 import math
 import re
 
 MONTH_NAMES = ('january','february','march','april','may','june','july','august','september','october','november','december')
 MONTH_LOOKUP = {name:i+1 for i,name in enumerate(MONTH_NAMES)} | {name[:3]:i+1 for i,name in enumerate(MONTH_NAMES)}
-DATE_FORMATS = {'ISO','ISO_DATETIME','MON_D_Y','MDY','DMY'}
+DATE_FORMATS = {'ISO','ISO_DATETIME','MON_D_Y','MDY','DMY','YEAR'}
 
 
 def finite_number(value):
@@ -30,6 +31,12 @@ def finite_number(value):
 
 
 def parse_date(value, hint=None):
+    if hint=='YEAR':
+        if isinstance(value,Integral) and not isinstance(value,bool):value=str(value)
+        if not isinstance(value,str) or not re.fullmatch(r'[0-9]{4}',value.strip()):return None
+        try:parsed=date(int(value.strip()),1,1)
+        except ValueError:return None
+        return {'date':parsed.isoformat(),'format':'YEAR','precision':'year','two_digit_year':False,'alternatives':[]}
     if not isinstance(value,str): return None
     text=value.strip(); two=False; alternatives=[]
     try:
@@ -71,3 +78,26 @@ def parse_datetime(value):
     try:
         return datetime(*(int(x) for x in match.groups(default='0'))), match[4] is not None
     except (ValueError,OverflowError): return None
+
+
+def temporal_failure(values, hint=None, supported_formats=None):
+    """Diagnose a wholly failed declaration; never apply another parse implicitly."""
+    values=[v for v in values if v is not None]
+    if not values or any(parse_date(v,hint) is not None for v in values):return None
+    supported=DATE_FORMATS if supported_formats is None else supported_formats
+    tried=[hint] if hint else sorted(supported-{'YEAR'})
+    counts={fmt:sum(parse_date(v,fmt) is not None for v in values) for fmt in sorted(supported)}
+    best=max(counts.values(),default=0)
+    return {'nonmissing':len(values),'formats_tried':tried,'format_matches':counts,
+            'suggested_formats':[fmt for fmt,n in counts.items() if n==best and best>0],
+            'best_matches':best,'selection':'greatest supported-format parse count; ties retained; no fallback applied'}
+
+
+def temporal_failure_message(name, failure, include_advice=True):
+    text=f"{name}: all {failure['nonmissing']} nonmissing values failed temporal parsing. Formats tried: "+', '.join(failure['formats_tried'])+'. '
+    choices=failure['suggested_formats']
+    if choices:
+        text+='Nearest supported format'+('s' if len(choices)>1 else '')+': '+', '.join(choices)+f" ({failure['best_matches']}/{failure['nonmissing']} match). "
+        if include_advice:text+=('After confirming meaning, explicitly declare date_format: '+choices[0]+'. ' if len(choices)==1 else 'Choose the intended date_format explicitly. ')
+    else:text+='No supported format matches; check the declared type and original values. '
+    return text+'No fallback was applied.'

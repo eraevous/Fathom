@@ -12,9 +12,10 @@ from statistics import NormalDist, median, quantiles
 from .parsing import finite_number, parse_date, parse_datetime
 from .univariate import stored
 
-GRAINS = ("hour", "day", "week", "month")
-CALENDAR = {"hour": (24, 168), "day": (7,), "week": (52,), "month": (12,)}  # calendar cycles, not domain meaning
-DEFAULT_LAG = {"hour": 168, "day": 28, "week": 26, "month": 24}
+GRAINS = ("hour", "day", "week", "month", "year")
+AUTO_GRAINS = GRAINS[:-1]
+CALENDAR = {"hour": (24, 168), "day": (7,), "week": (52,), "month": (12,), "year": ()}  # calendar cycles, not domain meaning
+DEFAULT_LAG = {"hour": 168, "day": 28, "week": 26, "month": 24, "year": 12}
 MIN_N, MAX_PERIODS, TOP_N = 30, 100_000, 5
 RULES = {
     "regularise": "periods run from the floor of the first to the floor of the last parsed timestamp; value series sum parsed "
@@ -52,6 +53,7 @@ def floor(dt, grain):
     day = dt.replace(hour=0, minute=0, second=0, microsecond=0)
     if grain == "day": return day
     if grain == "week": return day - timedelta(days=day.weekday())
+    if grain=="year":return day.replace(month=1,day=1)
     return day.replace(day=1)
 
 
@@ -59,16 +61,18 @@ def advance(dt, grain):
     if grain == "hour": return dt + timedelta(hours=1)
     if grain == "day": return dt + timedelta(days=1)
     if grain == "week": return dt + timedelta(days=7)
+    if grain=="year":return dt.replace(year=dt.year+1)
     return dt.replace(year=dt.year + dt.month // 12, month=dt.month % 12 + 1)
 
 
 def label(dt, grain):
     return {"hour": dt.strftime("%Y-%m-%dT%H"), "day": dt.strftime("%Y-%m-%d"),
-            "week": "week of " + dt.strftime("%Y-%m-%d"), "month": dt.strftime("%Y-%m")}[grain]
+            "week": "week of " + dt.strftime("%Y-%m-%d"), "month": dt.strftime("%Y-%m"), "year": f"{dt.year:04d}"}[grain]
 
 
 def span_periods(first, last, grain):
     a, b = floor(first, grain), floor(last, grain)
+    if grain == "year": return b.year-a.year+1
     if grain == "month": return (b.year - a.year) * 12 + b.month - a.month + 1
     step = {"hour": 3600, "day": 86400, "week": 604800}[grain]
     return int((b - a).total_seconds() // step) + 1
@@ -310,6 +314,9 @@ def informative(grains):
 
 
 def parse_time(value, fmt):
+    if fmt=='YEAR':
+        d=parse_date(value,fmt)
+        return (datetime.fromisoformat(d['date']),False) if d else None
     p = parse_datetime(value)
     if p is not None: return p
     d = parse_date(value, fmt)
@@ -339,7 +346,7 @@ def analyse(rows, names, cfg, item, deps, group=None, subset=None):
             text=rows[i][ti]
             parsed_time=parse_time(text,fmt) if text is not None else None
             if parsed_time and parsed_time[0]==last_stamp:
-                resolutions.append(1 if text.count(':')>=2 else 60 if ':' in text else 86400)
+                resolutions.append((datetime(last_stamp.year+1,1,1)-last_stamp).total_seconds() if fmt=='YEAR' and last_stamp.year<9999 else 1 if text.count(':')>=2 else 60 if ':' in text else 86400)
         last_resolution=min(resolutions) if resolutions else 1
     total = len(subset) if subset is not None else len(rows)
     parsed = sum(len(v) for v in points.values())
@@ -358,8 +365,12 @@ def analyse(rows, names, cfg, item, deps, group=None, subset=None):
         out["signals"] = []; out["charted"] = []
         return out
     requested = item["granularities"]
-    wanted = [g for g in GRAINS if g in requested or "auto" in requested]
+    wanted = [g for g in GRAINS if g in requested or "auto" in requested and g in (("year",) if fmt=="YEAR" else AUTO_GRAINS)]
     for g in wanted:
+        if fmt=='YEAR' and g!='year':
+            out['skipped_granularities'].append({'granularity':g,'reason':'YEAR has annual precision; use year'});continue
+        if g=='year' and stamps[-1].year==9999:
+            out['skipped_granularities'].append({'granularity':g,'reason':'year9999 end boundary exceeds datetime range'});continue
         n = span_periods(stamps[0], stamps[-1], g)
         if g == "hour" and process["time_of_day"] != "all":
             out["skipped_granularities"].append({"granularity": g, "reason": "timestamps lack a time of day"}); continue
@@ -374,7 +385,10 @@ def analyse(rows, names, cfg, item, deps, group=None, subset=None):
 def time_series(rows, columns, cfg, emit):
     names = [c["name"] for c in columns]
     deps = {}
-    result = {"rules": RULES, "declared": cfg.get("time_series", []), "series": [], "question": None, "dependencies": deps}
+    rules=RULES
+    if any(c.get('date_format')=='YEAR' for c in cfg['columns'].values()):
+        rules={**RULES,'auto':'Declared YEAR has annual precision: auto selects year only; subannual grains cannot be resolved. Other formats retain hour/day/week/month auto; year is otherwise explicit.'}
+    result = {"rules": rules, "declared": cfg.get("time_series", []), "series": [], "question": None, "dependencies": deps}
     for si, item in enumerate(cfg.get("time_series", [])):
         if item.get("by"):
             bi = names.index(item["by"])
@@ -416,7 +430,7 @@ def undeclared(rows, columns, cfg):
         fmt = cfg["columns"].get(c["name"], {}).get("date_format")
         parsed = [p for r in rows if r[j] is not None and (p := parse_time(r[j], fmt)) is not None]
         if not parsed: continue
-        grain = "hour" if all(t for _, t in parsed) else "day"
+        grain = "year" if fmt=="YEAR" else "hour" if all(t for _, t in parsed) else "day"
         distinct = len({floor(dt, grain) for dt, _ in parsed})
         if distinct >= MIN_N: found.append({"column": c["name"], "granularity": grain, "distinct_periods": distinct})
     if not found: return None

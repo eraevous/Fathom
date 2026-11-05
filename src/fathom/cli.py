@@ -140,6 +140,10 @@ def main(argv: list[str] | None = None) -> int:
         print(f"guide: wrote {', '.join(str(args.out / name) for name in sorted([*files, *binaries]))}")
         if args.command == "profile":
             print(summary_line(result.document))
+            from .parsing import temporal_failure_message
+            for column in result.document['columns']:
+                failure=column['statistics'].get('parse_failure')
+                if failure:print('guide: '+temporal_failure_message(column['name'],failure),file=sys.stderr)
         if args.command == "export":
             for fmt, item in sorted(status["formats"].items()):
                 if item["status"] == "unavailable":

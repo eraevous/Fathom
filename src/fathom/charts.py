@@ -87,7 +87,7 @@ def svg_chart(chart):
                     out.append(f'<rect x="{left+i*barwidth}" y="{bottom-h}" width="{max(.5,barwidth-2)}" height="{h}" fill="{C["accent"]}"><title>{e(d["label"])}: {d["count"]}</title></rect>')
     out.append('</svg>')
     notes=[]
-    if kind=='time' and data:notes.append('Calendar range: '+data[0]['label']+' to '+data[-1]['label']+'. Day ticks omit the year; exact dates remain in chart values.')
+    if kind=='time' and data:notes.append('Calendar range: '+data[0]['label']+' to '+data[-1]['label']+('. Day ticks omit the year; exact dates remain in chart values.' if chart.get('period')=='day' else '. Exact calendar-period labels and values remain in chart values.'))
     if 'coverage' in chart:notes.append('Top10 covers '+formatted(chart['coverage'],True)+f" of {chart['denominator']:,} raw values; remainder is shown separately.")
     if chart.get('omitted_periods'):notes.append(f"{chart['omitted_periods']:,} middle calendar bins omitted; full counts remain in profile.")
     if chart.get('omitted_points'):notes.append(f"Approximate ECDF display: {chart['omitted_points']:,} distinct points omitted.")
