@@ -11,6 +11,7 @@ HELPER=runpy.run_path(str(DOC/'migrate.py'))
 def records(raw):return [json.loads(l) for l in raw.splitlines() if l.strip() and not l.startswith('//')]
 def latest(rs):return {r['id']:r for r in rs}
 def ref(r):return r['id']+'@'+str(r['version'])
+def assertion(r):return {k:v for k,v in r.items() if k not in ('version','epistemic')}
 def before():return (ROOT/'.aec/records.jsonl').read_bytes()[:AUDIT['original_prefix_bytes']]
 def at_migration():
     """The ledger exactly as #18 left it; later appends (main's #19-#21 records, the follow-up) come after it."""
@@ -32,14 +33,18 @@ def test_migration_is_append_only_and_preserves_assertions():
 
 
 def test_latest_relation_directions_and_support_lineage():
-    current=latest(records((ROOT/'.aec/records.jsonl').read_text()))
+    all_records=records((ROOT/'.aec/records.jsonl').read_text());current=latest(all_records)
+    byref={ref(r):r for r in all_records}
     assert not any(e['rel']=='implements' for r in current.values() for e in r.get('relations',[]))
     for r in current.values():
         for e in r.get('relations',[]):
             if e['rel']=='implemented_by':assert r['type']=='requirement' and e['to'].startswith('code:')
         if r['type']=='claim':
             assert any(e['rel']=='depends_on' for e in r['relations'])
-            assert any(e['rel']=='supports' and e['to']==ref(r) for evidence in current.values() for e in evidence.get('relations',[])), ref(r)
+            # Label-only versions preserve historical evidence pins. They support the
+            # exact same assertion, not an unrelated later claim sharing an id.
+            assert any(e['rel']=='supports' and e['to'] in byref and byref[e['to']]['id']==r['id'] and assertion(byref[e['to']])==assertion(r)
+                       for evidence in current.values() for e in evidence.get('relations',[])), ref(r)
     assert current['FT-R8']['version']==1  # Unbuilt axis switching gets no invented implementation.
     assert current['FT-SD-Q1']['status']==current['FT-SD-Q2']['status']=='proposed'
 
@@ -54,7 +59,9 @@ def test_migration_is_deterministic_and_idempotent():
 
 
 def impact(rs):
-    pytest.importorskip('aec')
+    aec=pytest.importorskip('aec')
+    if aec.__version__!=AUDIT['aec_version']:
+        pytest.skip('Frozen migration snapshots require recorded AEC '+AUDIT['aec_version']+'; Telosmith 0.5 rejects their legacy/unknown method')
     from aec.records import Record,Store
     from aec.edges import loads
     from aec.code_impact import code_impact
@@ -74,7 +81,12 @@ def test_pinned_impact_reaches_obligations_after_migration():
     assert len(old.impacts)==28 and len(new.impacts)==42
     # The reach survives later appends: the full ledger still reaches the same governing obligations.
     now,_=impact(records((ROOT/'.aec/records.jsonl').read_text()))
-    assert {'FT-R7@3','FT-R18@2'}<=now.impacts.keys() and new.impacts.keys()<=now.impacts.keys()
+    assert {'FT-R7@3','FT-R18@2'}<=now.impacts.keys()
+    # Preserve the frozen #18 conclusions while acknowledging only the audited
+    # label/version aliases; no relationship or assertion is silently re-pinned.
+    audit=json.loads((ROOT/'docs/telosmith-adoption/labels.json').read_text())
+    aliases={r['to']:r['from'] for r in audit['records']}
+    assert new.impacts.keys()<={aliases.get(k,k) for k in now.impacts}
 
 
 def ablated(raw):

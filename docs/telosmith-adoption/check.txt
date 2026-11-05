@@ -1,0 +1,212 @@
+record-directed P0@2 anchor[0] for=text state=verified source="docs/vision.md" locator="q:Fathom turns raw or semi-cleaned tabular datasets into understanding"
+record-directed P0@2 anchor[1] for=rationale state=verified source="docs/decisions/2026-11-01.md" locator="q:Everything else looks good from that batch."
+record-directed DG-RA@1 anchor[0] for=text state=verified source="docs/vision.md" locator="q:**A.** Separate observations"
+record-directed DG-RA@1 anchor[1] for=rationale state=verified source="docs/decisions/2026-11-01.md" locator="q:Everything else looks good from that batch."
+record-directed DG-RB@1 anchor[0] for=text state=verified source="docs/vision.md" locator="q:**B.** Never present inferred"
+record-directed DG-RB@1 anchor[1] for=rationale state=verified source="docs/decisions/2026-11-01.md" locator="q:DG-RB is correct, provided that it does not entirely block off results"
+record-directed DG-RC@1 anchor[0] for=text state=verified source="docs/vision.md" locator="q:**C.** Let the analysis question"
+record-directed DG-RC@1 anchor[1] for=rationale state=verified source="docs/decisions/2026-11-01.md" locator="q:DG-RC should be interpreted as all-pairs Cartesian-Cross explosions"
+record-directed DG-RD@1 anchor[0] for=text state=verified source="docs/vision.md" locator="q:**D.** Enable iterative re-profiling"
+record-directed DG-RD@1 anchor[1] for=rationale state=verified source="docs/decisions/2026-11-01.md" locator="q:I'd like a DG-RD addendum that adds profile context to comparisons"
+record-directed DG-RE@1 anchor[0] for=text state=verified source="docs/vision.md" locator="q:**E.** Keep a machine-readable data artifact"
+record-directed DG-RE@1 anchor[1] for=rationale state=verified source="docs/decisions/2026-11-01.md" locator="q:Everything else looks good from that batch."
+record-directed DG-RF@1 anchor[0] for=text state=verified source="docs/vision.md" locator="q:**F.** Test metric accuracy"
+record-directed DG-RF@1 anchor[1] for=rationale state=verified source="docs/decisions/2026-11-01.md" locator="q:Everything else looks good from that batch."
+record-directed DG-D1@1 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-01.md" locator="q:The MVP here is data -> decisions"
+record-directed DG-A1@1 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-01.md" locator="q:capable of standalone functioning as data documentation"
+record-directed DG-A2@1 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-01.md" locator="q:none of the code is sacred"
+record-directed DG-A3@1 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-01.md" locator="q:leave room for an AI narrative, possibly through RelayKit"
+record-directed DG-A4@1 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-01.md" locator="q:An undeclared question or intention can fall back"
+record-directed DG-D2@1 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-01.md" locator="q:Charter looks good, too"
+record-directed DG-D2@1 anchor[1] for=text state=verified source="CHARTER.md" locator="q:Each rule gives: Rule"
+record-directed DG-D3@1 anchor[0] for=text state=verified source="docs/design.md" locator="q:**Key principle:** every connector produces"
+record-directed DG-D3@1 anchor[1] for=rationale state=verified source="docs/decisions/2026-11-01.md" locator="q:The April design spec and plan: **Distil, don't copy.**"
+record-directed DG-D4@1 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-01.md" locator="q:Blow it away."
+record-directed DG-D4@1 anchor[1] for=rationale state=verified source="docs/decisions/2026-11-01.md" locator="q:seeing what a \"from scratch\" repo built using AEC could get to"
+record-directed DG-D4@1 anchor[2] for=rationale state=verified source="docs/decisions/2026-11-01.md" locator="q:Who builds: **Codex, cold.**"
+record-directed FT-R1@2 anchor[0] for=text state=verified source="specs/001-data-review/spec.md" locator="q:An analyst supplies a public or synthetic CSV"
+record-directed FT-R2@1 anchor[0] for=text state=verified source="docs/vision.md" locator="q:**Categorical:** counts and rates, entropy, dominance, rare levels, and dummy or test values."
+record-directed FT-R2@1 anchor[1] for=text state=verified source="docs/vision.md" locator="q:**Temporal:** coverage, gaps, volume patterns, trends and seasonality."
+record-directed FT-R3@1 anchor[0] for=text state=verified source="docs/vision.md" locator="q:**C.** Let the analysis question"
+record-directed FT-R4@1 anchor[0] for=text state=verified source="docs/acceptance.md" locator="q:can the analyst understand something consequential"
+record-directed FT-R2@2 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-01-evening.md" locator="q:FTR2, R3, and R4 are all pretty much correct."
+record-directed FT-R3@2 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-01-evening.md" locator="q:FTR2, R3, and R4 are all pretty much correct."
+record-directed FT-R4@2 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-01-evening.md" locator="q:FTR2, R3, and R4 are all pretty much correct."
+record-directed FT-R5@1 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-01-evening.md" locator="q:How many rows were complete? How many columns were complete? How many columns were duplicated? How many columns of various types are there?"
+record-directed FT-R6@1 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-01-evening.md" locator="q:The format is atrocious to read"
+record-directed FT-R6@1 anchor[1] for=rationale state=verified source="docs/decisions/2026-11-01-evening.md" locator="q:I liked the format of guidereport.html."
+record-directed DG-D5@1 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-01-evening.md" locator="q:That is what I would be interested in first, is data quality checks."
+record-directed DG-D5@1 anchor[1] for=rationale state=verified source="docs/decisions/2026-11-01-evening.md" locator="q:For next steps, I would prefer some more advanced univariate analyses and visuals"
+record-directed FT-R6@2 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-01-evening.md" locator="q:The format is atrocious to read"
+record-directed FT-R6@2 anchor[1] for=rationale state=verified source="docs/decisions/2026-11-01-evening.md" locator="q:I liked the format of guidereport.html."
+record-directed FT-R6@2 anchor[2] for=rationale state=verified source="docs/decisions/2026-11-01-evening-2.md" locator="q:Is it possible to have that summarization piece clickable in the HTML"
+record-directed FT-R7@1 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-01-evening-2.md" locator="q:I would also like target-based analyses."
+record-directed FT-R7@1 anchor[1] for=rationale state=verified source="docs/decisions/2026-11-01-evening-2.md" locator="q:I don't want every bivariate comparison to run like a logistic regression"
+record-directed FT-R7@1 anchor[2] for=rationale state=verified source="docs/decisions/2026-11-01-evening-2.md" locator="q:and also eventually we'll want target versus bivariate."
+record-directed FT-R8@1 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-01-evening-2.md" locator="q:could be clicked to change to other variables"
+record-directed DG-D5@2 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-01-evening.md" locator="q:That is what I would be interested in first, is data quality checks."
+record-directed DG-D5@2 anchor[1] for=rationale state=verified source="docs/decisions/2026-11-01-evening.md" locator="q:For next steps, I would prefer some more advanced univariate analyses and visuals"
+record-directed DG-D5@2 anchor[2] for=rationale state=verified source="docs/decisions/2026-11-01-evening-2.md" locator="q:Addendum to DGD5."
+record-directed FT-DQ-R1@2 anchor[0] for=text state=verified source="specs/002-data-quality/spec.md" locator="q:An analyst receives findings rather than a collection of statistics"
+record-directed FT-R6@3 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-01-evening.md" locator="q:The format is atrocious to read"
+record-directed FT-R6@3 anchor[1] for=rationale state=verified source="docs/decisions/2026-11-01-evening.md" locator="q:I liked the format of guidereport.html."
+record-directed FT-R6@3 anchor[2] for=rationale state=verified source="docs/decisions/2026-11-01-evening-2.md" locator="q:Is it possible to have that summarization piece clickable in the HTML"
+record-directed FT-R6@3 anchor[3] for=rationale state=verified source="docs/decisions/2026-11-01-evening-3.md" locator="q:the report to actually go dictionary, then provenance, then summary, then findings and relations."
+record-directed FT-R6@3 anchor[4] for=rationale state=verified source="docs/decisions/2026-11-01-evening-3.md" locator="q:we can put that in as a default hidden option or on the same line."
+record-directed FT-R9@1 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-01-evening-3.md" locator="q:I used to have several samples, the first 20, the last 20, random 20 rows"
+record-directed FT-R10@1 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-01-evening-3.md" locator="q:Let's put an x-axis label there as well of for the missing cells by column."
+record-directed FT-R11@1 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-01-evening-4.md" locator="q:Also, a title of the data set and a description of what it is"
+record-directed FT-R12@1 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-01-evening-5.md" locator="q:Special types now, quality score off for now, and yes to the other export formats."
+record-directed FT-R13@1 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-01-evening-5.md" locator="q:Special types now, quality score off for now, and yes to the other export formats."
+record-directed DG-D6@1 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-01-evening-5.md" locator="q:Special types now, quality score off for now, and yes to the other export formats."
+record-directed FT-R14@1 anchor[0] for=rationale state=verified source="docs/decisions/2024-12-design-notes-excerpts.md" locator="q:Skewness and kurtosis (with simple interpretations)."
+record-directed FT-R14@1 anchor[1] for=rationale state=verified source="docs/decisions/2024-12-design-notes-excerpts.md" locator="q:Calculate Shannon entropy to measure diversity in categorical values."
+record-directed FT-R14@1 anchor[2] for=rationale state=verified source="docs/decisions/2024-12-design-notes-excerpts.md" locator="q:Visualizations are more important to me to add in."
+record-directed FT-R15@1 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-01-evening-6.md" locator="q:I'd like to add more univariate plots, and look at the alignments to better support review."
+record-directed FT-R16@1 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-01-evening-6.md" locator="q:I'd like to add more univariate plots, and look at the alignments to better support review."
+record-directed DG-D7@1 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-01-evening-6.md" locator="q:Layouts will need to have some better dynamism in the future as well."
+record-directed FT-R7@2 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-01-evening-2.md" locator="q:I would also like target-based analyses."
+record-directed FT-R7@2 anchor[1] for=rationale state=verified source="docs/decisions/2026-11-01-evening-2.md" locator="q:I don't want every bivariate comparison to run like a logistic regression"
+record-directed FT-R7@2 anchor[2] for=rationale state=verified source="docs/decisions/2026-11-01-evening-2.md" locator="q:and also eventually we'll want target versus bivariate."
+record-directed FT-R7@2 anchor[3] for=rationale state=verified source="docs/decisions/2026-11-01-evening-7.md" locator="q:Add within-group summaries to the target-analysis requirements."
+record-directed FT-R17@1 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-01-evening-7.md" locator="q:Also add a pass for layout and formatting, comparing to other artifacts, best practices, or sheer image recognition."
+record-directed FT-R18@1 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-02.md" locator="q:\"Send it\""
+record-directed FT-R19@1 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-02-evening.md" locator="q:\"Do the target analysis and fold in the four other items\""
+record-directed FT-DQ-R1@3 anchor[0] for=text state=verified source="specs/002-data-quality/spec.md" locator="q:An analyst receives findings rather than a collection of statistics"
+record-directed FT-R10@2 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-01-evening-3.md" locator="q:Let's put an x-axis label there as well of for the missing cells by column."
+record-directed FT-R11@2 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-01-evening-4.md" locator="q:Also, a title of the data set and a description of what it is"
+record-directed FT-R12@2 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-01-evening-5.md" locator="q:Special types now, quality score off for now, and yes to the other export formats."
+record-directed FT-R13@2 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-01-evening-5.md" locator="q:Special types now, quality score off for now, and yes to the other export formats."
+record-directed FT-R14@2 anchor[0] for=rationale state=verified source="docs/decisions/2024-12-design-notes-excerpts.md" locator="q:Skewness and kurtosis (with simple interpretations)."
+record-directed FT-R14@2 anchor[1] for=rationale state=verified source="docs/decisions/2024-12-design-notes-excerpts.md" locator="q:Calculate Shannon entropy to measure diversity in categorical values."
+record-directed FT-R14@2 anchor[2] for=rationale state=verified source="docs/decisions/2024-12-design-notes-excerpts.md" locator="q:Visualizations are more important to me to add in."
+record-directed FT-R15@2 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-01-evening-6.md" locator="q:I'd like to add more univariate plots, and look at the alignments to better support review."
+record-directed FT-R16@2 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-01-evening-6.md" locator="q:I'd like to add more univariate plots, and look at the alignments to better support review."
+record-directed FT-R17@2 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-01-evening-7.md" locator="q:Also add a pass for layout and formatting, comparing to other artifacts, best practices, or sheer image recognition."
+record-directed FT-R18@2 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-02.md" locator="q:\"Send it\""
+record-directed FT-R19@2 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-02-evening.md" locator="q:\"Do the target analysis and fold in the four other items\""
+record-directed FT-R2@3 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-01-evening.md" locator="q:FTR2, R3, and R4 are all pretty much correct."
+record-directed FT-R3@3 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-01-evening.md" locator="q:FTR2, R3, and R4 are all pretty much correct."
+record-directed FT-R4@3 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-01-evening.md" locator="q:FTR2, R3, and R4 are all pretty much correct."
+record-directed FT-R5@2 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-01-evening.md" locator="q:How many rows were complete? How many columns were complete? How many columns were duplicated? How many columns of various types are there?"
+record-directed FT-R6@4 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-01-evening.md" locator="q:The format is atrocious to read"
+record-directed FT-R6@4 anchor[1] for=rationale state=verified source="docs/decisions/2026-11-01-evening.md" locator="q:I liked the format of guidereport.html."
+record-directed FT-R6@4 anchor[2] for=rationale state=verified source="docs/decisions/2026-11-01-evening-2.md" locator="q:Is it possible to have that summarization piece clickable in the HTML"
+record-directed FT-R6@4 anchor[3] for=rationale state=verified source="docs/decisions/2026-11-01-evening-3.md" locator="q:the report to actually go dictionary, then provenance, then summary, then findings and relations."
+record-directed FT-R6@4 anchor[4] for=rationale state=verified source="docs/decisions/2026-11-01-evening-3.md" locator="q:we can put that in as a default hidden option or on the same line."
+record-directed FT-R7@3 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-01-evening-2.md" locator="q:I would also like target-based analyses."
+record-directed FT-R7@3 anchor[1] for=rationale state=verified source="docs/decisions/2026-11-01-evening-2.md" locator="q:I don't want every bivariate comparison to run like a logistic regression"
+record-directed FT-R7@3 anchor[2] for=rationale state=verified source="docs/decisions/2026-11-01-evening-2.md" locator="q:and also eventually we'll want target versus bivariate."
+record-directed FT-R7@3 anchor[3] for=rationale state=verified source="docs/decisions/2026-11-01-evening-7.md" locator="q:Add within-group summaries to the target-analysis requirements."
+record-directed FT-R9@2 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-01-evening-3.md" locator="q:I used to have several samples, the first 20, the last 20, random 20 rows"
+record-directed DG-D1@2 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-01.md" locator="q:The MVP here is data -> decisions"
+record-directed DG-D2@2 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-01.md" locator="q:Charter looks good, too"
+record-directed DG-D2@2 anchor[1] for=text state=verified source="CHARTER.md" locator="q:Each rule gives: Rule"
+record-directed DG-D3@2 anchor[0] for=text state=verified source="docs/design.md" locator="q:**Key principle:** every connector produces"
+record-directed DG-D3@2 anchor[1] for=rationale state=verified source="docs/decisions/2026-11-01.md" locator="q:The April design spec and plan: **Distil, don't copy.**"
+record-directed DG-D4@2 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-01.md" locator="q:Blow it away."
+record-directed DG-D4@2 anchor[1] for=rationale state=verified source="docs/decisions/2026-11-01.md" locator="q:seeing what a \"from scratch\" repo built using AEC could get to"
+record-directed DG-D4@2 anchor[2] for=rationale state=verified source="docs/decisions/2026-11-01.md" locator="q:Who builds: **Codex, cold.**"
+record-directed DG-D5@3 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-01-evening.md" locator="q:That is what I would be interested in first, is data quality checks."
+record-directed DG-D5@3 anchor[1] for=rationale state=verified source="docs/decisions/2026-11-01-evening.md" locator="q:For next steps, I would prefer some more advanced univariate analyses and visuals"
+record-directed DG-D5@3 anchor[2] for=rationale state=verified source="docs/decisions/2026-11-01-evening-2.md" locator="q:Addendum to DGD5."
+record-directed DG-D6@2 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-01-evening-5.md" locator="q:Special types now, quality score off for now, and yes to the other export formats."
+record-directed DG-D7@2 anchor[0] for=rationale state=verified source="docs/decisions/2026-11-01-evening-6.md" locator="q:Layouts will need to have some better dynamism in the future as well."
+[WARNING] deprecated-relation: FT-C1@1: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-DQ-R1@1: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-DQ-R1@1: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-DQ-R1@1: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-DQ-R1@1: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-DQ-R1@1: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-DQ-R1@2: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-DQ-R1@2: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-DQ-R1@2: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-DQ-R1@2: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-DQ-R1@2: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-DQ-C1@1: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-DQ-C1@1: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-DQ-C1@1: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-DQ-C1@1: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-DQ-C1@1: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-DQ-C1@1: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-UNI-R1@1: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-UNI-R1@1: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-UNI-R1@1: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-UNI-R1@1: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-UNI-R1@1: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-UNI-R1@2: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-UNI-R1@2: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-UNI-R1@2: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-UNI-R1@2: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-UNI-R1@2: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-UNI-C1@1: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-SX-R1@1: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-SX-R1@1: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-SX-R1@2: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-SX-R1@2: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-SX-C1@1: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-PL-R1@1: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-PL-R1@1: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-PL-R1@1: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-PL-R1@2: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-PL-R1@2: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-PL-R1@2: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-PL-C1@1: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-PO-R1@1: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-PO-R1@2: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-PO-C1@1: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-TA-R1@1: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-TA-R1@1: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-TA-R1@2: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-TA-R1@2: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-TA-C1@1: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-TA-C2@1: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-SD-C1@1: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] superseded-reference: FT-DQ-R1@3: depends_on -> FT-R6@2, but FT-R6@4 is newer: changes that reach FT-R6@4 only point at this record; append a version that references FT-R6@4 if that is meant (the old version may be intentional)
+[WARNING] deprecated-relation: FT-CU-R1@1: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-CU-R1@1: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-CU-C1@1: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-ROW2-R1@1: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-ROW2-C1@1: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-ROW2-C1@2: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] deprecated-relation: FT-TS1-C1@1: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] superseded-reference: FT-CU-R1@2: depends_on -> FT-R13@1, but FT-R13@2 is newer: changes that reach FT-R13@2 only point at this record; append a version that references FT-R13@2 if that is meant (the old version may be intentional)
+[WARNING] superseded-reference: FT-CU-R1@2: depends_on -> FT-R14@1, but FT-R14@2 is newer: changes that reach FT-R14@2 only point at this record; append a version that references FT-R14@2 if that is meant (the old version may be intentional)
+[WARNING] superseded-reference: FT-ROW2-R1@3: serves -> FT-R14@1, but FT-R14@2 is newer: changes that reach FT-R14@2 only point at this record; append a version that references FT-R14@2 if that is meant (the old version may be intentional)
+[WARNING] deprecated-relation: FT-CFG-C1@1: 'implements' is deprecated and impact ignores it: put 'implemented_by' on the requirement instead (the requirement is satisfied by the code, SysML <<satisfy>>)
+[WARNING] superseded-reference: FT-CFG-V1@4: produced -> FT-CFG-E1@5, but FT-CFG-E1@6 is newer: changes that reach FT-CFG-E1@6 only point at this record; append a version that references FT-CFG-E1@6 if that is meant (the old version may be intentional)
+[WARNING] superseded-reference: FT-CFG-V1@4: tests -> FT-CFG-C1@3, but FT-CFG-C1@4 is newer: changes that reach FT-CFG-C1@4 only point at this record; append a version that references FT-CFG-C1@4 if that is meant (the old version may be intentional)
+[WARNING] superseded-reference: FT-CU-V1@3: produced -> FT-CU-E1@2, but FT-CU-E1@3 is newer: changes that reach FT-CU-E1@3 only point at this record; append a version that references FT-CU-E1@3 if that is meant (the old version may be intentional)
+[WARNING] superseded-reference: FT-CU-V1@3: tests -> FT-CU-C1@2, but FT-CU-C1@3 is newer: changes that reach FT-CU-C1@3 only point at this record; append a version that references FT-CU-C1@3 if that is meant (the old version may be intentional)
+[WARNING] superseded-reference: FT-DQ-C1@3: depends_on -> FT-R6@2, but FT-R6@4 is newer: changes that reach FT-R6@4 only point at this record; append a version that references FT-R6@4 if that is meant (the old version may be intentional)
+[WARNING] superseded-reference: FT-DQ-V1@4: produced -> FT-DQ-E1@3, but FT-DQ-E1@4 is newer: changes that reach FT-DQ-E1@4 only point at this record; append a version that references FT-DQ-E1@4 if that is meant (the old version may be intentional)
+[WARNING] superseded-reference: FT-DQ-V1@4: produced -> FT-DQ-E2@3, but FT-DQ-E2@4 is newer: changes that reach FT-DQ-E2@4 only point at this record; append a version that references FT-DQ-E2@4 if that is meant (the old version may be intentional)
+[WARNING] superseded-reference: FT-DQ-V1@4: tests -> FT-DQ-C1@2, but FT-DQ-C1@3 is newer: changes that reach FT-DQ-C1@3 only point at this record; append a version that references FT-DQ-C1@3 if that is meant (the old version may be intentional)
+[WARNING] superseded-reference: FT-PL-V1@3: produced -> FT-PL-E1@2, but FT-PL-E1@3 is newer: changes that reach FT-PL-E1@3 only point at this record; append a version that references FT-PL-E1@3 if that is meant (the old version may be intentional)
+[WARNING] superseded-reference: FT-PL-V1@3: produced -> FT-PL-E2@2, but FT-PL-E2@3 is newer: changes that reach FT-PL-E2@3 only point at this record; append a version that references FT-PL-E2@3 if that is meant (the old version may be intentional)
+[WARNING] superseded-reference: FT-PL-V1@3: produced -> FT-PL-E3@2, but FT-PL-E3@3 is newer: changes that reach FT-PL-E3@3 only point at this record; append a version that references FT-PL-E3@3 if that is meant (the old version may be intentional)
+[WARNING] superseded-reference: FT-PL-V1@3: tests -> FT-PL-C1@2, but FT-PL-C1@3 is newer: changes that reach FT-PL-C1@3 only point at this record; append a version that references FT-PL-C1@3 if that is meant (the old version may be intentional)
+[WARNING] superseded-reference: FT-PO-V1@3: produced -> FT-PO-E1@2, but FT-PO-E1@3 is newer: changes that reach FT-PO-E1@3 only point at this record; append a version that references FT-PO-E1@3 if that is meant (the old version may be intentional)
+[WARNING] superseded-reference: FT-PO-V1@3: produced -> FT-PO-E2@2, but FT-PO-E2@3 is newer: changes that reach FT-PO-E2@3 only point at this record; append a version that references FT-PO-E2@3 if that is meant (the old version may be intentional)
+[WARNING] superseded-reference: FT-PO-V1@3: produced -> FT-PO-E3@2, but FT-PO-E3@3 is newer: changes that reach FT-PO-E3@3 only point at this record; append a version that references FT-PO-E3@3 if that is meant (the old version may be intentional)
+[WARNING] superseded-reference: FT-PO-V1@3: tests -> FT-PO-C1@2, but FT-PO-C1@3 is newer: changes that reach FT-PO-C1@3 only point at this record; append a version that references FT-PO-C1@3 if that is meant (the old version may be intentional)
+[WARNING] superseded-reference: FT-ROW2-V1@4: produced -> FT-ROW2-E1@3, but FT-ROW2-E1@4 is newer: changes that reach FT-ROW2-E1@4 only point at this record; append a version that references FT-ROW2-E1@4 if that is meant (the old version may be intentional)
+[WARNING] superseded-reference: FT-ROW2-V1@4: tests -> FT-ROW2-C1@3, but FT-ROW2-C1@4 is newer: changes that reach FT-ROW2-C1@4 only point at this record; append a version that references FT-ROW2-C1@4 if that is meant (the old version may be intentional)
+[WARNING] superseded-reference: FT-SD-V1@3: produced -> FT-SD-E1@2, but FT-SD-E1@3 is newer: changes that reach FT-SD-E1@3 only point at this record; append a version that references FT-SD-E1@3 if that is meant (the old version may be intentional)
+[WARNING] superseded-reference: FT-SD-V1@3: produced -> FT-SD-E2@2, but FT-SD-E2@3 is newer: changes that reach FT-SD-E2@3 only point at this record; append a version that references FT-SD-E2@3 if that is meant (the old version may be intentional)
+[WARNING] superseded-reference: FT-SD-V1@3: tests -> FT-SD-C1@2, but FT-SD-C1@3 is newer: changes that reach FT-SD-C1@3 only point at this record; append a version that references FT-SD-C1@3 if that is meant (the old version may be intentional)
+[WARNING] superseded-reference: FT-SX-V1@3: produced -> FT-SX-E1@2, but FT-SX-E1@3 is newer: changes that reach FT-SX-E1@3 only point at this record; append a version that references FT-SX-E1@3 if that is meant (the old version may be intentional)
+[WARNING] superseded-reference: FT-SX-V1@3: produced -> FT-SX-E2@2, but FT-SX-E2@3 is newer: changes that reach FT-SX-E2@3 only point at this record; append a version that references FT-SX-E2@3 if that is meant (the old version may be intentional)
+[WARNING] superseded-reference: FT-SX-V1@3: tests -> FT-SX-C1@2, but FT-SX-C1@3 is newer: changes that reach FT-SX-C1@3 only point at this record; append a version that references FT-SX-C1@3 if that is meant (the old version may be intentional)
+[WARNING] superseded-reference: FT-TA-V1@3: produced -> FT-TA-E1@2, but FT-TA-E1@3 is newer: changes that reach FT-TA-E1@3 only point at this record; append a version that references FT-TA-E1@3 if that is meant (the old version may be intentional)
+[WARNING] superseded-reference: FT-TA-V1@3: produced -> FT-TA-E2@2, but FT-TA-E2@3 is newer: changes that reach FT-TA-E2@3 only point at this record; append a version that references FT-TA-E2@3 if that is meant (the old version may be intentional)
+[WARNING] superseded-reference: FT-TA-V1@3: produced -> FT-TA-E3@2, but FT-TA-E3@3 is newer: changes that reach FT-TA-E3@3 only point at this record; append a version that references FT-TA-E3@3 if that is meant (the old version may be intentional)
+[WARNING] superseded-reference: FT-TA-V1@3: tests -> FT-TA-C1@2, but FT-TA-C1@3 is newer: changes that reach FT-TA-C1@3 only point at this record; append a version that references FT-TA-C1@3 if that is meant (the old version may be intentional)
+[WARNING] superseded-reference: FT-TS1-V1@3: produced -> FT-TS1-E1@1, but FT-TS1-E1@5 is newer: changes that reach FT-TS1-E1@5 only point at this record; append a version that references FT-TS1-E1@5 if that is meant (the old version may be intentional)
+[WARNING] superseded-reference: FT-TS1-V1@3: tests -> FT-TS1-C1@2, but FT-TS1-C1@3 is newer: changes that reach FT-TS1-C1@3 only point at this record; append a version that references FT-TS1-C1@3 if that is meant (the old version may be intentional)
+[WARNING] superseded-reference: FT-UNI-V1@3: produced -> FT-UNI-E1@2, but FT-UNI-E1@3 is newer: changes that reach FT-UNI-E1@3 only point at this record; append a version that references FT-UNI-E1@3 if that is meant (the old version may be intentional)
+[WARNING] superseded-reference: FT-UNI-V1@3: produced -> FT-UNI-E2@2, but FT-UNI-E2@3 is newer: changes that reach FT-UNI-E2@3 only point at this record; append a version that references FT-UNI-E2@3 if that is meant (the old version may be intentional)
+[WARNING] superseded-reference: FT-UNI-V1@3: tests -> FT-UNI-C1@2, but FT-UNI-C1@3 is newer: changes that reach FT-UNI-C1@3 only point at this record; append a version that references FT-UNI-C1@3 if that is meant (the old version may be intentional)
+[WARNING] superseded-reference: FT-V1@3: produced -> FT-E1@2, but FT-E1@3 is newer: changes that reach FT-E1@3 only point at this record; append a version that references FT-E1@3 if that is meant (the old version may be intentional)
+[WARNING] superseded-reference: FT-V1@3: tests -> FT-C1@2, but FT-C1@3 is newer: changes that reach FT-C1@3 only point at this record; append a version that references FT-C1@3 if that is meant (the old version may be intentional)
+aec check: 0 error(s), 97 warning(s) (structural)
