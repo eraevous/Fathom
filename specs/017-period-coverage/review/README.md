@@ -19,11 +19,11 @@ No univariate width redesign. Visually reviewed desktop/phone boundaries, amplit
 hourly dictionary qualification and category hint. Open: wide exact tables require
 phone panning; report length and existing chart-label wrapping are unchanged.
 
-Full tests after all record appends and final presentation changes:381passed,
+Full tests after all record appends and final presentation changes:387 passed,
 2frozen legacy-AEC snapshot skips (extras and pinned Telosmith0.5). Seven new
 focused cases all failed before implementation; affected temporal/Liftoff family
 59passed. Existing full offline suite passes. AEC:0errors/100inherited warnings,
-5,232edges/67files/0skipped. Impact36affected/82no status change/49structural
+5,371 edges / 70 files/0skipped. Impact 38 affected / 83 no status change / 54 structural
 pointers (review prompts, not acceptance). followup(raw) is empty. Existing ledger
 prefix/protected documents unchanged; FT-DEMO3-R1/C1/E1@1 are provisional.
 
@@ -47,3 +47,5 @@ periods hidden inside amplitude summaries, date-only text contradicting hourly w
 and opaque high-cardinality type routing. Private eval1–8 numbering was not supplied.
 Claude execution review requested; no acceptance inferred. Native PPTX charts and
 Brief boilerplate reduction remain follow-ups.
+
+Main #26 was merged by Zach during finalization. Reconciled main e8d3814 into this feature branch, retaining both ledger tails byte-for-byte (main exact prefix), and refreshed baseline/after screenshots. Full extras suite: 387 passed / 2 frozen legacy-AEC skips. This branch also spells out the related existing valid n<5 group caution inline; no threshold change. No PR merge or main push by the agent.

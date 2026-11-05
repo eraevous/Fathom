@@ -11,6 +11,7 @@ from .target import target_tables
 from .temporal_view import temporal_html, temporal_markdown, TEMPORAL_CSS
 from .presentation import formatted, column_tables, html_table, markdown_table, metric_table, structured_tables, formatted_examples, display_charts, top_n_reason, categorical_hint
 from pathlib import Path
+from .verdicts import headlines_html, key_findings, skew_text, inline_rule
 
 KINDS = (("observation", "Observations"), ("interpretation", "Interpretations"),
          ("hypothesis", "Hypotheses"), ("action", "Suggested actions"), ("question", "Open questions"))
@@ -203,7 +204,10 @@ def kind_tag(kind):
 def finding_html(f, repeated_ids):
     fid=escape(f['id'],quote=True)
     cls=('finding repetitive' if repetitive(f,repeated_ids) else 'finding')+' kind-'+escape(f['kind'],quote=True)
-    out=[f'<article id="{fid}" class="{cls}"><p>{kind_tag(f["kind"])}{escape(f["message"])}</p><details><summary>Evidence and uncertainty</summary>']
+    out=[f'<article id="{fid}" class="{cls}"><p>{kind_tag(f["kind"])}{escape(f["message"])}</p>']
+    gate=inline_rule(f)
+    if gate:out.append('<p class="gate">Gate: '+escape(gate)+'</p>')
+    out.append('<details><summary>Evidence and uncertainty</summary>')
     for item in f['evidence']:
         if 'finding' in item:
             ref=escape(item['finding'],quote=True)
@@ -229,6 +233,8 @@ def dictionary_and_provenance_html(d):
         basis='human override; inferred '+c['inference']['type'] if c['override'] else 'inferred, not a domain fact'
         out += ['<details class="column-entry"><summary><h3>'+escape(c['name'])+'</h3> <span>'+escape(c['effective_type'])+' · '+formatted(c['missing'])+'/'+formatted(c['count'])+' missing · '+formatted(c['distinct'])+' distinct'+(' · '+datetime_note(c,d) if datetime_note(c,d) else '')+'</span></summary><p>'+escape(meaning)+' ('+escape(basis)+')</p>',
                 '<p>Examples: '+escape(', '.join(formatted_examples(c)))+'</p><div class="column-grid"><div class="column-statistics">']
+        gate=d.get('quality',{}).get('skew_gates',{}).get(c['name'])
+        if gate:out.insert(len(out)-1,'<p>'+escape(skew_text(gate))+'</p>')
         if categorical_hint(c):out.append('<p>'+escape(categorical_hint(c))+'</p>')
         tables=column_tables(c)
         primary=[t for t in tables if t['caption'].startswith(('Column overview','Univariate statistics','Percentiles','Most common nonmissing'))]
@@ -259,7 +265,7 @@ def render_html(result: ProfilingResult):
         for title,value in [('Contexts',d['contexts']),('Context differences',d['context_differences']),('Measured deltas',d['deltas']),('Limitations',d['limitations'])]:
             out += ['<section><h2>'+title+'</h2>',''.join(html_table(t) for t in structured_tables(title,value)),'</section>']
     else:
-        out += [dictionary_and_provenance_html(d)]
+        out += [headlines_html(d),dictionary_and_provenance_html(d)]
         out += ['<section class="opening"><h2>Dataset summary</h2><table><thead><tr><th>Measure</th><th>Snapshot</th><th>Evidence</th></tr></thead><tbody>']
         for title,value,refs in summary_rows(d):
             links=' '.join(f'<a href="#{escape(ref,quote=True)}">Finding</a>' for ref in refs) or 'Stored measurement'
@@ -312,7 +318,7 @@ def dictionary_and_provenance_markdown(d):
     for c in d['columns']:
         meaning=c['meaning']['value']+' (human)' if c['meaning'] else 'Unknown meaning'
         lines += ['### '+md_text(c['name']),'',md_text(meaning+'; effective '+c['effective_type']+(' (human override)' if c['override'] else ' (inferred)')+('; '+datetime_note(c,d) if datetime_note(c,d) else '')),'',md_text('Examples: '+', '.join(formatted_examples(c))),'',md_text(categorical_hint(c)),'',charts_markdown(c),'',
-                  '<details><summary>Raw evidence</summary>','',readable_md(c),'</details>','']
+                  md_text(skew_text(d.get('quality',{}).get('skew_gates',{}).get(c['name']))) if c['effective_type']=='numeric' else '', '<details><summary>Raw evidence</summary>','',readable_md(c),'</details>','']
     lines += ['## Provenance','','Source and context are recorded; technical details are collapsed.','','<details><summary>Provenance internals</summary>','',readable_md({'source':d['source'],'context':d['context'],'schema':d['schema'],'dependencies':d['dependencies'],'identity_basis':d.get('dataset',{}).get('basis',{})}),
               '### Working record (human declarations)','',readable_md(d['working_record']),'</details>','']
     return lines
@@ -330,6 +336,7 @@ def render_markdown(result: ProfilingResult):
         for title,value in [('Contexts',d['contexts']),('Context differences',d['context_differences']),('Measured deltas',d['deltas']),('Limitations',d['limitations'])]:
             lines += ['## '+title,'','\n'.join(markdown_table(t) for t in structured_tables(title,value)),'']
     else:
+        lines += ['## Key findings','']+['- '+md_text(i['message']) for i in key_findings(d)]+['']
         lines += dictionary_and_provenance_markdown(d)
         lines += ['## Dataset summary','','| Measure | Snapshot | Evidence |','| --- | --- | --- |']
         for title,value,refs in summary_rows(d):
@@ -369,5 +376,5 @@ def render_markdown(result: ProfilingResult):
 
 
 def markdown_finding(f):
-    return [f'<a id="{escape(f["id"],quote=True)}"></a>',md_text(f['message']),'',
+    return [f'<a id="{escape(f["id"],quote=True)}"></a>',md_text(f['message']),'',md_text('Gate: '+inline_rule(f)) if inline_rule(f) else '',
             '<details><summary>Evidence and uncertainty</summary>','',readable_md({'evidence':f['evidence'],'generator':f['generator'],'uncertainty':f['uncertainty'],'provenance':f['provenance']}),'</details>','']

@@ -98,8 +98,12 @@ def summarize_groups(rows,columns,gi,vi):
     result=[]
     for g,values in sorted(groups.items()):
         nums=[v for v in values if v is not None];rest=[v for key,vs in groups.items() if key!=g for v in vs];rv=[v for v in rest if v is not None]
-        n=len(values);valid=len(nums);item={'value':g,'n':n,'share':safe(n/len(rows)) if rows else None,'valid':valid,'missing':n-valid,'missing_share':safe((n-valid)/n),'small':valid<5,'statistics':{},'contrasts':[],'rest_n':len(rest),'rest_valid':len(rv)}
+        n=len(values);valid=len(nums);item={'value':g,'n':n,'share':safe(n/len(rows)) if rows else None,'valid':valid,'missing':n-valid,'missing_share':safe((n-valid)/n),'small':valid<5,'statistics':{},'contrasts':[],'rest_n':len(rest),'rest_valid':len(rv),'gates':[]}
         if vt in NUMERIC and nums:
+            if rv and sd:
+                gap=abs(statistics.mean([v/scale for v in nums])-statistics.mean([v/scale for v in rv]))
+                item['gates'].append({'measure':'mean','gap':safe(gap*scale),'threshold':safe(sd*scale),'marked':gap>=sd,'status':'computed'})
+            else:item['gates'].append({'measure':'mean','status':'not estimable','reason':'no rest values or zero overall SD'})
             item['statistics']={'mean':safe(statistics.mean(nums)),'median':percentile(nums,50),'min':min(nums),'max':max(nums)}
             if rv and sd and abs(statistics.mean([v/scale for v in nums])-statistics.mean([v/scale for v in rv]))>=sd:
                 item['contrasts'].append({'measure':'mean','group':item['statistics']['mean'],'rest':safe(statistics.mean(rv)),'basis':'gap >= overall population SD'})
@@ -107,7 +111,9 @@ def summarize_groups(rows,columns,gi,vi):
             counts=Counter(nums);rc=Counter(rv)
             item['statistics']['rates']=[{'value':level,'count':counts[level],'share':safe(counts[level]/valid) if valid else None} for level in levels]
             for level in levels:
+                if nums and rv:item['gates'].append({'measure':'rate: '+level,'gap':safe(abs(counts[level]/valid-rc[level]/len(rv))),'threshold':.3,'marked':abs(counts[level]/valid-rc[level]/len(rv))>=.3,'status':'computed'})
                 if nums and rv and abs(counts[level]/valid-rc[level]/len(rv))>=.3:item['contrasts'].append({'measure':'rate: '+level,'group':safe(counts[level]/valid),'rest':safe(rc[level]/len(rv)),'basis':'absolute gap >=30 percentage points'})
+        if rest:item['gates'].append({'measure':'missing share','gap':safe(abs((n-valid)/n-(len(rest)-len(rv))/len(rest))),'threshold':.3,'marked':abs((n-valid)/n-(len(rest)-len(rv))/len(rest))>=.3,'status':'computed'})
         if rest and abs((n-valid)/n-(len(rest)-len(rv))/len(rest))>=.3:
             item['contrasts'].append({'measure':'missing share','group':item['missing_share'],'rest':safe((len(rest)-len(rv))/len(rest)),'basis':'absolute gap >=30 percentage points'})
         result.append(item)
@@ -189,8 +195,10 @@ def target_tables(d):
     for s in ta['groups']:
         rows=[]
         for g in s['groups']:
+            from .verdicts import gate_text
+            gates='; '.join(gate_text(x) for x in g.get('gates',[])) or 'gate evidence unavailable in this saved artifact'
             stats=g['statistics'];detail='\n'.join(k+': '+formatted(v) for k,v in stats.items() if k!='rates')
             if 'rates' in stats:detail='\n'.join(r['value']+': '+formatted(r['share'],True)+f" ({r['count']}/{g['valid']})" for r in stats['rates'])
-            rows.append([g['value'],formatted(g['n']),formatted(g['share'],True),f"{g['valid']} / {g['missing']}",detail,('too small to read reliably; ' if g['small'] else '')+('marked descriptive contrast' if g['contrasts'] else 'No marked contrast')])
+            rows.append([g['value'],formatted(g['n']),formatted(g['share'],True),f"{g['valid']} / {g['missing']}",detail,('too small to read reliably (valid n<5); ' if g['small'] else '')+('marked descriptive contrast' if g['contrasts'] else 'No marked contrast')+'; '+gates])
         tables.append({'caption':f"{s['value_column']} within {s['group_column']} — shares of {s['share_denominator']} rows; {s['group_missing']} missing grouping rows",'headers':['Group','Count','Share','Valid / missing','Key statistics / rates','Caution'],'rows':rows,'numeric':[1,2]})
     return tables

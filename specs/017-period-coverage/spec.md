@@ -33,3 +33,5 @@ Use [first timestamp,last timestamp plus its lexical resolution) as the measurab
 span:date=day, minute timestamp=minute, second timestamp=second. It is not proof of
 continuous observation. No extrapolation/rescaling or exclusion changes. A single
 bucket has one edge marked both. Calendar month/week lengths use existing rules.
+
+Main #26 merged during finalization; the related small-group caution now spells out valid n<5 inline (item1 presentation only).
