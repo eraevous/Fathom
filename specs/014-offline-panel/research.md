@@ -33,3 +33,8 @@ series, alongside their repeated-row counts.
 Mean-generated views withhold count-distribution floors even when their averages
 happen to be integers. Both training and evaluation boundary-side changes are listed
 in view comparisons. Restored panel artifacts reproduce all report/CSV bytes.
+
+Final review removed repeated technical estimator notes from analytical CSV columns;
+values/statuses remain, with full context in the artifact. The target-analysis table
+is the exported joined table, with identical CSV blank handling and verified target
+payload equality. This avoids treating empty explanatory notes as data-quality gaps.

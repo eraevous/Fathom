@@ -209,11 +209,14 @@ def aggregate_periods(collection, grain, rule):
     return out
 
 
-def flatten(value, prefix=''):
+def flatten(value, prefix='', compact=False):
     out = {}
     for k, v in value.items():
         name = prefix + k
-        if isinstance(v, dict): out.update(flatten(v, name + '.'))
+        if compact and name == 'noise.assumption': continue
+        if isinstance(v, dict):
+            if compact and {'value', 'status', 'reason'} <= v.keys(): v = {'value': v['value'], 'status': v['status']}
+            out.update(flatten(v, name + '.', compact=compact))
         elif isinstance(v, list): out[name] = canonical_json(v).strip()
         else: out[name] = v
     return out
@@ -260,11 +263,11 @@ def join_metrics(doc, cfg, root):
         for n in m['columns']: r[n] = number(r[n], 'metric ' + n)
         index[key].append(r)
     joined = [];matched = set();unmatched = []
-    reserved = set(flatten(doc['rows'][0])) | {'series'}
+    reserved = set(flatten(doc['rows'][0], compact=True)) | {'series'}
     if set(m['columns']) & reserved: raise ValueError('metric names collide with signal columns')
     if set(cfg['series']) & (reserved - {'series'}): raise ValueError('series key collides with generated signal column; rename the input key')
     for r in doc['rows']:
-        base = {**flatten(r), **dict(zip(cfg['series'], r['series']))};key = tuple(r['series']) + (r['model'], r['window'])
+        base = {**flatten(r, compact=True), **dict(zip(cfg['series'], r['series']))};key = tuple(r['series']) + (r['model'], r['window'])
         matches = [v for v in index.get(key, []) if r.get('horizon') is None or v.get('horizon') == r['horizon']]
         if not horizon and r.get('horizon') is not None: raise ValueError('metrics need horizon when windows declare it')
         if not matches:
@@ -299,7 +302,12 @@ def join_metrics(doc, cfg, root):
                 'spearman': spearman([r[a] for r in valid], [r[b] for r in valid]) if series_count >= 3 else estimate(status='not estimable', reason='fewer than three distinct series'), 'reservation': RULES['metrics']})
             if len(doc['disagreement']) > 20000: raise ValueError('metric disagreement exceeds 20000 rows')
     # Existing target analysis, not a new metric evaluator or forecast model.
-    fields = sorted({k for r in joined for k in r});frame = pd.DataFrame([{k: str(r[k]) if r.get(k) is not None else None for k in fields} for r in joined], columns=fields, dtype=object)
+    fields = sorted({k for r in joined for k in r})
+    def csv_cell(v):
+        if v is None: return None
+        text = str(v)
+        return text if text.strip() else None
+    frame = pd.DataFrame([{k: csv_cell(r.get(k)) for k in fields} for r in joined], columns=fields, dtype=object)
     source = {'connector': 'panel-metric-join', 'origin': 'joined-signals.csv', 'sha256': sha256(csv_text(joined).encode()).hexdigest()}
     for target in m['targets']:
         result = profile(GuideDataFrame(frame, SchemaContract().resolve(fields), source),
@@ -376,7 +384,7 @@ def panel_files(result):
     d = result.document
     signal_rows = []
     for r in d['rows']:
-        fields = flatten(r)
+        fields = flatten(r, compact=True)
         if set(d['configuration']['series']) & (set(fields) - {'series'}): raise ValueError('series key collides with generated CSV field')
         signal_rows.append({**fields, **dict(zip(d['configuration']['series'], r['series']))})
     files = {'panel.json': result.to_json(), 'panel.html': html(result), 'panel.md': markdown(result),

@@ -125,6 +125,14 @@ def test_thresholds_and_composite_metric_join_with_unmatched_keys(tmp_path):
     assert d['metric_join']['unmatched_metrics_count'] == 1
     assert d['joined'][0]['id'] == '001' and d['joined'][0]['horizon'] == '1'
     assert d['target_profiles'][0]['artifact']['purpose']['target'] == 'score_a'
+    assert 'amplitude.mean.value' in d['joined'][0] and 'amplitude.mean.status' in d['joined'][0]
+    assert 'amplitude.mean.reason' not in d['joined'][0]  # technical context belongs in the panel artifact
+    from fathom.profiler import profile
+    from fathom.panel import csv_text
+    path = tmp_path / 'joined.csv';path.write_text(csv_text(d['joined']))
+    actual = profile(CSVConnector(path).load(), {'target': 'score_a', 'columns': {n: {'type': 'categorical', 'exclude_from_target': True} for n in ['id', 'model', 'window', 'horizon']}}).document
+    assert [(c['name'], c['missing'], c['distinct']) for c in actual['columns']] == [(c['name'], c['missing'], c['distinct']) for c in d['target_profiles'][0]['artifact']['columns']]
+    assert actual['target_analysis'] == d['target_profiles'][0]['artifact']['target_analysis']
 
 
 def test_synthetic_fixture_found_and_missing_states():

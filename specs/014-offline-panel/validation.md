@@ -85,3 +85,9 @@ defaults and occur only in authored synthetic fixtures.
 
 Protected documents/docs/decisions and the parent ledger prefix are unchanged.
 FT-PANEL records remain provisional. Telosmith output is structural, not acceptance.
+
+The final analytical CSV contains estimate values/statuses rather than repeated
+technical notes; full reasons and formulas remain in panel.json and the report.
+Target-analysis output equals running the existing profiler on the exported joined
+CSV with the same target/key declarations. No dictionary or rank semantics are
+silently changed by in-memory blank strings.
