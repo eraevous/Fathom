@@ -13,16 +13,37 @@ from .parsing import finite_number, parse_date, MONTH_NAMES
 PERCENTILES=(1,5,25,33,50,66,75,95,99)
 
 
-def safe(n):
+def stored(n,figures=6):
+    """Stored-number rule (spec 008 FR-001): at least `figures` significant figures, never fewer than 10 decimals."""
+    if n is None or not math.isfinite(n):return None
+    if n==0:return n
+    return round(n,max(10,figures-1-math.floor(math.log10(abs(n)))))
+
+
+def geometry(n):
+    """Scale-aware chart geometry (FR-002): 12 significant figures, so tiny charts keep their shape."""
+    return stored(n,12)
+
+
+def coefficient(n):
+    """Dimensionless coefficients computed on normalized values (skewness, kurtosis, r, eta, V): 10 decimals,
+    because anything smaller is floating-point noise, not a small-scale measurement (spec 008 FR-001)."""
     return round(n,10) if n is not None and math.isfinite(n) else None
 
 
-def percentile(values,p):
+safe=stored
+
+
+def percentile(values,p,rule=None):
     if not values: return None
     ordered=sorted(values);position=(len(ordered)-1)*p/100
     lo=int(position);hi=min(lo+1,len(ordered)-1);w=position-lo
     scale=max(abs(ordered[lo]),abs(ordered[hi]),1)
-    return safe((ordered[lo]/scale*(1-w)+ordered[hi]/scale*w)*scale)
+    return (rule or stored)((ordered[lo]/scale*(1-w)+ordered[hi]/scale*w)*scale)
+
+
+def raw_percentile(values,p):
+    return percentile(values,p,geometry)
 
 
 def common(counter,least=False,limit=10):
@@ -69,8 +90,8 @@ def numeric_profile(values,name,units):
         scale=max(abs(x) for x in nums) or 1;normalized=[x/scale for x in nums]
         mu=statistics.mean(normalized);sd=statistics.pstdev(normalized)
         if sd:
-            skew=safe(statistics.mean(((x-mu)/sd)**3 for x in normalized))
-            kurt=safe(statistics.mean(((x-mu)/sd)**4 for x in normalized)-3)
+            skew=coefficient(statistics.mean(((x-mu)/sd)**3 for x in normalized))
+            kurt=coefficient(statistics.mean(((x-mu)/sd)**4 for x in normalized)-3)
     counts=Counter(v for v in values if finite_number(v) is not None)
     stats={'finite':n,'zeros':{'count':sum(x==0 for x in nums),'share':sum(x==0 for x in nums)/n if n else None},
            'negatives':{'count':sum(x<0 for x in nums),'share':sum(x<0 for x in nums)/n if n else None},
@@ -89,10 +110,10 @@ def numeric_profile(values,name,units):
         cs=[0]*bins
         for x in nums:
             i=min(bins-1,int(((x/scale-a)/(b-a))*bins)) if b!=a else 0;cs[i]+=1
-        data=[{'label':f'{edges[i]:.5g} to {edges[i+1]:.5g}','low':safe(edges[i]),'high':safe(edges[i+1]),'count':cs[i]} for i in range(bins)]
+        data=[{'label':f'{edges[i]:.5g} to {edges[i+1]:.5g}','low':geometry(edges[i]),'high':geometry(edges[i+1]),'count':cs[i]} for i in range(bins)]
         axis=f'{name} ({units or "recorded values; units unknown"})'
         charts=[chart('histogram',f'Distribution of {name}',axis,'Rows (count)',data=data),
-                chart('box',f'Five-number view of {name}',axis,'Column',box={'min':safe(lo),'q1':percentiles['25'],'median':percentiles['50'],'q3':percentiles['75'],'max':safe(hi)})]
+                chart('box',f'Five-number view of {name}',axis,'Column',box={'min':geometry(lo),'q1':raw_percentile(nums,25),'median':raw_percentile(nums,50),'q3':raw_percentile(nums,75),'max':geometry(hi)})]
         cumulative=0;points=[]
         for x,count in sorted(Counter(nums).items()):
             cumulative+=count;points.append({'x':x,'cumulative':cumulative/n,'count':cumulative})
@@ -117,7 +138,7 @@ def histogram(nums,title,x_label,**metadata):
     scale=max(abs(lo),abs(hi),1);a,b=lo/scale,hi/scale
     edges=[(a+(b-a)*i/bins)*scale for i in range(bins+1)];counts=[0]*bins
     for x in nums:counts[min(bins-1,int((x/scale-a)/(b-a)*bins)) if b!=a else 0]+=1
-    return chart('histogram',title,x_label,'Values (count)',data=[{'label':f'{edges[i]:.5g} to {edges[i+1]:.5g}','low':safe(edges[i]),'high':safe(edges[i+1]),'count':c} for i,c in enumerate(counts)],**metadata)
+    return chart('histogram',title,x_label,'Values (count)',data=[{'label':f'{edges[i]:.5g} to {edges[i+1]:.5g}','low':geometry(edges[i]),'high':geometry(edges[i+1]),'count':c} for i,c in enumerate(counts)],**metadata)
 
 
 def missingness_patterns(columns,rows):
@@ -177,7 +198,7 @@ def temporal_profile(values,name,cfg,meta):
         else:
             period='year';years=Counter(d.year for d in dates);series=[years.get(y,0) for y in range(unique[0].year,unique[-1].year+1)]
     lag=None
-    if len(series)>=3 and len(set(series[:-1]))>1 and len(set(series[1:]))>1:lag=safe(statistics.correlation(series[:-1],series[1:]))
+    if len(series)>=3 and len(set(series[:-1]))>1 and len(set(series[1:]))>1:lag=coefficient(statistics.correlation(series[:-1],series[1:]))
     intervals=[(b-a).days for a,b in zip(unique,unique[1:])]
     gap_basis=statistics.median(intervals) if intervals else None
     gaps=[{'after':a.isoformat(),'before':b.isoformat(),'days':(b-a).days} for a,b in zip(unique,unique[1:]) if gap_basis and (b-a).days>3*gap_basis]

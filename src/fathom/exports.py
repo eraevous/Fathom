@@ -12,6 +12,7 @@ from xml.sax.saxutils import escape
 from .renderers import KINDS, repetition_groups, sample_cell, scalar, summary_rows
 from .presentation import formatted, column_tables, structured_tables, formatted_examples, display_charts, top_n_reason, original_tick
 from .target import target_tables
+from .palette import LIGHT as C
 
 
 def finding_topics(d):
@@ -95,7 +96,7 @@ def pdf_bytes(d):
     right=styles['BodyText'].clone('Numeric');right.alignment=TA_RIGHT
     def table(rows,widths,numeric=()):
         t=Table([[Paragraph(escape(text(cell)),right) if i in numeric else p(cell) for i,cell in enumerate(row)] for row in rows],colWidths=widths,repeatRows=1,hAlign='LEFT')
-        t.setStyle(TableStyle([('VALIGN',(0,0),(-1,-1),'TOP'),('BACKGROUND',(0,0),(-1,0),colors.HexColor('#e9f2ee')),('LINEBELOW',(0,0),(-1,-1),.3,colors.HexColor('#b9d3cf')),('LEFTPADDING',(0,0),(-1,-1),4),('RIGHTPADDING',(0,0),(-1,-1),4)]))
+        t.setStyle(TableStyle([('VALIGN',(0,0),(-1,-1),'TOP'),('BACKGROUND',(0,0),(-1,0),colors.HexColor(C['tint'])),('LINEBELOW',(0,0),(-1,-1),.3,colors.HexColor(C['soft_border'])),('LEFTPADDING',(0,0),(-1,-1),4),('RIGHTPADDING',(0,0),(-1,-1),4)]))
         story.append(t)
     title,description,basis=identity(d)
     story.extend([p(title,'Title'),p(description),p(basis),p('Unsupported characters are replaced with ?. Exact source text remains in HTML/Markdown and JSON.')])
@@ -124,10 +125,10 @@ def pdf_bytes(d):
                     elif kind=='rect':c.setFillColor(colors.HexColor(v[4]));c.rect(v[0]*factor,self.height-30-(v[1]+v[3])*factor,v[2]*factor,v[3]*factor,fill=1,stroke=0)
                     elif kind=='circle':c.setFillColor(colors.HexColor(v[3]));c.circle(v[0]*factor,self.height-30-v[1]*factor,v[2]*factor,fill=1,stroke=0)
                     else:
-                        c.setFillColor(colors.HexColor('#193e42'));c.setFont(font,v[4]*factor)
+                        c.setFillColor(colors.HexColor(C['ink']));c.setFont(font,v[4]*factor)
                         draw={'start':c.drawString,'middle':c.drawCentredString,'end':c.drawRightString}[v[3]];draw(v[0]*factor,self.height-30-v[1]*factor,text(v[2]))
                 return
-            c.setFillColor(colors.HexColor('#216e73'));data=ch.get('data',[])
+            c.setFillColor(colors.HexColor(C['accent']));data=ch.get('data',[])
             if ch['kind']=='box':
                 b=ch['box'];scale=max(abs(b['min']),abs(b['max']),1);lo=b['min']/scale;span=b['max']/scale-lo
                 def x(v):return 55+390*((v/scale-lo)/span if span else .5)
@@ -320,7 +321,7 @@ def pptx_bytes(d,full=False):
     for ch in views:
         s=slide(ch['title']);data=ch.get('data',[])
         if ch['kind']=='target_legend':
-            from .target_marks import PALETTE
+            from .palette import CATEGORICAL as PALETTE
             from pptx.dml.color import RGBColor
             for i,index in enumerate(ch['legend_indices']):
                 shape=s.shapes.add_shape(MSO_SHAPE.RECTANGLE,Inches(.9),Inches(1.75+i*.36),Inches(.16),Inches(.16))

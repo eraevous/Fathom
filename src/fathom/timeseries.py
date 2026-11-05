@@ -10,6 +10,7 @@ import math
 from statistics import NormalDist, median, quantiles
 
 from .parsing import finite_number, parse_date, parse_datetime
+from .univariate import stored
 
 GRAINS = ("hour", "day", "week", "month")
 CALENDAR = {"hour": (24, 168), "day": (7,), "week": (52,), "month": (12,)}  # calendar cycles, not domain meaning
@@ -78,10 +79,11 @@ def r10(x):
 
 
 def summary(values):
+    """Scale-bearing quantiles keep the spec 008 stored-number rule (at least 6 significant figures)."""
     if not values: return None
     q = quantiles(values, n=4, method="inclusive") if len(values) >= 2 else [values[0]] * 3
-    return {"n": len(values), "min": r10(min(values)), "p25": r10(q[0]), "median": r10(median(values)),
-            "p75": r10(q[2]), "max": r10(max(values)), "mean": r10(sum(values) / len(values))}
+    return {"n": len(values), "min": stored(min(values)), "p25": stored(q[0]), "median": stored(median(values)),
+            "p75": stored(q[2]), "max": stored(max(values)), "mean": stored(sum(values) / len(values))}
 
 
 def runs(states):
@@ -241,7 +243,7 @@ def analyse_grain(points, grain, mode, max_lag, deps):
                        "spectral": spectral(x, deps)},
         "duration": {"zero_runs": summary(rl["zero"]), "nonzero_runs": summary(rl["nonzero"]),
                      "longest_zero_run": max(rl["zero"], default=0), "longest_nonzero_run": max(rl["nonzero"], default=0)},
-        "series": [{"period": label(k, grain), "value": r10(v)} for k, v in zip(periods, x)][:2000],
+        "series": [{"period": label(k, grain), "value": stored(v)} for k, v in zip(periods, x)][:2000],
         "series_truncated": max(0, len(x) - 2000),
     }
 

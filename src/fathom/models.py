@@ -94,10 +94,14 @@ class ProfilingResult:
         return cls(json.loads(Path(path).read_text(encoding="utf-8"), parse_constant=reject_constant))
 
 
+# 1: finite metrics rounded to 10 decimals. 2: at least 6 significant figures (spec 008).
+SCHEMA_VERSIONS = (1, 2)
+
+
 def validate_document(doc: dict) -> None:
     """Check the stable wire shape before a view or comparison consumes it."""
-    if not isinstance(doc, dict) or type(doc.get("schema_version")) is not int or doc["schema_version"] != 1:
-        raise ValueError("unsupported artifact schema_version; expected 1")
+    if not isinstance(doc, dict) or type(doc.get("schema_version")) is not int or doc["schema_version"] not in SCHEMA_VERSIONS:
+        raise ValueError("unsupported artifact schema_version; expected 1 or 2")
     kind = doc.get("kind")
     shapes = {
         "profile": {"source": dict, "context": dict, "purpose": dict, "working_record": dict,

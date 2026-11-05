@@ -3,6 +3,7 @@
 from html import escape
 
 from .presentation import formatted, html_table, markdown_table
+from .palette import LIGHT as C
 
 INTRO = ("Declared series only. Periods are regularised by aggregation; the four sparsity dimensions are measured per "
          "granularity. Statements are patterns under the stated rules, not causes; questions go to the data owner. "
@@ -90,14 +91,14 @@ def stem(g, which):
     title = f"{g['granularity'].capitalize()} {'ACF' if which == 'acf' else 'PACF'} — stem plot"
     out = [f'<svg role="img" data-kind="stem" aria-label="{escape(title, quote=True)}" viewBox="0 0 {w} {h}"><title>{escape(title)}</title>']
     for v in (-1, -.5, 0, .5, 1):
-        out.append(f'<line x1="{left}" y1="{py(v):.1f}" x2="{right}" y2="{py(v):.1f}" stroke="#d5e1df"/>')
+        out.append(f'<line x1="{left}" y1="{py(v):.1f}" x2="{right}" y2="{py(v):.1f}" stroke="{C["border"]}"/>')
         out.append(f'<text x="{left-6}" y="{py(v)+5:.1f}" text-anchor="end" class="tick-label">{v:g}</text>')
     for b, dash in ((c["band"], "5 4"), (c["family_band"], "2 3")):
         if b is None: continue
         for sgn in (1, -1):
-            out.append(f'<line x1="{left}" y1="{py(sgn*b):.1f}" x2="{right}" y2="{py(sgn*b):.1f}" stroke="#a0522d" stroke-dasharray="{dash}"/>')
+            out.append(f'<line x1="{left}" y1="{py(sgn*b):.1f}" x2="{right}" y2="{py(sgn*b):.1f}" stroke="{C["band"]}" stroke-dasharray="{dash}"/>')
     for k, v, ok in lags:
-        colour = "#216e73" if ok else "#9bbfbc"
+        colour = C["accent"] if ok else C["accent_faint"]
         out.append(f'<line x1="{px(k):.1f}" y1="{py(0):.1f}" x2="{px(k):.1f}" y2="{py(v):.1f}" stroke="{colour}" stroke-width="2"><title>lag {k}: {v:.3f}</title></line>')
         out.append(f'<circle cx="{px(k):.1f}" cy="{py(v):.1f}" r="2.5" fill="{colour}"/>')
     for k in sorted({1, L} | {round(L * i / 4) for i in range(1, 4)}):
