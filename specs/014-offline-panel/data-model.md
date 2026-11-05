@@ -8,4 +8,3 @@ A scalar estimate always has value/null, status and reason/denominator where nee
 Panel artifact load validates all required nested collection and scalar shapes.
 CSV flattens estimate values plus adjacent status columns. IDs are strings, keys
 are tuples internally and structured JSON arrays externally; no delimiter encoding.
-

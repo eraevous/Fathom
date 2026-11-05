@@ -100,6 +100,10 @@ SCHEMA_VERSIONS = (1, 2)
 
 def validate_document(doc: dict) -> None:
     """Check the stable wire shape before a view or comparison consumes it."""
+    if isinstance(doc, dict) and doc.get('kind') == 'panel':
+        from .panel import validate_panel
+        validate_panel(doc)
+        return
     if not isinstance(doc, dict) or type(doc.get("schema_version")) is not int or doc["schema_version"] not in SCHEMA_VERSIONS:
         raise ValueError("unsupported artifact schema_version; expected 1 or 2")
     kind = doc.get("kind")

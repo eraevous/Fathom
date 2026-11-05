@@ -235,6 +235,9 @@ def dictionary_and_provenance_html(d):
 
 
 def render_html(result: ProfilingResult):
+    if result.document['kind'] == 'panel':
+        from .panel_view import html
+        return html(result)
     d=result.document
     identity=d.get('dataset',{})
     title=identity.get('title',{}).get('text',Path(d.get('source',{}).get('origin','Fathom')).stem)
@@ -304,6 +307,9 @@ def dictionary_and_provenance_markdown(d):
 
 
 def render_markdown(result: ProfilingResult):
+    if result.document['kind'] == 'panel':
+        from .panel_view import markdown
+        return markdown(result)
     d=result.document
     identity=d.get('dataset',{})
     lines=['# '+md_text(identity.get('title',{}).get('text','Fathom — '+d['kind'])),'']

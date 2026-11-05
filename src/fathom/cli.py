@@ -32,13 +32,15 @@ def main(argv: list[str] | None = None) -> int:
     commands = parser.add_subparsers(dest="command", required=True)
     helps = {"liftoff": "inspect a CSV without config; write a Brief + Configurations HTML page and its profile", "configure": "write configure.html, a self-contained page that builds a YAML config from this table's profile "
                           "(defaults, observable suggestions, explicit selections), and configure-profile.json, the profile it used"}
-    for command in ("profile", "render", "compare", "validate", "export", "configure", "liftoff"):
+    for command in ("profile", "render", "compare", "validate", "export", "configure", "liftoff", "panel"):
         sub = commands.add_parser(command, help=helps.get(command), description=helps.get(command))
         sub.add_argument("input", type=Path)
         if command == "compare":
             sub.add_argument("after", type=Path)
-        if command in {"profile", "validate", "configure"}:
-            sub.add_argument("--config", type=Path, help="existing YAML config" + ("; its values start the page as 'existing config'" if command == "configure" else ""))
+        if command in {"profile", "validate", "configure", "panel"}:
+            sub.add_argument("--config", type=Path, required=command == 'panel', help="existing YAML config" + ("; its values start the page as 'existing config'" if command == "configure" else ""))
+        if command == 'panel':
+            sub.add_argument('--aggregate', help='separate week,month views from daily input')
         if command != "validate":
             sub.add_argument("--out", type=Path, required=True)
         if command == "export":
@@ -46,6 +48,19 @@ def main(argv: list[str] | None = None) -> int:
             sub.add_argument("--deck",choices=("summary","full"),default="summary")
     args = parser.parse_args(argv)
     try:
+        if args.command == 'panel':
+            from .panel import build_panel, panel_files
+            raw = read_config(args.config)
+            if args.aggregate is not None:
+                raw['aggregate'] = args.aggregate.split(',')
+            result = build_panel(CSVConnector(args.input).load(), raw, args.config.parent)
+            files = panel_files(result)
+            args.out.mkdir(parents=True, exist_ok=True)
+            for name, contents in files.items():
+                path = args.out / name;path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text(contents, encoding='utf-8', newline='\n')
+            print(f'guide: wrote {len(files)} local panel files; all signals training-only')
+            return 0
         if args.command == "liftoff":
             from .liftoff import build_liftoff, render_liftoff
             result = build_liftoff(CSVConnector(args.input).load())
@@ -89,6 +104,14 @@ def main(argv: list[str] | None = None) -> int:
             result = profile(data, cfg)
         elif args.command in {"render", "export"}:
             result = ProfilingResult.load(args.input)
+            if result.document['kind'] == 'panel':
+                if args.command == 'export': raise ValueError('panel Office export is not supported; use panel CSV/HTML')
+                from .panel import panel_files
+                files = panel_files(result)
+                for name, text in files.items():
+                    path = args.out / name;path.parent.mkdir(parents=True, exist_ok=True)
+                    path.write_text(text, encoding='utf-8', newline='\n')
+                return 0
         else:
             result = compare(ProfilingResult.load(args.input), ProfilingResult.load(args.after))
         if args.command == "render" and "liftoff" in result.document:

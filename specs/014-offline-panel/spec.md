@@ -1,5 +1,5 @@
 # Feature Specification: Offline panel signals
-**Branch**: 014-offline-panel | **Created**: 2026-11-05 | **Status**: provisional for Zach.
+**Branch**: 014-offline-panel-stack | **Created**: 2026-11-05 | **Status**: provisional for Zach.
 Serves: P0@2, DG-RA@1, DG-RB@1, DG-RC@1, DG-RD@1, DG-RE@1, DG-RF@1, FT-R17@2.
 Proposed: FT-PANEL-R1@1, FT-PANEL-R2@1.
 
@@ -27,8 +27,9 @@ leap years, invalid config, unsupported seasonal grains and optional extras abse
 
 ## Requirements
 - FR-001: Block every socket constructor during fresh-process command tests; compare all
-  bytes. Runtime imports must not introduce HTTP/telemetry clients. All eight commands
-  are covered once liftoff's dependency PR is available. No connector/network feature.
+  bytes. No data may leave the machine. Fathom code imports no network clients;
+  unused imports inside existing optional serializers may remain. All eight commands
+  are covered on the authorized liftoff stack. No connector/network feature.
 - FR-002: panel command writes series-signals.csv, panel.json, panel.html and panel.md;
   artifact is the authority. Strict declared local CSV roles, ISO dates, nonnegative
   finite values; at most one source row per series/calendar period. No inferred roles.
@@ -78,5 +79,13 @@ The calendar is declared and dates are timezone-free. No imputation. Windows out
 available data remain absent, not zero. Native period rows are unique; reject duplicates.
 Optional regime estimation is omitted explicitly. See contracts and research for
 provisional algorithm/cap readings. No forecasting, data-specific interpretation or
-accepted thresholds. Liftoff is absent from main498a50b; dependency routing pending.
+accepted thresholds. The user authorized stacking on PR23; its reconciled97648e0 includes main498a50b.
 
+### Offline clarification (2026-11-05)
+Loopback may be used only if a future authorized feature needs it, with safeguards
+against web access and binding only to 127.0.0.1/::1/localhost, never 0.0.0.0. This slice
+adds no server or network feature and needs no loopback: the test denies all socket
+creation and proves no attempt, which is stronger than blocking non-loopback alone.
+Unused network-client imports inside existing optional serializers are allowed;
+Fathom's own code imports none. Every command, including exports, runs under the
+same socket/Request audit and produces identical bytes. HTML requests no resources.

@@ -20,3 +20,12 @@ targets/<index>/guide-profile.json,report.html,report.md for chosen metrics.
 render accepts panel artifacts. export panel Office formats is not added; use CSV/HTML.
 Errors produce no partial output directory. Resource caps disclosed, fail rather than omit.
 
+
+Cross-series aggregation requires aligned train/eval bounds per group/model/window/horizon.
+Week/month views are generated from daily input only; coarser totals cannot be allocated
+across calendar boundaries. Sum views preserve observed source quantity; mean views
+change value/exposure units together, with source totals retained separately. View
+comparisons are descriptive; a human must reassess boundary meaning after a mean.
+Reserved key names model/window/horizon or names colliding with flattened signal fields
+are rejected rather than silently overwritten. Series key columns are retained in CSV.
+Volume distance is signed: normalized observed volume minus the declared boundary.
