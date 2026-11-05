@@ -29,3 +29,8 @@ comparisons are descriptive; a human must reassess boundary meaning after a mean
 Reserved key names model/window/horizon or names colliding with flattened signal fields
 are rejected rather than silently overwritten. Series key columns are retained in CSV.
 Volume distance is signed: normalized observed volume minus the declared boundary.
+
+Metrics join native signal rows only. Generated views do not inherit or aggregate
+metric quantities: their observation/target units changed, and no metric definition
+is inferred. A separate metrics declaration for a separately produced view is outside
+this slice. The view report states that omission explicitly.

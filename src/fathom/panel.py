@@ -156,7 +156,7 @@ def regularize(ps, start, end, grain):
 def volume(ps, start, end):
     # Volume is the observed subtotal, not a comparable-exposure estimator. Partial
     # buckets retain known quantity even though they cannot enter signal fitting.
-    values = [p['value'] for p in ps if p.get('value') is not None and (p['state'] == 'observed' or p.get('known_value_members', 0))]
+    values = [p['value'] for p in ps if p.get('value') is not None and (p['state'] in {'observed', 'closed'} or p.get('known_value_members', 0))]
     return {'value': math.fsum(values) if values else None, 'usable_periods': sum(usable(p) for p in ps), 'known_value_periods': len(values), 'calendar_periods': len(ps),
             'calendar_days': (iso(end) - iso(start)).days + 1 if start else 0,
             'status': 'computed' if values else 'undefined',
@@ -196,15 +196,19 @@ def aggregate_periods(collection, grain, rule):
         states = dict(Counter(p['state'] for p in members));partial = len(members) != expected
         measured = [p for p in members if usable(p)]
         known_values = [p for p in members if p['state'] == 'observed' and p.get('value') is not None]
+        if not known_values:
+            known_values = [p for p in members if p['state'] == 'closed' and p.get('value') == 0]
         vals = [p['value'] for p in known_values]
         exp = [p['exposure'] for p in members if p['state'] != 'absent' and p.get('exposure') is not None]
         known = math.fsum(vals);total_exp = math.fsum(exp)
         unknown = any(not usable(p) and p['state'] != 'closed' for p in members)
-        state = 'closed' if states.get('closed') == len(members) else 'missing' if partial or unknown else 'observed'
+        state = ('absent' if states.get('absent') == len(members) else 'closed' if states.get('closed') == len(members)
+                 else 'missing' if partial or unknown else 'observed')
         n = len(known_values) if rule == 'mean' else 1
         out.append({'period': d.isoformat(), 'state': state, 'value': known / n if n and vals else None,
                     'exposure': total_exp / n if n and exp else 0 if state == 'closed' else None,
-                    'partial': partial, 'known_subtotal': known, 'known_value_members': len(known_values), 'source_exposure_total': total_exp,
+                    'partial': partial, 'covered_start': min(p['period'] for p in members), 'covered_end': max(p['period'] for p in members),
+                    'known_subtotal': known, 'known_value_members': len(known_values), 'source_exposure_total': total_exp,
                     'constituent_states': states, 'constituents': len(members), 'expected_constituents': expected})
     return out
 
@@ -446,6 +450,8 @@ def validate_panel(d):
             for p in ps[kind]:
                 if not isinstance(p, dict) or p.get('state') not in {'observed', 'missing', 'closed', 'absent'} or not isinstance(p.get('period'), str): raise ValueError('invalid panel period')
                 iso(p['period'])
+                for key in ('covered_start', 'covered_end'):
+                    if key in p: iso(p[key])
                 if any(p.get(k) is not None and (not numeric(p[k]) or p[k] < 0) for k in ('value', 'exposure')) or type(p.get('partial', False)) is not bool: raise ValueError('invalid panel period value/exposure')
         state_counts = {s: sum(p['state'] == s for p in ps['training']) for s in ('observed', 'missing', 'closed', 'absent')}
         if dur['calendar_span'] != len(ps['training']) or dur['usable_observations'] != sum(usable(p) for p in ps['training']) or dur['states'] != state_counts: raise ValueError('panel duration/calendar mismatch')

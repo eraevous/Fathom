@@ -4,12 +4,12 @@ Final branch is stacked on PR #23 at 97648e0, which includes main 498a50b/Telosm
 Kate reviews first; Zach merges. No requirement accepted.
 
 ## Tests and offline contract
-**373 passed** with existing extras; **362 passed/11 optional skips** with core.
-40 panel cases and15offline cases; affected panel/offline family55passed after the
+**376 passed** with existing extras; **365 passed/11 optional skips** with core.
+43 panel cases and 15 offline cases; affected panel/offline family 58 passed after the
 final presentation adjustment. Initial panel tests failed at import before the
 module existed; malformed/alignment/evaluation-side/mean-floor/saved-render and
 swallowed-network regressions separately failed before their corrections. Do not
-read this as all 40 individually demonstrated red.
+read this as all 43 individually demonstrated red.
 
 Every command: profile,render,compare,validate,export,configure,liftoff,panel.
 Fresh-process audit is installed before Fathom imports and rejects every socket
@@ -91,3 +91,13 @@ technical notes; full reasons and formulas remain in panel.json and the report.
 Target-analysis output equals running the existing profiler on the exported joined
 CSV with the same target/key declarations. No dictionary or rank semantics are
 silently changed by in-memory blank strings.
+
+Final boundary/state regression: training dates inside padded coarse buckets count
+only actual covered calendar cycles. All-absent, all-missing and all-closed buckets
+remain distinct; explicit closure zeros contribute known quantity, never observed-zero
+signal counts. These controls pass in both full/core suites.
+
+Metric joins are native-only. Generated views retain source declarations as provenance,
+but do not aggregate metric quantities or invent metric definitions. Their reports
+explicitly state the omitted join; the native joined CSV/target reports retain exact
+composite-key coverage.

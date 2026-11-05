@@ -108,6 +108,7 @@ def test_windows_and_aggregate_boundaries_do_not_leak(tmp_path):
         for dimension in ('duration', 'amplitude', 'frequency', 'wavelength', 'sbc', 'noise'):
             assert x['rows'][0][dimension] == y['rows'][0][dimension], dimension
     assert any(p['partial'] for p in a.document['views']['week']['periods'][0]['training'])
+    assert a.document['views']['week']['rows'][0]['wavelength']['week']['calendar_cycles_covered'] == 2
     assert a.document['rows'][0]['volumes']['training']['value'] == a.document['views']['week']['rows'][0]['volumes']['training']['value']
 
 
@@ -118,6 +119,7 @@ def test_thresholds_and_composite_metric_join_with_unmatched_keys(tmp_path):
               [{'id': '001', 'model': 'm', 'window': 'w', 'horizon': '1', 'score_a': 1, 'score_b': 2},
                {'id': '999', 'model': 'm', 'window': 'w', 'horizon': '1', 'score_a': 3, 'score_b': 4}])
     d = build(tmp_path, [0] * 10 + [10] * 10, windows='w.csv',
+              aggregate=['week'],
               thresholds=[{'name': 'synthetic', 'value': 5, 'per_days': 10}],
               metrics={'path': 'metrics.csv', 'columns': ['score_a', 'score_b'], 'targets': ['score_a']}).document
     t = d['rows'][0]['thresholds'][0]
@@ -125,6 +127,8 @@ def test_thresholds_and_composite_metric_join_with_unmatched_keys(tmp_path):
     assert d['metric_join']['unmatched_metrics_count'] == 1
     assert d['joined'][0]['id'] == '001' and d['joined'][0]['horizon'] == '1'
     assert d['target_profiles'][0]['artifact']['purpose']['target'] == 'score_a'
+    from fathom.panel_view import html
+    assert d['views']['week']['metric_join'] is None and 'native signals only' in html(ProfilingResult(d['views']['week']))
     assert 'amplitude.mean.value' in d['joined'][0] and 'amplitude.mean.status' in d['joined'][0]
     assert 'amplitude.mean.reason' not in d['joined'][0]  # technical context belongs in the panel artifact
     from fathom.profiler import profile
@@ -278,6 +282,21 @@ def test_view_comparison_includes_evaluation_side_changes(tmp_path):
     d = build_panel(CSVConnector(path).load(), cfg, tmp_path).document
     changed = next(r for r in d['comparison'] if r['source_series'] == ['a'])
     assert changed['source_evaluation_sides'] == ['below'] and changed['view_evaluation_sides'] == ['above']
+
+
+@pytest.mark.parametrize('state', ['absent', 'missing', 'closed'])
+def test_uniform_unavailable_buckets_preserve_state_and_known_quantity(tmp_path, state):
+    source = tmp_path / 's.csv'
+    rows = [{'id': 'a', 'day': (date(2020, 1, 6) + timedelta(days=i)).isoformat(), 'value': 0 if state == 'closed' else '', 'state': state, 'exposure': 0 if state == 'closed' else 1} for i in range(14)]
+    if state == 'absent': rows = [{'id': 'a', 'day': '2019-12-01', 'value': 1, 'state': 'observed', 'exposure': 1}]
+    write_csv(source, ['id', 'day', 'value', 'state', 'exposure'], rows)
+    write_csv(tmp_path / 'w.csv', ['id', 'model', 'window', 'train_start', 'train_end', 'eval_start', 'eval_end'], [{'id': 'a', 'model': 'm', 'window': 'w', 'train_start': '2020-01-06', 'train_end': '2020-01-19', 'eval_start': '', 'eval_end': ''}])
+    cfg = {'series': ['id'], 'time': 'day', 'value': 'value', 'period': 'day', 'exposure': 'exposure', 'observation_state': 'state', 'windows': 'w.csv', 'aggregate': ['week']}
+    d = build_panel(CSVConnector(source).load(), cfg, tmp_path).document
+    raw, view = d['rows'][0], d['views']['week']['rows'][0]
+    assert raw['duration']['states'][state] == 14 and view['duration']['states'][state] == 2
+    assert view['frequency']['observed_zero_periods'] == 0
+    assert raw['volumes']['training']['value'] == view['volumes']['training']['value'] == (0 if state == 'closed' else None)
 
 
 @pytest.mark.parametrize('field', ['schema', 'count', 'estimate', 'noise', 'exposure', 'partial', 'disagreement', 'view_path'])

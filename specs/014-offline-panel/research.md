@@ -38,3 +38,8 @@ Final review removed repeated technical estimator notes from analytical CSV colu
 values/statuses remain, with full context in the artifact. The target-analysis table
 is the exported joined table, with identical CSV blank handling and verified target
 payload equality. This avoids treating empty explanatory notes as data-quality gaps.
+
+Coarse calendar coverage uses actual source-covered dates, never padded bucket
+edges. Entirely absent/missing/closed buckets preserve their distinct states; explicit
+closed-zero quantity is known volume but remains ineligible for signals. Without an
+exposure column, one unit per native period is an assumption, not a domain fact.

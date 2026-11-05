@@ -86,6 +86,8 @@ def html(result):
         for kind in ('unmatched_signals', 'unmatched_metrics'):
             keys = join['key_columns']
             out.append('<details><summary>' + escape(kind.replace('_', ' ')) + '</summary>' + table(keys, [r + [None] * (len(keys) - len(r)) for r in join[kind]]) + '</details>')
+    elif d['configuration'].get('metrics'):
+        out.append('<p>Metrics are joined to native signals only. No metric join is computed in this generated view, and no metric aggregation rule is inferred.</p>')
     else: out.append('<p>No metrics declared.</p>')
     if not d['configuration'].get('thresholds'): out.append('<p>Volume bands not computed: no volume boundaries declared.</p>')
     if d['disagreement']:

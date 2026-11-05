@@ -69,7 +69,8 @@ def seasonal(periods, grain, cycle):
     groups = defaultdict(list)
     covered = 0
     if periods:
-        first = date.fromisoformat(periods[0]['period']);last = advance(date.fromisoformat(periods[-1]['period']), grain) - timedelta(days=1)
+        first = date.fromisoformat(periods[0].get('covered_start', periods[0]['period']))
+        last = date.fromisoformat(periods[-1]['covered_end']) if 'covered_end' in periods[-1] else advance(date.fromisoformat(periods[-1]['period']), grain) - timedelta(days=1)
         start = floor(first, cycle) if cycle != 'year' else first.replace(month=1, day=1)
         while start <= last:
             end = advance(start, cycle) if cycle != 'year' else date(start.year + 1, 1, 1)

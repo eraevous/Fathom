@@ -202,7 +202,7 @@
   "target-top-dark-1280.png": {
     "document_width": 1280,
     "external_requests": [],
-    "height": 48865,
+    "height": 48680,
     "mode": "dark",
     "panel": "#162427",
     "topic": "top",
@@ -212,7 +212,7 @@
   "target-top-dark-390.png": {
     "document_width": 390,
     "external_requests": [],
-    "height": 71876,
+    "height": 71366,
     "mode": "dark",
     "panel": "#162427",
     "topic": "top",
@@ -222,7 +222,7 @@
   "target-top-light-1280.png": {
     "document_width": 1280,
     "external_requests": [],
-    "height": 48865,
+    "height": 48680,
     "mode": "light",
     "panel": "#ffffff",
     "topic": "top",
@@ -232,7 +232,7 @@
   "target-top-light-390.png": {
     "document_width": 390,
     "external_requests": [],
-    "height": 71876,
+    "height": 71366,
     "mode": "light",
     "panel": "#ffffff",
     "topic": "top",
