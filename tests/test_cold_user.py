@@ -103,12 +103,12 @@ def test_declared_row_unit_is_not_called_unknown(tmp_path, capsys):
 def test_profile_and_validate_echo_resolved_settings(tmp_path, capsys):
     cfg = config(tmp_path, "question: What drives tip?\ntarget: tip\nrow_unit: one trip\n")
     code, out, err = run(["profile", table(tmp_path), "--config", cfg, "--out", tmp_path / "out"], capsys)
-    assert code == 0 and err == ""
+    assert code == 0
     lines = out.splitlines()
-    assert len(lines) == 2 and "guide-profile.json" in lines[0] and "report.html" in lines[0]
-    assert lines[1] == "guide: question: What drives tip?; target: tip; excluded from target: pickup; row unit: one trip"
-    _, quiet, _ = run(["profile", table(tmp_path), "--out", tmp_path / "none"], capsys)
-    assert quiet.splitlines()[1] == "guide: question: none declared; target: not declared; row unit: unknown (not declared)"
+    assert len(lines) == 1 and "guide-profile.json" in lines[0] and "report.html" in lines[0]
+    assert err.strip() == "guide: question: What drives tip?; target: tip; excluded from target by config: none; unsupported type: pickup (unsupported type pair: temporal × numeric); budget: none; other eligibility: none; row unit: one trip"
+    _, quiet, quiet_err = run(["profile", table(tmp_path), "--out", tmp_path / "none"], capsys)
+    assert quiet_err.strip() == "guide: question: none declared; target: not declared; row unit: unknown (not declared)"
     code2, out2, _ = run(["profile", table(tmp_path), "--config", cfg, "--out", tmp_path / "out"], capsys)
     assert out2 == out  # deterministic, no timestamp
     code, out, _ = run(["validate", table(tmp_path), "--config", cfg], capsys)
