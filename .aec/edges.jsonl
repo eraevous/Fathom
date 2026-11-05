@@ -1,4 +1,4 @@
-{"aec_edges": 1, "files": 38, "files_sha": "42f0806fec526473", "modules": {"specs.005-plots-and-layout.review.capture": "specs/005-plots-and-layout/review/capture.py", "specs.006-report-polish.review.capture": "specs/006-report-polish/review/capture.py", "specs.007-target-analysis.review-fixes-gallery.capture": "specs/007-target-analysis/review-fixes-gallery/capture.py", "specs.007-target-analysis.review.capture": "specs/007-target-analysis/review/capture.py", "src.fathom": "src/fathom/__init__.py", "src.fathom.__main__": "src/fathom/__main__.py", "src.fathom.charts": "src/fathom/charts.py", "src.fathom.cli": "src/fathom/cli.py", "src.fathom.config": "src/fathom/config.py", "src.fathom.connectors": "src/fathom/connectors.py", "src.fathom.exports": "src/fathom/exports.py", "src.fathom.models": "src/fathom/models.py", "src.fathom.parsing": "src/fathom/parsing.py", "src.fathom.presentation": "src/fathom/presentation.py", "src.fathom.profiler": "src/fathom/profiler.py", "src.fathom.quality": "src/fathom/quality.py", "src.fathom.renderers": "src/fathom/renderers.py", "src.fathom.rows": "src/fathom/rows.py", "src.fathom.special": "src/fathom/special.py", "src.fathom.target": "src/fathom/target.py", "src.fathom.target_marks": "src/fathom/target_marks.py", "src.fathom.univariate": "src/fathom/univariate.py", "tests.conftest": "tests/conftest.py", "tests.test_cli": "tests/test_cli.py", "tests.test_cold_user": "tests/test_cold_user.py", "tests.test_exports": "tests/test_exports.py", "tests.test_outputs": "tests/test_outputs.py", "tests.test_pairs": "tests/test_pairs.py", "tests.test_plots_layout": "tests/test_plots_layout.py", "tests.test_polish": "tests/test_polish.py", "tests.test_quality": "tests/test_quality.py", "tests.test_readability": "tests/test_readability.py", "tests.test_review_fixes": "tests/test_review_fixes.py", "tests.test_row_level": "tests/test_row_level.py", "tests.test_special_types": "tests/test_special_types.py", "tests.test_target": "tests/test_target.py", "tests.test_understanding": "tests/test_understanding.py", "tests.test_univariate": "tests/test_univariate.py"}, "root": ".", "skipped": [], "source_roots": ["src"], "tool_version": "0.3.0"}
+{"aec_edges": 1, "files": 41, "files_sha": "91d1c983000fadad", "modules": {"specs.005-plots-and-layout.review.capture": "specs/005-plots-and-layout/review/capture.py", "specs.006-report-polish.review.capture": "specs/006-report-polish/review/capture.py", "specs.007-target-analysis.review-fixes-gallery.capture": "specs/007-target-analysis/review-fixes-gallery/capture.py", "specs.007-target-analysis.review.capture": "specs/007-target-analysis/review/capture.py", "src.fathom": "src/fathom/__init__.py", "src.fathom.__main__": "src/fathom/__main__.py", "src.fathom.charts": "src/fathom/charts.py", "src.fathom.cli": "src/fathom/cli.py", "src.fathom.config": "src/fathom/config.py", "src.fathom.connectors": "src/fathom/connectors.py", "src.fathom.exports": "src/fathom/exports.py", "src.fathom.models": "src/fathom/models.py", "src.fathom.parsing": "src/fathom/parsing.py", "src.fathom.presentation": "src/fathom/presentation.py", "src.fathom.profiler": "src/fathom/profiler.py", "src.fathom.quality": "src/fathom/quality.py", "src.fathom.renderers": "src/fathom/renderers.py", "src.fathom.rows": "src/fathom/rows.py", "src.fathom.special": "src/fathom/special.py", "src.fathom.target": "src/fathom/target.py", "src.fathom.target_marks": "src/fathom/target_marks.py", "src.fathom.temporal_view": "src/fathom/temporal_view.py", "src.fathom.timeseries": "src/fathom/timeseries.py", "src.fathom.univariate": "src/fathom/univariate.py", "tests.conftest": "tests/conftest.py", "tests.test_cli": "tests/test_cli.py", "tests.test_cold_user": "tests/test_cold_user.py", "tests.test_exports": "tests/test_exports.py", "tests.test_outputs": "tests/test_outputs.py", "tests.test_pairs": "tests/test_pairs.py", "tests.test_plots_layout": "tests/test_plots_layout.py", "tests.test_polish": "tests/test_polish.py", "tests.test_quality": "tests/test_quality.py", "tests.test_readability": "tests/test_readability.py", "tests.test_review_fixes": "tests/test_review_fixes.py", "tests.test_row_level": "tests/test_row_level.py", "tests.test_special_types": "tests/test_special_types.py", "tests.test_target": "tests/test_target.py", "tests.test_time_series": "tests/test_time_series.py", "tests.test_understanding": "tests/test_understanding.py", "tests.test_univariate": "tests/test_univariate.py"}, "root": ".", "skipped": [], "source_roots": ["src"], "tool_version": "0.3.0"}
 {"body_sha": "0d438038b2e0", "dst": "specs.005-plots-and-layout.review.capture.capture", "file": "specs/005-plots-and-layout/review/capture.py", "kind": "defines", "line": 18, "resolved": true, "src": "specs.005-plots-and-layout.review.capture"}
 {"body_sha": "61e21f359c5c", "dst": "specs.006-report-polish.review.capture.capture", "file": "specs/006-report-polish/review/capture.py", "kind": "defines", "line": 16, "resolved": true, "src": "specs.006-report-polish.review.capture"}
 {"body_sha": "086206605570", "dst": "specs.007-target-analysis.review-fixes-gallery.capture.main", "file": "specs/007-target-analysis/review-fixes-gallery/capture.py", "kind": "defines", "line": 11, "resolved": true, "src": "specs.007-target-analysis.review-fixes-gallery.capture"}
@@ -12,12 +12,12 @@
 {"body_sha": "f74e6d0ce692", "dst": "src.fathom.charts.svg_chart.<locals>.text", "file": "src/fathom/charts.py", "kind": "defines", "line": 40, "resolved": true, "src": "src.fathom.charts.svg_chart"}
 {"body_sha": "1b385500ad7a", "dst": "src.fathom.cli.main", "file": "src/fathom/cli.py", "kind": "defines", "line": 29, "resolved": true, "src": "src.fathom.cli"}
 {"body_sha": "50840c94ffb9", "dst": "src.fathom.cli.summary_line", "file": "src/fathom/cli.py", "kind": "defines", "line": 19, "resolved": true, "src": "src.fathom.cli"}
-{"body_sha": "98b75f6e1d51", "dst": "src.fathom.config.load_config", "file": "src/fathom/config.py", "kind": "defines", "line": 118, "resolved": true, "src": "src.fathom.config"}
+{"body_sha": "98b75f6e1d51", "dst": "src.fathom.config.load_config", "file": "src/fathom/config.py", "kind": "defines", "line": 142, "resolved": true, "src": "src.fathom.config"}
 {"body_sha": "048fa5c90b6d", "dst": "src.fathom.config.mapping", "file": "src/fathom/config.py", "kind": "defines", "line": 19, "resolved": true, "src": "src.fathom.config"}
 {"body_sha": "175fde084ef2", "dst": "src.fathom.config.text", "file": "src/fathom/config.py", "kind": "defines", "line": 12, "resolved": true, "src": "src.fathom.config"}
-{"body_sha": "dd4eb31fb661", "dst": "src.fathom.config.validate_config", "file": "src/fathom/config.py", "kind": "defines", "line": 25, "resolved": true, "src": "src.fathom.config"}
-{"body_sha": "e47ac030bce8", "dst": "src.fathom.config.load_config.<locals>.ConfigLoader", "file": "src/fathom/config.py", "kind": "defines", "line": 123, "resolved": true, "src": "src.fathom.config.load_config"}
-{"body_sha": "55fd0b64b4f9", "dst": "src.fathom.config.load_config.<locals>.unique_mapping", "file": "src/fathom/config.py", "kind": "defines", "line": 129, "resolved": true, "src": "src.fathom.config.load_config"}
+{"body_sha": "d9b87d3e20d5", "dst": "src.fathom.config.validate_config", "file": "src/fathom/config.py", "kind": "defines", "line": 25, "resolved": true, "src": "src.fathom.config"}
+{"body_sha": "e47ac030bce8", "dst": "src.fathom.config.load_config.<locals>.ConfigLoader", "file": "src/fathom/config.py", "kind": "defines", "line": 147, "resolved": true, "src": "src.fathom.config.load_config"}
+{"body_sha": "55fd0b64b4f9", "dst": "src.fathom.config.load_config.<locals>.unique_mapping", "file": "src/fathom/config.py", "kind": "defines", "line": 153, "resolved": true, "src": "src.fathom.config.load_config"}
 {"body_sha": "0430b802bd67", "dst": "src.fathom.connectors.CSVConnector", "file": "src/fathom/connectors.py", "kind": "defines", "line": 13, "resolved": true, "src": "src.fathom.connectors"}
 {"body_sha": "f779b2448139", "dst": "src.fathom.connectors.CSVConnector.__init__", "file": "src/fathom/connectors.py", "kind": "defines", "line": 14, "resolved": true, "src": "src.fathom.connectors.CSVConnector"}
 {"body_sha": "7150a82e2c08", "dst": "src.fathom.connectors.CSVConnector.connect", "file": "src/fathom/connectors.py", "kind": "defines", "line": 18, "resolved": true, "src": "src.fathom.connectors.CSVConnector"}
@@ -79,17 +79,17 @@
 {"body_sha": "f3aab43512a3", "dst": "src.fathom.presentation.title", "file": "src/fathom/presentation.py", "kind": "defines", "line": 39, "resolved": true, "src": "src.fathom.presentation"}
 {"body_sha": "249c568cba8b", "dst": "src.fathom.presentation.top_n_reason", "file": "src/fathom/presentation.py", "kind": "defines", "line": 92, "resolved": true, "src": "src.fathom.presentation"}
 {"body_sha": "9a59b25eaba0", "dst": "src.fathom.presentation.markdown_table.<locals>.cell", "file": "src/fathom/presentation.py", "kind": "defines", "line": 121, "resolved": true, "src": "src.fathom.presentation.markdown_table"}
-{"body_sha": "ad5877317745", "dst": "src.fathom.profiler.compare", "file": "src/fathom/profiler.py", "kind": "defines", "line": 269, "resolved": true, "src": "src.fathom.profiler"}
-{"body_sha": "eabc828ab825", "dst": "src.fathom.profiler.infer", "file": "src/fathom/profiler.py", "kind": "defines", "line": 35, "resolved": true, "src": "src.fathom.profiler"}
-{"body_sha": "e750b693e91d", "dst": "src.fathom.profiler.iso_date", "file": "src/fathom/profiler.py", "kind": "defines", "line": 23, "resolved": true, "src": "src.fathom.profiler"}
-{"body_sha": "338894c08d44", "dst": "src.fathom.profiler.number", "file": "src/fathom/profiler.py", "kind": "defines", "line": 19, "resolved": true, "src": "src.fathom.profiler"}
-{"body_sha": "72854eb0de6a", "dst": "src.fathom.profiler.profile", "file": "src/fathom/profiler.py", "kind": "defines", "line": 88, "resolved": true, "src": "src.fathom.profiler"}
-{"body_sha": "46a20940cc79", "dst": "src.fathom.profiler.rank_pairs", "file": "src/fathom/profiler.py", "kind": "defines", "line": 210, "resolved": true, "src": "src.fathom.profiler"}
-{"body_sha": "eb7710f14d54", "dst": "src.fathom.profiler.rounded", "file": "src/fathom/profiler.py", "kind": "defines", "line": 31, "resolved": true, "src": "src.fathom.profiler"}
-{"body_sha": "d8bde23b0ce0", "dst": "src.fathom.profiler.select_pairs", "file": "src/fathom/profiler.py", "kind": "defines", "line": 197, "resolved": true, "src": "src.fathom.profiler"}
-{"body_sha": "3995a4623318", "dst": "src.fathom.profiler.summarize", "file": "src/fathom/profiler.py", "kind": "defines", "line": 65, "resolved": true, "src": "src.fathom.profiler"}
-{"body_sha": "ae0f3da0b1d4", "dst": "src.fathom.profiler.profile.<locals>.diagnostic", "file": "src/fathom/profiler.py", "kind": "defines", "line": 105, "resolved": true, "src": "src.fathom.profiler.profile"}
-{"body_sha": "60d534301204", "dst": "src.fathom.profiler.profile.<locals>.finding", "file": "src/fathom/profiler.py", "kind": "defines", "line": 101, "resolved": true, "src": "src.fathom.profiler.profile"}
+{"body_sha": "ad5877317745", "dst": "src.fathom.profiler.compare", "file": "src/fathom/profiler.py", "kind": "defines", "line": 271, "resolved": true, "src": "src.fathom.profiler"}
+{"body_sha": "eabc828ab825", "dst": "src.fathom.profiler.infer", "file": "src/fathom/profiler.py", "kind": "defines", "line": 36, "resolved": true, "src": "src.fathom.profiler"}
+{"body_sha": "e750b693e91d", "dst": "src.fathom.profiler.iso_date", "file": "src/fathom/profiler.py", "kind": "defines", "line": 24, "resolved": true, "src": "src.fathom.profiler"}
+{"body_sha": "338894c08d44", "dst": "src.fathom.profiler.number", "file": "src/fathom/profiler.py", "kind": "defines", "line": 20, "resolved": true, "src": "src.fathom.profiler"}
+{"body_sha": "cde2ce820734", "dst": "src.fathom.profiler.profile", "file": "src/fathom/profiler.py", "kind": "defines", "line": 89, "resolved": true, "src": "src.fathom.profiler"}
+{"body_sha": "46a20940cc79", "dst": "src.fathom.profiler.rank_pairs", "file": "src/fathom/profiler.py", "kind": "defines", "line": 212, "resolved": true, "src": "src.fathom.profiler"}
+{"body_sha": "eb7710f14d54", "dst": "src.fathom.profiler.rounded", "file": "src/fathom/profiler.py", "kind": "defines", "line": 32, "resolved": true, "src": "src.fathom.profiler"}
+{"body_sha": "d8bde23b0ce0", "dst": "src.fathom.profiler.select_pairs", "file": "src/fathom/profiler.py", "kind": "defines", "line": 199, "resolved": true, "src": "src.fathom.profiler"}
+{"body_sha": "3995a4623318", "dst": "src.fathom.profiler.summarize", "file": "src/fathom/profiler.py", "kind": "defines", "line": 66, "resolved": true, "src": "src.fathom.profiler"}
+{"body_sha": "ae0f3da0b1d4", "dst": "src.fathom.profiler.profile.<locals>.diagnostic", "file": "src/fathom/profiler.py", "kind": "defines", "line": 106, "resolved": true, "src": "src.fathom.profiler.profile"}
+{"body_sha": "60d534301204", "dst": "src.fathom.profiler.profile.<locals>.finding", "file": "src/fathom/profiler.py", "kind": "defines", "line": 102, "resolved": true, "src": "src.fathom.profiler.profile"}
 {"body_sha": "375a8a3d1e47", "dst": "src.fathom.quality.calendar_date", "file": "src/fathom/quality.py", "kind": "defines", "line": 15, "resolved": true, "src": "src.fathom.quality"}
 {"body_sha": "ce2f28ace7dd", "dst": "src.fathom.quality.copy_evidence", "file": "src/fathom/quality.py", "kind": "defines", "line": 27, "resolved": true, "src": "src.fathom.quality"}
 {"body_sha": "0dbe1038ca52", "dst": "src.fathom.quality.finite", "file": "src/fathom/quality.py", "kind": "defines", "line": 10, "resolved": true, "src": "src.fathom.quality"}
@@ -97,30 +97,30 @@
 {"body_sha": "6f350ef87fd5", "dst": "src.fathom.quality.share", "file": "src/fathom/quality.py", "kind": "defines", "line": 23, "resolved": true, "src": "src.fathom.quality"}
 {"body_sha": "6e1bafe4499d", "dst": "src.fathom.quality.quality_profile.<locals>.diagnostic", "file": "src/fathom/quality.py", "kind": "defines", "line": 61, "resolved": true, "src": "src.fathom.quality.quality_profile"}
 {"body_sha": "894e891ec890", "dst": "src.fathom.quality.quality_profile.<locals>.observation", "file": "src/fathom/quality.py", "kind": "defines", "line": 56, "resolved": true, "src": "src.fathom.quality.quality_profile"}
-{"body_sha": "dcf5f78af772", "dst": "src.fathom.renderers.DATETIME_NOTE", "file": "src/fathom/renderers.py", "kind": "defines", "line": 109, "resolved": true, "src": "src.fathom.renderers"}
-{"body_sha": "e71ed64c139e", "dst": "src.fathom.renderers.KINDS", "file": "src/fathom/renderers.py", "kind": "defines", "line": 13, "resolved": true, "src": "src.fathom.renderers"}
-{"body_sha": "d3a46c5c79b7", "dst": "src.fathom.renderers.bars", "file": "src/fathom/renderers.py", "kind": "defines", "line": 162, "resolved": true, "src": "src.fathom.renderers"}
-{"body_sha": "9b3a41f4bbb5", "dst": "src.fathom.renderers.charts_markdown", "file": "src/fathom/renderers.py", "kind": "defines", "line": 158, "resolved": true, "src": "src.fathom.renderers"}
-{"body_sha": "ef94a852b439", "dst": "src.fathom.renderers.datetime_note", "file": "src/fathom/renderers.py", "kind": "defines", "line": 112, "resolved": true, "src": "src.fathom.renderers"}
-{"body_sha": "af0f2641a647", "dst": "src.fathom.renderers.dictionary_and_provenance_html", "file": "src/fathom/renderers.py", "kind": "defines", "line": 182, "resolved": true, "src": "src.fathom.renderers"}
-{"body_sha": "2816922bb492", "dst": "src.fathom.renderers.dictionary_and_provenance_markdown", "file": "src/fathom/renderers.py", "kind": "defines", "line": 266, "resolved": true, "src": "src.fathom.renderers"}
-{"body_sha": "38d6c5da287e", "dst": "src.fathom.renderers.finding_html", "file": "src/fathom/renderers.py", "kind": "defines", "line": 167, "resolved": true, "src": "src.fathom.renderers"}
-{"body_sha": "1ec92cecab09", "dst": "src.fathom.renderers.fraction", "file": "src/fathom/renderers.py", "kind": "defines", "line": 49, "resolved": true, "src": "src.fathom.renderers"}
-{"body_sha": "bb139afde1fe", "dst": "src.fathom.renderers.label", "file": "src/fathom/renderers.py", "kind": "defines", "line": 21, "resolved": true, "src": "src.fathom.renderers"}
-{"body_sha": "bccc41424c62", "dst": "src.fathom.renderers.markdown_finding", "file": "src/fathom/renderers.py", "kind": "defines", "line": 324, "resolved": true, "src": "src.fathom.renderers"}
-{"body_sha": "0ce1bccab727", "dst": "src.fathom.renderers.md_text", "file": "src/fathom/renderers.py", "kind": "defines", "line": 17, "resolved": true, "src": "src.fathom.renderers"}
-{"body_sha": "065828a36649", "dst": "src.fathom.renderers.readable_html", "file": "src/fathom/renderers.py", "kind": "defines", "line": 32, "resolved": true, "src": "src.fathom.renderers"}
-{"body_sha": "951c2f399138", "dst": "src.fathom.renderers.readable_md", "file": "src/fathom/renderers.py", "kind": "defines", "line": 41, "resolved": true, "src": "src.fathom.renderers"}
-{"body_sha": "1d7935a12fc3", "dst": "src.fathom.renderers.render_html", "file": "src/fathom/renderers.py", "kind": "defines", "line": 212, "resolved": true, "src": "src.fathom.renderers"}
-{"body_sha": "1833e259db1c", "dst": "src.fathom.renderers.render_markdown", "file": "src/fathom/renderers.py", "kind": "defines", "line": 278, "resolved": true, "src": "src.fathom.renderers"}
-{"body_sha": "6b92e1e3e954", "dst": "src.fathom.renderers.repetition_groups", "file": "src/fathom/renderers.py", "kind": "defines", "line": 84, "resolved": true, "src": "src.fathom.renderers"}
-{"body_sha": "81930e496574", "dst": "src.fathom.renderers.repetitive", "file": "src/fathom/renderers.py", "kind": "defines", "line": 79, "resolved": true, "src": "src.fathom.renderers"}
-{"body_sha": "b198e59f7f57", "dst": "src.fathom.renderers.sample_cell", "file": "src/fathom/renderers.py", "kind": "defines", "line": 127, "resolved": true, "src": "src.fathom.renderers"}
-{"body_sha": "cb735a6de890", "dst": "src.fathom.renderers.samples_html", "file": "src/fathom/renderers.py", "kind": "defines", "line": 134, "resolved": true, "src": "src.fathom.renderers"}
-{"body_sha": "cdcbb5a766dd", "dst": "src.fathom.renderers.samples_markdown", "file": "src/fathom/renderers.py", "kind": "defines", "line": 147, "resolved": true, "src": "src.fathom.renderers"}
-{"body_sha": "209a3e0e9fab", "dst": "src.fathom.renderers.scalar", "file": "src/fathom/renderers.py", "kind": "defines", "line": 25, "resolved": true, "src": "src.fathom.renderers"}
-{"body_sha": "f370abc30184", "dst": "src.fathom.renderers.summary_rows", "file": "src/fathom/renderers.py", "kind": "defines", "line": 55, "resolved": true, "src": "src.fathom.renderers"}
-{"body_sha": "01993f664517", "dst": "src.fathom.renderers.unknowns", "file": "src/fathom/renderers.py", "kind": "defines", "line": 118, "resolved": true, "src": "src.fathom.renderers"}
+{"body_sha": "dcf5f78af772", "dst": "src.fathom.renderers.DATETIME_NOTE", "file": "src/fathom/renderers.py", "kind": "defines", "line": 110, "resolved": true, "src": "src.fathom.renderers"}
+{"body_sha": "e71ed64c139e", "dst": "src.fathom.renderers.KINDS", "file": "src/fathom/renderers.py", "kind": "defines", "line": 14, "resolved": true, "src": "src.fathom.renderers"}
+{"body_sha": "d3a46c5c79b7", "dst": "src.fathom.renderers.bars", "file": "src/fathom/renderers.py", "kind": "defines", "line": 163, "resolved": true, "src": "src.fathom.renderers"}
+{"body_sha": "9b3a41f4bbb5", "dst": "src.fathom.renderers.charts_markdown", "file": "src/fathom/renderers.py", "kind": "defines", "line": 159, "resolved": true, "src": "src.fathom.renderers"}
+{"body_sha": "ef94a852b439", "dst": "src.fathom.renderers.datetime_note", "file": "src/fathom/renderers.py", "kind": "defines", "line": 113, "resolved": true, "src": "src.fathom.renderers"}
+{"body_sha": "af0f2641a647", "dst": "src.fathom.renderers.dictionary_and_provenance_html", "file": "src/fathom/renderers.py", "kind": "defines", "line": 183, "resolved": true, "src": "src.fathom.renderers"}
+{"body_sha": "2816922bb492", "dst": "src.fathom.renderers.dictionary_and_provenance_markdown", "file": "src/fathom/renderers.py", "kind": "defines", "line": 268, "resolved": true, "src": "src.fathom.renderers"}
+{"body_sha": "38d6c5da287e", "dst": "src.fathom.renderers.finding_html", "file": "src/fathom/renderers.py", "kind": "defines", "line": 168, "resolved": true, "src": "src.fathom.renderers"}
+{"body_sha": "1ec92cecab09", "dst": "src.fathom.renderers.fraction", "file": "src/fathom/renderers.py", "kind": "defines", "line": 50, "resolved": true, "src": "src.fathom.renderers"}
+{"body_sha": "bb139afde1fe", "dst": "src.fathom.renderers.label", "file": "src/fathom/renderers.py", "kind": "defines", "line": 22, "resolved": true, "src": "src.fathom.renderers"}
+{"body_sha": "bccc41424c62", "dst": "src.fathom.renderers.markdown_finding", "file": "src/fathom/renderers.py", "kind": "defines", "line": 327, "resolved": true, "src": "src.fathom.renderers"}
+{"body_sha": "0ce1bccab727", "dst": "src.fathom.renderers.md_text", "file": "src/fathom/renderers.py", "kind": "defines", "line": 18, "resolved": true, "src": "src.fathom.renderers"}
+{"body_sha": "065828a36649", "dst": "src.fathom.renderers.readable_html", "file": "src/fathom/renderers.py", "kind": "defines", "line": 33, "resolved": true, "src": "src.fathom.renderers"}
+{"body_sha": "951c2f399138", "dst": "src.fathom.renderers.readable_md", "file": "src/fathom/renderers.py", "kind": "defines", "line": 42, "resolved": true, "src": "src.fathom.renderers"}
+{"body_sha": "d36aa228deee", "dst": "src.fathom.renderers.render_html", "file": "src/fathom/renderers.py", "kind": "defines", "line": 213, "resolved": true, "src": "src.fathom.renderers"}
+{"body_sha": "70dd4561346e", "dst": "src.fathom.renderers.render_markdown", "file": "src/fathom/renderers.py", "kind": "defines", "line": 280, "resolved": true, "src": "src.fathom.renderers"}
+{"body_sha": "6b92e1e3e954", "dst": "src.fathom.renderers.repetition_groups", "file": "src/fathom/renderers.py", "kind": "defines", "line": 85, "resolved": true, "src": "src.fathom.renderers"}
+{"body_sha": "81930e496574", "dst": "src.fathom.renderers.repetitive", "file": "src/fathom/renderers.py", "kind": "defines", "line": 80, "resolved": true, "src": "src.fathom.renderers"}
+{"body_sha": "b198e59f7f57", "dst": "src.fathom.renderers.sample_cell", "file": "src/fathom/renderers.py", "kind": "defines", "line": 128, "resolved": true, "src": "src.fathom.renderers"}
+{"body_sha": "cb735a6de890", "dst": "src.fathom.renderers.samples_html", "file": "src/fathom/renderers.py", "kind": "defines", "line": 135, "resolved": true, "src": "src.fathom.renderers"}
+{"body_sha": "cdcbb5a766dd", "dst": "src.fathom.renderers.samples_markdown", "file": "src/fathom/renderers.py", "kind": "defines", "line": 148, "resolved": true, "src": "src.fathom.renderers"}
+{"body_sha": "209a3e0e9fab", "dst": "src.fathom.renderers.scalar", "file": "src/fathom/renderers.py", "kind": "defines", "line": 26, "resolved": true, "src": "src.fathom.renderers"}
+{"body_sha": "f370abc30184", "dst": "src.fathom.renderers.summary_rows", "file": "src/fathom/renderers.py", "kind": "defines", "line": 56, "resolved": true, "src": "src.fathom.renderers"}
+{"body_sha": "01993f664517", "dst": "src.fathom.renderers.unknowns", "file": "src/fathom/renderers.py", "kind": "defines", "line": 119, "resolved": true, "src": "src.fathom.renderers"}
 {"body_sha": "83ab62ab8299", "dst": "src.fathom.rows.LIMIT", "file": "src/fathom/rows.py", "kind": "defines", "line": 9, "resolved": true, "src": "src.fathom.rows"}
 {"body_sha": "ac589dfe0a67", "dst": "src.fathom.rows.RULES", "file": "src/fathom/rows.py", "kind": "defines", "line": 10, "resolved": true, "src": "src.fathom.rows"}
 {"body_sha": "ad92fc38bc30", "dst": "src.fathom.rows.interval", "file": "src/fathom/rows.py", "kind": "defines", "line": 184, "resolved": true, "src": "src.fathom.rows"}
@@ -159,6 +159,51 @@
 {"body_sha": "bd6b04316dc6", "dst": "src.fathom.target_marks.plot_marks.<locals>.rect", "file": "src/fathom/target_marks.py", "kind": "defines", "line": 15, "resolved": true, "src": "src.fathom.target_marks.plot_marks"}
 {"body_sha": "79acbb740ad1", "dst": "src.fathom.target_marks.plot_marks.<locals>.text", "file": "src/fathom/target_marks.py", "kind": "defines", "line": 14, "resolved": true, "src": "src.fathom.target_marks.plot_marks"}
 {"body_sha": "df9bd08c8dc6", "dst": "src.fathom.target_marks.plot_marks.<locals>.axis.<locals>.pos", "file": "src/fathom/target_marks.py", "kind": "defines", "line": 19, "resolved": true, "src": "src.fathom.target_marks.plot_marks.<locals>.axis"}
+{"body_sha": "a044a22f3b96", "dst": "src.fathom.temporal_view.INTRO", "file": "src/fathom/temporal_view.py", "kind": "defines", "line": 7, "resolved": true, "src": "src.fathom.temporal_view"}
+{"body_sha": "d724d1027a03", "dst": "src.fathom.temporal_view.blocks", "file": "src/fathom/temporal_view.py", "kind": "defines", "line": 113, "resolved": true, "src": "src.fathom.temporal_view"}
+{"body_sha": "450b248e888b", "dst": "src.fathom.temporal_view.corr_text", "file": "src/fathom/temporal_view.py", "kind": "defines", "line": 37, "resolved": true, "src": "src.fathom.temporal_view"}
+{"body_sha": "46e967d1a120", "dst": "src.fathom.temporal_view.lag_table", "file": "src/fathom/temporal_view.py", "kind": "defines", "line": 72, "resolved": true, "src": "src.fathom.temporal_view"}
+{"body_sha": "bf03ad5ee612", "dst": "src.fathom.temporal_view.name", "file": "src/fathom/temporal_view.py", "kind": "defines", "line": 14, "resolved": true, "src": "src.fathom.temporal_view"}
+{"body_sha": "583bb0df3c5a", "dst": "src.fathom.temporal_view.process_table", "file": "src/fathom/temporal_view.py", "kind": "defines", "line": 19, "resolved": true, "src": "src.fathom.temporal_view"}
+{"body_sha": "e46b1f86e9cd", "dst": "src.fathom.temporal_view.signal_table", "file": "src/fathom/temporal_view.py", "kind": "defines", "line": 67, "resolved": true, "src": "src.fathom.temporal_view"}
+{"body_sha": "189392c01b6b", "dst": "src.fathom.temporal_view.sparsity_table", "file": "src/fathom/temporal_view.py", "kind": "defines", "line": 44, "resolved": true, "src": "src.fathom.temporal_view"}
+{"body_sha": "3065f6632566", "dst": "src.fathom.temporal_view.stem", "file": "src/fathom/temporal_view.py", "kind": "defines", "line": 83, "resolved": true, "src": "src.fathom.temporal_view"}
+{"body_sha": "7ddeaee51b76", "dst": "src.fathom.temporal_view.temporal_html", "file": "src/fathom/temporal_view.py", "kind": "defines", "line": 126, "resolved": true, "src": "src.fathom.temporal_view"}
+{"body_sha": "be343e022784", "dst": "src.fathom.temporal_view.temporal_markdown", "file": "src/fathom/temporal_view.py", "kind": "defines", "line": 141, "resolved": true, "src": "src.fathom.temporal_view"}
+{"body_sha": "7486ffe65a4c", "dst": "src.fathom.temporal_view.sparsity_table.<locals>.cell", "file": "src/fathom/temporal_view.py", "kind": "defines", "line": 46, "resolved": true, "src": "src.fathom.temporal_view.sparsity_table"}
+{"body_sha": "61f1ce47b1ee", "dst": "src.fathom.temporal_view.stem.<locals>.px", "file": "src/fathom/temporal_view.py", "kind": "defines", "line": 89, "resolved": true, "src": "src.fathom.temporal_view.stem"}
+{"body_sha": "b970b88d85bb", "dst": "src.fathom.temporal_view.stem.<locals>.py", "file": "src/fathom/temporal_view.py", "kind": "defines", "line": 87, "resolved": true, "src": "src.fathom.temporal_view.stem"}
+{"body_sha": "ddab30fce388", "dst": "src.fathom.timeseries.CALENDAR", "file": "src/fathom/timeseries.py", "kind": "defines", "line": 15, "resolved": true, "src": "src.fathom.timeseries"}
+{"body_sha": "befa4aac4c34", "dst": "src.fathom.timeseries.DEFAULT_LAG", "file": "src/fathom/timeseries.py", "kind": "defines", "line": 16, "resolved": true, "src": "src.fathom.timeseries"}
+{"body_sha": "e700b2e209cb", "dst": "src.fathom.timeseries.GRAINS", "file": "src/fathom/timeseries.py", "kind": "defines", "line": 14, "resolved": true, "src": "src.fathom.timeseries"}
+{"body_sha": "ee4e247dab81", "dst": "src.fathom.timeseries.RULES", "file": "src/fathom/timeseries.py", "kind": "defines", "line": 18, "resolved": true, "src": "src.fathom.timeseries"}
+{"body_sha": "3212fe62a756", "dst": "src.fathom.timeseries.acf", "file": "src/fathom/timeseries.py", "kind": "defines", "line": 97, "resolved": true, "src": "src.fathom.timeseries"}
+{"body_sha": "8098dacfc710", "dst": "src.fathom.timeseries.advance", "file": "src/fathom/timeseries.py", "kind": "defines", "line": 57, "resolved": true, "src": "src.fathom.timeseries"}
+{"body_sha": "f8a72bf62a1e", "dst": "src.fathom.timeseries.analyse", "file": "src/fathom/timeseries.py", "kind": "defines", "line": 300, "resolved": true, "src": "src.fathom.timeseries"}
+{"body_sha": "ed11815acbf9", "dst": "src.fathom.timeseries.analyse_grain", "file": "src/fathom/timeseries.py", "kind": "defines", "line": 184, "resolved": true, "src": "src.fathom.timeseries"}
+{"body_sha": "434132063b1c", "dst": "src.fathom.timeseries.correlogram", "file": "src/fathom/timeseries.py", "kind": "defines", "line": 127, "resolved": true, "src": "src.fathom.timeseries"}
+{"body_sha": "84a66ccac375", "dst": "src.fathom.timeseries.describe", "file": "src/fathom/timeseries.py", "kind": "defines", "line": 411, "resolved": true, "src": "src.fathom.timeseries"}
+{"body_sha": "a072cd7e528b", "dst": "src.fathom.timeseries.floor", "file": "src/fathom/timeseries.py", "kind": "defines", "line": 49, "resolved": true, "src": "src.fathom.timeseries"}
+{"body_sha": "00dbab10e0d8", "dst": "src.fathom.timeseries.informative", "file": "src/fathom/timeseries.py", "kind": "defines", "line": 282, "resolved": true, "src": "src.fathom.timeseries"}
+{"body_sha": "f9bc23be0905", "dst": "src.fathom.timeseries.label", "file": "src/fathom/timeseries.py", "kind": "defines", "line": 64, "resolved": true, "src": "src.fathom.timeseries"}
+{"body_sha": "127f8a1c042c", "dst": "src.fathom.timeseries.pacf", "file": "src/fathom/timeseries.py", "kind": "defines", "line": 112, "resolved": true, "src": "src.fathom.timeseries"}
+{"body_sha": "5600b45d929e", "dst": "src.fathom.timeseries.parse_time", "file": "src/fathom/timeseries.py", "kind": "defines", "line": 293, "resolved": true, "src": "src.fathom.timeseries"}
+{"body_sha": "fb9182e0af26", "dst": "src.fathom.timeseries.r10", "file": "src/fathom/timeseries.py", "kind": "defines", "line": 76, "resolved": true, "src": "src.fathom.timeseries"}
+{"body_sha": "bfd4d1ca168f", "dst": "src.fathom.timeseries.runs", "file": "src/fathom/timeseries.py", "kind": "defines", "line": 87, "resolved": true, "src": "src.fathom.timeseries"}
+{"body_sha": "6b917e2dfce6", "dst": "src.fathom.timeseries.series_name", "file": "src/fathom/timeseries.py", "kind": "defines", "line": 406, "resolved": true, "src": "src.fathom.timeseries"}
+{"body_sha": "d57c952e1056", "dst": "src.fathom.timeseries.signals", "file": "src/fathom/timeseries.py", "kind": "defines", "line": 249, "resolved": true, "src": "src.fathom.timeseries"}
+{"body_sha": "0775fe70bc4a", "dst": "src.fathom.timeseries.span_periods", "file": "src/fathom/timeseries.py", "kind": "defines", "line": 69, "resolved": true, "src": "src.fathom.timeseries"}
+{"body_sha": "184add38e464", "dst": "src.fathom.timeseries.spectral", "file": "src/fathom/timeseries.py", "kind": "defines", "line": 169, "resolved": true, "src": "src.fathom.timeseries"}
+{"body_sha": "a51a6d22692b", "dst": "src.fathom.timeseries.summary", "file": "src/fathom/timeseries.py", "kind": "defines", "line": 80, "resolved": true, "src": "src.fathom.timeseries"}
+{"body_sha": "40bf03b9a3de", "dst": "src.fathom.timeseries.time_series", "file": "src/fathom/timeseries.py", "kind": "defines", "line": 346, "resolved": true, "src": "src.fathom.timeseries"}
+{"body_sha": "49ce4c83b837", "dst": "src.fathom.timeseries.undeclared", "file": "src/fathom/timeseries.py", "kind": "defines", "line": 383, "resolved": true, "src": "src.fathom.timeseries"}
+{"body_sha": "07201411d9c1", "dst": "src.fathom.timeseries.correlogram.<locals>.n_eff", "file": "src/fathom/timeseries.py", "kind": "defines", "line": 144, "resolved": true, "src": "src.fathom.timeseries.correlogram"}
+{"body_sha": "b0448fbd1aaf", "dst": "src.fathom.timeseries.correlogram.<locals>.up", "file": "src/fathom/timeseries.py", "kind": "defines", "line": 151, "resolved": true, "src": "src.fathom.timeseries.correlogram"}
+{"body_sha": "9097bdf60588", "dst": "src.fathom.timeseries.informative.<locals>.score", "file": "src/fathom/timeseries.py", "kind": "defines", "line": 284, "resolved": true, "src": "src.fathom.timeseries.informative"}
+{"body_sha": "21370fab4986", "dst": "src.fathom.timeseries.signals.<locals>.add", "file": "src/fathom/timeseries.py", "kind": "defines", "line": 252, "resolved": true, "src": "src.fathom.timeseries.signals"}
+{"body_sha": "8727be09b1bd", "dst": "src.fathom.timeseries.signals.<locals>.corr_verdict", "file": "src/fathom/timeseries.py", "kind": "defines", "line": 261, "resolved": true, "src": "src.fathom.timeseries.signals"}
+{"body_sha": "1c7ca43234f2", "dst": "src.fathom.timeseries.signals.<locals>.cycle", "file": "src/fathom/timeseries.py", "kind": "defines", "line": 269, "resolved": true, "src": "src.fathom.timeseries.signals"}
+{"body_sha": "70227d3c4d01", "dst": "src.fathom.timeseries.signals.<locals>.enough", "file": "src/fathom/timeseries.py", "kind": "defines", "line": 265, "resolved": true, "src": "src.fathom.timeseries.signals"}
 {"body_sha": "37a10fece1fc", "dst": "src.fathom.univariate.PERCENTILES", "file": "src/fathom/univariate.py", "kind": "defines", "line": 13, "resolved": true, "src": "src.fathom.univariate"}
 {"body_sha": "ce0054cc5244", "dst": "src.fathom.univariate.chart", "file": "src/fathom/univariate.py", "kind": "defines", "line": 32, "resolved": true, "src": "src.fathom.univariate"}
 {"body_sha": "c5e7c962585c", "dst": "src.fathom.univariate.common", "file": "src/fathom/univariate.py", "kind": "defines", "line": 28, "resolved": true, "src": "src.fathom.univariate"}
@@ -310,6 +355,36 @@
 {"body_sha": "d8429732df4e", "dst": "tests.test_target.test_scatter_sampling_log_coverage_and_native_log_ecdf", "file": "tests/test_target.py", "kind": "defines", "line": 116, "resolved": true, "src": "tests.test_target"}
 {"body_sha": "7ca8511979b9", "dst": "tests.test_target.test_skip_budget_and_legacy_config_errors", "file": "tests/test_target.py", "kind": "defines", "line": 58, "resolved": true, "src": "tests.test_target"}
 {"body_sha": "a9f00cba259a", "dst": "tests.test_target.test_small_group_counts_missing_and_contrasts", "file": "tests/test_target.py", "kind": "defines", "line": 35, "resolved": true, "src": "tests.test_target"}
+{"body_sha": "1cab242177cb", "dst": "tests.test_time_series.BASE", "file": "tests/test_time_series.py", "kind": "defines", "line": 14, "resolved": true, "src": "tests.test_time_series"}
+{"body_sha": "57275b2af660", "dst": "tests.test_time_series.daily", "file": "tests/test_time_series.py", "kind": "defines", "line": 17, "resolved": true, "src": "tests.test_time_series"}
+{"body_sha": "26effdde39d7", "dst": "tests.test_time_series.declare", "file": "tests/test_time_series.py", "kind": "defines", "line": 25, "resolved": true, "src": "tests.test_time_series"}
+{"body_sha": "730b2d4852c7", "dst": "tests.test_time_series.grain", "file": "tests/test_time_series.py", "kind": "defines", "line": 33, "resolved": true, "src": "tests.test_time_series"}
+{"body_sha": "6eff6163a3e0", "dst": "tests.test_time_series.hourly_events", "file": "tests/test_time_series.py", "kind": "defines", "line": 114, "resolved": true, "src": "tests.test_time_series"}
+{"body_sha": "ada6dbe7406d", "dst": "tests.test_time_series.series", "file": "tests/test_time_series.py", "kind": "defines", "line": 29, "resolved": true, "src": "tests.test_time_series"}
+{"body_sha": "1f30b4c1ec64", "dst": "tests.test_time_series.signal", "file": "tests/test_time_series.py", "kind": "defines", "line": 37, "resolved": true, "src": "tests.test_time_series"}
+{"body_sha": "33f26c109d0b", "dst": "tests.test_time_series.test_alternating_days_lag_one_is_not_estimable", "file": "tests/test_time_series.py", "kind": "defines", "line": 220, "resolved": true, "src": "tests.test_time_series"}
+{"body_sha": "af43d6d37ee6", "dst": "tests.test_time_series.test_by_split_limits_to_top_n_groups", "file": "tests/test_time_series.py", "kind": "defines", "line": 131, "resolved": true, "src": "tests.test_time_series"}
+{"body_sha": "c57485961453", "dst": "tests.test_time_series.test_constant_series_is_undefined_and_warned", "file": "tests/test_time_series.py", "kind": "defines", "line": 87, "resolved": true, "src": "tests.test_time_series"}
+{"body_sha": "9c2c0f988e88", "dst": "tests.test_time_series.test_decoys_stay_silent", "file": "tests/test_time_series.py", "kind": "defines", "line": 200, "resolved": true, "src": "tests.test_time_series"}
+{"body_sha": "eaa6088454b5", "dst": "tests.test_time_series.test_event_counts_from_timestamps_with_hour_and_day", "file": "tests/test_time_series.py", "kind": "defines", "line": 122, "resolved": true, "src": "tests.test_time_series"}
+{"body_sha": "5c5a5670f022", "dst": "tests.test_time_series.test_inter_event_interval_does_not_span_missing_periods", "file": "tests/test_time_series.py", "kind": "defines", "line": 187, "resolved": true, "src": "tests.test_time_series"}
+{"body_sha": "bc03d9d5765f", "dst": "tests.test_time_series.test_intermittent_demand_frequency_amplitude_duration", "file": "tests/test_time_series.py", "kind": "defines", "line": 75, "resolved": true, "src": "tests.test_time_series"}
+{"body_sha": "4344bd7ca2d4", "dst": "tests.test_time_series.test_invalid_declarations_are_refused", "file": "tests/test_time_series.py", "kind": "defines", "line": 215, "resolved": true, "src": "tests.test_time_series"}
+{"body_sha": "92ed95c418e3", "dst": "tests.test_time_series.test_missing_periods_are_distinguished_from_explicit_zeros", "file": "tests/test_time_series.py", "kind": "defines", "line": 102, "resolved": true, "src": "tests.test_time_series"}
+{"body_sha": "583cf29b144d", "dst": "tests.test_time_series.test_pacf_durbin_levinson_on_ar1_acf", "file": "tests/test_time_series.py", "kind": "defines", "line": 144, "resolved": true, "src": "tests.test_time_series"}
+{"body_sha": "65656ad96e03", "dst": "tests.test_time_series.test_pure_periodic_series_peaks_at_its_period", "file": "tests/test_time_series.py", "kind": "defines", "line": 45, "resolved": true, "src": "tests.test_time_series"}
+{"body_sha": "f973408c3b87", "dst": "tests.test_time_series.test_random_missing_still_recovers_known_period", "file": "tests/test_time_series.py", "kind": "defines", "line": 230, "resolved": true, "src": "tests.test_time_series"}
+{"body_sha": "9d468510c86b", "dst": "tests.test_time_series.test_report_has_temporal_section_with_stem_plots", "file": "tests/test_time_series.py", "kind": "defines", "line": 156, "resolved": true, "src": "tests.test_time_series"}
+{"body_sha": "f67a6491563d", "dst": "tests.test_time_series.test_short_series_is_insufficient", "file": "tests/test_time_series.py", "kind": "defines", "line": 96, "resolved": true, "src": "tests.test_time_series"}
+{"body_sha": "4b678d7804d8", "dst": "tests.test_time_series.test_spectral_degrades_without_scipy", "file": "tests/test_time_series.py", "kind": "defines", "line": 148, "resolved": true, "src": "tests.test_time_series"}
+{"body_sha": "c0de5c03987b", "dst": "tests.test_time_series.test_undeclared_pure_timestamps_offer_event_counts", "file": "tests/test_time_series.py", "kind": "defines", "line": 173, "resolved": true, "src": "tests.test_time_series"}
+{"body_sha": "ade5ff7ef906", "dst": "tests.test_time_series.test_undeclared_question_quiet_on_few_periods_and_skips_identifier_like", "file": "tests/test_time_series.py", "kind": "defines", "line": 179, "resolved": true, "src": "tests.test_time_series"}
+{"body_sha": "df7e48e97f20", "dst": "tests.test_time_series.test_undeclared_series_asks_one_question", "file": "tests/test_time_series.py", "kind": "defines", "line": 165, "resolved": true, "src": "tests.test_time_series"}
+{"body_sha": "d11785602374", "dst": "tests.test_time_series.test_weekly_default_reaches_52_when_span_allows", "file": "tests/test_time_series.py", "kind": "defines", "line": 241, "resolved": true, "src": "tests.test_time_series"}
+{"body_sha": "e2672a74e3a0", "dst": "tests.test_time_series.test_white_noise_family_wise_false_positive_rate_is_near_five_percent", "file": "tests/test_time_series.py", "kind": "defines", "line": 66, "resolved": true, "src": "tests.test_time_series"}
+{"body_sha": "bc972193c047", "dst": "tests.test_time_series.test_white_noise_has_no_significant_structure", "file": "tests/test_time_series.py", "kind": "defines", "line": 56, "resolved": true, "src": "tests.test_time_series"}
+{"body_sha": "2309bf2f2cf0", "dst": "tests.test_time_series.test_zero_and_burst_signals_need_thirty_periods", "file": "tests/test_time_series.py", "kind": "defines", "line": 194, "resolved": true, "src": "tests.test_time_series"}
+{"body_sha": "d3c1e0200c2c", "dst": "tests.test_time_series.ts_findings", "file": "tests/test_time_series.py", "kind": "defines", "line": 41, "resolved": true, "src": "tests.test_time_series"}
 {"body_sha": "0e44a9b2bafd", "dst": "tests.test_understanding.F", "file": "tests/test_understanding.py", "kind": "defines", "line": 12, "resolved": true, "src": "tests.test_understanding"}
 {"body_sha": "ed6bb95dee70", "dst": "tests.test_understanding.test_bad_csv", "file": "tests/test_understanding.py", "kind": "defines", "line": 96, "resolved": true, "src": "tests.test_understanding"}
 {"body_sha": "233d1cd6c5f2", "dst": "tests.test_understanding.test_duplicate_yaml_keys_rejected_and_clean_decoy", "file": "tests/test_understanding.py", "kind": "defines", "line": 136, "resolved": true, "src": "tests.test_understanding"}
@@ -496,14 +571,15 @@
 {"dst": "src.fathom.rows.row_structure", "file": "src/fathom/profiler.py", "kind": "imports", "line": 16, "resolved": true, "src": "src.fathom.profiler"}
 {"dst": "src.fathom.special.enrich_special", "file": "src/fathom/profiler.py", "kind": "imports", "line": 15, "resolved": true, "src": "src.fathom.profiler"}
 {"dst": "src.fathom.special.infer_special", "file": "src/fathom/profiler.py", "kind": "imports", "line": 15, "resolved": true, "src": "src.fathom.profiler"}
+{"dst": "src.fathom.timeseries.time_series", "file": "src/fathom/profiler.py", "kind": "imports", "line": 17, "resolved": true, "src": "src.fathom.profiler"}
 {"dst": "src.fathom.univariate.enrich_columns", "file": "src/fathom/profiler.py", "kind": "imports", "line": 14, "resolved": true, "src": "src.fathom.profiler"}
 {"dst": "src.fathom.univariate.identity_and_samples", "file": "src/fathom/profiler.py", "kind": "imports", "line": 14, "resolved": true, "src": "src.fathom.profiler"}
 {"dst": "src.fathom.univariate.missingness_patterns", "file": "src/fathom/profiler.py", "kind": "imports", "line": 14, "resolved": true, "src": "src.fathom.profiler"}
 {"dst": "statistics", "file": "src/fathom/profiler.py", "kind": "imports", "line": 8, "resolved": true, "src": "src.fathom.profiler"}
-{"dst": "src.fathom.target.build_target_analysis", "file": "src/fathom/profiler.py", "kind": "imports", "line": 167, "resolved": true, "src": "src.fathom.profiler.profile"}
-{"dst": "scipy.stats.pearsonr", "file": "src/fathom/profiler.py", "kind": "imports", "line": 254, "resolved": true, "src": "src.fathom.profiler.rank_pairs"}
-{"dst": "warnings", "file": "src/fathom/profiler.py", "kind": "imports", "line": 258, "resolved": true, "src": "src.fathom.profiler.rank_pairs"}
-{"dst": "src.fathom.target.target_candidates", "file": "src/fathom/profiler.py", "kind": "imports", "line": 205, "resolved": true, "src": "src.fathom.profiler.select_pairs"}
+{"dst": "src.fathom.target.build_target_analysis", "file": "src/fathom/profiler.py", "kind": "imports", "line": 169, "resolved": true, "src": "src.fathom.profiler.profile"}
+{"dst": "scipy.stats.pearsonr", "file": "src/fathom/profiler.py", "kind": "imports", "line": 256, "resolved": true, "src": "src.fathom.profiler.rank_pairs"}
+{"dst": "warnings", "file": "src/fathom/profiler.py", "kind": "imports", "line": 260, "resolved": true, "src": "src.fathom.profiler.rank_pairs"}
+{"dst": "src.fathom.target.target_candidates", "file": "src/fathom/profiler.py", "kind": "imports", "line": 207, "resolved": true, "src": "src.fathom.profiler.select_pairs"}
 {"dst": "collections.Counter", "file": "src/fathom/quality.py", "kind": "imports", "line": 3, "resolved": true, "src": "src.fathom.quality"}
 {"dst": "collections.defaultdict", "file": "src/fathom/quality.py", "kind": "imports", "line": 3, "resolved": true, "src": "src.fathom.quality"}
 {"dst": "datetime.date", "file": "src/fathom/quality.py", "kind": "imports", "line": 4, "resolved": true, "src": "src.fathom.quality"}
@@ -513,20 +589,22 @@
 {"dst": "src.fathom.parsing.finite_number", "file": "src/fathom/quality.py", "kind": "imports", "line": 11, "resolved": true, "src": "src.fathom.quality.finite"}
 {"dst": "collections.Counter", "file": "src/fathom/renderers.py", "kind": "imports", "line": 3, "resolved": true, "src": "src.fathom.renderers"}
 {"dst": "html.escape", "file": "src/fathom/renderers.py", "kind": "imports", "line": 4, "resolved": true, "src": "src.fathom.renderers"}
-{"dst": "pathlib.Path", "file": "src/fathom/renderers.py", "kind": "imports", "line": 11, "resolved": true, "src": "src.fathom.renderers"}
+{"dst": "pathlib.Path", "file": "src/fathom/renderers.py", "kind": "imports", "line": 12, "resolved": true, "src": "src.fathom.renderers"}
 {"dst": "re", "file": "src/fathom/renderers.py", "kind": "imports", "line": 5, "resolved": true, "src": "src.fathom.renderers"}
 {"dst": "src.fathom.charts.svg_chart", "file": "src/fathom/renderers.py", "kind": "imports", "line": 8, "resolved": true, "src": "src.fathom.renderers"}
 {"dst": "src.fathom.models.ProfilingResult", "file": "src/fathom/renderers.py", "kind": "imports", "line": 7, "resolved": true, "src": "src.fathom.renderers"}
-{"dst": "src.fathom.presentation.column_tables", "file": "src/fathom/renderers.py", "kind": "imports", "line": 10, "resolved": true, "src": "src.fathom.renderers"}
-{"dst": "src.fathom.presentation.display_charts", "file": "src/fathom/renderers.py", "kind": "imports", "line": 10, "resolved": true, "src": "src.fathom.renderers"}
-{"dst": "src.fathom.presentation.formatted", "file": "src/fathom/renderers.py", "kind": "imports", "line": 10, "resolved": true, "src": "src.fathom.renderers"}
-{"dst": "src.fathom.presentation.formatted_examples", "file": "src/fathom/renderers.py", "kind": "imports", "line": 10, "resolved": true, "src": "src.fathom.renderers"}
-{"dst": "src.fathom.presentation.html_table", "file": "src/fathom/renderers.py", "kind": "imports", "line": 10, "resolved": true, "src": "src.fathom.renderers"}
-{"dst": "src.fathom.presentation.markdown_table", "file": "src/fathom/renderers.py", "kind": "imports", "line": 10, "resolved": true, "src": "src.fathom.renderers"}
-{"dst": "src.fathom.presentation.metric_table", "file": "src/fathom/renderers.py", "kind": "imports", "line": 10, "resolved": true, "src": "src.fathom.renderers"}
-{"dst": "src.fathom.presentation.structured_tables", "file": "src/fathom/renderers.py", "kind": "imports", "line": 10, "resolved": true, "src": "src.fathom.renderers"}
-{"dst": "src.fathom.presentation.top_n_reason", "file": "src/fathom/renderers.py", "kind": "imports", "line": 10, "resolved": true, "src": "src.fathom.renderers"}
+{"dst": "src.fathom.presentation.column_tables", "file": "src/fathom/renderers.py", "kind": "imports", "line": 11, "resolved": true, "src": "src.fathom.renderers"}
+{"dst": "src.fathom.presentation.display_charts", "file": "src/fathom/renderers.py", "kind": "imports", "line": 11, "resolved": true, "src": "src.fathom.renderers"}
+{"dst": "src.fathom.presentation.formatted", "file": "src/fathom/renderers.py", "kind": "imports", "line": 11, "resolved": true, "src": "src.fathom.renderers"}
+{"dst": "src.fathom.presentation.formatted_examples", "file": "src/fathom/renderers.py", "kind": "imports", "line": 11, "resolved": true, "src": "src.fathom.renderers"}
+{"dst": "src.fathom.presentation.html_table", "file": "src/fathom/renderers.py", "kind": "imports", "line": 11, "resolved": true, "src": "src.fathom.renderers"}
+{"dst": "src.fathom.presentation.markdown_table", "file": "src/fathom/renderers.py", "kind": "imports", "line": 11, "resolved": true, "src": "src.fathom.renderers"}
+{"dst": "src.fathom.presentation.metric_table", "file": "src/fathom/renderers.py", "kind": "imports", "line": 11, "resolved": true, "src": "src.fathom.renderers"}
+{"dst": "src.fathom.presentation.structured_tables", "file": "src/fathom/renderers.py", "kind": "imports", "line": 11, "resolved": true, "src": "src.fathom.renderers"}
+{"dst": "src.fathom.presentation.top_n_reason", "file": "src/fathom/renderers.py", "kind": "imports", "line": 11, "resolved": true, "src": "src.fathom.renderers"}
 {"dst": "src.fathom.target.target_tables", "file": "src/fathom/renderers.py", "kind": "imports", "line": 9, "resolved": true, "src": "src.fathom.renderers"}
+{"dst": "src.fathom.temporal_view.temporal_html", "file": "src/fathom/renderers.py", "kind": "imports", "line": 10, "resolved": true, "src": "src.fathom.renderers"}
+{"dst": "src.fathom.temporal_view.temporal_markdown", "file": "src/fathom/renderers.py", "kind": "imports", "line": 10, "resolved": true, "src": "src.fathom.renderers"}
 {"dst": "collections.Counter", "file": "src/fathom/rows.py", "kind": "imports", "line": 3, "resolved": true, "src": "src.fathom.rows"}
 {"dst": "collections.defaultdict", "file": "src/fathom/rows.py", "kind": "imports", "line": 3, "resolved": true, "src": "src.fathom.rows"}
 {"dst": "datetime.date", "file": "src/fathom/rows.py", "kind": "imports", "line": 4, "resolved": true, "src": "src.fathom.rows"}
@@ -551,6 +629,22 @@
 {"dst": "math", "file": "src/fathom/target_marks.py", "kind": "imports", "line": 3, "resolved": true, "src": "src.fathom.target_marks"}
 {"dst": "src.fathom.charts.linear_ticks", "file": "src/fathom/target_marks.py", "kind": "imports", "line": 4, "resolved": true, "src": "src.fathom.target_marks"}
 {"dst": "src.fathom.presentation.tick_label", "file": "src/fathom/target_marks.py", "kind": "imports", "line": 5, "resolved": true, "src": "src.fathom.target_marks"}
+{"dst": "html.escape", "file": "src/fathom/temporal_view.py", "kind": "imports", "line": 3, "resolved": true, "src": "src.fathom.temporal_view"}
+{"dst": "src.fathom.presentation.formatted", "file": "src/fathom/temporal_view.py", "kind": "imports", "line": 5, "resolved": true, "src": "src.fathom.temporal_view"}
+{"dst": "src.fathom.presentation.html_table", "file": "src/fathom/temporal_view.py", "kind": "imports", "line": 5, "resolved": true, "src": "src.fathom.temporal_view"}
+{"dst": "src.fathom.presentation.markdown_table", "file": "src/fathom/temporal_view.py", "kind": "imports", "line": 5, "resolved": true, "src": "src.fathom.temporal_view"}
+{"dst": "collections.Counter", "file": "src/fathom/timeseries.py", "kind": "imports", "line": 7, "resolved": true, "src": "src.fathom.timeseries"}
+{"dst": "collections.defaultdict", "file": "src/fathom/timeseries.py", "kind": "imports", "line": 7, "resolved": true, "src": "src.fathom.timeseries"}
+{"dst": "datetime.datetime", "file": "src/fathom/timeseries.py", "kind": "imports", "line": 8, "resolved": true, "src": "src.fathom.timeseries"}
+{"dst": "datetime.timedelta", "file": "src/fathom/timeseries.py", "kind": "imports", "line": 8, "resolved": true, "src": "src.fathom.timeseries"}
+{"dst": "math", "file": "src/fathom/timeseries.py", "kind": "imports", "line": 9, "resolved": true, "src": "src.fathom.timeseries"}
+{"dst": "src.fathom.parsing.finite_number", "file": "src/fathom/timeseries.py", "kind": "imports", "line": 12, "resolved": true, "src": "src.fathom.timeseries"}
+{"dst": "src.fathom.parsing.parse_date", "file": "src/fathom/timeseries.py", "kind": "imports", "line": 12, "resolved": true, "src": "src.fathom.timeseries"}
+{"dst": "src.fathom.parsing.parse_datetime", "file": "src/fathom/timeseries.py", "kind": "imports", "line": 12, "resolved": true, "src": "src.fathom.timeseries"}
+{"dst": "statistics.NormalDist", "file": "src/fathom/timeseries.py", "kind": "imports", "line": 10, "resolved": true, "src": "src.fathom.timeseries"}
+{"dst": "statistics.median", "file": "src/fathom/timeseries.py", "kind": "imports", "line": 10, "resolved": true, "src": "src.fathom.timeseries"}
+{"dst": "statistics.quantiles", "file": "src/fathom/timeseries.py", "kind": "imports", "line": 10, "resolved": true, "src": "src.fathom.timeseries"}
+{"dst": "scipy.signal.periodogram", "file": "src/fathom/timeseries.py", "kind": "imports", "line": 172, "resolved": true, "src": "src.fathom.timeseries.spectral"}
 {"dst": "collections.Counter", "file": "src/fathom/univariate.py", "kind": "imports", "line": 3, "resolved": true, "src": "src.fathom.univariate"}
 {"dst": "datetime.date", "file": "src/fathom/univariate.py", "kind": "imports", "line": 4, "resolved": true, "src": "src.fathom.univariate"}
 {"dst": "math", "file": "src/fathom/univariate.py", "kind": "imports", "line": 5, "resolved": true, "src": "src.fathom.univariate"}
@@ -680,6 +774,17 @@
 {"dst": "pathlib.Path", "file": "tests/test_target.py", "kind": "imports", "line": 118, "resolved": true, "src": "tests.test_target.test_scatter_sampling_log_coverage_and_native_log_ecdf"}
 {"dst": "src.fathom.exports.export_bundle", "file": "tests/test_target.py", "kind": "imports", "line": 117, "resolved": true, "src": "tests.test_target.test_scatter_sampling_log_coverage_and_native_log_ecdf"}
 {"dst": "zipfile", "file": "tests/test_target.py", "kind": "imports", "line": 125, "resolved": true, "src": "tests.test_target.test_scatter_sampling_log_coverage_and_native_log_ecdf"}
+{"dst": "datetime.datetime", "file": "tests/test_time_series.py", "kind": "imports", "line": 3, "resolved": true, "src": "tests.test_time_series"}
+{"dst": "datetime.timedelta", "file": "tests/test_time_series.py", "kind": "imports", "line": 3, "resolved": true, "src": "tests.test_time_series"}
+{"dst": "math", "file": "tests/test_time_series.py", "kind": "imports", "line": 4, "resolved": true, "src": "tests.test_time_series"}
+{"dst": "pytest", "file": "tests/test_time_series.py", "kind": "imports", "line": 8, "resolved": true, "src": "tests.test_time_series"}
+{"dst": "random", "file": "tests/test_time_series.py", "kind": "imports", "line": 5, "resolved": true, "src": "tests.test_time_series"}
+{"dst": "src.fathom.config.validate_config", "file": "tests/test_time_series.py", "kind": "imports", "line": 10, "resolved": true, "src": "tests.test_time_series"}
+{"dst": "src.fathom.renderers.render_html", "file": "tests/test_time_series.py", "kind": "imports", "line": 11, "resolved": true, "src": "tests.test_time_series"}
+{"dst": "src.fathom.renderers.render_markdown", "file": "tests/test_time_series.py", "kind": "imports", "line": 11, "resolved": true, "src": "tests.test_time_series"}
+{"dst": "src.fathom.timeseries.pacf", "file": "tests/test_time_series.py", "kind": "imports", "line": 12, "resolved": true, "src": "tests.test_time_series"}
+{"dst": "sys", "file": "tests/test_time_series.py", "kind": "imports", "line": 6, "resolved": true, "src": "tests.test_time_series"}
+{"dst": "src.fathom.timeseries.correlogram", "file": "tests/test_time_series.py", "kind": "imports", "line": 67, "resolved": true, "src": "tests.test_time_series.test_white_noise_family_wise_false_positive_rate_is_near_five_percent"}
 {"dst": "pathlib.Path", "file": "tests/test_understanding.py", "kind": "imports", "line": 3, "resolved": true, "src": "tests.test_understanding"}
 {"dst": "pytest", "file": "tests/test_understanding.py", "kind": "imports", "line": 5, "resolved": true, "src": "tests.test_understanding"}
 {"dst": "src.fathom.config.load_config", "file": "tests/test_understanding.py", "kind": "imports", "line": 7, "resolved": true, "src": "tests.test_understanding"}
@@ -701,7 +806,7 @@
 {"dst": "src.fathom.renderers.render_markdown", "file": "tests/test_univariate.py", "kind": "imports", "line": 12, "resolved": true, "src": "tests.test_univariate"}
 {"dst": "src.fathom.config.load_config", "file": "tests/test_univariate.py", "kind": "imports", "line": 136, "resolved": true, "src": "tests.test_univariate.test_builder_film_clean_and_late_tables"}
 {"dst": "copy", "file": "tests/test_univariate.py", "kind": "imports", "line": 129, "resolved": true, "src": "tests.test_univariate.test_invalid_chart_artifact_is_rejected"}
-{"dst": "yaml.SafeLoader", "file": "src/fathom/config.py", "kind": "inherits", "line": 123, "resolved": true, "src": "src.fathom.config.load_config.<locals>.ConfigLoader"}
+{"dst": "yaml.SafeLoader", "file": "src/fathom/config.py", "kind": "inherits", "line": 147, "resolved": true, "src": "src.fathom.config.load_config.<locals>.ConfigLoader"}
 {"dst": "?Flowable", "file": "src/fathom/exports.py", "kind": "inherits", "line": 103, "resolved": false, "src": "src.fathom.exports.pdf_bytes.<locals>.Chart"}
 {"dst": "?parser.add_argument", "file": "specs/005-plots-and-layout/review/capture.py", "kind": "calls", "line": 74, "resolved": false, "src": "specs.005-plots-and-layout.review.capture"}
 {"dst": "?parser.parse_args", "file": "specs/005-plots-and-layout/review/capture.py", "kind": "calls", "line": 74, "resolved": false, "src": "specs.005-plots-and-layout.review.capture"}
@@ -934,28 +1039,29 @@
 {"dst": "?purpose.get", "file": "src/fathom/cli.py", "kind": "calls", "line": 25, "resolved": false, "src": "src.fathom.cli.summary_line"}
 {"dst": "?record.get", "file": "src/fathom/cli.py", "kind": "calls", "line": 26, "resolved": false, "src": "src.fathom.cli.summary_line"}
 {"dst": "?ta.get", "file": "src/fathom/cli.py", "kind": "calls", "line": 22, "resolved": false, "src": "src.fathom.cli.summary_line"}
-{"dst": "?ConfigLoader.add_constructor", "file": "src/fathom/config.py", "kind": "calls", "line": 137, "resolved": false, "src": "src.fathom.config.load_config"}
-{"dst": "?Path(...).read_text", "file": "src/fathom/config.py", "kind": "calls", "line": 138, "resolved": false, "src": "src.fathom.config.load_config"}
-{"dst": "pathlib.Path", "file": "src/fathom/config.py", "kind": "calls", "line": 138, "resolved": true, "src": "src.fathom.config.load_config"}
-{"dst": "src.fathom.config.validate_config", "file": "src/fathom/config.py", "kind": "calls", "line": 120, "resolved": true, "src": "src.fathom.config.load_config"}
-{"dst": "yaml.SafeLoader.yaml_implicit_resolvers.items", "file": "src/fathom/config.py", "kind": "calls", "line": 127, "resolved": true, "src": "src.fathom.config.load_config"}
-{"dst": "yaml.load", "file": "src/fathom/config.py", "kind": "calls", "line": 138, "resolved": true, "src": "src.fathom.config.load_config"}
-{"dst": "?loader.construct_pairs", "file": "src/fathom/config.py", "kind": "calls", "line": 130, "resolved": false, "src": "src.fathom.config.load_config.<locals>.unique_mapping"}
+{"dst": "?ConfigLoader.add_constructor", "file": "src/fathom/config.py", "kind": "calls", "line": 161, "resolved": false, "src": "src.fathom.config.load_config"}
+{"dst": "?Path(...).read_text", "file": "src/fathom/config.py", "kind": "calls", "line": 162, "resolved": false, "src": "src.fathom.config.load_config"}
+{"dst": "pathlib.Path", "file": "src/fathom/config.py", "kind": "calls", "line": 162, "resolved": true, "src": "src.fathom.config.load_config"}
+{"dst": "src.fathom.config.validate_config", "file": "src/fathom/config.py", "kind": "calls", "line": 144, "resolved": true, "src": "src.fathom.config.load_config"}
+{"dst": "yaml.SafeLoader.yaml_implicit_resolvers.items", "file": "src/fathom/config.py", "kind": "calls", "line": 151, "resolved": true, "src": "src.fathom.config.load_config"}
+{"dst": "yaml.load", "file": "src/fathom/config.py", "kind": "calls", "line": 162, "resolved": true, "src": "src.fathom.config.load_config"}
+{"dst": "?loader.construct_pairs", "file": "src/fathom/config.py", "kind": "calls", "line": 154, "resolved": false, "src": "src.fathom.config.load_config.<locals>.unique_mapping"}
 {"dst": "?constant.join", "file": "src/fathom/config.py", "kind": "calls", "line": 21, "resolved": false, "src": "src.fathom.config.mapping"}
 {"dst": "?value.strip", "file": "src/fathom/config.py", "kind": "calls", "line": 15, "resolved": false, "src": "src.fathom.config.text"}
-{"dst": "?SchemaContract(...).resolve", "file": "src/fathom/config.py", "kind": "calls", "line": 114, "resolved": false, "src": "src.fathom.config.validate_config"}
+{"dst": "?SchemaContract(...).resolve", "file": "src/fathom/config.py", "kind": "calls", "line": 138, "resolved": false, "src": "src.fathom.config.validate_config"}
 {"dst": "?cfg.get", "file": "src/fathom/config.py", "kind": "calls", "line": 30, "resolved": false, "src": "src.fathom.config.validate_config"}
+{"dst": "?cleaned.append", "file": "src/fathom/config.py", "kind": "calls", "line": 88, "resolved": false, "src": "src.fathom.config.validate_config"}
 {"dst": "?constant.join", "file": "src/fathom/config.py", "kind": "calls", "line": 45, "resolved": false, "src": "src.fathom.config.validate_config"}
-{"dst": "?context.get", "file": "src/fathom/config.py", "kind": "calls", "line": 70, "resolved": false, "src": "src.fathom.config.validate_config"}
-{"dst": "?date.fromisoformat(...).isoformat", "file": "src/fathom/config.py", "kind": "calls", "line": 74, "resolved": false, "src": "src.fathom.config.validate_config"}
+{"dst": "?context.get", "file": "src/fathom/config.py", "kind": "calls", "line": 94, "resolved": false, "src": "src.fathom.config.validate_config"}
+{"dst": "?date.fromisoformat(...).isoformat", "file": "src/fathom/config.py", "kind": "calls", "line": 98, "resolved": false, "src": "src.fathom.config.validate_config"}
 {"dst": "?item.get", "file": "src/fathom/config.py", "kind": "calls", "line": 62, "resolved": false, "src": "src.fathom.config.validate_config"}
 {"dst": "?metadata.items", "file": "src/fathom/config.py", "kind": "calls", "line": 40, "resolved": false, "src": "src.fathom.config.validate_config"}
-{"dst": "?schema.get", "file": "src/fathom/config.py", "kind": "calls", "line": 103, "resolved": false, "src": "src.fathom.config.validate_config"}
-{"dst": "dataclasses.asdict", "file": "src/fathom/config.py", "kind": "calls", "line": 101, "resolved": true, "src": "src.fathom.config.validate_config"}
-{"dst": "datetime.date.fromisoformat", "file": "src/fathom/config.py", "kind": "calls", "line": 74, "resolved": true, "src": "src.fathom.config.validate_config"}
+{"dst": "?schema.get", "file": "src/fathom/config.py", "kind": "calls", "line": 127, "resolved": false, "src": "src.fathom.config.validate_config"}
+{"dst": "dataclasses.asdict", "file": "src/fathom/config.py", "kind": "calls", "line": 125, "resolved": true, "src": "src.fathom.config.validate_config"}
+{"dst": "datetime.date.fromisoformat", "file": "src/fathom/config.py", "kind": "calls", "line": 98, "resolved": true, "src": "src.fathom.config.validate_config"}
 {"dst": "src.fathom.config.mapping", "file": "src/fathom/config.py", "kind": "calls", "line": 26, "resolved": true, "src": "src.fathom.config.validate_config"}
 {"dst": "src.fathom.config.text", "file": "src/fathom/config.py", "kind": "calls", "line": 30, "resolved": true, "src": "src.fathom.config.validate_config"}
-{"dst": "src.fathom.models.SchemaContract", "file": "src/fathom/config.py", "kind": "calls", "line": 101, "resolved": true, "src": "src.fathom.config.validate_config"}
+{"dst": "src.fathom.models.SchemaContract", "file": "src/fathom/config.py", "kind": "calls", "line": 125, "resolved": true, "src": "src.fathom.config.validate_config"}
 {"dst": "pathlib.Path", "file": "src/fathom/connectors.py", "kind": "calls", "line": 15, "resolved": true, "src": "src.fathom.connectors.CSVConnector.__init__"}
 {"dst": "src.fathom.models.SchemaContract", "file": "src/fathom/connectors.py", "kind": "calls", "line": 16, "resolved": true, "src": "src.fathom.connectors.CSVConnector.__init__"}
 {"dst": "?self.path.is_file", "file": "src/fathom/connectors.py", "kind": "calls", "line": 19, "resolved": false, "src": "src.fathom.connectors.CSVConnector.connect"}
@@ -1306,78 +1412,79 @@
 {"dst": "?str(...).upper", "file": "src/fathom/presentation.py", "kind": "calls", "line": 39, "resolved": false, "src": "src.fathom.presentation.title"}
 {"dst": "?col.get", "file": "src/fathom/presentation.py", "kind": "calls", "line": 93, "resolved": false, "src": "src.fathom.presentation.top_n_reason"}
 {"dst": "?u.get", "file": "src/fathom/presentation.py", "kind": "calls", "line": 94, "resolved": false, "src": "src.fathom.presentation.top_n_reason"}
-{"dst": "?ac.items", "file": "src/fathom/profiler.py", "kind": "calls", "line": 287, "resolved": false, "src": "src.fathom.profiler.compare"}
-{"dst": "src.fathom.models.ProfilingResult", "file": "src/fathom/profiler.py", "kind": "calls", "line": 278, "resolved": true, "src": "src.fathom.profiler.compare"}
-{"dst": "?meta.get", "file": "src/fathom/profiler.py", "kind": "calls", "line": 46, "resolved": false, "src": "src.fathom.profiler.infer"}
-{"dst": "?v.lower", "file": "src/fathom/profiler.py", "kind": "calls", "line": 44, "resolved": false, "src": "src.fathom.profiler.infer"}
-{"dst": "?v.strip", "file": "src/fathom/profiler.py", "kind": "calls", "line": 48, "resolved": false, "src": "src.fathom.profiler.infer"}
-{"dst": "re.match", "file": "src/fathom/profiler.py", "kind": "calls", "line": 48, "resolved": true, "src": "src.fathom.profiler.infer"}
-{"dst": "re.search", "file": "src/fathom/profiler.py", "kind": "calls", "line": 46, "resolved": true, "src": "src.fathom.profiler.infer"}
-{"dst": "src.fathom.parsing.parse_date", "file": "src/fathom/profiler.py", "kind": "calls", "line": 46, "resolved": true, "src": "src.fathom.profiler.infer"}
-{"dst": "src.fathom.profiler.number", "file": "src/fathom/profiler.py", "kind": "calls", "line": 48, "resolved": true, "src": "src.fathom.profiler.infer"}
-{"dst": "src.fathom.special.infer_special", "file": "src/fathom/profiler.py", "kind": "calls", "line": 37, "resolved": true, "src": "src.fathom.profiler.infer"}
-{"dst": "?parsed.isoformat", "file": "src/fathom/profiler.py", "kind": "calls", "line": 26, "resolved": false, "src": "src.fathom.profiler.iso_date"}
-{"dst": "datetime.date.fromisoformat", "file": "src/fathom/profiler.py", "kind": "calls", "line": 25, "resolved": true, "src": "src.fathom.profiler.iso_date"}
-{"dst": "src.fathom.parsing.finite_number", "file": "src/fathom/profiler.py", "kind": "calls", "line": 20, "resolved": true, "src": "src.fathom.profiler.number"}
-{"dst": "?cfg.get", "file": "src/fathom/profiler.py", "kind": "calls", "line": 153, "resolved": false, "src": "src.fathom.profiler.profile"}
-{"dst": "?cfg[...].get", "file": "src/fathom/profiler.py", "kind": "calls", "line": 123, "resolved": false, "src": "src.fathom.profiler.profile"}
-{"dst": "?columns.append", "file": "src/fathom/profiler.py", "kind": "calls", "line": 134, "resolved": false, "src": "src.fathom.profiler.profile"}
-{"dst": "?constant.join", "file": "src/fathom/profiler.py", "kind": "calls", "line": 161, "resolved": false, "src": "src.fathom.profiler.profile"}
-{"dst": "?counts.items", "file": "src/fathom/profiler.py", "kind": "calls", "line": 130, "resolved": false, "src": "src.fathom.profiler.profile"}
-{"dst": "?data.frame.values.tolist", "file": "src/fathom/profiler.py", "kind": "calls", "line": 92, "resolved": false, "src": "src.fathom.profiler.profile"}
-{"dst": "?data.schema.resolve", "file": "src/fathom/profiler.py", "kind": "calls", "line": 91, "resolved": false, "src": "src.fathom.profiler.profile"}
-{"dst": "?diagnostic", "file": "src/fathom/profiler.py", "kind": "calls", "line": 116, "resolved": false, "src": "src.fathom.profiler.profile"}
-{"dst": "?dup[...].append", "file": "src/fathom/profiler.py", "kind": "calls", "line": 162, "resolved": false, "src": "src.fathom.profiler.profile"}
-{"dst": "?finding", "file": "src/fathom/profiler.py", "kind": "calls", "line": 113, "resolved": false, "src": "src.fathom.profiler.profile"}
-{"dst": "?meta.get", "file": "src/fathom/profiler.py", "kind": "calls", "line": 125, "resolved": false, "src": "src.fathom.profiler.profile"}
-{"dst": "?overview.copy", "file": "src/fathom/profiler.py", "kind": "calls", "line": 114, "resolved": false, "src": "src.fathom.profiler.profile"}
-{"dst": "?stats.get", "file": "src/fathom/profiler.py", "kind": "calls", "line": 144, "resolved": false, "src": "src.fathom.profiler.profile"}
-{"dst": "collections.Counter", "file": "src/fathom/profiler.py", "kind": "calls", "line": 122, "resolved": true, "src": "src.fathom.profiler.profile"}
-{"dst": "dataclasses.asdict", "file": "src/fathom/profiler.py", "kind": "calls", "line": 185, "resolved": true, "src": "src.fathom.profiler.profile"}
-{"dst": "src.fathom.config.validate_config", "file": "src/fathom/profiler.py", "kind": "calls", "line": 90, "resolved": true, "src": "src.fathom.profiler.profile"}
-{"dst": "src.fathom.models.ProfilingResult", "file": "src/fathom/profiler.py", "kind": "calls", "line": 184, "resolved": true, "src": "src.fathom.profiler.profile"}
-{"dst": "src.fathom.profiler.infer", "file": "src/fathom/profiler.py", "kind": "calls", "line": 124, "resolved": true, "src": "src.fathom.profiler.profile"}
-{"dst": "src.fathom.profiler.select_pairs", "file": "src/fathom/profiler.py", "kind": "calls", "line": 166, "resolved": true, "src": "src.fathom.profiler.profile"}
-{"dst": "src.fathom.profiler.summarize", "file": "src/fathom/profiler.py", "kind": "calls", "line": 126, "resolved": true, "src": "src.fathom.profiler.profile"}
-{"dst": "src.fathom.quality.quality_profile", "file": "src/fathom/profiler.py", "kind": "calls", "line": 157, "resolved": true, "src": "src.fathom.profiler.profile"}
-{"dst": "src.fathom.rows.row_structure", "file": "src/fathom/profiler.py", "kind": "calls", "line": 158, "resolved": true, "src": "src.fathom.profiler.profile"}
-{"dst": "src.fathom.special.enrich_special", "file": "src/fathom/profiler.py", "kind": "calls", "line": 164, "resolved": true, "src": "src.fathom.profiler.profile"}
-{"dst": "src.fathom.target.build_target_analysis", "file": "src/fathom/profiler.py", "kind": "calls", "line": 168, "resolved": true, "src": "src.fathom.profiler.profile"}
-{"dst": "src.fathom.univariate.enrich_columns", "file": "src/fathom/profiler.py", "kind": "calls", "line": 163, "resolved": true, "src": "src.fathom.profiler.profile"}
-{"dst": "src.fathom.univariate.identity_and_samples", "file": "src/fathom/profiler.py", "kind": "calls", "line": 165, "resolved": true, "src": "src.fathom.profiler.profile"}
-{"dst": "src.fathom.univariate.missingness_patterns", "file": "src/fathom/profiler.py", "kind": "calls", "line": 194, "resolved": true, "src": "src.fathom.profiler.profile"}
-{"dst": "?finding", "file": "src/fathom/profiler.py", "kind": "calls", "line": 106, "resolved": false, "src": "src.fathom.profiler.profile.<locals>.diagnostic"}
-{"dst": "?findings.append", "file": "src/fathom/profiler.py", "kind": "calls", "line": 102, "resolved": false, "src": "src.fathom.profiler.profile.<locals>.finding"}
-{"dst": "?boolop.casefold", "file": "src/fathom/profiler.py", "kind": "calls", "line": 212, "resolved": false, "src": "src.fathom.profiler.rank_pairs"}
-{"dst": "?candidates.sort", "file": "src/fathom/profiler.py", "kind": "calls", "line": 227, "resolved": false, "src": "src.fathom.profiler.rank_pairs"}
-{"dst": "?cfg.get", "file": "src/fathom/profiler.py", "kind": "calls", "line": 212, "resolved": false, "src": "src.fathom.profiler.rank_pairs"}
-{"dst": "?chosen.append", "file": "src/fathom/profiler.py", "kind": "calls", "line": 264, "resolved": false, "src": "src.fathom.profiler.rank_pairs"}
-{"dst": "?name.casefold", "file": "src/fathom/profiler.py", "kind": "calls", "line": 217, "resolved": false, "src": "src.fathom.profiler.rank_pairs"}
-{"dst": "?pair[...].update", "file": "src/fathom/profiler.py", "kind": "calls", "line": 262, "resolved": false, "src": "src.fathom.profiler.rank_pairs"}
-{"dst": "?selection[...].append", "file": "src/fathom/profiler.py", "kind": "calls", "line": 244, "resolved": false, "src": "src.fathom.profiler.rank_pairs"}
-{"dst": "?slots.add", "file": "src/fathom/profiler.py", "kind": "calls", "line": 240, "resolved": false, "src": "src.fathom.profiler.rank_pairs"}
-{"dst": "?slots.remove", "file": "src/fathom/profiler.py", "kind": "calls", "line": 240, "resolved": false, "src": "src.fathom.profiler.rank_pairs"}
-{"dst": "math.isfinite", "file": "src/fathom/profiler.py", "kind": "calls", "line": 226, "resolved": true, "src": "src.fathom.profiler.rank_pairs"}
-{"dst": "re.escape", "file": "src/fathom/profiler.py", "kind": "calls", "line": 217, "resolved": true, "src": "src.fathom.profiler.rank_pairs"}
-{"dst": "re.search", "file": "src/fathom/profiler.py", "kind": "calls", "line": 217, "resolved": true, "src": "src.fathom.profiler.rank_pairs"}
-{"dst": "scipy.stats.pearsonr", "file": "src/fathom/profiler.py", "kind": "calls", "line": 261, "resolved": true, "src": "src.fathom.profiler.rank_pairs"}
-{"dst": "src.fathom.profiler.number", "file": "src/fathom/profiler.py", "kind": "calls", "line": 224, "resolved": true, "src": "src.fathom.profiler.rank_pairs"}
-{"dst": "src.fathom.profiler.rounded", "file": "src/fathom/profiler.py", "kind": "calls", "line": 226, "resolved": true, "src": "src.fathom.profiler.rank_pairs"}
-{"dst": "warnings.catch_warnings", "file": "src/fathom/profiler.py", "kind": "calls", "line": 259, "resolved": true, "src": "src.fathom.profiler.rank_pairs"}
-{"dst": "warnings.simplefilter", "file": "src/fathom/profiler.py", "kind": "calls", "line": 260, "resolved": true, "src": "src.fathom.profiler.rank_pairs"}
-{"dst": "math.isfinite", "file": "src/fathom/profiler.py", "kind": "calls", "line": 32, "resolved": true, "src": "src.fathom.profiler.rounded"}
-{"dst": "?boolop.get", "file": "src/fathom/profiler.py", "kind": "calls", "line": 201, "resolved": false, "src": "src.fathom.profiler.select_pairs"}
-{"dst": "?cfg.get", "file": "src/fathom/profiler.py", "kind": "calls", "line": 198, "resolved": false, "src": "src.fathom.profiler.select_pairs"}
-{"dst": "src.fathom.profiler.rank_pairs", "file": "src/fathom/profiler.py", "kind": "calls", "line": 204, "resolved": true, "src": "src.fathom.profiler.select_pairs"}
-{"dst": "src.fathom.target.target_candidates", "file": "src/fathom/profiler.py", "kind": "calls", "line": 206, "resolved": true, "src": "src.fathom.profiler.select_pairs"}
-{"dst": "?boolop.get", "file": "src/fathom/profiler.py", "kind": "calls", "line": 77, "resolved": false, "src": "src.fathom.profiler.summarize"}
-{"dst": "?v.lower", "file": "src/fathom/profiler.py", "kind": "calls", "line": 81, "resolved": false, "src": "src.fathom.profiler.summarize"}
-{"dst": "src.fathom.parsing.parse_date", "file": "src/fathom/profiler.py", "kind": "calls", "line": 77, "resolved": true, "src": "src.fathom.profiler.summarize"}
-{"dst": "src.fathom.profiler.number", "file": "src/fathom/profiler.py", "kind": "calls", "line": 67, "resolved": true, "src": "src.fathom.profiler.summarize"}
-{"dst": "src.fathom.profiler.rounded", "file": "src/fathom/profiler.py", "kind": "calls", "line": 69, "resolved": true, "src": "src.fathom.profiler.summarize"}
-{"dst": "statistics.mean", "file": "src/fathom/profiler.py", "kind": "calls", "line": 71, "resolved": true, "src": "src.fathom.profiler.summarize"}
-{"dst": "statistics.median", "file": "src/fathom/profiler.py", "kind": "calls", "line": 72, "resolved": true, "src": "src.fathom.profiler.summarize"}
-{"dst": "statistics.pstdev", "file": "src/fathom/profiler.py", "kind": "calls", "line": 73, "resolved": true, "src": "src.fathom.profiler.summarize"}
+{"dst": "?ac.items", "file": "src/fathom/profiler.py", "kind": "calls", "line": 289, "resolved": false, "src": "src.fathom.profiler.compare"}
+{"dst": "src.fathom.models.ProfilingResult", "file": "src/fathom/profiler.py", "kind": "calls", "line": 280, "resolved": true, "src": "src.fathom.profiler.compare"}
+{"dst": "?meta.get", "file": "src/fathom/profiler.py", "kind": "calls", "line": 47, "resolved": false, "src": "src.fathom.profiler.infer"}
+{"dst": "?v.lower", "file": "src/fathom/profiler.py", "kind": "calls", "line": 45, "resolved": false, "src": "src.fathom.profiler.infer"}
+{"dst": "?v.strip", "file": "src/fathom/profiler.py", "kind": "calls", "line": 49, "resolved": false, "src": "src.fathom.profiler.infer"}
+{"dst": "re.match", "file": "src/fathom/profiler.py", "kind": "calls", "line": 49, "resolved": true, "src": "src.fathom.profiler.infer"}
+{"dst": "re.search", "file": "src/fathom/profiler.py", "kind": "calls", "line": 47, "resolved": true, "src": "src.fathom.profiler.infer"}
+{"dst": "src.fathom.parsing.parse_date", "file": "src/fathom/profiler.py", "kind": "calls", "line": 47, "resolved": true, "src": "src.fathom.profiler.infer"}
+{"dst": "src.fathom.profiler.number", "file": "src/fathom/profiler.py", "kind": "calls", "line": 49, "resolved": true, "src": "src.fathom.profiler.infer"}
+{"dst": "src.fathom.special.infer_special", "file": "src/fathom/profiler.py", "kind": "calls", "line": 38, "resolved": true, "src": "src.fathom.profiler.infer"}
+{"dst": "?parsed.isoformat", "file": "src/fathom/profiler.py", "kind": "calls", "line": 27, "resolved": false, "src": "src.fathom.profiler.iso_date"}
+{"dst": "datetime.date.fromisoformat", "file": "src/fathom/profiler.py", "kind": "calls", "line": 26, "resolved": true, "src": "src.fathom.profiler.iso_date"}
+{"dst": "src.fathom.parsing.finite_number", "file": "src/fathom/profiler.py", "kind": "calls", "line": 21, "resolved": true, "src": "src.fathom.profiler.number"}
+{"dst": "?cfg.get", "file": "src/fathom/profiler.py", "kind": "calls", "line": 154, "resolved": false, "src": "src.fathom.profiler.profile"}
+{"dst": "?cfg[...].get", "file": "src/fathom/profiler.py", "kind": "calls", "line": 124, "resolved": false, "src": "src.fathom.profiler.profile"}
+{"dst": "?columns.append", "file": "src/fathom/profiler.py", "kind": "calls", "line": 135, "resolved": false, "src": "src.fathom.profiler.profile"}
+{"dst": "?constant.join", "file": "src/fathom/profiler.py", "kind": "calls", "line": 162, "resolved": false, "src": "src.fathom.profiler.profile"}
+{"dst": "?counts.items", "file": "src/fathom/profiler.py", "kind": "calls", "line": 131, "resolved": false, "src": "src.fathom.profiler.profile"}
+{"dst": "?data.frame.values.tolist", "file": "src/fathom/profiler.py", "kind": "calls", "line": 93, "resolved": false, "src": "src.fathom.profiler.profile"}
+{"dst": "?data.schema.resolve", "file": "src/fathom/profiler.py", "kind": "calls", "line": 92, "resolved": false, "src": "src.fathom.profiler.profile"}
+{"dst": "?diagnostic", "file": "src/fathom/profiler.py", "kind": "calls", "line": 117, "resolved": false, "src": "src.fathom.profiler.profile"}
+{"dst": "?dup[...].append", "file": "src/fathom/profiler.py", "kind": "calls", "line": 163, "resolved": false, "src": "src.fathom.profiler.profile"}
+{"dst": "?finding", "file": "src/fathom/profiler.py", "kind": "calls", "line": 114, "resolved": false, "src": "src.fathom.profiler.profile"}
+{"dst": "?meta.get", "file": "src/fathom/profiler.py", "kind": "calls", "line": 126, "resolved": false, "src": "src.fathom.profiler.profile"}
+{"dst": "?overview.copy", "file": "src/fathom/profiler.py", "kind": "calls", "line": 115, "resolved": false, "src": "src.fathom.profiler.profile"}
+{"dst": "?stats.get", "file": "src/fathom/profiler.py", "kind": "calls", "line": 145, "resolved": false, "src": "src.fathom.profiler.profile"}
+{"dst": "collections.Counter", "file": "src/fathom/profiler.py", "kind": "calls", "line": 123, "resolved": true, "src": "src.fathom.profiler.profile"}
+{"dst": "dataclasses.asdict", "file": "src/fathom/profiler.py", "kind": "calls", "line": 187, "resolved": true, "src": "src.fathom.profiler.profile"}
+{"dst": "src.fathom.config.validate_config", "file": "src/fathom/profiler.py", "kind": "calls", "line": 91, "resolved": true, "src": "src.fathom.profiler.profile"}
+{"dst": "src.fathom.models.ProfilingResult", "file": "src/fathom/profiler.py", "kind": "calls", "line": 186, "resolved": true, "src": "src.fathom.profiler.profile"}
+{"dst": "src.fathom.profiler.infer", "file": "src/fathom/profiler.py", "kind": "calls", "line": 125, "resolved": true, "src": "src.fathom.profiler.profile"}
+{"dst": "src.fathom.profiler.select_pairs", "file": "src/fathom/profiler.py", "kind": "calls", "line": 168, "resolved": true, "src": "src.fathom.profiler.profile"}
+{"dst": "src.fathom.profiler.summarize", "file": "src/fathom/profiler.py", "kind": "calls", "line": 127, "resolved": true, "src": "src.fathom.profiler.profile"}
+{"dst": "src.fathom.quality.quality_profile", "file": "src/fathom/profiler.py", "kind": "calls", "line": 158, "resolved": true, "src": "src.fathom.profiler.profile"}
+{"dst": "src.fathom.rows.row_structure", "file": "src/fathom/profiler.py", "kind": "calls", "line": 159, "resolved": true, "src": "src.fathom.profiler.profile"}
+{"dst": "src.fathom.special.enrich_special", "file": "src/fathom/profiler.py", "kind": "calls", "line": 166, "resolved": true, "src": "src.fathom.profiler.profile"}
+{"dst": "src.fathom.target.build_target_analysis", "file": "src/fathom/profiler.py", "kind": "calls", "line": 170, "resolved": true, "src": "src.fathom.profiler.profile"}
+{"dst": "src.fathom.timeseries.time_series", "file": "src/fathom/profiler.py", "kind": "calls", "line": 164, "resolved": true, "src": "src.fathom.profiler.profile"}
+{"dst": "src.fathom.univariate.enrich_columns", "file": "src/fathom/profiler.py", "kind": "calls", "line": 165, "resolved": true, "src": "src.fathom.profiler.profile"}
+{"dst": "src.fathom.univariate.identity_and_samples", "file": "src/fathom/profiler.py", "kind": "calls", "line": 167, "resolved": true, "src": "src.fathom.profiler.profile"}
+{"dst": "src.fathom.univariate.missingness_patterns", "file": "src/fathom/profiler.py", "kind": "calls", "line": 196, "resolved": true, "src": "src.fathom.profiler.profile"}
+{"dst": "?finding", "file": "src/fathom/profiler.py", "kind": "calls", "line": 107, "resolved": false, "src": "src.fathom.profiler.profile.<locals>.diagnostic"}
+{"dst": "?findings.append", "file": "src/fathom/profiler.py", "kind": "calls", "line": 103, "resolved": false, "src": "src.fathom.profiler.profile.<locals>.finding"}
+{"dst": "?boolop.casefold", "file": "src/fathom/profiler.py", "kind": "calls", "line": 214, "resolved": false, "src": "src.fathom.profiler.rank_pairs"}
+{"dst": "?candidates.sort", "file": "src/fathom/profiler.py", "kind": "calls", "line": 229, "resolved": false, "src": "src.fathom.profiler.rank_pairs"}
+{"dst": "?cfg.get", "file": "src/fathom/profiler.py", "kind": "calls", "line": 214, "resolved": false, "src": "src.fathom.profiler.rank_pairs"}
+{"dst": "?chosen.append", "file": "src/fathom/profiler.py", "kind": "calls", "line": 266, "resolved": false, "src": "src.fathom.profiler.rank_pairs"}
+{"dst": "?name.casefold", "file": "src/fathom/profiler.py", "kind": "calls", "line": 219, "resolved": false, "src": "src.fathom.profiler.rank_pairs"}
+{"dst": "?pair[...].update", "file": "src/fathom/profiler.py", "kind": "calls", "line": 264, "resolved": false, "src": "src.fathom.profiler.rank_pairs"}
+{"dst": "?selection[...].append", "file": "src/fathom/profiler.py", "kind": "calls", "line": 246, "resolved": false, "src": "src.fathom.profiler.rank_pairs"}
+{"dst": "?slots.add", "file": "src/fathom/profiler.py", "kind": "calls", "line": 242, "resolved": false, "src": "src.fathom.profiler.rank_pairs"}
+{"dst": "?slots.remove", "file": "src/fathom/profiler.py", "kind": "calls", "line": 242, "resolved": false, "src": "src.fathom.profiler.rank_pairs"}
+{"dst": "math.isfinite", "file": "src/fathom/profiler.py", "kind": "calls", "line": 228, "resolved": true, "src": "src.fathom.profiler.rank_pairs"}
+{"dst": "re.escape", "file": "src/fathom/profiler.py", "kind": "calls", "line": 219, "resolved": true, "src": "src.fathom.profiler.rank_pairs"}
+{"dst": "re.search", "file": "src/fathom/profiler.py", "kind": "calls", "line": 219, "resolved": true, "src": "src.fathom.profiler.rank_pairs"}
+{"dst": "scipy.stats.pearsonr", "file": "src/fathom/profiler.py", "kind": "calls", "line": 263, "resolved": true, "src": "src.fathom.profiler.rank_pairs"}
+{"dst": "src.fathom.profiler.number", "file": "src/fathom/profiler.py", "kind": "calls", "line": 226, "resolved": true, "src": "src.fathom.profiler.rank_pairs"}
+{"dst": "src.fathom.profiler.rounded", "file": "src/fathom/profiler.py", "kind": "calls", "line": 228, "resolved": true, "src": "src.fathom.profiler.rank_pairs"}
+{"dst": "warnings.catch_warnings", "file": "src/fathom/profiler.py", "kind": "calls", "line": 261, "resolved": true, "src": "src.fathom.profiler.rank_pairs"}
+{"dst": "warnings.simplefilter", "file": "src/fathom/profiler.py", "kind": "calls", "line": 262, "resolved": true, "src": "src.fathom.profiler.rank_pairs"}
+{"dst": "math.isfinite", "file": "src/fathom/profiler.py", "kind": "calls", "line": 33, "resolved": true, "src": "src.fathom.profiler.rounded"}
+{"dst": "?boolop.get", "file": "src/fathom/profiler.py", "kind": "calls", "line": 203, "resolved": false, "src": "src.fathom.profiler.select_pairs"}
+{"dst": "?cfg.get", "file": "src/fathom/profiler.py", "kind": "calls", "line": 200, "resolved": false, "src": "src.fathom.profiler.select_pairs"}
+{"dst": "src.fathom.profiler.rank_pairs", "file": "src/fathom/profiler.py", "kind": "calls", "line": 206, "resolved": true, "src": "src.fathom.profiler.select_pairs"}
+{"dst": "src.fathom.target.target_candidates", "file": "src/fathom/profiler.py", "kind": "calls", "line": 208, "resolved": true, "src": "src.fathom.profiler.select_pairs"}
+{"dst": "?boolop.get", "file": "src/fathom/profiler.py", "kind": "calls", "line": 78, "resolved": false, "src": "src.fathom.profiler.summarize"}
+{"dst": "?v.lower", "file": "src/fathom/profiler.py", "kind": "calls", "line": 82, "resolved": false, "src": "src.fathom.profiler.summarize"}
+{"dst": "src.fathom.parsing.parse_date", "file": "src/fathom/profiler.py", "kind": "calls", "line": 78, "resolved": true, "src": "src.fathom.profiler.summarize"}
+{"dst": "src.fathom.profiler.number", "file": "src/fathom/profiler.py", "kind": "calls", "line": 68, "resolved": true, "src": "src.fathom.profiler.summarize"}
+{"dst": "src.fathom.profiler.rounded", "file": "src/fathom/profiler.py", "kind": "calls", "line": 70, "resolved": true, "src": "src.fathom.profiler.summarize"}
+{"dst": "statistics.mean", "file": "src/fathom/profiler.py", "kind": "calls", "line": 72, "resolved": true, "src": "src.fathom.profiler.summarize"}
+{"dst": "statistics.median", "file": "src/fathom/profiler.py", "kind": "calls", "line": 73, "resolved": true, "src": "src.fathom.profiler.summarize"}
+{"dst": "statistics.pstdev", "file": "src/fathom/profiler.py", "kind": "calls", "line": 74, "resolved": true, "src": "src.fathom.profiler.summarize"}
 {"dst": "?d.isoformat", "file": "src/fathom/quality.py", "kind": "calls", "line": 18, "resolved": false, "src": "src.fathom.quality.calendar_date"}
 {"dst": "datetime.date.fromisoformat", "file": "src/fathom/quality.py", "kind": "calls", "line": 17, "resolved": true, "src": "src.fathom.quality.calendar_date"}
 {"dst": "src.fathom.quality.share", "file": "src/fathom/quality.py", "kind": "calls", "line": 30, "resolved": true, "src": "src.fathom.quality.copy_evidence"}
@@ -1431,148 +1538,150 @@
 {"dst": "?observation", "file": "src/fathom/quality.py", "kind": "calls", "line": 62, "resolved": false, "src": "src.fathom.quality.quality_profile.<locals>.diagnostic"}
 {"dst": "?rules.get", "file": "src/fathom/quality.py", "kind": "calls", "line": 62, "resolved": false, "src": "src.fathom.quality.quality_profile.<locals>.diagnostic"}
 {"dst": "?emit", "file": "src/fathom/quality.py", "kind": "calls", "line": 57, "resolved": false, "src": "src.fathom.quality.quality_profile.<locals>.observation"}
-{"dst": "src.fathom.charts.svg_chart", "file": "src/fathom/renderers.py", "kind": "calls", "line": 163, "resolved": true, "src": "src.fathom.renderers.bars"}
-{"dst": "?constant.join", "file": "src/fathom/renderers.py", "kind": "calls", "line": 159, "resolved": false, "src": "src.fathom.renderers.charts_markdown"}
-{"dst": "src.fathom.charts.svg_chart", "file": "src/fathom/renderers.py", "kind": "calls", "line": 159, "resolved": true, "src": "src.fathom.renderers.charts_markdown"}
-{"dst": "src.fathom.presentation.column_tables", "file": "src/fathom/renderers.py", "kind": "calls", "line": 159, "resolved": true, "src": "src.fathom.renderers.charts_markdown"}
-{"dst": "src.fathom.presentation.display_charts", "file": "src/fathom/renderers.py", "kind": "calls", "line": 159, "resolved": true, "src": "src.fathom.renderers.charts_markdown"}
-{"dst": "src.fathom.presentation.markdown_table", "file": "src/fathom/renderers.py", "kind": "calls", "line": 159, "resolved": true, "src": "src.fathom.renderers.charts_markdown"}
-{"dst": "?boolop.get", "file": "src/fathom/renderers.py", "kind": "calls", "line": 114, "resolved": false, "src": "src.fathom.renderers.datetime_note"}
-{"dst": "?boolop.get(...).get", "file": "src/fathom/renderers.py", "kind": "calls", "line": 114, "resolved": false, "src": "src.fathom.renderers.datetime_note"}
-{"dst": "?c.get", "file": "src/fathom/renderers.py", "kind": "calls", "line": 114, "resolved": false, "src": "src.fathom.renderers.datetime_note"}
-{"dst": "?constant.join", "file": "src/fathom/renderers.py", "kind": "calls", "line": 189, "resolved": false, "src": "src.fathom.renderers.dictionary_and_provenance_html"}
-{"dst": "?d.get", "file": "src/fathom/renderers.py", "kind": "calls", "line": 185, "resolved": false, "src": "src.fathom.renderers.dictionary_and_provenance_html"}
-{"dst": "?d.get(...).get", "file": "src/fathom/renderers.py", "kind": "calls", "line": 207, "resolved": false, "src": "src.fathom.renderers.dictionary_and_provenance_html"}
-{"dst": "?t[...].startswith", "file": "src/fathom/renderers.py", "kind": "calls", "line": 197, "resolved": false, "src": "src.fathom.renderers.dictionary_and_provenance_html"}
-{"dst": "html.escape", "file": "src/fathom/renderers.py", "kind": "calls", "line": 187, "resolved": true, "src": "src.fathom.renderers.dictionary_and_provenance_html"}
-{"dst": "src.fathom.charts.svg_chart", "file": "src/fathom/renderers.py", "kind": "calls", "line": 187, "resolved": true, "src": "src.fathom.renderers.dictionary_and_provenance_html"}
-{"dst": "src.fathom.presentation.column_tables", "file": "src/fathom/renderers.py", "kind": "calls", "line": 196, "resolved": true, "src": "src.fathom.renderers.dictionary_and_provenance_html"}
-{"dst": "src.fathom.presentation.display_charts", "file": "src/fathom/renderers.py", "kind": "calls", "line": 202, "resolved": true, "src": "src.fathom.renderers.dictionary_and_provenance_html"}
-{"dst": "src.fathom.presentation.formatted", "file": "src/fathom/renderers.py", "kind": "calls", "line": 189, "resolved": true, "src": "src.fathom.renderers.dictionary_and_provenance_html"}
-{"dst": "src.fathom.presentation.formatted_examples", "file": "src/fathom/renderers.py", "kind": "calls", "line": 195, "resolved": true, "src": "src.fathom.renderers.dictionary_and_provenance_html"}
-{"dst": "src.fathom.presentation.html_table", "file": "src/fathom/renderers.py", "kind": "calls", "line": 188, "resolved": true, "src": "src.fathom.renderers.dictionary_and_provenance_html"}
-{"dst": "src.fathom.presentation.top_n_reason", "file": "src/fathom/renderers.py", "kind": "calls", "line": 201, "resolved": true, "src": "src.fathom.renderers.dictionary_and_provenance_html"}
-{"dst": "src.fathom.renderers.bars", "file": "src/fathom/renderers.py", "kind": "calls", "line": 184, "resolved": true, "src": "src.fathom.renderers.dictionary_and_provenance_html"}
-{"dst": "src.fathom.renderers.datetime_note", "file": "src/fathom/renderers.py", "kind": "calls", "line": 194, "resolved": true, "src": "src.fathom.renderers.dictionary_and_provenance_html"}
-{"dst": "src.fathom.renderers.readable_html", "file": "src/fathom/renderers.py", "kind": "calls", "line": 206, "resolved": true, "src": "src.fathom.renderers.dictionary_and_provenance_html"}
-{"dst": "src.fathom.renderers.samples_html", "file": "src/fathom/renderers.py", "kind": "calls", "line": 190, "resolved": true, "src": "src.fathom.renderers.dictionary_and_provenance_html"}
-{"dst": "?constant.join", "file": "src/fathom/renderers.py", "kind": "calls", "line": 271, "resolved": false, "src": "src.fathom.renderers.dictionary_and_provenance_markdown"}
-{"dst": "?d.get", "file": "src/fathom/renderers.py", "kind": "calls", "line": 268, "resolved": false, "src": "src.fathom.renderers.dictionary_and_provenance_markdown"}
-{"dst": "?d.get(...).get", "file": "src/fathom/renderers.py", "kind": "calls", "line": 273, "resolved": false, "src": "src.fathom.renderers.dictionary_and_provenance_markdown"}
-{"dst": "src.fathom.charts.svg_chart", "file": "src/fathom/renderers.py", "kind": "calls", "line": 268, "resolved": true, "src": "src.fathom.renderers.dictionary_and_provenance_markdown"}
-{"dst": "src.fathom.presentation.formatted_examples", "file": "src/fathom/renderers.py", "kind": "calls", "line": 271, "resolved": true, "src": "src.fathom.renderers.dictionary_and_provenance_markdown"}
-{"dst": "src.fathom.renderers.charts_markdown", "file": "src/fathom/renderers.py", "kind": "calls", "line": 271, "resolved": true, "src": "src.fathom.renderers.dictionary_and_provenance_markdown"}
-{"dst": "src.fathom.renderers.datetime_note", "file": "src/fathom/renderers.py", "kind": "calls", "line": 271, "resolved": true, "src": "src.fathom.renderers.dictionary_and_provenance_markdown"}
-{"dst": "src.fathom.renderers.md_text", "file": "src/fathom/renderers.py", "kind": "calls", "line": 271, "resolved": true, "src": "src.fathom.renderers.dictionary_and_provenance_markdown"}
-{"dst": "src.fathom.renderers.readable_md", "file": "src/fathom/renderers.py", "kind": "calls", "line": 272, "resolved": true, "src": "src.fathom.renderers.dictionary_and_provenance_markdown"}
-{"dst": "src.fathom.renderers.samples_markdown", "file": "src/fathom/renderers.py", "kind": "calls", "line": 267, "resolved": true, "src": "src.fathom.renderers.dictionary_and_provenance_markdown"}
-{"dst": "?constant.join", "file": "src/fathom/renderers.py", "kind": "calls", "line": 179, "resolved": false, "src": "src.fathom.renderers.finding_html"}
-{"dst": "?out.append", "file": "src/fathom/renderers.py", "kind": "calls", "line": 174, "resolved": false, "src": "src.fathom.renderers.finding_html"}
-{"dst": "html.escape", "file": "src/fathom/renderers.py", "kind": "calls", "line": 168, "resolved": true, "src": "src.fathom.renderers.finding_html"}
-{"dst": "src.fathom.renderers.label", "file": "src/fathom/renderers.py", "kind": "calls", "line": 176, "resolved": true, "src": "src.fathom.renderers.finding_html"}
-{"dst": "src.fathom.renderers.readable_html", "file": "src/fathom/renderers.py", "kind": "calls", "line": 176, "resolved": true, "src": "src.fathom.renderers.finding_html"}
-{"dst": "src.fathom.renderers.repetitive", "file": "src/fathom/renderers.py", "kind": "calls", "line": 169, "resolved": true, "src": "src.fathom.renderers.finding_html"}
-{"dst": "?measure.get", "file": "src/fathom/renderers.py", "kind": "calls", "line": 51, "resolved": false, "src": "src.fathom.renderers.fraction"}
-{"dst": "src.fathom.presentation.formatted", "file": "src/fathom/renderers.py", "kind": "calls", "line": 52, "resolved": true, "src": "src.fathom.renderers.fraction"}
-{"dst": "?str(...).replace", "file": "src/fathom/renderers.py", "kind": "calls", "line": 22, "resolved": false, "src": "src.fathom.renderers.label"}
-{"dst": "?str(...).replace(...).replace", "file": "src/fathom/renderers.py", "kind": "calls", "line": 22, "resolved": false, "src": "src.fathom.renderers.label"}
-{"dst": "?str(...).replace(...).replace(...).capitalize", "file": "src/fathom/renderers.py", "kind": "calls", "line": 22, "resolved": false, "src": "src.fathom.renderers.label"}
-{"dst": "html.escape", "file": "src/fathom/renderers.py", "kind": "calls", "line": 325, "resolved": true, "src": "src.fathom.renderers.markdown_finding"}
-{"dst": "src.fathom.renderers.md_text", "file": "src/fathom/renderers.py", "kind": "calls", "line": 325, "resolved": true, "src": "src.fathom.renderers.markdown_finding"}
-{"dst": "src.fathom.renderers.readable_md", "file": "src/fathom/renderers.py", "kind": "calls", "line": 326, "resolved": true, "src": "src.fathom.renderers.markdown_finding"}
-{"dst": "?re.sub(...).replace", "file": "src/fathom/renderers.py", "kind": "calls", "line": 18, "resolved": false, "src": "src.fathom.renderers.md_text"}
-{"dst": "html.escape", "file": "src/fathom/renderers.py", "kind": "calls", "line": 18, "resolved": true, "src": "src.fathom.renderers.md_text"}
-{"dst": "re.sub", "file": "src/fathom/renderers.py", "kind": "calls", "line": 18, "resolved": true, "src": "src.fathom.renderers.md_text"}
-{"dst": "?constant.join", "file": "src/fathom/renderers.py", "kind": "calls", "line": 35, "resolved": false, "src": "src.fathom.renderers.readable_html"}
-{"dst": "?value.items", "file": "src/fathom/renderers.py", "kind": "calls", "line": 35, "resolved": false, "src": "src.fathom.renderers.readable_html"}
-{"dst": "html.escape", "file": "src/fathom/renderers.py", "kind": "calls", "line": 35, "resolved": true, "src": "src.fathom.renderers.readable_html"}
-{"dst": "src.fathom.renderers.label", "file": "src/fathom/renderers.py", "kind": "calls", "line": 35, "resolved": true, "src": "src.fathom.renderers.readable_html"}
-{"dst": "src.fathom.renderers.readable_html", "file": "src/fathom/renderers.py", "kind": "calls", "line": 35, "resolved": true, "src": "src.fathom.renderers.readable_html"}
-{"dst": "src.fathom.renderers.scalar", "file": "src/fathom/renderers.py", "kind": "calls", "line": 38, "resolved": true, "src": "src.fathom.renderers.readable_html"}
-{"dst": "?constant.join", "file": "src/fathom/renderers.py", "kind": "calls", "line": 43, "resolved": false, "src": "src.fathom.renderers.readable_md"}
-{"dst": "?value.items", "file": "src/fathom/renderers.py", "kind": "calls", "line": 43, "resolved": false, "src": "src.fathom.renderers.readable_md"}
-{"dst": "src.fathom.renderers.label", "file": "src/fathom/renderers.py", "kind": "calls", "line": 43, "resolved": true, "src": "src.fathom.renderers.readable_md"}
-{"dst": "src.fathom.renderers.md_text", "file": "src/fathom/renderers.py", "kind": "calls", "line": 43, "resolved": true, "src": "src.fathom.renderers.readable_md"}
-{"dst": "src.fathom.renderers.readable_md", "file": "src/fathom/renderers.py", "kind": "calls", "line": 43, "resolved": true, "src": "src.fathom.renderers.readable_md"}
-{"dst": "src.fathom.renderers.scalar", "file": "src/fathom/renderers.py", "kind": "calls", "line": 43, "resolved": true, "src": "src.fathom.renderers.readable_md"}
-{"dst": "?constant.join", "file": "src/fathom/renderers.py", "kind": "calls", "line": 220, "resolved": false, "src": "src.fathom.renderers.render_html"}
-{"dst": "?d.get", "file": "src/fathom/renderers.py", "kind": "calls", "line": 214, "resolved": false, "src": "src.fathom.renderers.render_html"}
-{"dst": "?d.get(...).get", "file": "src/fathom/renderers.py", "kind": "calls", "line": 215, "resolved": false, "src": "src.fathom.renderers.render_html"}
-{"dst": "?d[...].get", "file": "src/fathom/renderers.py", "kind": "calls", "line": 227, "resolved": false, "src": "src.fathom.renderers.render_html"}
-{"dst": "?identity.get", "file": "src/fathom/renderers.py", "kind": "calls", "line": 215, "resolved": false, "src": "src.fathom.renderers.render_html"}
-{"dst": "?identity.get(...).get", "file": "src/fathom/renderers.py", "kind": "calls", "line": 215, "resolved": false, "src": "src.fathom.renderers.render_html"}
-{"dst": "?out.append", "file": "src/fathom/renderers.py", "kind": "calls", "line": 226, "resolved": false, "src": "src.fathom.renderers.render_html"}
-{"dst": "?out.extend", "file": "src/fathom/renderers.py", "kind": "calls", "line": 241, "resolved": false, "src": "src.fathom.renderers.render_html"}
-{"dst": "html.escape", "file": "src/fathom/renderers.py", "kind": "calls", "line": 216, "resolved": true, "src": "src.fathom.renderers.render_html"}
-{"dst": "pathlib.Path", "file": "src/fathom/renderers.py", "kind": "calls", "line": 215, "resolved": true, "src": "src.fathom.renderers.render_html"}
-{"dst": "src.fathom.charts.svg_chart", "file": "src/fathom/renderers.py", "kind": "calls", "line": 248, "resolved": true, "src": "src.fathom.renderers.render_html"}
-{"dst": "src.fathom.presentation.html_table", "file": "src/fathom/renderers.py", "kind": "calls", "line": 220, "resolved": true, "src": "src.fathom.renderers.render_html"}
-{"dst": "src.fathom.presentation.structured_tables", "file": "src/fathom/renderers.py", "kind": "calls", "line": 220, "resolved": true, "src": "src.fathom.renderers.render_html"}
-{"dst": "src.fathom.renderers.dictionary_and_provenance_html", "file": "src/fathom/renderers.py", "kind": "calls", "line": 222, "resolved": true, "src": "src.fathom.renderers.render_html"}
-{"dst": "src.fathom.renderers.finding_html", "file": "src/fathom/renderers.py", "kind": "calls", "line": 241, "resolved": true, "src": "src.fathom.renderers.render_html"}
-{"dst": "src.fathom.renderers.readable_html", "file": "src/fathom/renderers.py", "kind": "calls", "line": 229, "resolved": true, "src": "src.fathom.renderers.render_html"}
-{"dst": "src.fathom.renderers.repetition_groups", "file": "src/fathom/renderers.py", "kind": "calls", "line": 232, "resolved": true, "src": "src.fathom.renderers.render_html"}
-{"dst": "src.fathom.renderers.summary_rows", "file": "src/fathom/renderers.py", "kind": "calls", "line": 224, "resolved": true, "src": "src.fathom.renderers.render_html"}
-{"dst": "src.fathom.renderers.unknowns", "file": "src/fathom/renderers.py", "kind": "calls", "line": 229, "resolved": true, "src": "src.fathom.renderers.render_html"}
-{"dst": "src.fathom.target.target_tables", "file": "src/fathom/renderers.py", "kind": "calls", "line": 247, "resolved": true, "src": "src.fathom.renderers.render_html"}
-{"dst": "?constant.join", "file": "src/fathom/renderers.py", "kind": "calls", "line": 285, "resolved": false, "src": "src.fathom.renderers.render_markdown"}
-{"dst": "?constant.join(...).rstrip", "file": "src/fathom/renderers.py", "kind": "calls", "line": 321, "resolved": false, "src": "src.fathom.renderers.render_markdown"}
-{"dst": "?d.get", "file": "src/fathom/renderers.py", "kind": "calls", "line": 280, "resolved": false, "src": "src.fathom.renderers.render_markdown"}
-{"dst": "?d[...].get", "file": "src/fathom/renderers.py", "kind": "calls", "line": 292, "resolved": false, "src": "src.fathom.renderers.render_markdown"}
-{"dst": "?identity.get", "file": "src/fathom/renderers.py", "kind": "calls", "line": 281, "resolved": false, "src": "src.fathom.renderers.render_markdown"}
-{"dst": "?identity.get(...).get", "file": "src/fathom/renderers.py", "kind": "calls", "line": 281, "resolved": false, "src": "src.fathom.renderers.render_markdown"}
-{"dst": "?lines.append", "file": "src/fathom/renderers.py", "kind": "calls", "line": 291, "resolved": false, "src": "src.fathom.renderers.render_markdown"}
-{"dst": "src.fathom.charts.svg_chart", "file": "src/fathom/renderers.py", "kind": "calls", "line": 314, "resolved": true, "src": "src.fathom.renderers.render_markdown"}
-{"dst": "src.fathom.presentation.markdown_table", "file": "src/fathom/renderers.py", "kind": "calls", "line": 285, "resolved": true, "src": "src.fathom.renderers.render_markdown"}
-{"dst": "src.fathom.presentation.structured_tables", "file": "src/fathom/renderers.py", "kind": "calls", "line": 285, "resolved": true, "src": "src.fathom.renderers.render_markdown"}
-{"dst": "src.fathom.renderers.dictionary_and_provenance_markdown", "file": "src/fathom/renderers.py", "kind": "calls", "line": 287, "resolved": true, "src": "src.fathom.renderers.render_markdown"}
-{"dst": "src.fathom.renderers.markdown_finding", "file": "src/fathom/renderers.py", "kind": "calls", "line": 303, "resolved": true, "src": "src.fathom.renderers.render_markdown"}
-{"dst": "src.fathom.renderers.md_text", "file": "src/fathom/renderers.py", "kind": "calls", "line": 281, "resolved": true, "src": "src.fathom.renderers.render_markdown"}
-{"dst": "src.fathom.renderers.readable_md", "file": "src/fathom/renderers.py", "kind": "calls", "line": 293, "resolved": true, "src": "src.fathom.renderers.render_markdown"}
-{"dst": "src.fathom.renderers.repetition_groups", "file": "src/fathom/renderers.py", "kind": "calls", "line": 295, "resolved": true, "src": "src.fathom.renderers.render_markdown"}
-{"dst": "src.fathom.renderers.repetitive", "file": "src/fathom/renderers.py", "kind": "calls", "line": 302, "resolved": true, "src": "src.fathom.renderers.render_markdown"}
-{"dst": "src.fathom.renderers.summary_rows", "file": "src/fathom/renderers.py", "kind": "calls", "line": 289, "resolved": true, "src": "src.fathom.renderers.render_markdown"}
-{"dst": "src.fathom.renderers.unknowns", "file": "src/fathom/renderers.py", "kind": "calls", "line": 293, "resolved": true, "src": "src.fathom.renderers.render_markdown"}
-{"dst": "src.fathom.target.target_tables", "file": "src/fathom/renderers.py", "kind": "calls", "line": 313, "resolved": true, "src": "src.fathom.renderers.render_markdown"}
-{"dst": "?buckets.items", "file": "src/fathom/renderers.py", "kind": "calls", "line": 97, "resolved": false, "src": "src.fathom.renderers.repetition_groups"}
-{"dst": "?buckets.setdefault", "file": "src/fathom/renderers.py", "kind": "calls", "line": 96, "resolved": false, "src": "src.fathom.renderers.repetition_groups"}
-{"dst": "?buckets.setdefault(...).append", "file": "src/fathom/renderers.py", "kind": "calls", "line": 96, "resolved": false, "src": "src.fathom.renderers.repetition_groups"}
-{"dst": "?constant.join", "file": "src/fathom/renderers.py", "kind": "calls", "line": 104, "resolved": false, "src": "src.fathom.renderers.repetition_groups"}
-{"dst": "?f.get", "file": "src/fathom/renderers.py", "kind": "calls", "line": 93, "resolved": false, "src": "src.fathom.renderers.repetition_groups"}
-{"dst": "?f[...].split", "file": "src/fathom/renderers.py", "kind": "calls", "line": 101, "resolved": false, "src": "src.fathom.renderers.repetition_groups"}
-{"dst": "?items[...][...].rstrip", "file": "src/fathom/renderers.py", "kind": "calls", "line": 104, "resolved": false, "src": "src.fathom.renderers.repetition_groups"}
-{"dst": "?match.group", "file": "src/fathom/renderers.py", "kind": "calls", "line": 93, "resolved": false, "src": "src.fathom.renderers.repetition_groups"}
-{"dst": "?names.append", "file": "src/fathom/renderers.py", "kind": "calls", "line": 103, "resolved": false, "src": "src.fathom.renderers.repetition_groups"}
-{"dst": "?result.append", "file": "src/fathom/renderers.py", "kind": "calls", "line": 105, "resolved": false, "src": "src.fathom.renderers.repetition_groups"}
-{"dst": "re.fullmatch", "file": "src/fathom/renderers.py", "kind": "calls", "line": 85, "resolved": true, "src": "src.fathom.renderers.repetition_groups"}
-{"dst": "src.fathom.renderers.repetitive", "file": "src/fathom/renderers.py", "kind": "calls", "line": 91, "resolved": true, "src": "src.fathom.renderers.repetition_groups"}
-{"dst": "re.fullmatch", "file": "src/fathom/renderers.py", "kind": "calls", "line": 81, "resolved": true, "src": "src.fathom.renderers.repetitive"}
-{"dst": "?value.strip", "file": "src/fathom/renderers.py", "kind": "calls", "line": 130, "resolved": false, "src": "src.fathom.renderers.sample_cell"}
-{"dst": "?constant.join", "file": "src/fathom/renderers.py", "kind": "calls", "line": 142, "resolved": false, "src": "src.fathom.renderers.samples_html"}
-{"dst": "?d.get", "file": "src/fathom/renderers.py", "kind": "calls", "line": 135, "resolved": false, "src": "src.fathom.renderers.samples_html"}
-{"dst": "?out.append", "file": "src/fathom/renderers.py", "kind": "calls", "line": 142, "resolved": false, "src": "src.fathom.renderers.samples_html"}
-{"dst": "html.escape", "file": "src/fathom/renderers.py", "kind": "calls", "line": 137, "resolved": true, "src": "src.fathom.renderers.samples_html"}
-{"dst": "src.fathom.renderers.sample_cell", "file": "src/fathom/renderers.py", "kind": "calls", "line": 142, "resolved": true, "src": "src.fathom.renderers.samples_html"}
-{"dst": "?constant.join", "file": "src/fathom/renderers.py", "kind": "calls", "line": 152, "resolved": false, "src": "src.fathom.renderers.samples_markdown"}
-{"dst": "?d.get", "file": "src/fathom/renderers.py", "kind": "calls", "line": 148, "resolved": false, "src": "src.fathom.renderers.samples_markdown"}
-{"dst": "?lines.append", "file": "src/fathom/renderers.py", "kind": "calls", "line": 153, "resolved": false, "src": "src.fathom.renderers.samples_markdown"}
-{"dst": "src.fathom.renderers.md_text", "file": "src/fathom/renderers.py", "kind": "calls", "line": 152, "resolved": true, "src": "src.fathom.renderers.samples_markdown"}
-{"dst": "src.fathom.renderers.sample_cell", "file": "src/fathom/renderers.py", "kind": "calls", "line": 153, "resolved": true, "src": "src.fathom.renderers.samples_markdown"}
-{"dst": "?Counter(...).items", "file": "src/fathom/renderers.py", "kind": "calls", "line": 62, "resolved": false, "src": "src.fathom.renderers.summary_rows"}
-{"dst": "?constant.join", "file": "src/fathom/renderers.py", "kind": "calls", "line": 70, "resolved": false, "src": "src.fathom.renderers.summary_rows"}
-{"dst": "?d.get", "file": "src/fathom/renderers.py", "kind": "calls", "line": 56, "resolved": false, "src": "src.fathom.renderers.summary_rows"}
-{"dst": "?items.append", "file": "src/fathom/renderers.py", "kind": "calls", "line": 75, "resolved": false, "src": "src.fathom.renderers.summary_rows"}
-{"dst": "?s.get", "file": "src/fathom/renderers.py", "kind": "calls", "line": 76, "resolved": false, "src": "src.fathom.renderers.summary_rows"}
-{"dst": "?s.get(...).get", "file": "src/fathom/renderers.py", "kind": "calls", "line": 76, "resolved": false, "src": "src.fathom.renderers.summary_rows"}
-{"dst": "?s[...].items", "file": "src/fathom/renderers.py", "kind": "calls", "line": 70, "resolved": false, "src": "src.fathom.renderers.summary_rows"}
-{"dst": "collections.Counter", "file": "src/fathom/renderers.py", "kind": "calls", "line": 62, "resolved": true, "src": "src.fathom.renderers.summary_rows"}
-{"dst": "src.fathom.presentation.formatted", "file": "src/fathom/renderers.py", "kind": "calls", "line": 76, "resolved": true, "src": "src.fathom.renderers.summary_rows"}
-{"dst": "src.fathom.renderers.fraction", "file": "src/fathom/renderers.py", "kind": "calls", "line": 65, "resolved": true, "src": "src.fathom.renderers.summary_rows"}
-{"dst": "src.fathom.renderers.label", "file": "src/fathom/renderers.py", "kind": "calls", "line": 75, "resolved": true, "src": "src.fathom.renderers.summary_rows"}
-{"dst": "?constant.join", "file": "src/fathom/renderers.py", "kind": "calls", "line": 123, "resolved": false, "src": "src.fathom.renderers.unknowns"}
-{"dst": "?d.get", "file": "src/fathom/renderers.py", "kind": "calls", "line": 121, "resolved": false, "src": "src.fathom.renderers.unknowns"}
-{"dst": "?f[...].startswith", "file": "src/fathom/renderers.py", "kind": "calls", "line": 119, "resolved": false, "src": "src.fathom.renderers.unknowns"}
-{"dst": "src.fathom.renderers.datetime_note", "file": "src/fathom/renderers.py", "kind": "calls", "line": 121, "resolved": true, "src": "src.fathom.renderers.unknowns"}
+{"dst": "src.fathom.charts.svg_chart", "file": "src/fathom/renderers.py", "kind": "calls", "line": 164, "resolved": true, "src": "src.fathom.renderers.bars"}
+{"dst": "?constant.join", "file": "src/fathom/renderers.py", "kind": "calls", "line": 160, "resolved": false, "src": "src.fathom.renderers.charts_markdown"}
+{"dst": "src.fathom.charts.svg_chart", "file": "src/fathom/renderers.py", "kind": "calls", "line": 160, "resolved": true, "src": "src.fathom.renderers.charts_markdown"}
+{"dst": "src.fathom.presentation.column_tables", "file": "src/fathom/renderers.py", "kind": "calls", "line": 160, "resolved": true, "src": "src.fathom.renderers.charts_markdown"}
+{"dst": "src.fathom.presentation.display_charts", "file": "src/fathom/renderers.py", "kind": "calls", "line": 160, "resolved": true, "src": "src.fathom.renderers.charts_markdown"}
+{"dst": "src.fathom.presentation.markdown_table", "file": "src/fathom/renderers.py", "kind": "calls", "line": 160, "resolved": true, "src": "src.fathom.renderers.charts_markdown"}
+{"dst": "?boolop.get", "file": "src/fathom/renderers.py", "kind": "calls", "line": 115, "resolved": false, "src": "src.fathom.renderers.datetime_note"}
+{"dst": "?boolop.get(...).get", "file": "src/fathom/renderers.py", "kind": "calls", "line": 115, "resolved": false, "src": "src.fathom.renderers.datetime_note"}
+{"dst": "?c.get", "file": "src/fathom/renderers.py", "kind": "calls", "line": 115, "resolved": false, "src": "src.fathom.renderers.datetime_note"}
+{"dst": "?constant.join", "file": "src/fathom/renderers.py", "kind": "calls", "line": 190, "resolved": false, "src": "src.fathom.renderers.dictionary_and_provenance_html"}
+{"dst": "?d.get", "file": "src/fathom/renderers.py", "kind": "calls", "line": 186, "resolved": false, "src": "src.fathom.renderers.dictionary_and_provenance_html"}
+{"dst": "?d.get(...).get", "file": "src/fathom/renderers.py", "kind": "calls", "line": 208, "resolved": false, "src": "src.fathom.renderers.dictionary_and_provenance_html"}
+{"dst": "?t[...].startswith", "file": "src/fathom/renderers.py", "kind": "calls", "line": 198, "resolved": false, "src": "src.fathom.renderers.dictionary_and_provenance_html"}
+{"dst": "html.escape", "file": "src/fathom/renderers.py", "kind": "calls", "line": 188, "resolved": true, "src": "src.fathom.renderers.dictionary_and_provenance_html"}
+{"dst": "src.fathom.charts.svg_chart", "file": "src/fathom/renderers.py", "kind": "calls", "line": 188, "resolved": true, "src": "src.fathom.renderers.dictionary_and_provenance_html"}
+{"dst": "src.fathom.presentation.column_tables", "file": "src/fathom/renderers.py", "kind": "calls", "line": 197, "resolved": true, "src": "src.fathom.renderers.dictionary_and_provenance_html"}
+{"dst": "src.fathom.presentation.display_charts", "file": "src/fathom/renderers.py", "kind": "calls", "line": 203, "resolved": true, "src": "src.fathom.renderers.dictionary_and_provenance_html"}
+{"dst": "src.fathom.presentation.formatted", "file": "src/fathom/renderers.py", "kind": "calls", "line": 190, "resolved": true, "src": "src.fathom.renderers.dictionary_and_provenance_html"}
+{"dst": "src.fathom.presentation.formatted_examples", "file": "src/fathom/renderers.py", "kind": "calls", "line": 196, "resolved": true, "src": "src.fathom.renderers.dictionary_and_provenance_html"}
+{"dst": "src.fathom.presentation.html_table", "file": "src/fathom/renderers.py", "kind": "calls", "line": 189, "resolved": true, "src": "src.fathom.renderers.dictionary_and_provenance_html"}
+{"dst": "src.fathom.presentation.top_n_reason", "file": "src/fathom/renderers.py", "kind": "calls", "line": 202, "resolved": true, "src": "src.fathom.renderers.dictionary_and_provenance_html"}
+{"dst": "src.fathom.renderers.bars", "file": "src/fathom/renderers.py", "kind": "calls", "line": 185, "resolved": true, "src": "src.fathom.renderers.dictionary_and_provenance_html"}
+{"dst": "src.fathom.renderers.datetime_note", "file": "src/fathom/renderers.py", "kind": "calls", "line": 195, "resolved": true, "src": "src.fathom.renderers.dictionary_and_provenance_html"}
+{"dst": "src.fathom.renderers.readable_html", "file": "src/fathom/renderers.py", "kind": "calls", "line": 207, "resolved": true, "src": "src.fathom.renderers.dictionary_and_provenance_html"}
+{"dst": "src.fathom.renderers.samples_html", "file": "src/fathom/renderers.py", "kind": "calls", "line": 191, "resolved": true, "src": "src.fathom.renderers.dictionary_and_provenance_html"}
+{"dst": "?constant.join", "file": "src/fathom/renderers.py", "kind": "calls", "line": 273, "resolved": false, "src": "src.fathom.renderers.dictionary_and_provenance_markdown"}
+{"dst": "?d.get", "file": "src/fathom/renderers.py", "kind": "calls", "line": 270, "resolved": false, "src": "src.fathom.renderers.dictionary_and_provenance_markdown"}
+{"dst": "?d.get(...).get", "file": "src/fathom/renderers.py", "kind": "calls", "line": 275, "resolved": false, "src": "src.fathom.renderers.dictionary_and_provenance_markdown"}
+{"dst": "src.fathom.charts.svg_chart", "file": "src/fathom/renderers.py", "kind": "calls", "line": 270, "resolved": true, "src": "src.fathom.renderers.dictionary_and_provenance_markdown"}
+{"dst": "src.fathom.presentation.formatted_examples", "file": "src/fathom/renderers.py", "kind": "calls", "line": 273, "resolved": true, "src": "src.fathom.renderers.dictionary_and_provenance_markdown"}
+{"dst": "src.fathom.renderers.charts_markdown", "file": "src/fathom/renderers.py", "kind": "calls", "line": 273, "resolved": true, "src": "src.fathom.renderers.dictionary_and_provenance_markdown"}
+{"dst": "src.fathom.renderers.datetime_note", "file": "src/fathom/renderers.py", "kind": "calls", "line": 273, "resolved": true, "src": "src.fathom.renderers.dictionary_and_provenance_markdown"}
+{"dst": "src.fathom.renderers.md_text", "file": "src/fathom/renderers.py", "kind": "calls", "line": 273, "resolved": true, "src": "src.fathom.renderers.dictionary_and_provenance_markdown"}
+{"dst": "src.fathom.renderers.readable_md", "file": "src/fathom/renderers.py", "kind": "calls", "line": 274, "resolved": true, "src": "src.fathom.renderers.dictionary_and_provenance_markdown"}
+{"dst": "src.fathom.renderers.samples_markdown", "file": "src/fathom/renderers.py", "kind": "calls", "line": 269, "resolved": true, "src": "src.fathom.renderers.dictionary_and_provenance_markdown"}
+{"dst": "?constant.join", "file": "src/fathom/renderers.py", "kind": "calls", "line": 180, "resolved": false, "src": "src.fathom.renderers.finding_html"}
+{"dst": "?out.append", "file": "src/fathom/renderers.py", "kind": "calls", "line": 175, "resolved": false, "src": "src.fathom.renderers.finding_html"}
+{"dst": "html.escape", "file": "src/fathom/renderers.py", "kind": "calls", "line": 169, "resolved": true, "src": "src.fathom.renderers.finding_html"}
+{"dst": "src.fathom.renderers.label", "file": "src/fathom/renderers.py", "kind": "calls", "line": 177, "resolved": true, "src": "src.fathom.renderers.finding_html"}
+{"dst": "src.fathom.renderers.readable_html", "file": "src/fathom/renderers.py", "kind": "calls", "line": 177, "resolved": true, "src": "src.fathom.renderers.finding_html"}
+{"dst": "src.fathom.renderers.repetitive", "file": "src/fathom/renderers.py", "kind": "calls", "line": 170, "resolved": true, "src": "src.fathom.renderers.finding_html"}
+{"dst": "?measure.get", "file": "src/fathom/renderers.py", "kind": "calls", "line": 52, "resolved": false, "src": "src.fathom.renderers.fraction"}
+{"dst": "src.fathom.presentation.formatted", "file": "src/fathom/renderers.py", "kind": "calls", "line": 53, "resolved": true, "src": "src.fathom.renderers.fraction"}
+{"dst": "?str(...).replace", "file": "src/fathom/renderers.py", "kind": "calls", "line": 23, "resolved": false, "src": "src.fathom.renderers.label"}
+{"dst": "?str(...).replace(...).replace", "file": "src/fathom/renderers.py", "kind": "calls", "line": 23, "resolved": false, "src": "src.fathom.renderers.label"}
+{"dst": "?str(...).replace(...).replace(...).capitalize", "file": "src/fathom/renderers.py", "kind": "calls", "line": 23, "resolved": false, "src": "src.fathom.renderers.label"}
+{"dst": "html.escape", "file": "src/fathom/renderers.py", "kind": "calls", "line": 328, "resolved": true, "src": "src.fathom.renderers.markdown_finding"}
+{"dst": "src.fathom.renderers.md_text", "file": "src/fathom/renderers.py", "kind": "calls", "line": 328, "resolved": true, "src": "src.fathom.renderers.markdown_finding"}
+{"dst": "src.fathom.renderers.readable_md", "file": "src/fathom/renderers.py", "kind": "calls", "line": 329, "resolved": true, "src": "src.fathom.renderers.markdown_finding"}
+{"dst": "?re.sub(...).replace", "file": "src/fathom/renderers.py", "kind": "calls", "line": 19, "resolved": false, "src": "src.fathom.renderers.md_text"}
+{"dst": "html.escape", "file": "src/fathom/renderers.py", "kind": "calls", "line": 19, "resolved": true, "src": "src.fathom.renderers.md_text"}
+{"dst": "re.sub", "file": "src/fathom/renderers.py", "kind": "calls", "line": 19, "resolved": true, "src": "src.fathom.renderers.md_text"}
+{"dst": "?constant.join", "file": "src/fathom/renderers.py", "kind": "calls", "line": 36, "resolved": false, "src": "src.fathom.renderers.readable_html"}
+{"dst": "?value.items", "file": "src/fathom/renderers.py", "kind": "calls", "line": 36, "resolved": false, "src": "src.fathom.renderers.readable_html"}
+{"dst": "html.escape", "file": "src/fathom/renderers.py", "kind": "calls", "line": 36, "resolved": true, "src": "src.fathom.renderers.readable_html"}
+{"dst": "src.fathom.renderers.label", "file": "src/fathom/renderers.py", "kind": "calls", "line": 36, "resolved": true, "src": "src.fathom.renderers.readable_html"}
+{"dst": "src.fathom.renderers.readable_html", "file": "src/fathom/renderers.py", "kind": "calls", "line": 36, "resolved": true, "src": "src.fathom.renderers.readable_html"}
+{"dst": "src.fathom.renderers.scalar", "file": "src/fathom/renderers.py", "kind": "calls", "line": 39, "resolved": true, "src": "src.fathom.renderers.readable_html"}
+{"dst": "?constant.join", "file": "src/fathom/renderers.py", "kind": "calls", "line": 44, "resolved": false, "src": "src.fathom.renderers.readable_md"}
+{"dst": "?value.items", "file": "src/fathom/renderers.py", "kind": "calls", "line": 44, "resolved": false, "src": "src.fathom.renderers.readable_md"}
+{"dst": "src.fathom.renderers.label", "file": "src/fathom/renderers.py", "kind": "calls", "line": 44, "resolved": true, "src": "src.fathom.renderers.readable_md"}
+{"dst": "src.fathom.renderers.md_text", "file": "src/fathom/renderers.py", "kind": "calls", "line": 44, "resolved": true, "src": "src.fathom.renderers.readable_md"}
+{"dst": "src.fathom.renderers.readable_md", "file": "src/fathom/renderers.py", "kind": "calls", "line": 44, "resolved": true, "src": "src.fathom.renderers.readable_md"}
+{"dst": "src.fathom.renderers.scalar", "file": "src/fathom/renderers.py", "kind": "calls", "line": 44, "resolved": true, "src": "src.fathom.renderers.readable_md"}
+{"dst": "?constant.join", "file": "src/fathom/renderers.py", "kind": "calls", "line": 221, "resolved": false, "src": "src.fathom.renderers.render_html"}
+{"dst": "?d.get", "file": "src/fathom/renderers.py", "kind": "calls", "line": 215, "resolved": false, "src": "src.fathom.renderers.render_html"}
+{"dst": "?d.get(...).get", "file": "src/fathom/renderers.py", "kind": "calls", "line": 216, "resolved": false, "src": "src.fathom.renderers.render_html"}
+{"dst": "?d[...].get", "file": "src/fathom/renderers.py", "kind": "calls", "line": 228, "resolved": false, "src": "src.fathom.renderers.render_html"}
+{"dst": "?identity.get", "file": "src/fathom/renderers.py", "kind": "calls", "line": 216, "resolved": false, "src": "src.fathom.renderers.render_html"}
+{"dst": "?identity.get(...).get", "file": "src/fathom/renderers.py", "kind": "calls", "line": 216, "resolved": false, "src": "src.fathom.renderers.render_html"}
+{"dst": "?out.append", "file": "src/fathom/renderers.py", "kind": "calls", "line": 227, "resolved": false, "src": "src.fathom.renderers.render_html"}
+{"dst": "?out.extend", "file": "src/fathom/renderers.py", "kind": "calls", "line": 242, "resolved": false, "src": "src.fathom.renderers.render_html"}
+{"dst": "html.escape", "file": "src/fathom/renderers.py", "kind": "calls", "line": 217, "resolved": true, "src": "src.fathom.renderers.render_html"}
+{"dst": "pathlib.Path", "file": "src/fathom/renderers.py", "kind": "calls", "line": 216, "resolved": true, "src": "src.fathom.renderers.render_html"}
+{"dst": "src.fathom.charts.svg_chart", "file": "src/fathom/renderers.py", "kind": "calls", "line": 250, "resolved": true, "src": "src.fathom.renderers.render_html"}
+{"dst": "src.fathom.presentation.html_table", "file": "src/fathom/renderers.py", "kind": "calls", "line": 221, "resolved": true, "src": "src.fathom.renderers.render_html"}
+{"dst": "src.fathom.presentation.structured_tables", "file": "src/fathom/renderers.py", "kind": "calls", "line": 221, "resolved": true, "src": "src.fathom.renderers.render_html"}
+{"dst": "src.fathom.renderers.dictionary_and_provenance_html", "file": "src/fathom/renderers.py", "kind": "calls", "line": 223, "resolved": true, "src": "src.fathom.renderers.render_html"}
+{"dst": "src.fathom.renderers.finding_html", "file": "src/fathom/renderers.py", "kind": "calls", "line": 242, "resolved": true, "src": "src.fathom.renderers.render_html"}
+{"dst": "src.fathom.renderers.readable_html", "file": "src/fathom/renderers.py", "kind": "calls", "line": 230, "resolved": true, "src": "src.fathom.renderers.render_html"}
+{"dst": "src.fathom.renderers.repetition_groups", "file": "src/fathom/renderers.py", "kind": "calls", "line": 233, "resolved": true, "src": "src.fathom.renderers.render_html"}
+{"dst": "src.fathom.renderers.summary_rows", "file": "src/fathom/renderers.py", "kind": "calls", "line": 225, "resolved": true, "src": "src.fathom.renderers.render_html"}
+{"dst": "src.fathom.renderers.unknowns", "file": "src/fathom/renderers.py", "kind": "calls", "line": 230, "resolved": true, "src": "src.fathom.renderers.render_html"}
+{"dst": "src.fathom.target.target_tables", "file": "src/fathom/renderers.py", "kind": "calls", "line": 249, "resolved": true, "src": "src.fathom.renderers.render_html"}
+{"dst": "src.fathom.temporal_view.temporal_html", "file": "src/fathom/renderers.py", "kind": "calls", "line": 244, "resolved": true, "src": "src.fathom.renderers.render_html"}
+{"dst": "?constant.join", "file": "src/fathom/renderers.py", "kind": "calls", "line": 287, "resolved": false, "src": "src.fathom.renderers.render_markdown"}
+{"dst": "?constant.join(...).rstrip", "file": "src/fathom/renderers.py", "kind": "calls", "line": 324, "resolved": false, "src": "src.fathom.renderers.render_markdown"}
+{"dst": "?d.get", "file": "src/fathom/renderers.py", "kind": "calls", "line": 282, "resolved": false, "src": "src.fathom.renderers.render_markdown"}
+{"dst": "?d[...].get", "file": "src/fathom/renderers.py", "kind": "calls", "line": 294, "resolved": false, "src": "src.fathom.renderers.render_markdown"}
+{"dst": "?identity.get", "file": "src/fathom/renderers.py", "kind": "calls", "line": 283, "resolved": false, "src": "src.fathom.renderers.render_markdown"}
+{"dst": "?identity.get(...).get", "file": "src/fathom/renderers.py", "kind": "calls", "line": 283, "resolved": false, "src": "src.fathom.renderers.render_markdown"}
+{"dst": "?lines.append", "file": "src/fathom/renderers.py", "kind": "calls", "line": 293, "resolved": false, "src": "src.fathom.renderers.render_markdown"}
+{"dst": "src.fathom.charts.svg_chart", "file": "src/fathom/renderers.py", "kind": "calls", "line": 317, "resolved": true, "src": "src.fathom.renderers.render_markdown"}
+{"dst": "src.fathom.presentation.markdown_table", "file": "src/fathom/renderers.py", "kind": "calls", "line": 287, "resolved": true, "src": "src.fathom.renderers.render_markdown"}
+{"dst": "src.fathom.presentation.structured_tables", "file": "src/fathom/renderers.py", "kind": "calls", "line": 287, "resolved": true, "src": "src.fathom.renderers.render_markdown"}
+{"dst": "src.fathom.renderers.dictionary_and_provenance_markdown", "file": "src/fathom/renderers.py", "kind": "calls", "line": 289, "resolved": true, "src": "src.fathom.renderers.render_markdown"}
+{"dst": "src.fathom.renderers.markdown_finding", "file": "src/fathom/renderers.py", "kind": "calls", "line": 305, "resolved": true, "src": "src.fathom.renderers.render_markdown"}
+{"dst": "src.fathom.renderers.md_text", "file": "src/fathom/renderers.py", "kind": "calls", "line": 283, "resolved": true, "src": "src.fathom.renderers.render_markdown"}
+{"dst": "src.fathom.renderers.readable_md", "file": "src/fathom/renderers.py", "kind": "calls", "line": 295, "resolved": true, "src": "src.fathom.renderers.render_markdown"}
+{"dst": "src.fathom.renderers.repetition_groups", "file": "src/fathom/renderers.py", "kind": "calls", "line": 297, "resolved": true, "src": "src.fathom.renderers.render_markdown"}
+{"dst": "src.fathom.renderers.repetitive", "file": "src/fathom/renderers.py", "kind": "calls", "line": 304, "resolved": true, "src": "src.fathom.renderers.render_markdown"}
+{"dst": "src.fathom.renderers.summary_rows", "file": "src/fathom/renderers.py", "kind": "calls", "line": 291, "resolved": true, "src": "src.fathom.renderers.render_markdown"}
+{"dst": "src.fathom.renderers.unknowns", "file": "src/fathom/renderers.py", "kind": "calls", "line": 295, "resolved": true, "src": "src.fathom.renderers.render_markdown"}
+{"dst": "src.fathom.target.target_tables", "file": "src/fathom/renderers.py", "kind": "calls", "line": 316, "resolved": true, "src": "src.fathom.renderers.render_markdown"}
+{"dst": "src.fathom.temporal_view.temporal_markdown", "file": "src/fathom/renderers.py", "kind": "calls", "line": 311, "resolved": true, "src": "src.fathom.renderers.render_markdown"}
+{"dst": "?buckets.items", "file": "src/fathom/renderers.py", "kind": "calls", "line": 98, "resolved": false, "src": "src.fathom.renderers.repetition_groups"}
+{"dst": "?buckets.setdefault", "file": "src/fathom/renderers.py", "kind": "calls", "line": 97, "resolved": false, "src": "src.fathom.renderers.repetition_groups"}
+{"dst": "?buckets.setdefault(...).append", "file": "src/fathom/renderers.py", "kind": "calls", "line": 97, "resolved": false, "src": "src.fathom.renderers.repetition_groups"}
+{"dst": "?constant.join", "file": "src/fathom/renderers.py", "kind": "calls", "line": 105, "resolved": false, "src": "src.fathom.renderers.repetition_groups"}
+{"dst": "?f.get", "file": "src/fathom/renderers.py", "kind": "calls", "line": 94, "resolved": false, "src": "src.fathom.renderers.repetition_groups"}
+{"dst": "?f[...].split", "file": "src/fathom/renderers.py", "kind": "calls", "line": 102, "resolved": false, "src": "src.fathom.renderers.repetition_groups"}
+{"dst": "?items[...][...].rstrip", "file": "src/fathom/renderers.py", "kind": "calls", "line": 105, "resolved": false, "src": "src.fathom.renderers.repetition_groups"}
+{"dst": "?match.group", "file": "src/fathom/renderers.py", "kind": "calls", "line": 94, "resolved": false, "src": "src.fathom.renderers.repetition_groups"}
+{"dst": "?names.append", "file": "src/fathom/renderers.py", "kind": "calls", "line": 104, "resolved": false, "src": "src.fathom.renderers.repetition_groups"}
+{"dst": "?result.append", "file": "src/fathom/renderers.py", "kind": "calls", "line": 106, "resolved": false, "src": "src.fathom.renderers.repetition_groups"}
+{"dst": "re.fullmatch", "file": "src/fathom/renderers.py", "kind": "calls", "line": 86, "resolved": true, "src": "src.fathom.renderers.repetition_groups"}
+{"dst": "src.fathom.renderers.repetitive", "file": "src/fathom/renderers.py", "kind": "calls", "line": 92, "resolved": true, "src": "src.fathom.renderers.repetition_groups"}
+{"dst": "re.fullmatch", "file": "src/fathom/renderers.py", "kind": "calls", "line": 82, "resolved": true, "src": "src.fathom.renderers.repetitive"}
+{"dst": "?value.strip", "file": "src/fathom/renderers.py", "kind": "calls", "line": 131, "resolved": false, "src": "src.fathom.renderers.sample_cell"}
+{"dst": "?constant.join", "file": "src/fathom/renderers.py", "kind": "calls", "line": 143, "resolved": false, "src": "src.fathom.renderers.samples_html"}
+{"dst": "?d.get", "file": "src/fathom/renderers.py", "kind": "calls", "line": 136, "resolved": false, "src": "src.fathom.renderers.samples_html"}
+{"dst": "?out.append", "file": "src/fathom/renderers.py", "kind": "calls", "line": 143, "resolved": false, "src": "src.fathom.renderers.samples_html"}
+{"dst": "html.escape", "file": "src/fathom/renderers.py", "kind": "calls", "line": 138, "resolved": true, "src": "src.fathom.renderers.samples_html"}
+{"dst": "src.fathom.renderers.sample_cell", "file": "src/fathom/renderers.py", "kind": "calls", "line": 143, "resolved": true, "src": "src.fathom.renderers.samples_html"}
+{"dst": "?constant.join", "file": "src/fathom/renderers.py", "kind": "calls", "line": 153, "resolved": false, "src": "src.fathom.renderers.samples_markdown"}
+{"dst": "?d.get", "file": "src/fathom/renderers.py", "kind": "calls", "line": 149, "resolved": false, "src": "src.fathom.renderers.samples_markdown"}
+{"dst": "?lines.append", "file": "src/fathom/renderers.py", "kind": "calls", "line": 154, "resolved": false, "src": "src.fathom.renderers.samples_markdown"}
+{"dst": "src.fathom.renderers.md_text", "file": "src/fathom/renderers.py", "kind": "calls", "line": 153, "resolved": true, "src": "src.fathom.renderers.samples_markdown"}
+{"dst": "src.fathom.renderers.sample_cell", "file": "src/fathom/renderers.py", "kind": "calls", "line": 154, "resolved": true, "src": "src.fathom.renderers.samples_markdown"}
+{"dst": "?Counter(...).items", "file": "src/fathom/renderers.py", "kind": "calls", "line": 63, "resolved": false, "src": "src.fathom.renderers.summary_rows"}
+{"dst": "?constant.join", "file": "src/fathom/renderers.py", "kind": "calls", "line": 71, "resolved": false, "src": "src.fathom.renderers.summary_rows"}
+{"dst": "?d.get", "file": "src/fathom/renderers.py", "kind": "calls", "line": 57, "resolved": false, "src": "src.fathom.renderers.summary_rows"}
+{"dst": "?items.append", "file": "src/fathom/renderers.py", "kind": "calls", "line": 76, "resolved": false, "src": "src.fathom.renderers.summary_rows"}
+{"dst": "?s.get", "file": "src/fathom/renderers.py", "kind": "calls", "line": 77, "resolved": false, "src": "src.fathom.renderers.summary_rows"}
+{"dst": "?s.get(...).get", "file": "src/fathom/renderers.py", "kind": "calls", "line": 77, "resolved": false, "src": "src.fathom.renderers.summary_rows"}
+{"dst": "?s[...].items", "file": "src/fathom/renderers.py", "kind": "calls", "line": 71, "resolved": false, "src": "src.fathom.renderers.summary_rows"}
+{"dst": "collections.Counter", "file": "src/fathom/renderers.py", "kind": "calls", "line": 63, "resolved": true, "src": "src.fathom.renderers.summary_rows"}
+{"dst": "src.fathom.presentation.formatted", "file": "src/fathom/renderers.py", "kind": "calls", "line": 77, "resolved": true, "src": "src.fathom.renderers.summary_rows"}
+{"dst": "src.fathom.renderers.fraction", "file": "src/fathom/renderers.py", "kind": "calls", "line": 66, "resolved": true, "src": "src.fathom.renderers.summary_rows"}
+{"dst": "src.fathom.renderers.label", "file": "src/fathom/renderers.py", "kind": "calls", "line": 76, "resolved": true, "src": "src.fathom.renderers.summary_rows"}
+{"dst": "?constant.join", "file": "src/fathom/renderers.py", "kind": "calls", "line": 124, "resolved": false, "src": "src.fathom.renderers.unknowns"}
+{"dst": "?d.get", "file": "src/fathom/renderers.py", "kind": "calls", "line": 122, "resolved": false, "src": "src.fathom.renderers.unknowns"}
+{"dst": "?f[...].startswith", "file": "src/fathom/renderers.py", "kind": "calls", "line": 120, "resolved": false, "src": "src.fathom.renderers.unknowns"}
+{"dst": "src.fathom.renderers.datetime_note", "file": "src/fathom/renderers.py", "kind": "calls", "line": 122, "resolved": true, "src": "src.fathom.renderers.unknowns"}
 {"dst": "?binop.total_seconds", "file": "src/fathom/rows.py", "kind": "calls", "line": 194, "resolved": false, "src": "src.fathom.rows.interval"}
 {"dst": "?constant.join", "file": "src/fathom/rows.py", "kind": "calls", "line": 219, "resolved": false, "src": "src.fathom.rows.interval"}
 {"dst": "?durations.append", "file": "src/fathom/rows.py", "kind": "calls", "line": 195, "resolved": false, "src": "src.fathom.rows.interval"}
@@ -1757,6 +1866,154 @@
 {"dst": "?marks.append", "file": "src/fathom/target_marks.py", "kind": "calls", "line": 13, "resolved": false, "src": "src.fathom.target_marks.plot_marks.<locals>.line"}
 {"dst": "?marks.append", "file": "src/fathom/target_marks.py", "kind": "calls", "line": 15, "resolved": false, "src": "src.fathom.target_marks.plot_marks.<locals>.rect"}
 {"dst": "?marks.append", "file": "src/fathom/target_marks.py", "kind": "calls", "line": 14, "resolved": false, "src": "src.fathom.target_marks.plot_marks.<locals>.text"}
+{"dst": "?d.get", "file": "src/fathom/temporal_view.py", "kind": "calls", "line": 114, "resolved": false, "src": "src.fathom.temporal_view.blocks"}
+{"dst": "?entry.get", "file": "src/fathom/temporal_view.py", "kind": "calls", "line": 117, "resolved": false, "src": "src.fathom.temporal_view.blocks"}
+{"dst": "?head.append", "file": "src/fathom/temporal_view.py", "kind": "calls", "line": 118, "resolved": false, "src": "src.fathom.temporal_view.blocks"}
+{"dst": "?ts.get", "file": "src/fathom/temporal_view.py", "kind": "calls", "line": 115, "resolved": false, "src": "src.fathom.temporal_view.blocks"}
+{"dst": "src.fathom.temporal_view.name", "file": "src/fathom/temporal_view.py", "kind": "calls", "line": 122, "resolved": true, "src": "src.fathom.temporal_view.blocks"}
+{"dst": "src.fathom.temporal_view.process_table", "file": "src/fathom/temporal_view.py", "kind": "calls", "line": 122, "resolved": true, "src": "src.fathom.temporal_view.blocks"}
+{"dst": "src.fathom.temporal_view.signal_table", "file": "src/fathom/temporal_view.py", "kind": "calls", "line": 122, "resolved": true, "src": "src.fathom.temporal_view.blocks"}
+{"dst": "src.fathom.temporal_view.sparsity_table", "file": "src/fathom/temporal_view.py", "kind": "calls", "line": 122, "resolved": true, "src": "src.fathom.temporal_view.blocks"}
+{"dst": "?c.get", "file": "src/fathom/temporal_view.py", "kind": "calls", "line": 40, "resolved": false, "src": "src.fathom.temporal_view.corr_text"}
+{"dst": "?constant.join", "file": "src/fathom/temporal_view.py", "kind": "calls", "line": 39, "resolved": false, "src": "src.fathom.temporal_view.corr_text"}
+{"dst": "?g[...].capitalize", "file": "src/fathom/temporal_view.py", "kind": "calls", "line": 79, "resolved": false, "src": "src.fathom.temporal_view.lag_table"}
+{"dst": "?o.get", "file": "src/fathom/temporal_view.py", "kind": "calls", "line": 74, "resolved": false, "src": "src.fathom.temporal_view.lag_table"}
+{"dst": "src.fathom.presentation.formatted", "file": "src/fathom/temporal_view.py", "kind": "calls", "line": 75, "resolved": true, "src": "src.fathom.temporal_view.lag_table"}
+{"dst": "?g[...].capitalize", "file": "src/fathom/temporal_view.py", "kind": "calls", "line": 32, "resolved": false, "src": "src.fathom.temporal_view.process_table"}
+{"dst": "?k[...].capitalize", "file": "src/fathom/temporal_view.py", "kind": "calls", "line": 33, "resolved": false, "src": "src.fathom.temporal_view.process_table"}
+{"dst": "?rows.append", "file": "src/fathom/temporal_view.py", "kind": "calls", "line": 28, "resolved": false, "src": "src.fathom.temporal_view.process_table"}
+{"dst": "src.fathom.presentation.formatted", "file": "src/fathom/temporal_view.py", "kind": "calls", "line": 21, "resolved": true, "src": "src.fathom.temporal_view.process_table"}
+{"dst": "?constant.join", "file": "src/fathom/temporal_view.py", "kind": "calls", "line": 68, "resolved": false, "src": "src.fathom.temporal_view.signal_table"}
+{"dst": "?boolop.get", "file": "src/fathom/temporal_view.py", "kind": "calls", "line": 60, "resolved": false, "src": "src.fathom.temporal_view.sparsity_table"}
+{"dst": "?cell", "file": "src/fathom/temporal_view.py", "kind": "calls", "line": 64, "resolved": false, "src": "src.fathom.temporal_view.sparsity_table"}
+{"dst": "?constant.join", "file": "src/fathom/temporal_view.py", "kind": "calls", "line": 58, "resolved": false, "src": "src.fathom.temporal_view.sparsity_table"}
+{"dst": "src.fathom.presentation.formatted", "file": "src/fathom/temporal_view.py", "kind": "calls", "line": 51, "resolved": true, "src": "src.fathom.temporal_view.sparsity_table"}
+{"dst": "src.fathom.temporal_view.corr_text", "file": "src/fathom/temporal_view.py", "kind": "calls", "line": 56, "resolved": true, "src": "src.fathom.temporal_view.sparsity_table"}
+{"dst": "?f", "file": "src/fathom/temporal_view.py", "kind": "calls", "line": 47, "resolved": false, "src": "src.fathom.temporal_view.sparsity_table.<locals>.cell"}
+{"dst": "src.fathom.presentation.formatted", "file": "src/fathom/temporal_view.py", "kind": "calls", "line": 49, "resolved": true, "src": "src.fathom.temporal_view.sparsity_table.<locals>.cell"}
+{"dst": "?constant.join", "file": "src/fathom/temporal_view.py", "kind": "calls", "line": 108, "resolved": false, "src": "src.fathom.temporal_view.stem"}
+{"dst": "?g[...].capitalize", "file": "src/fathom/temporal_view.py", "kind": "calls", "line": 90, "resolved": false, "src": "src.fathom.temporal_view.stem"}
+{"dst": "?out.append", "file": "src/fathom/temporal_view.py", "kind": "calls", "line": 93, "resolved": false, "src": "src.fathom.temporal_view.stem"}
+{"dst": "?px", "file": "src/fathom/temporal_view.py", "kind": "calls", "line": 101, "resolved": false, "src": "src.fathom.temporal_view.stem"}
+{"dst": "?py", "file": "src/fathom/temporal_view.py", "kind": "calls", "line": 93, "resolved": false, "src": "src.fathom.temporal_view.stem"}
+{"dst": "html.escape", "file": "src/fathom/temporal_view.py", "kind": "calls", "line": 91, "resolved": true, "src": "src.fathom.temporal_view.stem"}
+{"dst": "?constant.join", "file": "src/fathom/temporal_view.py", "kind": "calls", "line": 137, "resolved": false, "src": "src.fathom.temporal_view.temporal_html"}
+{"dst": "?d.get", "file": "src/fathom/temporal_view.py", "kind": "calls", "line": 127, "resolved": false, "src": "src.fathom.temporal_view.temporal_html"}
+{"dst": "?g[...].capitalize", "file": "src/fathom/temporal_view.py", "kind": "calls", "line": 136, "resolved": false, "src": "src.fathom.temporal_view.temporal_html"}
+{"dst": "?out.append", "file": "src/fathom/temporal_view.py", "kind": "calls", "line": 132, "resolved": false, "src": "src.fathom.temporal_view.temporal_html"}
+{"dst": "?ts.get", "file": "src/fathom/temporal_view.py", "kind": "calls", "line": 128, "resolved": false, "src": "src.fathom.temporal_view.temporal_html"}
+{"dst": "?ts[...].items", "file": "src/fathom/temporal_view.py", "kind": "calls", "line": 137, "resolved": false, "src": "src.fathom.temporal_view.temporal_html"}
+{"dst": "html.escape", "file": "src/fathom/temporal_view.py", "kind": "calls", "line": 129, "resolved": true, "src": "src.fathom.temporal_view.temporal_html"}
+{"dst": "src.fathom.presentation.html_table", "file": "src/fathom/temporal_view.py", "kind": "calls", "line": 131, "resolved": true, "src": "src.fathom.temporal_view.temporal_html"}
+{"dst": "src.fathom.temporal_view.blocks", "file": "src/fathom/temporal_view.py", "kind": "calls", "line": 130, "resolved": true, "src": "src.fathom.temporal_view.temporal_html"}
+{"dst": "src.fathom.temporal_view.lag_table", "file": "src/fathom/temporal_view.py", "kind": "calls", "line": 136, "resolved": true, "src": "src.fathom.temporal_view.temporal_html"}
+{"dst": "src.fathom.temporal_view.stem", "file": "src/fathom/temporal_view.py", "kind": "calls", "line": 133, "resolved": true, "src": "src.fathom.temporal_view.temporal_html"}
+{"dst": "?d.get", "file": "src/fathom/temporal_view.py", "kind": "calls", "line": 142, "resolved": false, "src": "src.fathom.temporal_view.temporal_markdown"}
+{"dst": "?g[...].capitalize", "file": "src/fathom/temporal_view.py", "kind": "calls", "line": 150, "resolved": false, "src": "src.fathom.temporal_view.temporal_markdown"}
+{"dst": "?ts.get", "file": "src/fathom/temporal_view.py", "kind": "calls", "line": 143, "resolved": false, "src": "src.fathom.temporal_view.temporal_markdown"}
+{"dst": "?ts[...].items", "file": "src/fathom/temporal_view.py", "kind": "calls", "line": 151, "resolved": false, "src": "src.fathom.temporal_view.temporal_markdown"}
+{"dst": "src.fathom.presentation.markdown_table", "file": "src/fathom/temporal_view.py", "kind": "calls", "line": 146, "resolved": true, "src": "src.fathom.temporal_view.temporal_markdown"}
+{"dst": "src.fathom.temporal_view.blocks", "file": "src/fathom/temporal_view.py", "kind": "calls", "line": 145, "resolved": true, "src": "src.fathom.temporal_view.temporal_markdown"}
+{"dst": "src.fathom.temporal_view.lag_table", "file": "src/fathom/temporal_view.py", "kind": "calls", "line": 150, "resolved": true, "src": "src.fathom.temporal_view.temporal_markdown"}
+{"dst": "src.fathom.temporal_view.stem", "file": "src/fathom/temporal_view.py", "kind": "calls", "line": 147, "resolved": true, "src": "src.fathom.temporal_view.temporal_markdown"}
+{"dst": "?out.append", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 108, "resolved": false, "src": "src.fathom.timeseries.acf"}
+{"dst": "?pairs.append", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 107, "resolved": false, "src": "src.fathom.timeseries.acf"}
+{"dst": "?dt.replace", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 61, "resolved": false, "src": "src.fathom.timeseries.advance"}
+{"dst": "datetime.timedelta", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 58, "resolved": true, "src": "src.fathom.timeseries.advance"}
+{"dst": "?binop.total_seconds", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 319, "resolved": false, "src": "src.fathom.timeseries.analyse"}
+{"dst": "?cfg[...].get", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 302, "resolved": false, "src": "src.fathom.timeseries.analyse"}
+{"dst": "?cfg[...].get(...).get", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 302, "resolved": false, "src": "src.fathom.timeseries.analyse"}
+{"dst": "?item.get", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 301, "resolved": false, "src": "src.fathom.timeseries.analyse"}
+{"dst": "?names.index", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 301, "resolved": false, "src": "src.fathom.timeseries.analyse"}
+{"dst": "?out[...].append", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 337, "resolved": false, "src": "src.fathom.timeseries.analyse"}
+{"dst": "?points.values", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 317, "resolved": false, "src": "src.fathom.timeseries.analyse"}
+{"dst": "?points[...].append", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 315, "resolved": false, "src": "src.fathom.timeseries.analyse"}
+{"dst": "?stamps[...].isoformat", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 325, "resolved": false, "src": "src.fathom.timeseries.analyse"}
+{"dst": "collections.defaultdict", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 304, "resolved": true, "src": "src.fathom.timeseries.analyse"}
+{"dst": "src.fathom.parsing.finite_number", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 313, "resolved": true, "src": "src.fathom.timeseries.analyse"}
+{"dst": "src.fathom.timeseries.analyse_grain", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 340, "resolved": true, "src": "src.fathom.timeseries.analyse"}
+{"dst": "src.fathom.timeseries.informative", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 342, "resolved": true, "src": "src.fathom.timeseries.analyse"}
+{"dst": "src.fathom.timeseries.parse_time", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 308, "resolved": true, "src": "src.fathom.timeseries.analyse"}
+{"dst": "src.fathom.timeseries.signals", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 341, "resolved": true, "src": "src.fathom.timeseries.analyse"}
+{"dst": "src.fathom.timeseries.span_periods", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 335, "resolved": true, "src": "src.fathom.timeseries.analyse"}
+{"dst": "src.fathom.timeseries.summary", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 326, "resolved": true, "src": "src.fathom.timeseries.analyse"}
+{"dst": "?calendar.append", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 228, "resolved": false, "src": "src.fathom.timeseries.analyse_grain"}
+{"dst": "?gaps.append", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 210, "resolved": false, "src": "src.fathom.timeseries.analyse_grain"}
+{"dst": "?points.items", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 193, "resolved": false, "src": "src.fathom.timeseries.analyse_grain"}
+{"dst": "?states.append", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 202, "resolved": false, "src": "src.fathom.timeseries.analyse_grain"}
+{"dst": "?x.append", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 201, "resolved": false, "src": "src.fathom.timeseries.analyse_grain"}
+{"dst": "collections.Counter", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 191, "resolved": true, "src": "src.fathom.timeseries.analyse_grain"}
+{"dst": "collections.defaultdict", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 191, "resolved": true, "src": "src.fathom.timeseries.analyse_grain"}
+{"dst": "src.fathom.timeseries.advance", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 190, "resolved": true, "src": "src.fathom.timeseries.analyse_grain"}
+{"dst": "src.fathom.timeseries.correlogram", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 219, "resolved": true, "src": "src.fathom.timeseries.analyse_grain"}
+{"dst": "src.fathom.timeseries.floor", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 187, "resolved": true, "src": "src.fathom.timeseries.analyse_grain"}
+{"dst": "src.fathom.timeseries.label", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 230, "resolved": true, "src": "src.fathom.timeseries.analyse_grain"}
+{"dst": "src.fathom.timeseries.r10", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 216, "resolved": true, "src": "src.fathom.timeseries.analyse_grain"}
+{"dst": "src.fathom.timeseries.runs", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 211, "resolved": true, "src": "src.fathom.timeseries.analyse_grain"}
+{"dst": "src.fathom.timeseries.spectral", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 241, "resolved": true, "src": "src.fathom.timeseries.analyse_grain"}
+{"dst": "src.fathom.timeseries.summary", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 212, "resolved": true, "src": "src.fathom.timeseries.analyse_grain"}
+{"dst": "?NormalDist(...).inv_cdf", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 143, "resolved": false, "src": "src.fathom.timeseries.correlogram"}
+{"dst": "?band.get", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 150, "resolved": false, "src": "src.fathom.timeseries.correlogram"}
+{"dst": "?family.get", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 150, "resolved": false, "src": "src.fathom.timeseries.correlogram"}
+{"dst": "?family.values", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 159, "resolved": false, "src": "src.fathom.timeseries.correlogram"}
+{"dst": "?n_eff", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 145, "resolved": false, "src": "src.fathom.timeseries.correlogram"}
+{"dst": "?up", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 152, "resolved": false, "src": "src.fathom.timeseries.correlogram"}
+{"dst": "math.sqrt", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 132, "resolved": true, "src": "src.fathom.timeseries.correlogram"}
+{"dst": "src.fathom.timeseries.acf", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 135, "resolved": true, "src": "src.fathom.timeseries.correlogram"}
+{"dst": "src.fathom.timeseries.pacf", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 140, "resolved": true, "src": "src.fathom.timeseries.correlogram"}
+{"dst": "src.fathom.timeseries.r10", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 132, "resolved": true, "src": "src.fathom.timeseries.correlogram"}
+{"dst": "statistics.NormalDist", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 143, "resolved": true, "src": "src.fathom.timeseries.correlogram"}
+{"dst": "?constant.join", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 418, "resolved": false, "src": "src.fathom.timeseries.describe"}
+{"dst": "?emit", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 421, "resolved": false, "src": "src.fathom.timeseries.describe"}
+{"dst": "?parts.append", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 419, "resolved": false, "src": "src.fathom.timeseries.describe"}
+{"dst": "?sig[...].split", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 419, "resolved": false, "src": "src.fathom.timeseries.describe"}
+{"dst": "src.fathom.timeseries.series_name", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 413, "resolved": true, "src": "src.fathom.timeseries.describe"}
+{"dst": "?day.replace", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 54, "resolved": false, "src": "src.fathom.timeseries.floor"}
+{"dst": "?day.weekday", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 53, "resolved": false, "src": "src.fathom.timeseries.floor"}
+{"dst": "?dt.replace", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 50, "resolved": false, "src": "src.fathom.timeseries.floor"}
+{"dst": "datetime.timedelta", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 53, "resolved": true, "src": "src.fathom.timeseries.floor"}
+{"dst": "?score", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 289, "resolved": false, "src": "src.fathom.timeseries.informative"}
+{"dst": "src.fathom.timeseries.GRAINS.index", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 288, "resolved": true, "src": "src.fathom.timeseries.informative.<locals>.score"}
+{"dst": "?dt.strftime", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 65, "resolved": false, "src": "src.fathom.timeseries.label"}
+{"dst": "?out.append", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 123, "resolved": false, "src": "src.fathom.timeseries.pacf"}
+{"dst": "datetime.datetime.fromisoformat", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 297, "resolved": true, "src": "src.fathom.timeseries.parse_time"}
+{"dst": "src.fathom.parsing.parse_date", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 296, "resolved": true, "src": "src.fathom.timeseries.parse_time"}
+{"dst": "src.fathom.parsing.parse_datetime", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 294, "resolved": true, "src": "src.fathom.timeseries.parse_time"}
+{"dst": "math.isfinite", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 77, "resolved": true, "src": "src.fathom.timeseries.r10"}
+{"dst": "?out[...].append", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 92, "resolved": false, "src": "src.fathom.timeseries.runs"}
+{"dst": "?add", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 266, "resolved": false, "src": "src.fathom.timeseries.signals"}
+{"dst": "?corr_verdict", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 266, "resolved": false, "src": "src.fathom.timeseries.signals"}
+{"dst": "?cycle", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 273, "resolved": false, "src": "src.fathom.timeseries.signals"}
+{"dst": "?enough", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 275, "resolved": false, "src": "src.fathom.timeseries.signals"}
+{"dst": "?groups[...].append", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 254, "resolved": false, "src": "src.fathom.timeseries.signals.<locals>.add"}
+{"dst": "?out.append", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 255, "resolved": false, "src": "src.fathom.timeseries.signals.<locals>.add"}
+{"dst": "?corr_verdict", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 271, "resolved": false, "src": "src.fathom.timeseries.signals.<locals>.cycle"}
+{"dst": "?binop.total_seconds", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 73, "resolved": false, "src": "src.fathom.timeseries.span_periods"}
+{"dst": "src.fathom.timeseries.floor", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 70, "resolved": true, "src": "src.fathom.timeseries.span_periods"}
+{"dst": "scipy.signal.periodogram", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 177, "resolved": true, "src": "src.fathom.timeseries.spectral"}
+{"dst": "src.fathom.timeseries.r10", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 181, "resolved": true, "src": "src.fathom.timeseries.spectral"}
+{"dst": "src.fathom.timeseries.r10", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 83, "resolved": true, "src": "src.fathom.timeseries.summary"}
+{"dst": "statistics.median", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 83, "resolved": true, "src": "src.fathom.timeseries.summary"}
+{"dst": "statistics.quantiles", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 82, "resolved": true, "src": "src.fathom.timeseries.summary"}
+{"dst": "?cfg.get", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 349, "resolved": false, "src": "src.fathom.timeseries.time_series"}
+{"dst": "?constant.join", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 373, "resolved": false, "src": "src.fathom.timeseries.time_series"}
+{"dst": "?emit", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 372, "resolved": false, "src": "src.fathom.timeseries.time_series"}
+{"dst": "?groups.items", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 358, "resolved": false, "src": "src.fathom.timeseries.time_series"}
+{"dst": "?groups[...].append", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 357, "resolved": false, "src": "src.fathom.timeseries.time_series"}
+{"dst": "?item.get", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 351, "resolved": false, "src": "src.fathom.timeseries.time_series"}
+{"dst": "?names.index", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 352, "resolved": false, "src": "src.fathom.timeseries.time_series"}
+{"dst": "?result[...].append", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 365, "resolved": false, "src": "src.fathom.timeseries.time_series"}
+{"dst": "collections.defaultdict", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 353, "resolved": true, "src": "src.fathom.timeseries.time_series"}
+{"dst": "src.fathom.timeseries.analyse", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 362, "resolved": true, "src": "src.fathom.timeseries.time_series"}
+{"dst": "src.fathom.timeseries.describe", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 366, "resolved": true, "src": "src.fathom.timeseries.time_series"}
+{"dst": "src.fathom.timeseries.undeclared", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 368, "resolved": true, "src": "src.fathom.timeseries.time_series"}
+{"dst": "?cfg[...].get", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 388, "resolved": false, "src": "src.fathom.timeseries.undeclared"}
+{"dst": "?cfg[...].get(...).get", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 388, "resolved": false, "src": "src.fathom.timeseries.undeclared"}
+{"dst": "?found.append", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 393, "resolved": false, "src": "src.fathom.timeseries.undeclared"}
+{"dst": "?numeric.append", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 400, "resolved": false, "src": "src.fathom.timeseries.undeclared"}
+{"dst": "src.fathom.parsing.finite_number", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 398, "resolved": true, "src": "src.fathom.timeseries.undeclared"}
+{"dst": "src.fathom.timeseries.floor", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 392, "resolved": true, "src": "src.fathom.timeseries.undeclared"}
+{"dst": "src.fathom.timeseries.parse_time", "file": "src/fathom/timeseries.py", "kind": "calls", "line": 389, "resolved": true, "src": "src.fathom.timeseries.undeclared"}
 {"dst": "?counter.items", "file": "src/fathom/univariate.py", "kind": "calls", "line": 29, "resolved": false, "src": "src.fathom.univariate.common"}
 {"dst": "?cfg[...].get", "file": "src/fathom/univariate.py", "kind": "calls", "line": 221, "resolved": false, "src": "src.fathom.univariate.enrich_columns"}
 {"dst": "?counts.items", "file": "src/fathom/univariate.py", "kind": "calls", "line": 245, "resolved": false, "src": "src.fathom.univariate.enrich_columns"}
@@ -2354,6 +2611,135 @@
 {"dst": "pytest.approx", "file": "tests/test_target.py", "kind": "calls", "line": 41, "resolved": true, "src": "tests.test_target.test_small_group_counts_missing_and_contrasts"}
 {"dst": "src.fathom.renderers.render_html", "file": "tests/test_target.py", "kind": "calls", "line": 44, "resolved": true, "src": "tests.test_target.test_small_group_counts_missing_and_contrasts"}
 {"dst": "src.fathom.renderers.render_markdown", "file": "tests/test_target.py", "kind": "calls", "line": 44, "resolved": true, "src": "tests.test_target.test_small_group_counts_missing_and_contrasts"}
+{"dst": "datetime.datetime", "file": "tests/test_time_series.py", "kind": "calls", "line": 14, "resolved": true, "src": "tests.test_time_series"}
+{"dst": "pytest.mark.parametrize", "file": "tests/test_time_series.py", "kind": "calls", "line": 208, "resolved": true, "src": "tests.test_time_series"}
+{"dst": "?binop.date", "file": "tests/test_time_series.py", "kind": "calls", "line": 21, "resolved": false, "src": "tests.test_time_series.daily"}
+{"dst": "?binop.date(...).isoformat", "file": "tests/test_time_series.py", "kind": "calls", "line": 21, "resolved": false, "src": "tests.test_time_series.daily"}
+{"dst": "?constant.join", "file": "tests/test_time_series.py", "kind": "calls", "line": 22, "resolved": false, "src": "tests.test_time_series.daily"}
+{"dst": "?lines.append", "file": "tests/test_time_series.py", "kind": "calls", "line": 21, "resolved": false, "src": "tests.test_time_series.daily"}
+{"dst": "datetime.timedelta", "file": "tests/test_time_series.py", "kind": "calls", "line": 21, "resolved": true, "src": "tests.test_time_series.daily"}
+{"dst": "?binop.isoformat", "file": "tests/test_time_series.py", "kind": "calls", "line": 118, "resolved": false, "src": "tests.test_time_series.hourly_events"}
+{"dst": "?constant.join", "file": "tests/test_time_series.py", "kind": "calls", "line": 119, "resolved": false, "src": "tests.test_time_series.hourly_events"}
+{"dst": "?lines.append", "file": "tests/test_time_series.py", "kind": "calls", "line": 118, "resolved": false, "src": "tests.test_time_series.hourly_events"}
+{"dst": "datetime.timedelta", "file": "tests/test_time_series.py", "kind": "calls", "line": 118, "resolved": true, "src": "tests.test_time_series.hourly_events"}
+{"dst": "?x[...].startswith", "file": "tests/test_time_series.py", "kind": "calls", "line": 38, "resolved": false, "src": "tests.test_time_series.signal"}
+{"dst": "?make_profile", "file": "tests/test_time_series.py", "kind": "calls", "line": 222, "resolved": false, "src": "tests.test_time_series.test_alternating_days_lag_one_is_not_estimable"}
+{"dst": "tests.test_time_series.daily", "file": "tests/test_time_series.py", "kind": "calls", "line": 222, "resolved": true, "src": "tests.test_time_series.test_alternating_days_lag_one_is_not_estimable"}
+{"dst": "tests.test_time_series.declare", "file": "tests/test_time_series.py", "kind": "calls", "line": 222, "resolved": true, "src": "tests.test_time_series.test_alternating_days_lag_one_is_not_estimable"}
+{"dst": "tests.test_time_series.grain", "file": "tests/test_time_series.py", "kind": "calls", "line": 223, "resolved": true, "src": "tests.test_time_series.test_alternating_days_lag_one_is_not_estimable"}
+{"dst": "tests.test_time_series.series", "file": "tests/test_time_series.py", "kind": "calls", "line": 223, "resolved": true, "src": "tests.test_time_series.test_alternating_days_lag_one_is_not_estimable"}
+{"dst": "tests.test_time_series.signal", "file": "tests/test_time_series.py", "kind": "calls", "line": 226, "resolved": true, "src": "tests.test_time_series.test_alternating_days_lag_one_is_not_estimable"}
+{"dst": "?binop.date", "file": "tests/test_time_series.py", "kind": "calls", "line": 135, "resolved": false, "src": "tests.test_time_series.test_by_split_limits_to_top_n_groups"}
+{"dst": "?binop.date(...).isoformat", "file": "tests/test_time_series.py", "kind": "calls", "line": 135, "resolved": false, "src": "tests.test_time_series.test_by_split_limits_to_top_n_groups"}
+{"dst": "?constant.join", "file": "tests/test_time_series.py", "kind": "calls", "line": 137, "resolved": false, "src": "tests.test_time_series.test_by_split_limits_to_top_n_groups"}
+{"dst": "?lines.append", "file": "tests/test_time_series.py", "kind": "calls", "line": 135, "resolved": false, "src": "tests.test_time_series.test_by_split_limits_to_top_n_groups"}
+{"dst": "?make_profile", "file": "tests/test_time_series.py", "kind": "calls", "line": 137, "resolved": false, "src": "tests.test_time_series.test_by_split_limits_to_top_n_groups"}
+{"dst": "datetime.timedelta", "file": "tests/test_time_series.py", "kind": "calls", "line": 135, "resolved": true, "src": "tests.test_time_series.test_by_split_limits_to_top_n_groups"}
+{"dst": "src.fathom.renderers.render_markdown", "file": "tests/test_time_series.py", "kind": "calls", "line": 141, "resolved": true, "src": "tests.test_time_series.test_by_split_limits_to_top_n_groups"}
+{"dst": "tests.test_time_series.declare", "file": "tests/test_time_series.py", "kind": "calls", "line": 137, "resolved": true, "src": "tests.test_time_series.test_by_split_limits_to_top_n_groups"}
+{"dst": "?make_profile", "file": "tests/test_time_series.py", "kind": "calls", "line": 88, "resolved": false, "src": "tests.test_time_series.test_constant_series_is_undefined_and_warned"}
+{"dst": "tests.test_time_series.daily", "file": "tests/test_time_series.py", "kind": "calls", "line": 88, "resolved": true, "src": "tests.test_time_series.test_constant_series_is_undefined_and_warned"}
+{"dst": "tests.test_time_series.declare", "file": "tests/test_time_series.py", "kind": "calls", "line": 88, "resolved": true, "src": "tests.test_time_series.test_constant_series_is_undefined_and_warned"}
+{"dst": "tests.test_time_series.grain", "file": "tests/test_time_series.py", "kind": "calls", "line": 89, "resolved": true, "src": "tests.test_time_series.test_constant_series_is_undefined_and_warned"}
+{"dst": "tests.test_time_series.series", "file": "tests/test_time_series.py", "kind": "calls", "line": 88, "resolved": true, "src": "tests.test_time_series.test_constant_series_is_undefined_and_warned"}
+{"dst": "tests.test_time_series.signal", "file": "tests/test_time_series.py", "kind": "calls", "line": 91, "resolved": true, "src": "tests.test_time_series.test_constant_series_is_undefined_and_warned"}
+{"dst": "?make_profile", "file": "tests/test_time_series.py", "kind": "calls", "line": 201, "resolved": false, "src": "tests.test_time_series.test_decoys_stay_silent"}
+{"dst": "src.fathom.renderers.render_html", "file": "tests/test_time_series.py", "kind": "calls", "line": 205, "resolved": true, "src": "tests.test_time_series.test_decoys_stay_silent"}
+{"dst": "tests.test_time_series.daily", "file": "tests/test_time_series.py", "kind": "calls", "line": 203, "resolved": true, "src": "tests.test_time_series.test_decoys_stay_silent"}
+{"dst": "tests.test_time_series.declare", "file": "tests/test_time_series.py", "kind": "calls", "line": 203, "resolved": true, "src": "tests.test_time_series.test_decoys_stay_silent"}
+{"dst": "tests.test_time_series.ts_findings", "file": "tests/test_time_series.py", "kind": "calls", "line": 202, "resolved": true, "src": "tests.test_time_series.test_decoys_stay_silent"}
+{"dst": "?make_profile", "file": "tests/test_time_series.py", "kind": "calls", "line": 123, "resolved": false, "src": "tests.test_time_series.test_event_counts_from_timestamps_with_hour_and_day"}
+{"dst": "tests.test_time_series.grain", "file": "tests/test_time_series.py", "kind": "calls", "line": 125, "resolved": true, "src": "tests.test_time_series.test_event_counts_from_timestamps_with_hour_and_day"}
+{"dst": "tests.test_time_series.hourly_events", "file": "tests/test_time_series.py", "kind": "calls", "line": 123, "resolved": true, "src": "tests.test_time_series.test_event_counts_from_timestamps_with_hour_and_day"}
+{"dst": "?make_profile", "file": "tests/test_time_series.py", "kind": "calls", "line": 189, "resolved": false, "src": "tests.test_time_series.test_inter_event_interval_does_not_span_missing_periods"}
+{"dst": "tests.test_time_series.daily", "file": "tests/test_time_series.py", "kind": "calls", "line": 189, "resolved": true, "src": "tests.test_time_series.test_inter_event_interval_does_not_span_missing_periods"}
+{"dst": "tests.test_time_series.declare", "file": "tests/test_time_series.py", "kind": "calls", "line": 189, "resolved": true, "src": "tests.test_time_series.test_inter_event_interval_does_not_span_missing_periods"}
+{"dst": "tests.test_time_series.grain", "file": "tests/test_time_series.py", "kind": "calls", "line": 189, "resolved": true, "src": "tests.test_time_series.test_inter_event_interval_does_not_span_missing_periods"}
+{"dst": "tests.test_time_series.series", "file": "tests/test_time_series.py", "kind": "calls", "line": 189, "resolved": true, "src": "tests.test_time_series.test_inter_event_interval_does_not_span_missing_periods"}
+{"dst": "?make_profile", "file": "tests/test_time_series.py", "kind": "calls", "line": 78, "resolved": false, "src": "tests.test_time_series.test_intermittent_demand_frequency_amplitude_duration"}
+{"dst": "pytest.approx", "file": "tests/test_time_series.py", "kind": "calls", "line": 82, "resolved": true, "src": "tests.test_time_series.test_intermittent_demand_frequency_amplitude_duration"}
+{"dst": "tests.test_time_series.daily", "file": "tests/test_time_series.py", "kind": "calls", "line": 78, "resolved": true, "src": "tests.test_time_series.test_intermittent_demand_frequency_amplitude_duration"}
+{"dst": "tests.test_time_series.declare", "file": "tests/test_time_series.py", "kind": "calls", "line": 78, "resolved": true, "src": "tests.test_time_series.test_intermittent_demand_frequency_amplitude_duration"}
+{"dst": "tests.test_time_series.grain", "file": "tests/test_time_series.py", "kind": "calls", "line": 78, "resolved": true, "src": "tests.test_time_series.test_intermittent_demand_frequency_amplitude_duration"}
+{"dst": "tests.test_time_series.series", "file": "tests/test_time_series.py", "kind": "calls", "line": 78, "resolved": true, "src": "tests.test_time_series.test_intermittent_demand_frequency_amplitude_duration"}
+{"dst": "pytest.raises", "file": "tests/test_time_series.py", "kind": "calls", "line": 216, "resolved": true, "src": "tests.test_time_series.test_invalid_declarations_are_refused"}
+{"dst": "src.fathom.config.validate_config", "file": "tests/test_time_series.py", "kind": "calls", "line": 217, "resolved": true, "src": "tests.test_time_series.test_invalid_declarations_are_refused"}
+{"dst": "?make_profile", "file": "tests/test_time_series.py", "kind": "calls", "line": 105, "resolved": false, "src": "tests.test_time_series.test_missing_periods_are_distinguished_from_explicit_zeros"}
+{"dst": "tests.test_time_series.daily", "file": "tests/test_time_series.py", "kind": "calls", "line": 105, "resolved": true, "src": "tests.test_time_series.test_missing_periods_are_distinguished_from_explicit_zeros"}
+{"dst": "tests.test_time_series.declare", "file": "tests/test_time_series.py", "kind": "calls", "line": 105, "resolved": true, "src": "tests.test_time_series.test_missing_periods_are_distinguished_from_explicit_zeros"}
+{"dst": "tests.test_time_series.grain", "file": "tests/test_time_series.py", "kind": "calls", "line": 106, "resolved": true, "src": "tests.test_time_series.test_missing_periods_are_distinguished_from_explicit_zeros"}
+{"dst": "tests.test_time_series.series", "file": "tests/test_time_series.py", "kind": "calls", "line": 106, "resolved": true, "src": "tests.test_time_series.test_missing_periods_are_distinguished_from_explicit_zeros"}
+{"dst": "tests.test_time_series.ts_findings", "file": "tests/test_time_series.py", "kind": "calls", "line": 110, "resolved": true, "src": "tests.test_time_series.test_missing_periods_are_distinguished_from_explicit_zeros"}
+{"dst": "pytest.approx", "file": "tests/test_time_series.py", "kind": "calls", "line": 145, "resolved": true, "src": "tests.test_time_series.test_pacf_durbin_levinson_on_ar1_acf"}
+{"dst": "src.fathom.timeseries.pacf", "file": "tests/test_time_series.py", "kind": "calls", "line": 145, "resolved": true, "src": "tests.test_time_series.test_pacf_durbin_levinson_on_ar1_acf"}
+{"dst": "?make_profile", "file": "tests/test_time_series.py", "kind": "calls", "line": 47, "resolved": false, "src": "tests.test_time_series.test_pure_periodic_series_peaks_at_its_period"}
+{"dst": "tests.test_time_series.daily", "file": "tests/test_time_series.py", "kind": "calls", "line": 47, "resolved": true, "src": "tests.test_time_series.test_pure_periodic_series_peaks_at_its_period"}
+{"dst": "tests.test_time_series.declare", "file": "tests/test_time_series.py", "kind": "calls", "line": 47, "resolved": true, "src": "tests.test_time_series.test_pure_periodic_series_peaks_at_its_period"}
+{"dst": "tests.test_time_series.grain", "file": "tests/test_time_series.py", "kind": "calls", "line": 48, "resolved": true, "src": "tests.test_time_series.test_pure_periodic_series_peaks_at_its_period"}
+{"dst": "tests.test_time_series.series", "file": "tests/test_time_series.py", "kind": "calls", "line": 48, "resolved": true, "src": "tests.test_time_series.test_pure_periodic_series_peaks_at_its_period"}
+{"dst": "tests.test_time_series.signal", "file": "tests/test_time_series.py", "kind": "calls", "line": 52, "resolved": true, "src": "tests.test_time_series.test_pure_periodic_series_peaks_at_its_period"}
+{"dst": "tests.test_time_series.ts_findings", "file": "tests/test_time_series.py", "kind": "calls", "line": 53, "resolved": true, "src": "tests.test_time_series.test_pure_periodic_series_peaks_at_its_period"}
+{"dst": "?make_profile", "file": "tests/test_time_series.py", "kind": "calls", "line": 234, "resolved": false, "src": "tests.test_time_series.test_random_missing_still_recovers_known_period"}
+{"dst": "?rng.random", "file": "tests/test_time_series.py", "kind": "calls", "line": 233, "resolved": false, "src": "tests.test_time_series.test_random_missing_still_recovers_known_period"}
+{"dst": "math.sqrt", "file": "tests/test_time_series.py", "kind": "calls", "line": 237, "resolved": true, "src": "tests.test_time_series.test_random_missing_still_recovers_known_period"}
+{"dst": "random.Random", "file": "tests/test_time_series.py", "kind": "calls", "line": 232, "resolved": true, "src": "tests.test_time_series.test_random_missing_still_recovers_known_period"}
+{"dst": "tests.test_time_series.daily", "file": "tests/test_time_series.py", "kind": "calls", "line": 234, "resolved": true, "src": "tests.test_time_series.test_random_missing_still_recovers_known_period"}
+{"dst": "tests.test_time_series.declare", "file": "tests/test_time_series.py", "kind": "calls", "line": 234, "resolved": true, "src": "tests.test_time_series.test_random_missing_still_recovers_known_period"}
+{"dst": "tests.test_time_series.grain", "file": "tests/test_time_series.py", "kind": "calls", "line": 234, "resolved": true, "src": "tests.test_time_series.test_random_missing_still_recovers_known_period"}
+{"dst": "tests.test_time_series.series", "file": "tests/test_time_series.py", "kind": "calls", "line": 234, "resolved": true, "src": "tests.test_time_series.test_random_missing_still_recovers_known_period"}
+{"dst": "?html.count", "file": "tests/test_time_series.py", "kind": "calls", "line": 161, "resolved": false, "src": "tests.test_time_series.test_report_has_temporal_section_with_stem_plots"}
+{"dst": "?make_profile", "file": "tests/test_time_series.py", "kind": "calls", "line": 157, "resolved": false, "src": "tests.test_time_series.test_report_has_temporal_section_with_stem_plots"}
+{"dst": "src.fathom.renderers.render_html", "file": "tests/test_time_series.py", "kind": "calls", "line": 159, "resolved": true, "src": "tests.test_time_series.test_report_has_temporal_section_with_stem_plots"}
+{"dst": "src.fathom.renderers.render_markdown", "file": "tests/test_time_series.py", "kind": "calls", "line": 159, "resolved": true, "src": "tests.test_time_series.test_report_has_temporal_section_with_stem_plots"}
+{"dst": "tests.test_time_series.hourly_events", "file": "tests/test_time_series.py", "kind": "calls", "line": 157, "resolved": true, "src": "tests.test_time_series.test_report_has_temporal_section_with_stem_plots"}
+{"dst": "?make_profile", "file": "tests/test_time_series.py", "kind": "calls", "line": 97, "resolved": false, "src": "tests.test_time_series.test_short_series_is_insufficient"}
+{"dst": "tests.test_time_series.daily", "file": "tests/test_time_series.py", "kind": "calls", "line": 97, "resolved": true, "src": "tests.test_time_series.test_short_series_is_insufficient"}
+{"dst": "tests.test_time_series.declare", "file": "tests/test_time_series.py", "kind": "calls", "line": 97, "resolved": true, "src": "tests.test_time_series.test_short_series_is_insufficient"}
+{"dst": "tests.test_time_series.grain", "file": "tests/test_time_series.py", "kind": "calls", "line": 98, "resolved": true, "src": "tests.test_time_series.test_short_series_is_insufficient"}
+{"dst": "tests.test_time_series.series", "file": "tests/test_time_series.py", "kind": "calls", "line": 97, "resolved": true, "src": "tests.test_time_series.test_short_series_is_insufficient"}
+{"dst": "?d[...][...][...].startswith", "file": "tests/test_time_series.py", "kind": "calls", "line": 153, "resolved": false, "src": "tests.test_time_series.test_spectral_degrades_without_scipy"}
+{"dst": "?make_profile", "file": "tests/test_time_series.py", "kind": "calls", "line": 151, "resolved": false, "src": "tests.test_time_series.test_spectral_degrades_without_scipy"}
+{"dst": "?monkeypatch.setitem", "file": "tests/test_time_series.py", "kind": "calls", "line": 149, "resolved": false, "src": "tests.test_time_series.test_spectral_degrades_without_scipy"}
+{"dst": "tests.test_time_series.daily", "file": "tests/test_time_series.py", "kind": "calls", "line": 151, "resolved": true, "src": "tests.test_time_series.test_spectral_degrades_without_scipy"}
+{"dst": "tests.test_time_series.declare", "file": "tests/test_time_series.py", "kind": "calls", "line": 151, "resolved": true, "src": "tests.test_time_series.test_spectral_degrades_without_scipy"}
+{"dst": "tests.test_time_series.grain", "file": "tests/test_time_series.py", "kind": "calls", "line": 152, "resolved": true, "src": "tests.test_time_series.test_spectral_degrades_without_scipy"}
+{"dst": "tests.test_time_series.series", "file": "tests/test_time_series.py", "kind": "calls", "line": 152, "resolved": true, "src": "tests.test_time_series.test_spectral_degrades_without_scipy"}
+{"dst": "?binop.isoformat", "file": "tests/test_time_series.py", "kind": "calls", "line": 174, "resolved": false, "src": "tests.test_time_series.test_undeclared_pure_timestamps_offer_event_counts"}
+{"dst": "?constant.join", "file": "tests/test_time_series.py", "kind": "calls", "line": 174, "resolved": false, "src": "tests.test_time_series.test_undeclared_pure_timestamps_offer_event_counts"}
+{"dst": "?make_profile", "file": "tests/test_time_series.py", "kind": "calls", "line": 174, "resolved": false, "src": "tests.test_time_series.test_undeclared_pure_timestamps_offer_event_counts"}
+{"dst": "datetime.timedelta", "file": "tests/test_time_series.py", "kind": "calls", "line": 174, "resolved": true, "src": "tests.test_time_series.test_undeclared_pure_timestamps_offer_event_counts"}
+{"dst": "?binop.date", "file": "tests/test_time_series.py", "kind": "calls", "line": 182, "resolved": false, "src": "tests.test_time_series.test_undeclared_question_quiet_on_few_periods_and_skips_identifier_like"}
+{"dst": "?binop.date(...).isoformat", "file": "tests/test_time_series.py", "kind": "calls", "line": 182, "resolved": false, "src": "tests.test_time_series.test_undeclared_question_quiet_on_few_periods_and_skips_identifier_like"}
+{"dst": "?constant.join", "file": "tests/test_time_series.py", "kind": "calls", "line": 183, "resolved": false, "src": "tests.test_time_series.test_undeclared_question_quiet_on_few_periods_and_skips_identifier_like"}
+{"dst": "?make_profile", "file": "tests/test_time_series.py", "kind": "calls", "line": 180, "resolved": false, "src": "tests.test_time_series.test_undeclared_question_quiet_on_few_periods_and_skips_identifier_like"}
+{"dst": "datetime.timedelta", "file": "tests/test_time_series.py", "kind": "calls", "line": 182, "resolved": true, "src": "tests.test_time_series.test_undeclared_question_quiet_on_few_periods_and_skips_identifier_like"}
+{"dst": "tests.test_time_series.daily", "file": "tests/test_time_series.py", "kind": "calls", "line": 180, "resolved": true, "src": "tests.test_time_series.test_undeclared_question_quiet_on_few_periods_and_skips_identifier_like"}
+{"dst": "?make_profile", "file": "tests/test_time_series.py", "kind": "calls", "line": 166, "resolved": false, "src": "tests.test_time_series.test_undeclared_series_asks_one_question"}
+{"dst": "?q[...][...].startswith", "file": "tests/test_time_series.py", "kind": "calls", "line": 169, "resolved": false, "src": "tests.test_time_series.test_undeclared_series_asks_one_question"}
+{"dst": "tests.test_time_series.daily", "file": "tests/test_time_series.py", "kind": "calls", "line": 166, "resolved": true, "src": "tests.test_time_series.test_undeclared_series_asks_one_question"}
+{"dst": "tests.test_time_series.ts_findings", "file": "tests/test_time_series.py", "kind": "calls", "line": 167, "resolved": true, "src": "tests.test_time_series.test_undeclared_series_asks_one_question"}
+{"dst": "?make_profile", "file": "tests/test_time_series.py", "kind": "calls", "line": 243, "resolved": false, "src": "tests.test_time_series.test_weekly_default_reaches_52_when_span_allows"}
+{"dst": "tests.test_time_series.daily", "file": "tests/test_time_series.py", "kind": "calls", "line": 243, "resolved": true, "src": "tests.test_time_series.test_weekly_default_reaches_52_when_span_allows"}
+{"dst": "tests.test_time_series.declare", "file": "tests/test_time_series.py", "kind": "calls", "line": 243, "resolved": true, "src": "tests.test_time_series.test_weekly_default_reaches_52_when_span_allows"}
+{"dst": "tests.test_time_series.grain", "file": "tests/test_time_series.py", "kind": "calls", "line": 243, "resolved": true, "src": "tests.test_time_series.test_weekly_default_reaches_52_when_span_allows"}
+{"dst": "tests.test_time_series.series", "file": "tests/test_time_series.py", "kind": "calls", "line": 243, "resolved": true, "src": "tests.test_time_series.test_weekly_default_reaches_52_when_span_allows"}
+{"dst": "?rng.gauss", "file": "tests/test_time_series.py", "kind": "calls", "line": 71, "resolved": false, "src": "tests.test_time_series.test_white_noise_family_wise_false_positive_rate_is_near_five_percent"}
+{"dst": "random.Random", "file": "tests/test_time_series.py", "kind": "calls", "line": 70, "resolved": true, "src": "tests.test_time_series.test_white_noise_family_wise_false_positive_rate_is_near_five_percent"}
+{"dst": "src.fathom.timeseries.correlogram", "file": "tests/test_time_series.py", "kind": "calls", "line": 71, "resolved": true, "src": "tests.test_time_series.test_white_noise_family_wise_false_positive_rate_is_near_five_percent"}
+{"dst": "?make_profile", "file": "tests/test_time_series.py", "kind": "calls", "line": 58, "resolved": false, "src": "tests.test_time_series.test_white_noise_has_no_significant_structure"}
+{"dst": "?rng.gauss", "file": "tests/test_time_series.py", "kind": "calls", "line": 58, "resolved": false, "src": "tests.test_time_series.test_white_noise_has_no_significant_structure"}
+{"dst": "random.Random", "file": "tests/test_time_series.py", "kind": "calls", "line": 57, "resolved": true, "src": "tests.test_time_series.test_white_noise_has_no_significant_structure"}
+{"dst": "tests.test_time_series.daily", "file": "tests/test_time_series.py", "kind": "calls", "line": 58, "resolved": true, "src": "tests.test_time_series.test_white_noise_has_no_significant_structure"}
+{"dst": "tests.test_time_series.declare", "file": "tests/test_time_series.py", "kind": "calls", "line": 58, "resolved": true, "src": "tests.test_time_series.test_white_noise_has_no_significant_structure"}
+{"dst": "tests.test_time_series.grain", "file": "tests/test_time_series.py", "kind": "calls", "line": 60, "resolved": true, "src": "tests.test_time_series.test_white_noise_has_no_significant_structure"}
+{"dst": "tests.test_time_series.series", "file": "tests/test_time_series.py", "kind": "calls", "line": 59, "resolved": true, "src": "tests.test_time_series.test_white_noise_has_no_significant_structure"}
+{"dst": "tests.test_time_series.signal", "file": "tests/test_time_series.py", "kind": "calls", "line": 61, "resolved": true, "src": "tests.test_time_series.test_white_noise_has_no_significant_structure"}
+{"dst": "tests.test_time_series.ts_findings", "file": "tests/test_time_series.py", "kind": "calls", "line": 63, "resolved": true, "src": "tests.test_time_series.test_white_noise_has_no_significant_structure"}
+{"dst": "?make_profile", "file": "tests/test_time_series.py", "kind": "calls", "line": 195, "resolved": false, "src": "tests.test_time_series.test_zero_and_burst_signals_need_thirty_periods"}
+{"dst": "tests.test_time_series.daily", "file": "tests/test_time_series.py", "kind": "calls", "line": 195, "resolved": true, "src": "tests.test_time_series.test_zero_and_burst_signals_need_thirty_periods"}
+{"dst": "tests.test_time_series.declare", "file": "tests/test_time_series.py", "kind": "calls", "line": 195, "resolved": true, "src": "tests.test_time_series.test_zero_and_burst_signals_need_thirty_periods"}
+{"dst": "tests.test_time_series.series", "file": "tests/test_time_series.py", "kind": "calls", "line": 195, "resolved": true, "src": "tests.test_time_series.test_zero_and_burst_signals_need_thirty_periods"}
+{"dst": "tests.test_time_series.signal", "file": "tests/test_time_series.py", "kind": "calls", "line": 197, "resolved": true, "src": "tests.test_time_series.test_zero_and_burst_signals_need_thirty_periods"}
 {"dst": "pathlib.Path", "file": "tests/test_understanding.py", "kind": "calls", "line": 12, "resolved": true, "src": "tests.test_understanding"}
 {"dst": "pytest.mark.parametrize", "file": "tests/test_understanding.py", "kind": "calls", "line": 40, "resolved": true, "src": "tests.test_understanding"}
 {"dst": "?CSVConnector(...).load", "file": "tests/test_understanding.py", "kind": "calls", "line": 100, "resolved": false, "src": "tests.test_understanding.test_bad_csv"}
@@ -2443,7 +2829,7 @@
 {"dst": "src.fathom.__version__", "file": "src/fathom/cli.py", "kind": "references", "line": 31, "resolved": true, "src": "src.fathom.cli.main"}
 {"dst": "sys.stderr", "file": "src/fathom/cli.py", "kind": "references", "line": 90, "resolved": true, "src": "src.fathom.cli.main"}
 {"dst": "yaml.YAMLError", "file": "src/fathom/cli.py", "kind": "references", "line": 92, "resolved": true, "src": "src.fathom.cli.main"}
-{"dst": "yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG", "file": "src/fathom/config.py", "kind": "references", "line": 137, "resolved": true, "src": "src.fathom.config.load_config"}
+{"dst": "yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG", "file": "src/fathom/config.py", "kind": "references", "line": 161, "resolved": true, "src": "src.fathom.config.load_config"}
 {"dst": "src.fathom.models.TYPES", "file": "src/fathom/config.py", "kind": "references", "line": 44, "resolved": true, "src": "src.fathom.config.validate_config"}
 {"dst": "src.fathom.parsing.DATE_FORMATS", "file": "src/fathom/config.py", "kind": "references", "line": 48, "resolved": true, "src": "src.fathom.config.validate_config"}
 {"dst": "src.fathom.exports.pdf_bytes", "file": "src/fathom/exports.py", "kind": "references", "line": 424, "resolved": true, "src": "src.fathom.exports.export_bundle"}
@@ -2468,12 +2854,12 @@
 {"dst": "src.fathom.models.TYPES", "file": "src/fathom/models.py", "kind": "references", "line": 127, "resolved": true, "src": "src.fathom.models.validate_document"}
 {"dst": "src.fathom.parsing.MONTH_NAMES", "file": "src/fathom/parsing.py", "kind": "references", "line": 8, "resolved": true, "src": "src.fathom.parsing"}
 {"dst": "src.fathom.presentation.METRIC_ORDER", "file": "src/fathom/presentation.py", "kind": "references", "line": 47, "resolved": true, "src": "src.fathom.presentation.metric_table"}
-{"dst": "re.I", "file": "src/fathom/profiler.py", "kind": "references", "line": 46, "resolved": true, "src": "src.fathom.profiler.infer"}
-{"dst": "src.fathom.renderers.DATETIME_NOTE", "file": "src/fathom/renderers.py", "kind": "references", "line": 115, "resolved": true, "src": "src.fathom.renderers.datetime_note"}
-{"dst": "src.fathom.renderers.DATETIME_NOTE", "file": "src/fathom/renderers.py", "kind": "references", "line": 194, "resolved": true, "src": "src.fathom.renderers.dictionary_and_provenance_html"}
-{"dst": "src.fathom.renderers.KINDS", "file": "src/fathom/renderers.py", "kind": "references", "line": 234, "resolved": true, "src": "src.fathom.renderers.render_html"}
-{"dst": "src.fathom.renderers.KINDS", "file": "src/fathom/renderers.py", "kind": "references", "line": 298, "resolved": true, "src": "src.fathom.renderers.render_markdown"}
-{"dst": "src.fathom.renderers.DATETIME_NOTE", "file": "src/fathom/renderers.py", "kind": "references", "line": 123, "resolved": true, "src": "src.fathom.renderers.unknowns"}
+{"dst": "re.I", "file": "src/fathom/profiler.py", "kind": "references", "line": 47, "resolved": true, "src": "src.fathom.profiler.infer"}
+{"dst": "src.fathom.renderers.DATETIME_NOTE", "file": "src/fathom/renderers.py", "kind": "references", "line": 116, "resolved": true, "src": "src.fathom.renderers.datetime_note"}
+{"dst": "src.fathom.renderers.DATETIME_NOTE", "file": "src/fathom/renderers.py", "kind": "references", "line": 195, "resolved": true, "src": "src.fathom.renderers.dictionary_and_provenance_html"}
+{"dst": "src.fathom.renderers.KINDS", "file": "src/fathom/renderers.py", "kind": "references", "line": 235, "resolved": true, "src": "src.fathom.renderers.render_html"}
+{"dst": "src.fathom.renderers.KINDS", "file": "src/fathom/renderers.py", "kind": "references", "line": 300, "resolved": true, "src": "src.fathom.renderers.render_markdown"}
+{"dst": "src.fathom.renderers.DATETIME_NOTE", "file": "src/fathom/renderers.py", "kind": "references", "line": 124, "resolved": true, "src": "src.fathom.renderers.unknowns"}
 {"dst": "src.fathom.rows.LIMIT", "file": "src/fathom/rows.py", "kind": "references", "line": 28, "resolved": true, "src": "src.fathom.rows.positions"}
 {"dst": "src.fathom.rows.LIMIT", "file": "src/fathom/rows.py", "kind": "references", "line": 40, "resolved": true, "src": "src.fathom.rows.row_structure"}
 {"dst": "src.fathom.rows.RULES", "file": "src/fathom/rows.py", "kind": "references", "line": 40, "resolved": true, "src": "src.fathom.rows.row_structure"}
@@ -2498,6 +2884,13 @@
 {"dst": "src.fathom.target.NUMERIC", "file": "src/fathom/target.py", "kind": "references", "line": 62, "resolved": true, "src": "src.fathom.target.target_candidates"}
 {"dst": "src.fathom.target.WARNING", "file": "src/fathom/target.py", "kind": "references", "line": 84, "resolved": true, "src": "src.fathom.target.target_candidates"}
 {"dst": "src.fathom.target_marks.PALETTE", "file": "src/fathom/target_marks.py", "kind": "references", "line": 56, "resolved": true, "src": "src.fathom.target_marks.plot_marks"}
+{"dst": "src.fathom.temporal_view.INTRO", "file": "src/fathom/temporal_view.py", "kind": "references", "line": 129, "resolved": true, "src": "src.fathom.temporal_view.temporal_html"}
+{"dst": "src.fathom.temporal_view.INTRO", "file": "src/fathom/temporal_view.py", "kind": "references", "line": 144, "resolved": true, "src": "src.fathom.temporal_view.temporal_markdown"}
+{"dst": "src.fathom.timeseries.GRAINS", "file": "src/fathom/timeseries.py", "kind": "references", "line": 333, "resolved": true, "src": "src.fathom.timeseries.analyse"}
+{"dst": "src.fathom.timeseries.CALENDAR", "file": "src/fathom/timeseries.py", "kind": "references", "line": 221, "resolved": true, "src": "src.fathom.timeseries.analyse_grain"}
+{"dst": "src.fathom.timeseries.DEFAULT_LAG", "file": "src/fathom/timeseries.py", "kind": "references", "line": 218, "resolved": true, "src": "src.fathom.timeseries.analyse_grain"}
+{"dst": "src.fathom.timeseries.RULES", "file": "src/fathom/timeseries.py", "kind": "references", "line": 266, "resolved": true, "src": "src.fathom.timeseries.signals"}
+{"dst": "src.fathom.timeseries.RULES", "file": "src/fathom/timeseries.py", "kind": "references", "line": 349, "resolved": true, "src": "src.fathom.timeseries.time_series"}
 {"dst": "re.I", "file": "src/fathom/univariate.py", "kind": "references", "line": 228, "resolved": true, "src": "src.fathom.univariate.enrich_columns"}
 {"dst": "re.I", "file": "src/fathom/univariate.py", "kind": "references", "line": 40, "resolved": true, "src": "src.fathom.univariate.identity_and_samples"}
 {"dst": "src.fathom.univariate.PERCENTILES", "file": "src/fathom/univariate.py", "kind": "references", "line": 66, "resolved": true, "src": "src.fathom.univariate.numeric_profile"}
@@ -2538,5 +2931,11 @@
 {"dst": "src.fathom.renderers.render_html", "file": "tests/test_special_types.py", "kind": "references", "line": 74, "resolved": true, "src": "tests.test_special_types.test_builder_acceptance_tables"}
 {"dst": "src.fathom.renderers.render_markdown", "file": "tests/test_special_types.py", "kind": "references", "line": 74, "resolved": true, "src": "tests.test_special_types.test_builder_acceptance_tables"}
 {"dst": "socket", "file": "tests/test_special_types.py", "kind": "references", "line": 48, "resolved": true, "src": "tests.test_special_types.test_no_network_or_sensitive_classification"}
+{"dst": "tests.test_time_series.BASE", "file": "tests/test_time_series.py", "kind": "references", "line": 21, "resolved": true, "src": "tests.test_time_series.daily"}
+{"dst": "tests.test_time_series.BASE", "file": "tests/test_time_series.py", "kind": "references", "line": 118, "resolved": true, "src": "tests.test_time_series.hourly_events"}
+{"dst": "tests.test_time_series.BASE", "file": "tests/test_time_series.py", "kind": "references", "line": 135, "resolved": true, "src": "tests.test_time_series.test_by_split_limits_to_top_n_groups"}
+{"dst": "sys.modules", "file": "tests/test_time_series.py", "kind": "references", "line": 149, "resolved": true, "src": "tests.test_time_series.test_spectral_degrades_without_scipy"}
+{"dst": "tests.test_time_series.BASE", "file": "tests/test_time_series.py", "kind": "references", "line": 174, "resolved": true, "src": "tests.test_time_series.test_undeclared_pure_timestamps_offer_event_counts"}
+{"dst": "tests.test_time_series.BASE", "file": "tests/test_time_series.py", "kind": "references", "line": 182, "resolved": true, "src": "tests.test_time_series.test_undeclared_question_quiet_on_few_periods_and_skips_identifier_like"}
 {"dst": "csv.Error", "file": "tests/test_understanding.py", "kind": "references", "line": 99, "resolved": true, "src": "tests.test_understanding.test_bad_csv"}
 {"dst": "tests.test_understanding.F", "file": "tests/test_understanding.py", "kind": "references", "line": 16, "resolved": true, "src": "tests.test_understanding.test_review_actions_and_clean_decoy"}
