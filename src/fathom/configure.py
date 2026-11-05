@@ -284,7 +284,10 @@ function configDocument(schema,sel){
   if(intervals.length){out.intervals=intervals;}
   if(schema.time_series_suggestions){
     var offered=schema.time_series_suggestions.map(function(c){return c.column;});
-    var series=(sel.time_series||[]).filter(function(item){return offered.indexOf(item.time)>=0&&(item.value==null||(schema.series_value_options.indexOf(item.value)>=0&&item.value!==item.time))&&Array.isArray(item.granularities)&&item.granularities.length&&item.granularities.every(function(g){return ['auto','hour','day','week','month'].indexOf(g)>=0;});}).map(function(item){return {time:item.time,value:item.value==null?null:item.value,granularities:item.granularities};});
+    var series=(sel.time_series||[]).map(function(item){
+      var grains=own(item,'granularities');
+      return {time:own(item,'time'),value:own(item,'value'),granularities:grains===undefined?['auto']:grains};
+    }).filter(function(item){return offered.indexOf(item.time)>=0&&(item.value==null||(schema.series_value_options.indexOf(item.value)>=0&&item.value!==item.time))&&Array.isArray(item.granularities)&&item.granularities.length&&item.granularities.every(function(g){return ['auto','hour','day','week','month'].indexOf(g)>=0;});}).map(function(item){return {time:item.time,value:item.value==null?null:item.value,granularities:item.granularities};});
     if(series.length){out.time_series=series;}
   }
   else{
