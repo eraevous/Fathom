@@ -3,14 +3,15 @@
 import math
 from .charts import linear_ticks
 from .presentation import tick_label
+from .palette import CATEGORICAL, LIGHT as C
 
-PALETTE=['#216e73','#ab5130','#7564a3','#397db5','#6d8430','#b34867','#5b777e','#9d7428','#5974bd','#906a75','#248b81','#bd6440','#79538a','#427448','#a64d4d','#507e99','#8c852e','#7b657f','#468568','#967454']
+PALETTE=CATEGORICAL
 
 
 def plot_marks(ch):
     """Return width,height and simple vector marks; original values stay in artifact."""
     kind=ch['kind'];marks=[];width=560;left,right,top,bottom=75,510,25,235
-    def line(x1,y1,x2,y2,color='#cbd9d7'):marks.append(('line',x1,y1,x2,y2,color))
+    def line(x1,y1,x2,y2,color=C['grid']):marks.append(('line',x1,y1,x2,y2,color))
     def text(x,y,value,anchor='start',size=18):marks.append(('text',x,y,str(value),anchor,size))
     def rect(x,y,w,h,color):marks.append(('rect',x,y,w,h,color))
     def axis(values,lo,hi,scale,start,end,horizontal=True):
@@ -27,7 +28,7 @@ def plot_marks(ch):
     if kind=='scatter':
         points=ch['points'];xs=[p['x'] for p in points];ys=[p['y'] for p in points]
         xp=axis(xs,min(xs),max(xs),ch['x_scale'],left,right);yp=axis(ys,min(ys),max(ys),ch['y_scale'],bottom,top,False)
-        for p in points:marks.append(('circle',xp(p['x']),yp(p['y']),3.2,'#216e73'))
+        for p in points:marks.append(('circle',xp(p['x']),yp(p['y']),3.2,C['accent']))
         return width,275,marks
     if kind=='group_box':
         rows=ch['data'];left=195;bottom=35+len(rows)*48;top=15
@@ -42,7 +43,7 @@ def plot_marks(ch):
             text(left-12,y+16,sample,'end',14)
             b=row.get('box')
             if b:
-                line(xp(b['min']),y,xp(b['max']),y,'#216e73');rect(xp(b['q1']),y-9,max(1,xp(b['q3'])-xp(b['q1'])),18,'#b9d3cf');line(xp(b['median']),y-10,xp(b['median']),y+10,'#193e42')
+                line(xp(b['min']),y,xp(b['max']),y,C['accent']);rect(xp(b['q1']),y-9,max(1,xp(b['q3'])-xp(b['q1'])),18,C['soft_border']);line(xp(b['median']),y-10,xp(b['median']),y+10,C['ink'])
             else:text(left,y+5,'No positive values',size=14)
         return width,bottom+35,marks
     # Rates: one stacked bar per bin/group, explicit n including empty bins.

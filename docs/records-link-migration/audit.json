@@ -1,0 +1,17 @@
+{
+  "aec_commit": "860b7815f208fac09c4e2ba57e5fbfe418ed2ba7",
+  "aec_version": "0.4.0",
+  "latest_depends_on": 37,
+  "latest_implements": 0,
+  "ledger_base": "10cf8c2534e22eb07a738e5d2b8fc46d6d046d0b",
+  "new_versions": 67,
+  "original_prefix_bytes": 107242,
+  "original_prefix_sha256": "b211aaf257b45a0ae377f811ffd7ab0de217e3e873572a097ee74d9c1cc2515a",
+  "python": "3.12",
+  "snapshot_sha256": {
+    "base.edges.jsonl": "3275d0443c95751308569af19761edf35a580c70d5880fc3e9a9e9f17996b48a",
+    "head.edges.jsonl": "91526345799d105c4f268dadb0b594da9118401fbe50d2152b1f3862e2a943b1"
+  },
+  "source_base": "3b89d7c7b3847926dfd2c7751d90a19681b69d58",
+  "source_head": "3367ab306e961ea20fadf2f2cbaa545b374afab0"
+}

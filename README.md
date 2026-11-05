@@ -41,7 +41,7 @@ not deletion or imputation. The clean fixture produces neither review action.
 The report also asks about unsupplied row unit, meanings, generating process and
 missingness mechanism. It never guesses a domain explanation.
 
-`guide-profile.json` (schema version 1) is the interface. Markdown and self-contained
+`guide-profile.json` (schema version 2; version 1 still loads) is the interface. Markdown and self-contained
 HTML with embedded charts derive solely from that artifact. Re-rendering does not
 need the CSV. Repeated runs with identical input paths, bytes, configuration and
 dependency availability produce byte-identical outputs. No runtime date is added.
@@ -229,6 +229,49 @@ remains future work under DG-D7. See
 [builder found/missed ledger](specs/005-plots-and-layout/validation.md) and
 [slice-4 visual review](specs/005-plots-and-layout/review/README.md), plus
 [polish review and current open issues](specs/006-report-polish/review/README.md).
+
+## Small numbers, missingness by group and themes
+
+Stored statistics keep at least 6 significant figures (never fewer than the earlier
+10 decimals), so a column at the 1e-12 scale keeps its percentiles, mean and SD
+instead of storing 0; normal-scale and large-offset values are unchanged.
+Dimensionless coefficients (skewness, kurtosis, r, eta, V) keep 10 decimals so
+symmetric data does not report float noise. Artifacts are schema version 2.
+
+A missingness-by-group test reports "Missingness in X varies with G" as an
+observation only: chi-square on missing/present by group, groups of at least 10,
+Bonferroni over the tests run (family alpha 0.01) and Cramér's V ≥ 0.15, all
+disclosed under `quality.missingness_tests`. It never suggests an action or selects
+pairs; on 20 null tables it reports nothing. HTML findings carry kind-coloured tags,
+and the report follows the system light/dark setting (`data-theme="light"` or
+`"dark"` on `<html>` overrides it). Colours come from one palette, `fathom/palette.py`.
+See [spec008](specs/008-salvage-decisions/spec.md) and its
+[visual review](specs/008-salvage-decisions/review/README.md).
+
+## Time series
+
+Declare a series; Fathom never infers one from column names.
+
+```yaml
+time_series:
+  - time: pickup          # strict ISO date/date-time (or the column's date_format)
+    value: null           # null counts rows (events); a column sums its values
+    by: zone              # optional: top_n groups by row count (default 5, max 20)
+    granularities: [hour, day]   # or [auto]: hour/day/week/month as the span allows
+    max_lag: 48           # optional; defaults 168/28/26/24 by granularity
+```
+
+The report gains a **Temporal structure** section (artifact key `time_series`): the
+observation process (raw rows, distinct and repeated timestamps, missing observations
+vs explicit zeros vs periods with no event), the four sparsity dimensions per
+granularity — **frequency** (zero share, inter-event interval; ADI alias),
+**amplitude** (non-zero quantiles, CV²), **wavelength** (ACF/PACF of values and of
+the occurrence indicator, dominant and calendar lags, optional periodogram peak with
+the `stats` extra) and **duration** (zero-run and burst lengths) — ACF/PACF stem plots
+for two granularities, and a present / absent / insufficient-evidence summary with
+each rule. Fewer than 30 periods is insufficient; a constant series is undefined; lags
+beyond n/4 are marked poorly supported. Without a declaration, one question suggests
+one. See [spec011](specs/011-time-series/spec.md).
 
 ## Scope and limits
 

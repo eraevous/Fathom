@@ -50,7 +50,7 @@ def test_context_first_exact_deltas_and_identical_decoy(make_profile):
 
 
 @pytest.mark.parametrize("mutation", [
-    lambda d: d.update(schema_version=2), lambda d: d.update(kind="unknown"),
+    lambda d: d.update(schema_version=3), lambda d: d.update(kind="unknown"),  # 2 is valid since spec 008
     lambda d: d.pop("overview"), lambda d: d.update(columns=[{}]),
     lambda d: d["overview"].update(rows=-1), lambda d: d["findings"][0].update(kind="fact"),
     lambda d: d.update(kind=[]), lambda d: d["columns"][0].update(inference={}),

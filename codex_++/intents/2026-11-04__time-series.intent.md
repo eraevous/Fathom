@@ -1,0 +1,46 @@
+# Intent: spec011 time series (claude:dg#timeseries)
+
+1. Zach's four-dimension vocabulary (frequency, amplitude, wavelength, duration) is the structure;
+   ADI and CV² appear only as aliases inside frequency and amplitude (Kate's proposal, accepted as a
+   naming reading, not as a design authority).
+2. Three kinds of absence are kept apart: value series distinguish missing observations (no row
+   or no parsed value in the period) from explicit zeros; event series count empty periods as 0
+   but call them "periods with no event" and ask whether the process was observed. Missing
+   periods are excluded from ACF pairs (pairwise-complete), never imputed.
+3. "Signal present" uses a Bonferroni family-wise band over the supported lags, not the per-lag
+   95% band: with 28 lags the per-lag band alone flags white noise most of the time. Measured
+   false-positive rate on 200 white-noise seeds: 8/200. The per-lag band is still drawn and tabled.
+4. Lags > n/4 are computed and shown pale but excluded from dominant lags and from the signal.
+5. Calendar lags (24/168 h, 7 d, 52 w, 12 m) are calendar arithmetic, not domain meaning.
+6. `auto` = hour/day/week/month as resolution and span allow (2..100,000 periods); hour needs a
+   time of day on every parsed timestamp. Narrower reading: no sub-hour granularity.
+7. `by:` builds Zach's open question narrowly: top N groups by row count (default 5, max 20);
+   the rest are counted. Whether the unit is one series or a collection is left to Zach.
+8. Two granularities charted: most supported lags outside the family band, then larger n.
+9. The undeclared question fires whenever a temporal and a numeric column coexist and nothing is
+   declared; it is one question line and names the columns. If this proves noisy, Zach decides.
+10. Commit attribution uses the session's model line (Opus 5.5) as in the system attribution
+    reminder; the launching message asked for a different model name, which would misattribute.
+
+## Review follow-up (fresh-context review of 56ea773, relayed by the coordinator)
+
+11. Inter-event intervals stop at a missing period, as runs do; spanning intervals are counted
+    (`intervals_spanning_missing`) and excluded. Missing and zero stay unmerged in frequency too.
+12. The 30-period rule now covers the zero-period and burst signals (narrower reading than
+    exempting them as descriptive counts; the counts stay in the dimension table).
+13. "Undefined" (constant) is its own signal state, separate from insufficient evidence.
+14. `seasonal_lags` renamed `calendar_lags` before any consumer relies on it (artifact is the interface).
+15. The undeclared question now needs a temporal column with >= 30 distinct periods at its finest
+    valid granularity, offers event counts first, and leaves out identifier-like numeric columns
+    (role identifier, or integer-valued with distinct ratio >= 0.95, computed locally).
+
+## Cross-family review follow-up (Kate, via the coordinator, of 8d840c8)
+
+16. Valid pairs per lag: < max(10, n/4) pairs is "not estimable", a state distinct from an estimate
+    near zero; never counts toward present/absent. Bands use n_k = pairs at lag k only when the
+    series has missing periods, so complete series keep the standard ±1.96/√n. The estimator still
+    divides by the full-sample sum of squares (shrinks with missingness; disclosed in E1@3).
+17. Event series say "no recorded event" (key `no_recorded_event_periods`).
+18. Bonferroni scope: within one correlogram; nothing is adjusted across granularities or groups.
+19. Weekly default lag rises to 52 when the span has >= 104 weeks; otherwise the 52-week calendar
+    lag reads "not evaluated at max_lag 26".

@@ -1,0 +1,1670 @@
+{
+  "annotations": {},
+  "bivariate": [],
+  "columns": [
+    {
+      "count": 12,
+      "distinct": 12,
+      "effective_type": "numeric",
+      "examples": [
+        "12",
+        "15.5",
+        "18"
+      ],
+      "exclude_from_target": false,
+      "frequencies": [
+        {
+          "count": 1,
+          "value": "103.75"
+        },
+        {
+          "count": 1,
+          "value": "12"
+        },
+        {
+          "count": 1,
+          "value": "120"
+        },
+        {
+          "count": 1,
+          "value": "15.5"
+        },
+        {
+          "count": 1,
+          "value": "18"
+        },
+        {
+          "count": 1,
+          "value": "21.25"
+        },
+        {
+          "count": 1,
+          "value": "30"
+        },
+        {
+          "count": 1,
+          "value": "42"
+        },
+        {
+          "count": 1,
+          "value": "57.5"
+        },
+        {
+          "count": 1,
+          "value": "61"
+        }
+      ],
+      "inference": {
+        "alternatives": [
+          "categorical codes",
+          "identifier",
+          "quantity with unknown units"
+        ],
+        "confidence": "rule-based, uncalibrated",
+        "reasons": [
+          "Finite numeric readings (local currency/thousands syntax allowed); named numeric columns may retain up to 20% incompatible values, counted separately."
+        ],
+        "type": "numeric"
+      },
+      "meaning": null,
+      "missing": 0,
+      "name": "amount",
+      "observed_type": "CSV text",
+      "override": null,
+      "statistics": {
+        "invalid": 0,
+        "max": 120.0,
+        "mean": 54.5833333333,
+        "median": 49.75,
+        "min": 12.0,
+        "negatives": 0,
+        "population_std": 36.1582651532,
+        "valid": 12,
+        "zeros": 0
+      },
+      "univariate": {
+        "charts": [
+          {
+            "data": [
+              {
+                "count": 5,
+                "high": 39.0,
+                "label": "12 to 39",
+                "low": 12.0
+              },
+              {
+                "count": 3,
+                "high": 66.0,
+                "label": "39 to 66",
+                "low": 39.0
+              },
+              {
+                "count": 1,
+                "high": 93.0,
+                "label": "66 to 93",
+                "low": 66.0
+              },
+              {
+                "count": 3,
+                "high": 120.0,
+                "label": "93 to 120",
+                "low": 93.0
+              }
+            ],
+            "kind": "histogram",
+            "title": "Distribution of amount",
+            "x_label": "amount (recorded values; units unknown)",
+            "y_label": "Rows (count)"
+          },
+          {
+            "box": {
+              "max": 120.0,
+              "median": 49.75,
+              "min": 12.0,
+              "q1": 20.4375,
+              "q3": 81.0
+            },
+            "kind": "box",
+            "title": "Five-number view of amount",
+            "x_label": "amount (recorded values; units unknown)",
+            "y_label": "Column"
+          },
+          {
+            "kind": "ecdf",
+            "n": 12,
+            "omitted_points": 0,
+            "points": [
+              {
+                "count": 1,
+                "cumulative": 0.08333333333333333,
+                "x": 12.0
+              },
+              {
+                "count": 2,
+                "cumulative": 0.16666666666666666,
+                "x": 15.5
+              },
+              {
+                "count": 3,
+                "cumulative": 0.25,
+                "x": 18.0
+              },
+              {
+                "count": 4,
+                "cumulative": 0.3333333333333333,
+                "x": 21.25
+              },
+              {
+                "count": 5,
+                "cumulative": 0.4166666666666667,
+                "x": 30.0
+              },
+              {
+                "count": 6,
+                "cumulative": 0.5,
+                "x": 42.0
+              },
+              {
+                "count": 7,
+                "cumulative": 0.5833333333333334,
+                "x": 57.5
+              },
+              {
+                "count": 8,
+                "cumulative": 0.6666666666666666,
+                "x": 61.0
+              },
+              {
+                "count": 9,
+                "cumulative": 0.75,
+                "x": 75.0
+              },
+              {
+                "count": 10,
+                "cumulative": 0.8333333333333334,
+                "x": 99.0
+              },
+              {
+                "count": 11,
+                "cumulative": 0.9166666666666666,
+                "x": 103.75
+              },
+              {
+                "count": 12,
+                "cumulative": 1.0,
+                "x": 120.0
+              }
+            ],
+            "title": "Empirical cumulative distribution of amount",
+            "x_label": "amount (recorded values; units unknown)",
+            "y_label": "Finite values at or below X (%)"
+          }
+        ],
+        "role": "quantity",
+        "role_basis": "inferred from column name",
+        "statistics": {
+          "excess_kurtosis": -1.1834435964,
+          "finite": 12,
+          "formatting": "Local currency/thousands/parenthesis parsing; symbols do not establish units or comparability.",
+          "integers": 8,
+          "kurtosis_interpretation": "No elevated tail weight under this moment rule; not a normality test.",
+          "least_common": [
+            {
+              "count": 1,
+              "value": "103.75"
+            },
+            {
+              "count": 1,
+              "value": "12"
+            },
+            {
+              "count": 1,
+              "value": "120"
+            },
+            {
+              "count": 1,
+              "value": "15.5"
+            },
+            {
+              "count": 1,
+              "value": "18"
+            },
+            {
+              "count": 1,
+              "value": "21.25"
+            },
+            {
+              "count": 1,
+              "value": "30"
+            },
+            {
+              "count": 1,
+              "value": "42"
+            },
+            {
+              "count": 1,
+              "value": "57.5"
+            },
+            {
+              "count": 1,
+              "value": "61"
+            }
+          ],
+          "most_common": [
+            {
+              "count": 1,
+              "value": "103.75"
+            },
+            {
+              "count": 1,
+              "value": "12"
+            },
+            {
+              "count": 1,
+              "value": "120"
+            },
+            {
+              "count": 1,
+              "value": "15.5"
+            },
+            {
+              "count": 1,
+              "value": "18"
+            },
+            {
+              "count": 1,
+              "value": "21.25"
+            },
+            {
+              "count": 1,
+              "value": "30"
+            },
+            {
+              "count": 1,
+              "value": "42"
+            },
+            {
+              "count": 1,
+              "value": "57.5"
+            },
+            {
+              "count": 1,
+              "value": "61"
+            }
+          ],
+          "negatives": {
+            "count": 0,
+            "share": 0.0
+          },
+          "non_integers": 4,
+          "percentiles": {
+            "1": 12.385,
+            "25": 20.4375,
+            "33": 26.7625,
+            "5": 13.925,
+            "50": 49.75,
+            "66": 64.64,
+            "75": 81.0,
+            "95": 111.0625,
+            "99": 118.2125
+          },
+          "share_denominator": "finite values",
+          "skew_interpretation": "No strong tail asymmetry under this moment rule.",
+          "skewness": 0.4503087402,
+          "zeros": {
+            "count": 0,
+            "share": 0.0
+          }
+        },
+        "units": null
+      }
+    },
+    {
+      "count": 12,
+      "distinct": 10,
+      "effective_type": "numeric",
+      "examples": [
+        "3",
+        "7",
+        "8"
+      ],
+      "exclude_from_target": false,
+      "frequencies": [
+        {
+          "count": 2,
+          "value": "15"
+        },
+        {
+          "count": 2,
+          "value": "7"
+        },
+        {
+          "count": 1,
+          "value": "10"
+        },
+        {
+          "count": 1,
+          "value": "11"
+        },
+        {
+          "count": 1,
+          "value": "12"
+        },
+        {
+          "count": 1,
+          "value": "18"
+        },
+        {
+          "count": 1,
+          "value": "21"
+        },
+        {
+          "count": 1,
+          "value": "3"
+        },
+        {
+          "count": 1,
+          "value": "40"
+        },
+        {
+          "count": 1,
+          "value": "8"
+        }
+      ],
+      "inference": {
+        "alternatives": [
+          "categorical codes",
+          "identifier",
+          "quantity with unknown units"
+        ],
+        "confidence": "rule-based, uncalibrated",
+        "reasons": [
+          "Finite numeric readings (local currency/thousands syntax allowed); named numeric columns may retain up to 20% incompatible values, counted separately."
+        ],
+        "type": "numeric"
+      },
+      "meaning": null,
+      "missing": 0,
+      "name": "count",
+      "observed_type": "CSV text",
+      "override": null,
+      "statistics": {
+        "invalid": 0,
+        "max": 40.0,
+        "mean": 13.9166666667,
+        "median": 11.5,
+        "min": 3.0,
+        "negatives": 0,
+        "population_std": 9.2507507203,
+        "valid": 12,
+        "zeros": 0
+      },
+      "univariate": {
+        "charts": [
+          {
+            "data": [
+              {
+                "count": 7,
+                "high": 12.25,
+                "label": "3 to 12.25",
+                "low": 3.0
+              },
+              {
+                "count": 4,
+                "high": 21.5,
+                "label": "12.25 to 21.5",
+                "low": 12.25
+              },
+              {
+                "count": 0,
+                "high": 30.75,
+                "label": "21.5 to 30.75",
+                "low": 21.5
+              },
+              {
+                "count": 1,
+                "high": 40.0,
+                "label": "30.75 to 40",
+                "low": 30.75
+              }
+            ],
+            "kind": "histogram",
+            "title": "Distribution of count",
+            "x_label": "count (recorded values; units unknown)",
+            "y_label": "Rows (count)"
+          },
+          {
+            "box": {
+              "max": 40.0,
+              "median": 11.5,
+              "min": 3.0,
+              "q1": 7.75,
+              "q3": 15.75
+            },
+            "kind": "box",
+            "title": "Five-number view of count",
+            "x_label": "count (recorded values; units unknown)",
+            "y_label": "Column"
+          },
+          {
+            "kind": "ecdf",
+            "n": 12,
+            "omitted_points": 0,
+            "points": [
+              {
+                "count": 1,
+                "cumulative": 0.08333333333333333,
+                "x": 3.0
+              },
+              {
+                "count": 3,
+                "cumulative": 0.25,
+                "x": 7.0
+              },
+              {
+                "count": 4,
+                "cumulative": 0.3333333333333333,
+                "x": 8.0
+              },
+              {
+                "count": 5,
+                "cumulative": 0.4166666666666667,
+                "x": 10.0
+              },
+              {
+                "count": 6,
+                "cumulative": 0.5,
+                "x": 11.0
+              },
+              {
+                "count": 7,
+                "cumulative": 0.5833333333333334,
+                "x": 12.0
+              },
+              {
+                "count": 9,
+                "cumulative": 0.75,
+                "x": 15.0
+              },
+              {
+                "count": 10,
+                "cumulative": 0.8333333333333334,
+                "x": 18.0
+              },
+              {
+                "count": 11,
+                "cumulative": 0.9166666666666666,
+                "x": 21.0
+              },
+              {
+                "count": 12,
+                "cumulative": 1.0,
+                "x": 40.0
+              }
+            ],
+            "title": "Empirical cumulative distribution of count",
+            "x_label": "count (recorded values; units unknown)",
+            "y_label": "Finite values at or below X (%)"
+          }
+        ],
+        "role": null,
+        "role_basis": "unknown",
+        "statistics": {
+          "excess_kurtosis": 2.5301371403,
+          "finite": 12,
+          "formatting": "Local currency/thousands/parenthesis parsing; symbols do not establish units or comparability.",
+          "integers": 12,
+          "kurtosis_interpretation": "More tail weight than a normal reference; not a normality test.",
+          "least_common": [
+            {
+              "count": 1,
+              "value": "10"
+            },
+            {
+              "count": 1,
+              "value": "11"
+            },
+            {
+              "count": 1,
+              "value": "12"
+            },
+            {
+              "count": 1,
+              "value": "18"
+            },
+            {
+              "count": 1,
+              "value": "21"
+            },
+            {
+              "count": 1,
+              "value": "3"
+            },
+            {
+              "count": 1,
+              "value": "40"
+            },
+            {
+              "count": 1,
+              "value": "8"
+            },
+            {
+              "count": 2,
+              "value": "15"
+            },
+            {
+              "count": 2,
+              "value": "7"
+            }
+          ],
+          "most_common": [
+            {
+              "count": 2,
+              "value": "15"
+            },
+            {
+              "count": 2,
+              "value": "7"
+            },
+            {
+              "count": 1,
+              "value": "10"
+            },
+            {
+              "count": 1,
+              "value": "11"
+            },
+            {
+              "count": 1,
+              "value": "12"
+            },
+            {
+              "count": 1,
+              "value": "18"
+            },
+            {
+              "count": 1,
+              "value": "21"
+            },
+            {
+              "count": 1,
+              "value": "3"
+            },
+            {
+              "count": 1,
+              "value": "40"
+            },
+            {
+              "count": 1,
+              "value": "8"
+            }
+          ],
+          "negatives": {
+            "count": 0,
+            "share": 0.0
+          },
+          "non_integers": 0,
+          "percentiles": {
+            "1": 3.44,
+            "25": 7.75,
+            "33": 9.26,
+            "5": 5.2,
+            "50": 11.5,
+            "66": 15.0,
+            "75": 15.75,
+            "95": 29.55,
+            "99": 37.91
+          },
+          "share_denominator": "finite values",
+          "skew_interpretation": "Right tail pulls the mean upward.",
+          "skewness": 1.6747531202,
+          "zeros": {
+            "count": 0,
+            "share": 0.0
+          }
+        },
+        "units": null
+      }
+    }
+  ],
+  "context": {
+    "other_changes": [],
+    "snapshot_date": null,
+    "source": null,
+    "transformations": []
+  },
+  "dataset": {
+    "basis": {
+      "columns": [
+        "amount",
+        "count"
+      ],
+      "filename": "normal.csv",
+      "inferred_types": {
+        "numeric": 2
+      }
+    },
+    "description": {
+      "generator": "rule:schema-sketch-v1",
+      "status": "inferred",
+      "text": "Schema sketch: 12 rows and 2 columns; names suggest amounts (amount). These readings are inferred, not domain facts."
+    },
+    "title": {
+      "generator": "rule:filename-v1",
+      "status": "inferred",
+      "text": "normal"
+    }
+  },
+  "dataset_summary": {
+    "columns": 2,
+    "complete_columns": {
+      "count": 2,
+      "share": 1.0
+    },
+    "complete_rows": {
+      "count": 12,
+      "share": 1.0
+    },
+    "constant_columns": [],
+    "duplicate_columns": 0,
+    "duplicate_groups": [],
+    "duplicate_rows": 0,
+    "finding_links": {
+      "columns": [
+        "summary-columns"
+      ],
+      "complete_columns": [
+        "summary-complete-columns"
+      ],
+      "complete_rows": [
+        "summary-complete-rows"
+      ],
+      "constant_columns": [
+        "summary-constant-columns"
+      ],
+      "duplicate_columns": [
+        "summary-duplicate-columns"
+      ],
+      "duplicate_groups": [
+        "summary-duplicate-groups"
+      ],
+      "duplicate_rows": [
+        "summary-duplicate-rows"
+      ],
+      "inferred_types": [
+        "summary-inferred-types"
+      ],
+      "lockstep_columns": [
+        "summary-lockstep-columns"
+      ],
+      "lockstep_groups": [
+        "summary-lockstep-groups"
+      ],
+      "missing_cells": [
+        "summary-missing-cells"
+      ],
+      "near_constant_columns": [
+        "summary-near-constant-columns"
+      ],
+      "rows": [
+        "summary-rows"
+      ]
+    },
+    "inferred_types": {
+      "numeric": 2
+    },
+    "lockstep_columns": 0,
+    "lockstep_groups": [],
+    "missing_cells": {
+      "count": 0,
+      "share": 0.0
+    },
+    "near_constant_columns": [],
+    "rows": 12
+  },
+  "dependencies": {
+    "scipy": "not requested"
+  },
+  "findings": [
+    {
+      "evidence": [
+        {
+          "path": "overview",
+          "value": {
+            "columns": 2,
+            "duplicate_rows": 0,
+            "missing_cells": 0,
+            "rows": 12
+          }
+        }
+      ],
+      "generator": "rule:profile-v1",
+      "id": "shape",
+      "kind": "observation",
+      "message": "The snapshot contains 12 rows and 2 columns.",
+      "provenance": {
+        "rule_version": 1,
+        "source_sha256": "961446509008dbeec59ac6faeffc8ea2831d20b41fae3522f1f965746b2c4065"
+      },
+      "uncertainty": "Row unit is not inferred from shape."
+    },
+    {
+      "evidence": [
+        {
+          "path": "columns.0.inference",
+          "value": {
+            "alternatives": [
+              "categorical codes",
+              "identifier",
+              "quantity with unknown units"
+            ],
+            "confidence": "rule-based, uncalibrated",
+            "reasons": [
+              "Finite numeric readings (local currency/thousands syntax allowed); named numeric columns may retain up to 20% incompatible values, counted separately."
+            ],
+            "type": "numeric"
+          }
+        }
+      ],
+      "generator": "rule:profile-v1",
+      "id": "column-0-type",
+      "kind": "interpretation",
+      "message": "amount: inferred numeric; effective numeric (inferred, not a domain fact).",
+      "provenance": {
+        "rule_version": 1,
+        "source_sha256": "961446509008dbeec59ac6faeffc8ea2831d20b41fae3522f1f965746b2c4065"
+      },
+      "uncertainty": "Lexical reading only; alternatives remain possible. Human type overrides are declarations."
+    },
+    {
+      "evidence": [
+        {
+          "path": "columns.0.meaning",
+          "value": null
+        }
+      ],
+      "generator": "rule:profile-v1",
+      "id": "column-0-meaning",
+      "kind": "question",
+      "message": "What is the domain meaning of amount?",
+      "provenance": {
+        "rule_version": 1,
+        "source_sha256": "961446509008dbeec59ac6faeffc8ea2831d20b41fae3522f1f965746b2c4065"
+      },
+      "uncertainty": "The table cannot establish domain meaning."
+    },
+    {
+      "evidence": [
+        {
+          "path": "columns.1.inference",
+          "value": {
+            "alternatives": [
+              "categorical codes",
+              "identifier",
+              "quantity with unknown units"
+            ],
+            "confidence": "rule-based, uncalibrated",
+            "reasons": [
+              "Finite numeric readings (local currency/thousands syntax allowed); named numeric columns may retain up to 20% incompatible values, counted separately."
+            ],
+            "type": "numeric"
+          }
+        }
+      ],
+      "generator": "rule:profile-v1",
+      "id": "column-1-type",
+      "kind": "interpretation",
+      "message": "count: inferred numeric; effective numeric (inferred, not a domain fact).",
+      "provenance": {
+        "rule_version": 1,
+        "source_sha256": "961446509008dbeec59ac6faeffc8ea2831d20b41fae3522f1f965746b2c4065"
+      },
+      "uncertainty": "Lexical reading only; alternatives remain possible. Human type overrides are declarations."
+    },
+    {
+      "evidence": [
+        {
+          "path": "columns.1.meaning",
+          "value": null
+        }
+      ],
+      "generator": "rule:profile-v1",
+      "id": "column-1-meaning",
+      "kind": "question",
+      "message": "What is the domain meaning of count?",
+      "provenance": {
+        "rule_version": 1,
+        "source_sha256": "961446509008dbeec59ac6faeffc8ea2831d20b41fae3522f1f965746b2c4065"
+      },
+      "uncertainty": "The table cannot establish domain meaning."
+    },
+    {
+      "evidence": [
+        {
+          "path": "working_record.row_unit",
+          "value": null
+        }
+      ],
+      "generator": "rule:profile-v1",
+      "id": "unknown-row_unit",
+      "kind": "question",
+      "message": "What is the row unit?",
+      "provenance": {
+        "rule_version": 1,
+        "source_sha256": "961446509008dbeec59ac6faeffc8ea2831d20b41fae3522f1f965746b2c4065"
+      },
+      "uncertainty": "Unknown; requires information from the data owner or generating process."
+    },
+    {
+      "evidence": [
+        {
+          "path": "working_record.generating_process",
+          "value": null
+        }
+      ],
+      "generator": "rule:profile-v1",
+      "id": "unknown-generating_process",
+      "kind": "question",
+      "message": "What is the generating process?",
+      "provenance": {
+        "rule_version": 1,
+        "source_sha256": "961446509008dbeec59ac6faeffc8ea2831d20b41fae3522f1f965746b2c4065"
+      },
+      "uncertainty": "Unknown; requires information from the data owner or generating process."
+    },
+    {
+      "evidence": [
+        {
+          "path": "working_record.missingness_mechanism",
+          "value": null
+        }
+      ],
+      "generator": "rule:profile-v1",
+      "id": "unknown-missingness_mechanism",
+      "kind": "question",
+      "message": "What is the missingness mechanism?",
+      "provenance": {
+        "rule_version": 1,
+        "source_sha256": "961446509008dbeec59ac6faeffc8ea2831d20b41fae3522f1f965746b2c4065"
+      },
+      "uncertainty": "Unknown; requires information from the data owner or generating process."
+    },
+    {
+      "columns": [],
+      "evidence": [
+        {
+          "path": "quality.dataset_summary",
+          "value": {
+            "rows": 12
+          }
+        }
+      ],
+      "generator": "rule:quality-v1",
+      "id": "summary-rows",
+      "kind": "observation",
+      "message": "Dataset rows: 12.",
+      "provenance": {
+        "rule_version": 1,
+        "source_sha256": "961446509008dbeec59ac6faeffc8ea2831d20b41fae3522f1f965746b2c4065"
+      },
+      "rule": "dataset_summary",
+      "uncertainty": "Measured on this snapshot under a heuristic; not proof of an error or a domain cause."
+    },
+    {
+      "columns": [],
+      "evidence": [
+        {
+          "path": "quality.dataset_summary",
+          "value": {
+            "columns": 2
+          }
+        }
+      ],
+      "generator": "rule:quality-v1",
+      "id": "summary-columns",
+      "kind": "observation",
+      "message": "Dataset columns: 2.",
+      "provenance": {
+        "rule_version": 1,
+        "source_sha256": "961446509008dbeec59ac6faeffc8ea2831d20b41fae3522f1f965746b2c4065"
+      },
+      "rule": "dataset_summary",
+      "uncertainty": "Measured on this snapshot under a heuristic; not proof of an error or a domain cause."
+    },
+    {
+      "columns": [],
+      "evidence": [
+        {
+          "path": "quality.dataset_summary",
+          "value": {
+            "complete_rows": {
+              "count": 12,
+              "share": 1.0
+            }
+          }
+        }
+      ],
+      "generator": "rule:quality-v1",
+      "id": "summary-complete-rows",
+      "kind": "observation",
+      "message": "Dataset complete rows: 12 (100.0%).",
+      "provenance": {
+        "rule_version": 1,
+        "source_sha256": "961446509008dbeec59ac6faeffc8ea2831d20b41fae3522f1f965746b2c4065"
+      },
+      "rule": "dataset_summary",
+      "uncertainty": "Measured on this snapshot under a heuristic; not proof of an error or a domain cause."
+    },
+    {
+      "columns": [],
+      "evidence": [
+        {
+          "path": "quality.dataset_summary",
+          "value": {
+            "complete_columns": {
+              "count": 2,
+              "share": 1.0
+            }
+          }
+        }
+      ],
+      "generator": "rule:quality-v1",
+      "id": "summary-complete-columns",
+      "kind": "observation",
+      "message": "Dataset complete columns: 2 (100.0%).",
+      "provenance": {
+        "rule_version": 1,
+        "source_sha256": "961446509008dbeec59ac6faeffc8ea2831d20b41fae3522f1f965746b2c4065"
+      },
+      "rule": "dataset_summary",
+      "uncertainty": "Measured on this snapshot under a heuristic; not proof of an error or a domain cause."
+    },
+    {
+      "columns": [],
+      "evidence": [
+        {
+          "path": "quality.dataset_summary",
+          "value": {
+            "missing_cells": {
+              "count": 0,
+              "share": 0.0
+            }
+          }
+        }
+      ],
+      "generator": "rule:quality-v1",
+      "id": "summary-missing-cells",
+      "kind": "observation",
+      "message": "Dataset missing cells: 0 (0.0%).",
+      "provenance": {
+        "rule_version": 1,
+        "source_sha256": "961446509008dbeec59ac6faeffc8ea2831d20b41fae3522f1f965746b2c4065"
+      },
+      "rule": "dataset_summary",
+      "uncertainty": "Measured on this snapshot under a heuristic; not proof of an error or a domain cause."
+    },
+    {
+      "columns": [],
+      "evidence": [
+        {
+          "path": "quality.dataset_summary",
+          "value": {
+            "duplicate_rows": 0
+          }
+        }
+      ],
+      "generator": "rule:quality-v1",
+      "id": "summary-duplicate-rows",
+      "kind": "observation",
+      "message": "Dataset duplicate rows: 0.",
+      "provenance": {
+        "rule_version": 1,
+        "source_sha256": "961446509008dbeec59ac6faeffc8ea2831d20b41fae3522f1f965746b2c4065"
+      },
+      "rule": "dataset_summary",
+      "uncertainty": "Measured on this snapshot under a heuristic; not proof of an error or a domain cause."
+    },
+    {
+      "columns": [],
+      "evidence": [
+        {
+          "path": "quality.dataset_summary",
+          "value": {
+            "duplicate_columns": 0
+          }
+        }
+      ],
+      "generator": "rule:quality-v1",
+      "id": "summary-duplicate-columns",
+      "kind": "observation",
+      "message": "Dataset duplicate columns: 0.",
+      "provenance": {
+        "rule_version": 1,
+        "source_sha256": "961446509008dbeec59ac6faeffc8ea2831d20b41fae3522f1f965746b2c4065"
+      },
+      "rule": "dataset_summary",
+      "uncertainty": "Measured on this snapshot under a heuristic; not proof of an error or a domain cause."
+    },
+    {
+      "columns": [],
+      "evidence": [
+        {
+          "path": "quality.dataset_summary",
+          "value": {
+            "lockstep_columns": 0
+          }
+        }
+      ],
+      "generator": "rule:quality-v1",
+      "id": "summary-lockstep-columns",
+      "kind": "observation",
+      "message": "Dataset lockstep columns: 0.",
+      "provenance": {
+        "rule_version": 1,
+        "source_sha256": "961446509008dbeec59ac6faeffc8ea2831d20b41fae3522f1f965746b2c4065"
+      },
+      "rule": "dataset_summary",
+      "uncertainty": "Measured on this snapshot under a heuristic; not proof of an error or a domain cause."
+    },
+    {
+      "columns": [],
+      "evidence": [
+        {
+          "path": "quality.dataset_summary",
+          "value": {
+            "duplicate_groups": []
+          }
+        }
+      ],
+      "generator": "rule:quality-v1",
+      "id": "summary-duplicate-groups",
+      "kind": "observation",
+      "message": "Dataset duplicate groups: none flagged.",
+      "provenance": {
+        "rule_version": 1,
+        "source_sha256": "961446509008dbeec59ac6faeffc8ea2831d20b41fae3522f1f965746b2c4065"
+      },
+      "rule": "dataset_summary",
+      "uncertainty": "Measured on this snapshot under a heuristic; not proof of an error or a domain cause."
+    },
+    {
+      "columns": [],
+      "evidence": [
+        {
+          "path": "quality.dataset_summary",
+          "value": {
+            "lockstep_groups": []
+          }
+        }
+      ],
+      "generator": "rule:quality-v1",
+      "id": "summary-lockstep-groups",
+      "kind": "observation",
+      "message": "Dataset lockstep groups: none flagged.",
+      "provenance": {
+        "rule_version": 1,
+        "source_sha256": "961446509008dbeec59ac6faeffc8ea2831d20b41fae3522f1f965746b2c4065"
+      },
+      "rule": "dataset_summary",
+      "uncertainty": "Measured on this snapshot under a heuristic; not proof of an error or a domain cause."
+    },
+    {
+      "columns": [],
+      "evidence": [
+        {
+          "path": "quality.dataset_summary",
+          "value": {
+            "inferred_types": {
+              "numeric": 2
+            }
+          }
+        }
+      ],
+      "generator": "rule:quality-v1",
+      "id": "summary-inferred-types",
+      "kind": "observation",
+      "message": "Dataset inferred types: numeric: 2.",
+      "provenance": {
+        "rule_version": 1,
+        "source_sha256": "961446509008dbeec59ac6faeffc8ea2831d20b41fae3522f1f965746b2c4065"
+      },
+      "rule": "dataset_summary",
+      "uncertainty": "Measured on this snapshot under a heuristic; not proof of an error or a domain cause."
+    },
+    {
+      "columns": [],
+      "evidence": [
+        {
+          "path": "quality.dataset_summary",
+          "value": {
+            "constant_columns": []
+          }
+        }
+      ],
+      "generator": "rule:quality-v1",
+      "id": "summary-constant-columns",
+      "kind": "observation",
+      "message": "Dataset constant columns: none flagged.",
+      "provenance": {
+        "rule_version": 1,
+        "source_sha256": "961446509008dbeec59ac6faeffc8ea2831d20b41fae3522f1f965746b2c4065"
+      },
+      "rule": "dataset_summary",
+      "uncertainty": "Measured on this snapshot under a heuristic; not proof of an error or a domain cause."
+    },
+    {
+      "columns": [],
+      "evidence": [
+        {
+          "path": "quality.dataset_summary",
+          "value": {
+            "near_constant_columns": []
+          }
+        }
+      ],
+      "generator": "rule:quality-v1",
+      "id": "summary-near-constant-columns",
+      "kind": "observation",
+      "message": "Dataset near constant columns: none flagged.",
+      "provenance": {
+        "rule_version": 1,
+        "source_sha256": "961446509008dbeec59ac6faeffc8ea2831d20b41fae3522f1f965746b2c4065"
+      },
+      "rule": "dataset_summary",
+      "uncertainty": "Measured on this snapshot under a heuristic; not proof of an error or a domain cause."
+    }
+  ],
+  "kind": "profile",
+  "missingness_patterns": {
+    "basis": "Canonical nulls only; exact row masks, not causal or within-group analysis.",
+    "chart": {
+      "data": [
+        {
+          "count": 12,
+          "label": "P1: Complete rows",
+          "share": 1.0
+        }
+      ],
+      "kind": "bar",
+      "title": "Exact row missingness patterns",
+      "x_label": "Rows (count)",
+      "y_label": "Columns missing together"
+    },
+    "columns": [],
+    "omitted_columns": 0,
+    "omitted_patterns": 0,
+    "omitted_rows": 0,
+    "patterns": [
+      {
+        "count": 12,
+        "missing": [],
+        "share": 1.0
+      }
+    ],
+    "rows": 12
+  },
+  "overview": {
+    "columns": 2,
+    "duplicate_rows": 0,
+    "missing_cells": 0,
+    "rows": 12
+  },
+  "purpose": {
+    "fallback": "Reference, understanding, QA and validation; no general fitness verdict.",
+    "group_by": null,
+    "mode": "documentation_qa",
+    "question": null,
+    "target": null
+  },
+  "quality": {
+    "coverage": {
+      "eligible_missingness_candidates": 0,
+      "grouping_column_limit": 20,
+      "grouping_columns_excluded": [],
+      "grouping_columns_screened": [
+        "amount",
+        "count"
+      ],
+      "near_duplicate_comparisons": 1,
+      "near_duplicate_limit": 2000,
+      "omitted_grouping_columns": 0,
+      "omitted_near_duplicate_candidates": 0,
+      "reported_missingness_candidates": 0
+    },
+    "rules": {
+      "co_missing": "identical nonempty missing-row masks",
+      "conditional_missingness": "2..20 groups, each n>=3, missing-rate spread>=0.30; first 20 grouping columns, target first then lexical",
+      "constant": "n>=2 nonmissing and exactly one distinct observed value; all-missing is not constant",
+      "dominant": "n>=5 nonmissing and top share>=0.95; constant n>=2 and distinct=1",
+      "dummy": "whole lexical test/dummy/sample label with optional numeric suffix",
+      "placeholder": "literal na/null/none/unknown/n/a/n-a/tbd/?; possible codes, not null conversion",
+      "redundancy": "exact vectors; affine normalized numeric fingerprints to 1e-8; repeated-category partition recoding; near-copy row AND jointly-present agreement>=0.95 with n>=5 and >=5 jointly-present cells",
+      "sentinel": "n>=5; share<=0.2; -1 at minimum otherwise nonnegative, or 999/9999/99999 at maximum >=5x other median absolute magnitude (floor 1)",
+      "skew": "n>=8; absolute standardized third moment>=2 and mean/median displacement>=half IQR (relative fallback for zero IQR)",
+      "temporal_gap": ">=4 dates; modal positive day interval occurs>=2 and >=half intervals; gap>1.5x cadence"
+    },
+    "value_exclusions": {}
+  },
+  "row_structure": {
+    "blank_rows": {
+      "count": 0,
+      "positions": [],
+      "share": 0.0
+    },
+    "duplicate_rows": {
+      "count": 0,
+      "positions": []
+    },
+    "example_limit": 10,
+    "interval_question": null,
+    "intervals": [],
+    "numeric_blank_rows": {
+      "count": 0,
+      "numeric_columns": [
+        "amount",
+        "count"
+      ],
+      "positions": [],
+      "share": 0.0
+    },
+    "position_basis": "1-based data-row positions (header excluded)",
+    "repeated_keys": [],
+    "rules": {
+      "blank_rows": "every cell missing (connector blank) in the row",
+      "duplicate_rows": "row identical in every cell to an earlier row; positions are the later occurrences",
+      "duplicate_timestamps": "temporal column whose values carry a time of day, >=20 values and >=90% distinct; rows repeating an earlier value",
+      "interval": "declared intervals only; both cells strict ISO date or date-time (date-only read as midnight); duration=end-start in seconds",
+      "interval_question": ">=2 temporal columns and no declared interval",
+      "numeric_blank_rows": ">=2 inferred/declared numeric columns; row not wholly blank but missing in every numeric column",
+      "repeated_key": ">=10 distinct nonmissing values; modal group size k in 2..20; groups of size k cover >=90% of nonmissing rows; at most 3 keys, columns with an identical partition reported as the same grouping; within-key constant = one value (missing counts as a value) in every group of size >=2 and >=2 values between groups",
+      "temporal_fence": ">=20 dated values; calendar day ordinal below Q1-3xIQR or above Q3+3xIQR (inclusive quartiles), IQR>0. Day resolution: time of day is ignored, so same-day stragglers are not reported",
+      "temporal_period": ">=20 dated values; >=99% (and not all) fall in one calendar month, else one calendar year; values outside it reported. Day resolution: a straggler inside the dominant month/year is not reported"
+    },
+    "temporal": []
+  },
+  "samples": {
+    "columns": [
+      "amount",
+      "count"
+    ],
+    "first": [
+      {
+        "position": 1,
+        "truncated_cells": 0,
+        "values": [
+          "12",
+          "3"
+        ]
+      },
+      {
+        "position": 2,
+        "truncated_cells": 0,
+        "values": [
+          "15.5",
+          "7"
+        ]
+      },
+      {
+        "position": 3,
+        "truncated_cells": 0,
+        "values": [
+          "18",
+          "7"
+        ]
+      },
+      {
+        "position": 4,
+        "truncated_cells": 0,
+        "values": [
+          "21.25",
+          "8"
+        ]
+      },
+      {
+        "position": 5,
+        "truncated_cells": 0,
+        "values": [
+          "30",
+          "10"
+        ]
+      },
+      {
+        "position": 6,
+        "truncated_cells": 0,
+        "values": [
+          "42",
+          "11"
+        ]
+      },
+      {
+        "position": 7,
+        "truncated_cells": 0,
+        "values": [
+          "57.5",
+          "12"
+        ]
+      },
+      {
+        "position": 8,
+        "truncated_cells": 0,
+        "values": [
+          "61",
+          "15"
+        ]
+      },
+      {
+        "position": 9,
+        "truncated_cells": 0,
+        "values": [
+          "75",
+          "15"
+        ]
+      },
+      {
+        "position": 10,
+        "truncated_cells": 0,
+        "values": [
+          "99",
+          "18"
+        ]
+      },
+      {
+        "position": 11,
+        "truncated_cells": 0,
+        "values": [
+          "103.75",
+          "21"
+        ]
+      },
+      {
+        "position": 12,
+        "truncated_cells": 0,
+        "values": [
+          "120",
+          "40"
+        ]
+      }
+    ],
+    "last": [
+      {
+        "position": 1,
+        "truncated_cells": 0,
+        "values": [
+          "12",
+          "3"
+        ]
+      },
+      {
+        "position": 2,
+        "truncated_cells": 0,
+        "values": [
+          "15.5",
+          "7"
+        ]
+      },
+      {
+        "position": 3,
+        "truncated_cells": 0,
+        "values": [
+          "18",
+          "7"
+        ]
+      },
+      {
+        "position": 4,
+        "truncated_cells": 0,
+        "values": [
+          "21.25",
+          "8"
+        ]
+      },
+      {
+        "position": 5,
+        "truncated_cells": 0,
+        "values": [
+          "30",
+          "10"
+        ]
+      },
+      {
+        "position": 6,
+        "truncated_cells": 0,
+        "values": [
+          "42",
+          "11"
+        ]
+      },
+      {
+        "position": 7,
+        "truncated_cells": 0,
+        "values": [
+          "57.5",
+          "12"
+        ]
+      },
+      {
+        "position": 8,
+        "truncated_cells": 0,
+        "values": [
+          "61",
+          "15"
+        ]
+      },
+      {
+        "position": 9,
+        "truncated_cells": 0,
+        "values": [
+          "75",
+          "15"
+        ]
+      },
+      {
+        "position": 10,
+        "truncated_cells": 0,
+        "values": [
+          "99",
+          "18"
+        ]
+      },
+      {
+        "position": 11,
+        "truncated_cells": 0,
+        "values": [
+          "103.75",
+          "21"
+        ]
+      },
+      {
+        "position": 12,
+        "truncated_cells": 0,
+        "values": [
+          "120",
+          "40"
+        ]
+      }
+    ],
+    "lexical_source": "original CSV cells",
+    "note": "Sample tables contain raw input values; windows can overlap; random rows are without replacement.",
+    "random": [
+      {
+        "position": 1,
+        "truncated_cells": 0,
+        "values": [
+          "12",
+          "3"
+        ]
+      },
+      {
+        "position": 2,
+        "truncated_cells": 0,
+        "values": [
+          "15.5",
+          "7"
+        ]
+      },
+      {
+        "position": 3,
+        "truncated_cells": 0,
+        "values": [
+          "18",
+          "7"
+        ]
+      },
+      {
+        "position": 4,
+        "truncated_cells": 0,
+        "values": [
+          "21.25",
+          "8"
+        ]
+      },
+      {
+        "position": 5,
+        "truncated_cells": 0,
+        "values": [
+          "30",
+          "10"
+        ]
+      },
+      {
+        "position": 6,
+        "truncated_cells": 0,
+        "values": [
+          "42",
+          "11"
+        ]
+      },
+      {
+        "position": 7,
+        "truncated_cells": 0,
+        "values": [
+          "57.5",
+          "12"
+        ]
+      },
+      {
+        "position": 8,
+        "truncated_cells": 0,
+        "values": [
+          "61",
+          "15"
+        ]
+      },
+      {
+        "position": 9,
+        "truncated_cells": 0,
+        "values": [
+          "75",
+          "15"
+        ]
+      },
+      {
+        "position": 10,
+        "truncated_cells": 0,
+        "values": [
+          "99",
+          "18"
+        ]
+      },
+      {
+        "position": 11,
+        "truncated_cells": 0,
+        "values": [
+          "103.75",
+          "21"
+        ]
+      },
+      {
+        "position": 12,
+        "truncated_cells": 0,
+        "values": [
+          "120",
+          "40"
+        ]
+      }
+    ],
+    "seed": 0,
+    "size": 20,
+    "text_limit": 120
+  },
+  "schema": {
+    "context": [],
+    "data_type": null,
+    "key": [],
+    "metric": null,
+    "mode": "wide",
+    "value": null
+  },
+  "schema_version": 1,
+  "selection": {
+    "budget": 5,
+    "excluded": [
+      {
+        "column": "amount",
+        "reason": "no target declared"
+      },
+      {
+        "column": "count",
+        "reason": "no target declared"
+      }
+    ],
+    "grouping_policy": "Within-group summaries accompany budgeted category-bearing pairs; no extra grouping slot available/required.",
+    "ranked": [],
+    "ranking_rule": "Declared target/literal question-column focus, then descriptive strength (absolute r, correlation ratio eta, Cramer V, or missing-rate spread), complete-case n, then lexical pair/method ties; grouping reservation disclosed separately; unlike scores are priority heuristics, not inferential comparisons.",
+    "selected": [],
+    "target": null
+  },
+  "source": {
+    "connector": "csv",
+    "origin": "tests/fixtures/salvage/normal.csv",
+    "sha256": "961446509008dbeec59ac6faeffc8ea2831d20b41fae3522f1f965746b2c4065"
+  },
+  "target_analysis": {
+    "charts": [],
+    "excluded": [
+      {
+        "column": "amount",
+        "reason": "no target declared"
+      },
+      {
+        "column": "count",
+        "reason": "no target declared"
+      }
+    ],
+    "grouping_policy": "Within-group summaries accompany budgeted category-bearing pairs; no extra grouping slot available/required.",
+    "groups": [],
+    "ranked": [],
+    "reason": "No target declared; documentation/QA fallback applies.",
+    "status": "skipped",
+    "target": null,
+    "warning": "Descriptive complete-case association, not causation. Types/meanings may be inferred. Unlike measures are priority heuristics, not interchangeable effect sizes; sparse/small groups can inflate apparent association. Unmarked leakage cannot be inferred reliably from correlation."
+  },
+  "time_series": {
+    "declared": [],
+    "dependencies": {},
+    "question": null,
+    "rules": {
+      "amplitude": "quantiles (inclusive) of non-zero period values; CV2 = (population sd / mean)^2 of non-zero values",
+      "auto": "auto = every granularity at or coarser than the timestamps' resolution (hour needs a time of day) with 2..100,000 periods in span",
+      "by": "by: the top N groups by row count (default 5, ties by value); other groups and rows with a missing key are counted, not analysed; each group's span runs from its own first to its own last timestamp",
+      "cycle": "present when a dominant ACF lag >= 2 (supported local peak above the per-lag band) also exceeds the family-wise band",
+      "duration": "run lengths in periods of consecutive zero and consecutive non-zero periods; a missing period ends a run",
+      "frequency": "zero share = zero periods / observed periods; inter-event interval = periods from one non-zero period to the next with no missing period between them (mean is the ADI alias); intervals that span a missing period are counted separately and excluded",
+      "missingness": "valid pairs are counted per lag; a lag with fewer than max(10, n/4) valid pairs is not estimable (distinct from an estimate near 0) and never counts toward present or absent; with missing periods the bands use the per-lag valid pair count, n_k = pairs at lag k (complete series: n_k = n); PACF stops at the first non-estimable lag; supported = estimable and lag <= n/4",
+      "observation": "value series: a period with no row (or only rows without a parsed value) is a missing observation, a period whose values sum to 0 is a zero; event series: a period with no row has no recorded event (0 counted), and the table cannot say whether the process was observed then",
+      "regularise": "periods run from the floor of the first to the floor of the last parsed timestamp; value series sum parsed values per period, event series count rows per period; week = ISO week starting Monday",
+      "reliability": "n < 30 observed periods: insufficient (applies to every signal, including zero periods and bursts); zero variance: undefined; lag > n/4: poorly supported",
+      "signal": "present when |r_k| exceeds the family-wise band z(1-0.025/L)/sqrt(n_k) at any supported lag (Bonferroni over the L supported lags of this one correlogram; not adjusted across granularities, groups or values vs occurrence); absent = not detected under this rule, not evidence of absence; insufficient evidence under the reliability rule",
+      "spectral": "periodogram peak (scipy.signal.periodogram, mean removed) on gap-free series only; requires the stats extra",
+      "wavelength": "ACF r_k = sum over pairs observed at t and t+k of (x_t-m)(x_t+k-m) / sum over observed (x_t-m)^2; PACF by Durbin-Levinson; per-lag 95% band +/-1.96/sqrt(n); dominant lag = supported local ACF peak above the band"
+    },
+    "series": []
+  },
+  "working_record": {
+    "decisions": [],
+    "generating_process": null,
+    "generator": "human",
+    "missingness_mechanism": null,
+    "row_unit": null
+  }
+}

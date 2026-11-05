@@ -11,9 +11,12 @@ from .config import validate_config
 from .models import GuideDataFrame, ProfilingResult
 from .quality import quality_profile, copy_evidence
 from .parsing import finite_number, parse_date
-from .univariate import enrich_columns, identity_and_samples, missingness_patterns
+from .univariate import enrich_columns, identity_and_samples, missingness_patterns, stored
+
+SCHEMA_VERSION = 2
 from .special import infer_special, enrich_special
 from .rows import row_structure
+from .timeseries import time_series
 
 
 def number(value: str) -> float | None:
@@ -29,7 +32,7 @@ def iso_date(value: str) -> str | None:
 
 
 def rounded(n: float | None) -> float | None:
-    return round(n, 10) if n is not None and math.isfinite(n) else None
+    return stored(n)
 
 
 def infer(values: list[str], name="", meta=None) -> dict:
@@ -160,6 +163,7 @@ def profile(data: GuideDataFrame, config: dict | None = None) -> ProfilingResult
         dup = next(f for f in findings if f["id"] == "duplicates")
         dup["message"] += " Repeating rows (1-based): " + ", ".join(map(str, structure["duplicate_rows"]["positions"])) + (f", first 10 of {duplicates}" if duplicates > 10 else "") + "."
         dup["evidence"].append({"path": "row_structure.duplicate_rows", "value": structure["duplicate_rows"]})
+    temporal_structure = time_series(rows, columns, cfg, finding)
     enrich_columns(columns,rows,data.raw_rows if data.raw_rows is not None else rows,cfg,finding,findings)
     enrich_special(columns,rows,finding)
     dataset,samples=identity_and_samples(data,cfg,columns)
@@ -181,7 +185,7 @@ def profile(data: GuideDataFrame, config: dict | None = None) -> ProfilingResult
             finding(f"pair-{index}-review", "action", f"Investigate collection differences across {pair['right']} before choosing a missing-value treatment for {pair['left']}.",
                     [{"finding": f"pair-{index}"}], "A descriptive contrast does not establish the missingness mechanism.", "rule:quality-v1",
                     rule="conditional_missingness", columns=[pair["left"],pair["right"]])
-    return ProfilingResult({"schema_version": 1, "kind": "profile", "source": data.source,
+    return ProfilingResult({"schema_version": SCHEMA_VERSION, "kind": "profile", "source": data.source,
         "schema": asdict(schema), "context": cfg["context"],
         "purpose": {"question": cfg.get("question"), "target": cfg.get("target"), "group_by":cfg.get("group_by"),
                     "mode": "declared" if cfg.get("question") or cfg.get("target") else "documentation_qa",
@@ -191,7 +195,7 @@ def profile(data: GuideDataFrame, config: dict | None = None) -> ProfilingResult
         "overview": overview, "columns": columns, "findings": findings,
         "selection": selection, "bivariate": pairs, "dependencies": dependencies, "annotations": {},
         "dataset_summary": dataset_summary, "quality": quality, "dataset":dataset, "samples":samples,
-        "target_analysis":target_analysis,"row_structure":structure,"missingness_patterns":missingness_patterns(columns,rows),
+        "target_analysis":target_analysis,"row_structure":structure,"time_series":temporal_structure,"missingness_patterns":missingness_patterns(columns,rows),
         "report":report_settings(cfg)})
 
 
@@ -285,7 +289,7 @@ def compare(before: ProfilingResult, after: ProfilingResult) -> ProfilingResult:
     differences = {key: {"before": contexts["before"][key], "after": contexts["after"][key]}
                    for key in contexts["before"] if contexts["before"][key] != contexts["after"][key]}
     ac, bc = {c["name"]: c for c in a["columns"]}, {c["name"]: c for c in b["columns"]}
-    return ProfilingResult({"schema_version": 1, "kind": "comparison", "contexts": contexts,
+    return ProfilingResult({"schema_version": SCHEMA_VERSION, "kind": "comparison", "contexts": contexts,
         "context_differences": differences,
         "deltas": {**{key: b["overview"][key] - a["overview"][key] for key in ("rows", "columns", "missing_cells", "duplicate_rows")},
                    "columns_added": [name for name in bc if name not in ac],
