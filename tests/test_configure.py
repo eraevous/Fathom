@@ -70,7 +70,7 @@ def test_schema_suggests_with_observable_reasons_and_nothing_preselected(tmp_pat
     assert config_yaml(schema, schema["initial"]) == "{}\n"
     assert 'data-accept="col:1:type"> suggested' in page and "checked" not in page.split('data-interval="0"')[1][:20]
     assert all(r["source"].startswith("FT-") for r in schema["fixed_rules"])
-    assert any(e["key"] == "time_series" for e in schema["extension_points"])
+    assert not any(e["key"] == "time_series" for e in schema["extension_points"])  # offered now (spec011 merged)
 
 
 def test_python_generator_round_trips_through_config_loader(tmp_path):
@@ -121,6 +121,9 @@ def test_embedded_javascript_generator_matches_python(tmp_path):
          "columns": {QUOTED: {"type": "categorical"}, "on": {"exclude_from_target": True, "date_format": "ISO"}}},
         {"row_unit": "   ", "pair_budget": 0, "sample_rows": 100, "intervals": [[EVIL, "on"], ["on", "on"]], "columns": {"plain": {"type": "string"}}},
         {"target": "constructor", "columns": {"__proto__": {"type": "string", "exclude_from_target": True}, "prototype": {"type": "categorical"}}},
+        {"time_series": [{"time": "on", "value": None, "by": EVIL, "granularities": ["month", "auto", "bogus"]},
+                         {"time": QUOTED, "value": "__proto__", "by": "nope", "granularities": [], "max_lag": 7, "top_n": True},
+                         {"time": "on", "value": "on"}, {"time": "constructor"}]},
     ]
     script = yaml_js_from_page(page) + "\nconst QUOTED_TEXT = " + json.dumps(QUOTED * 9) + ";\nconst [schema, sels] = JSON.parse(require('fs').readFileSync(0, 'utf8'));\nprocess.stdout.write(JSON.stringify(sels.map(s => [configYaml(schema, s), sha256Hex(configYaml(schema, s))]).concat([[QUOTED_TEXT, sha256Hex(QUOTED_TEXT)]])));"
     out = subprocess.run([node, "-e", script], input=json.dumps([schema, selections]), text=True, capture_output=True)
@@ -196,9 +199,71 @@ def test_validate_echoes_bins_and_sections(tmp_path):
 
 
 def test_time_series_status_is_detected_not_assumed(tmp_path):
-    known = loader_knows("time_series")
-    assert loader_knows("bins") and not loader_knows("no_such_key")
+    """Kept name (FT-CFG-E1@3 cites it): loader keys are detected, and the page now names what it does not offer."""
+    assert loader_knows("bins") and loader_knows("time_series") and loader_knows("intervals") and not loader_knows("no_such_key")
     out, page = page_for(tmp_path, unseen_csv(tmp_path / "u.csv"))
-    status = next(e for e in schema_from_page(page)["extension_points"] if e["key"] == "time_series")["status"]
-    assert status.startswith("Not yet offered by this page.") and ("accepts `time_series`" in status) == known
+    points = {e["key"]: e["status"] for e in schema_from_page(page)["extension_points"]}
+    assert points["time_series.max_lag, time_series.top_n"].startswith("Not offered") and "Not offered by this page" in page
     assert "not an audit certificate" in page and "yaml_sha256" in page
+
+
+# --- time_series knob (spec011 merged from main) ---------------------------------------
+
+def hourly_csv(path: Path, hours=48) -> Path:
+    """Synthetic: 48 hourly event timestamps, a numeric amount, an integer id (identifier-like) and a zone."""
+    lines = ["id,at,amount,zone,short"]
+    for i in range(hours):
+        lines.append(f"{i},2021-03-{1 + i // 24:02d} {i % 24:02d}:15:00,{(i * 7) % 11}.5,{'NS'[i % 2]},2021-03-0{1 + i % 3}")
+    path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return path
+
+
+def test_time_series_suggestions_are_unticked_with_observable_reasons(tmp_path):
+    _, page = page_for(tmp_path, hourly_csv(tmp_path / "h.csv"))
+    schema = schema_from_page(page)
+    got = [(o["time"], o["value"]) for o in schema["series_suggestions"]]
+    assert got == [("at", None), ("at", "amount")]          # id is identifier-like; `short` has 3 days (< 30 periods)
+    assert schema["series_suggestions"][0]["reason"].startswith("at is temporal with 48 distinct hours (at least 30")
+    assert "zone" in schema["by_options"] and schema["ts_granularities"] == ["auto", "hour", "day", "week", "month"]
+    assert config_yaml(schema, schema["initial"]) == "{}\n"  # nothing preselected
+    assert 'data-series="0" data-key' in page and "checked" not in page.split('data-series="0"')[1][:20]
+
+
+def test_time_series_decoy_without_enough_periods_offers_nothing(tmp_path):
+    _, page = page_for(tmp_path, unseen_csv(tmp_path / "u.csv"))      # 28 distinct hours: below the rule
+    assert schema_from_page(page)["series_suggestions"] == [] and "No temporal column with at least 30 distinct periods" in page
+
+
+def test_time_series_round_trips_and_profiles(tmp_path):
+    csv_path = hourly_csv(tmp_path / "h.csv")
+    _, page = page_for(tmp_path, csv_path)
+    schema = schema_from_page(page)
+    names = [c["name"] for c in schema["columns"]]
+    sel = {"time_series": [{"time": "at", "value": None, "by": None, "granularities": ["day", "hour"]},
+                           {"time": "at", "value": "amount", "by": "zone", "granularities": []},
+                           {"time": "at", "value": "at", "granularities": []},              # same column twice: dropped
+                           {"time": "nope", "value": None}]}                                  # unknown column: dropped
+    text = config_yaml(schema, sel)
+    assert text == ('time_series:\n  - time: "at"\n    value: null\n    granularities:\n      - "hour"\n      - "day"\n'
+                    '  - time: "at"\n    value: "amount"\n    by: "zone"\n')
+    cfg = roundtrip(tmp_path, schema, sel, names)
+    assert cfg["time_series"][0]["granularities"] == ["hour", "day"] and cfg["time_series"][1]["by"] == "zone"
+    (tmp_path / "f.yaml").write_text(text, encoding="utf-8")
+    r = run("profile", csv_path, "--config", tmp_path / "f.yaml", "--out", tmp_path / "rep")
+    assert r.returncode == 0, r.stderr
+    doc = json.loads((tmp_path / "rep" / "guide-profile.json").read_text())
+    assert [s["time"] for s in doc["time_series"]["series"]] == ["at", "at"] and doc["time_series"]["series"][1]["by"] == "zone"
+
+
+def test_existing_time_series_and_intervals_prefill_and_keep_passthrough(tmp_path):
+    csv_path = hourly_csv(tmp_path / "h.csv")
+    existing = tmp_path / "e.yaml"
+    existing.write_text("time_series:\n  - {time: at, value: null, by: zone, granularities: [day], max_lag: 10, top_n: 2}\n"
+                        "  - {time: short, value: null}\nintervals:\n  - {start: short, end: at}\n", encoding="utf-8")
+    _, page = page_for(tmp_path, csv_path, "--config", existing)
+    schema = schema_from_page(page)
+    cfg = roundtrip(tmp_path, schema, schema["initial"], [c["name"] for c in schema["columns"]])
+    assert cfg["time_series"] == [{"time": "at", "value": None, "by": "zone", "granularities": ["day"], "max_lag": 10, "top_n": 2},
+                                  {"time": "short", "value": None, "by": None, "granularities": ["auto"], "max_lag": None}]
+    assert cfg["intervals"] == [{"start": "short", "end": "at"}]
+    assert "kept from --config: max_lag 10, top_n 2" in page and "declared in the existing configuration" in page

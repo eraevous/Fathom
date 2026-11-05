@@ -52,5 +52,11 @@ report's "What the data cannot tell" as "omitted by configuration".
 1. "Exclude" a column is read as `exclude_from_target` only. Dropping a column from
    profiling would suppress its findings (US4), so it is not offered.
 2. Granularity / time series: no `time_series` key on this branch; the page lists it as
-   an extension point and offers no control.
+   an extension point and offers no control. *Updated 2026-11-05 after merging main
+   (#21 added `time_series`):* the page now offers series unticked, chosen by the
+   report's own undeclared-series rule (temporal column with >= 30 distinct periods;
+   event counts, or the sum of a numeric column that is not identifier-like), each with
+   an optional `by` column and granularity checkboxes. `max_lag` and `top_n` are not
+   offered (defaults apply; values from `--config` are kept). See
+   `codex_++/intents/2026-11-05__reconcile-22.intent.md`.
 3. Omitting `samples` departs from FT-R9 only by explicit configuration and is disclosed.

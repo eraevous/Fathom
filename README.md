@@ -98,7 +98,11 @@ The page lists each column's inferred type and observable facts (populated share
 distinct values, parsed date formats) with controls for a type override, a
 `date_format`, and `exclude_from_target`; a target selector whose candidates carry only
 observable reasons ("numeric; 96.0% populated; 14 distinct"); temporal column pairs as
-unticked interval suggestions; histogram `bins` (default: square root of n, capped at
+unticked interval suggestions (written as `intervals: [{start, end}]`); time series
+offered unticked by the report's own rule (a temporal column with at least 30 distinct
+periods, as event counts or as the sum of a numeric column that is not identifier-like),
+each with an optional `by` column and granularities (`auto`, `hour`, `day`, `week`,
+`month`); histogram `bins` (default: square root of n, capped at
 10; a declared value applies to every histogram, including string lengths and the
 positive log view); `pair_budget`, `sample_rows`; optional report `sections` (`samples`,
 `missingness_patterns`); and the question and row unit. Every control starts at the
@@ -107,8 +111,8 @@ system default; a suggestion applies only when you tick it. The page writes YAML
 `config-manifest.json` saying which values were default, suggested or selected. The
 manifest also carries the sha256 of the exact YAML bytes it
 describes; it is advisory, not an audit certificate, and Fathom does not read it.
-Controls not yet offered by the page (for example `time_series`) may be declared
-directly in YAML if the installed Fathom supports them; `guide configure` prints which. Evidentiary thresholds are shown
+Settings the page does not offer (`time_series.max_lag` and `top_n`, or a series on
+other columns) may be declared directly in YAML; values from `--config` are kept. Evidentiary thresholds are shown
 read-only with their record ids; no control suppresses a finding. An omitted section
 is named under "What the data cannot tell" as omitted by configuration, and stays in
 `guide-profile.json`.

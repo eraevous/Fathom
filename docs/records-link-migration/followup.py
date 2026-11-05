@@ -5,7 +5,7 @@ Records appended on main after the #18 migration still use the old convention (a
 relation-only versions in the #18 convention: `implements` becomes `depends_on`, a claim's
 code bindings become `depends_on`, and the requirement the claim served gains those
 bindings as `implemented_by`, so code-impact reaches the governing obligation.
-Default dry-run; --write appends. No acceptance inferred."""
+Default dry-run; --write appends (--note TEXT names the occasion in the comment line). No acceptance inferred."""
 import copy,json,sys
 from pathlib import Path
 
@@ -53,7 +53,8 @@ def main():
   print('No follow-up needed; ledger unchanged.');return
  if '--write' in sys.argv:
   with p.open('a') as f:
-   f.write('// 2026-11-05: records-link follow-up after merging main (#19-#21) into #16 (claude:dg#reconcile); relation metadata only.\n')
+   note=sys.argv[sys.argv.index('--note')+1] if '--note' in sys.argv else 'after merging main (#19-#21) into #16'
+   f.write(f'// 2026-11-05: records-link follow-up {note} (claude:dg#reconcile); relation metadata only.\n')
    for r in new:f.write(json.dumps(r,ensure_ascii=False)+'\n')
  print(json.dumps({'new_versions':len(new),'mapping':mapping},indent=2,sort_keys=True))
 if __name__=='__main__':main()

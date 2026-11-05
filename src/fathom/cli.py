@@ -52,14 +52,14 @@ def main(argv: list[str] | None = None) -> int:
             cfg = validate_config(raw)
             data = CSVConnector(args.input, SchemaContract(**cfg["schema"])).load()
             result = profile(data, validate_config(cfg, list(data.frame.columns)))
-            page = render_page(build_schema(result.document, data.frame, raw))
+            schema = build_schema(result.document, data.frame, raw)
+            page = render_page(schema)
             args.out.mkdir(parents=True, exist_ok=True)
             for name, contents in (("configure.html", page), ("configure-profile.json", result.to_json())):
                 (args.out / name).write_text(contents, encoding="utf-8", newline="\n")
             print(f"guide: wrote {args.out / 'configure-profile.json'}, {args.out / 'configure.html'}")
-            from .configure import loader_knows
-            print("guide: time_series: " + ("accepted by this Fathom's config loader; not yet offered by the page (declare it directly in YAML)"
-                                            if loader_knows("time_series") else "not accepted by this Fathom's config loader; not offered by the page"))
+            print(f"guide: time_series: {len(schema['series_suggestions'])} series offered unticked; max_lag and top_n are not offered by the page "
+                  "(declare them directly in YAML)")
             return 0
         if args.command in {"profile", "validate"}:
             cfg = load_config(args.config)
