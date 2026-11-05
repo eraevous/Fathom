@@ -116,6 +116,7 @@ def quality_profile(rows, columns, cfg, emit):
     vectors = {c["name"]: [r[i] for r in rows] for i, c in enumerate(columns)}
     by_name = {c["name"]: c for c in columns}
     constants, dominant, blocked, groups, missing_candidates = [], [], {}, {}, []
+    skew_gates = {}
     rules = {
         "sentinel": "n>=5; share<=0.2; -1 at minimum otherwise nonnegative, or 999/9999/99999 at maximum >=5x other median absolute magnitude (floor 1)",
         "dummy": "whole lexical test/dummy/sample label with optional numeric suffix",
@@ -186,6 +187,10 @@ def quality_profile(rows, columns, cfg, emit):
             iqr = quartiles[2] - quartiles[0]
             skew = statistics.mean(((x-mu)/sd)**3 for x in unit) if sd else 0
             displacement = abs(mu-med)
+            ref=iqr or max(abs(med), 1e-12)
+            skew_gates[name]={'n':len(nums),'skew':round(abs(skew),10),'moment_passed':abs(skew)>=2,
+                'displacement_ratio':displacement/ref,'reference':'IQR' if iqr else 'relative median fallback',
+                'displacement_passed':displacement>=.5*ref,'marked':abs(skew)>=2 and displacement>=.5*ref}
             if abs(skew) >= 2 and displacement >= .5 * (iqr or max(abs(med), 1e-12)):
                 diagnostic(prefix + "-skew", "skew", [name], f"{name} is strongly skewed: mean {statistics.mean(nums):.6g} differs from median {statistics.median(nums):.6g}, so the mean may not describe a typical row.",
                            {"finite_count": len(nums), "standardized_third_moment": round(skew, 10), "mean": statistics.mean(nums), "median": statistics.median(nums)},
@@ -353,4 +358,4 @@ def quality_profile(rows, columns, cfg, emit):
                 "grouping_columns_screened": grouping_names, "grouping_column_limit": 20, "omitted_grouping_columns": max(0,p-20),
                 "grouping_columns_excluded": [{"column": name, "reason": "grouping-column screening limit"} for name in names if name not in grouping_names],
                 "eligible_missingness_candidates": len(missing_candidates), "reported_missingness_candidates": 0}
-    return summary, {"rules": rules, "coverage": coverage, "value_exclusions": blocked, "missingness_tests": missingness_tests}, missing_candidates
+    return summary, {"rules": rules, "skew_gates":skew_gates, "coverage": coverage, "value_exclusions": blocked, "missingness_tests": missingness_tests}, missing_candidates
