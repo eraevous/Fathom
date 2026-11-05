@@ -36,13 +36,13 @@ Spec Kit skills are in `.agents/skills/`: `speckit-constitution`, `-specify`, `-
    - For each feature, append a `requirement` record if the feature needs one that isn't there yet. Mark it provisional and say it is for Zach to accept.
    - When a feature is built, append a `claim` with `evidence` (the tests), linked to the code with `implemented_by` and `observed_on`.
    - Never edit an existing line; append a new version instead.
-   - Vocabulary: https://github.com/eraevous/AEC/blob/main/docs/reasoning-vocabulary.md
+  - Vocabulary: https://github.com/eraevous/Telosmith/blob/main/docs/reasoning-vocabulary.md
 4. **Record non-obvious trade-offs and unanswered questions** in an intent note, `codex_++/intents/<YYYY-MM-DD>__<topic>.intent.md`. Where a document is silent, take the narrower reading and write down that you did.
 
 ## AEC commands
 
 ```bash
-pip install "aec @ git+https://github.com/eraevous/AEC.git@860b7815f208fac09c4e2ba57e5fbfe418ed2ba7"
+pip install "git+https://github.com/eraevous/Telosmith.git@b0e202fa4b2087679901620c999f1968f6c62b0e"
 python3 -m aec edges . -o .aec/edges.jsonl            # regenerate; never hand-edit
 python3 -m aec check .aec/records.jsonl --edges .aec/edges.jsonl
 python3 -m aec code-impact .aec/records.jsonl OLD.jsonl NEW.jsonl   # what a code change affects (two edge snapshots)
@@ -50,6 +50,11 @@ python3 -m aec source show <record-ref>              # the passage a record is a
 ```
 
 AEC results are structural. They show what changed and what relied on it; they don't show whether the work is good.
+
+The installed Claude Code hook (`.claude/settings.json`) compares edits with HEAD;
+record errors and affected conclusions are reported to the agent. An unchanged tree
+is silent. It needs the pinned Telosmith above on `python3`'s environment; the package
+still exposes `aec`. CI also writes report-only code impact to its job summary.
 
 ## Rules for what Fathom produces
 
