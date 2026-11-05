@@ -59,3 +59,15 @@ def parse_date(value, hint=None):
         else: return None
         return {'date':parsed.isoformat(),'format':fmt,'two_digit_year':two,'alternatives':alternatives}
     except (ValueError,OverflowError): return None
+
+
+def parse_datetime(value):
+    """Strict ISO date or date-time -> (datetime, has_time); used for row-level time checks only."""
+    from datetime import datetime
+    if not isinstance(value,str): return None
+    text=value.strip()
+    match=re.fullmatch(r'(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2}))?)?',text)
+    if not match: return None
+    try:
+        return datetime(*(int(x) for x in match.groups(default='0'))), match[4] is not None
+    except (ValueError,OverflowError): return None
