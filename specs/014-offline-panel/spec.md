@@ -1,7 +1,7 @@
 # Feature Specification: Offline panel signals
 **Branch**: 014-offline-panel-stack | **Created**: 2026-11-05 | **Status**: provisional for Zach.
 Serves: P0@2, DG-RA@1, DG-RB@1, DG-RC@1, DG-RD@1, DG-RE@1, DG-RF@1, FT-R17@2.
-Proposed: FT-PANEL-R1@1, FT-PANEL-R2@1.
+Proposed: FT-PANEL-R1@2, FT-PANEL-R2@2.
 
 ## User Scenarios & Testing
 ### US1 — Keep data local (P1)

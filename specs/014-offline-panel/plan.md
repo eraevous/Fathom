@@ -1,5 +1,5 @@
 # Implementation Plan: Offline panel signals
-Serves P0@2, FT-PANEL-R1@1, FT-PANEL-R2@1. Methods/caps provisional.
+Serves P0@2, FT-PANEL-R1@2, FT-PANEL-R2@2. Methods/caps provisional.
 
 ## Summary / technical context
 First socket-denial/resource tests and offline wheel installation. Then declared
