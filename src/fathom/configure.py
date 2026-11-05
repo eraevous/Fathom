@@ -19,6 +19,8 @@ from .parsing import DATE_FORMATS, parse_date, parse_datetime
 from .rows import RULES as ROW_RULES
 from .timeseries import DEFAULT_LAG, GRAINS, MIN_N, TOP_N, undeclared
 from .univariate import BIN_RULE
+from .palette import theme_css
+from .renderers import KIND_CSS
 
 CONTROLLED_COLUMN_KEYS = ("type", "date_format", "exclude_from_target")
 TEXT_KEYS = ("question", "row_unit")
@@ -165,20 +167,29 @@ def config_document(schema: dict, sel: dict) -> dict:
     if sections: out["sections"] = sections
     intervals = [{"start": a, "end": b} for a, b in sel.get("intervals") or [] if a in names and b in names and a != b]
     if intervals: out["intervals"] = intervals
-    series = []
-    for item in sel.get("time_series") or []:
-        t, v, b = item.get("time"), item.get("value"), item.get("by")
-        if t not in names or (v is not None and v not in names): continue
-        if b is not None and b not in names: b = None
-        if len({t, v, b} - {None}) != len([x for x in (t, v, b) if x is not None]): continue
-        entry = {"time": t, "value": v}
-        if b is not None: entry["by"] = b
-        grains = [g for g in schema["ts_granularities"] if g in (item.get("granularities") or [])]
-        if grains: entry["granularities"] = grains
-        for k in TS_PASSTHROUGH:
-            if type(item.get(k)) is int: entry[k] = item[k]
-        series.append(entry)
-    if series: out["time_series"] = series
+    if "time_series_suggestions" in schema:
+        offered = {c["column"] for c in schema["time_series_suggestions"]}
+        series = []
+        for item in sel.get("time_series") or []:
+            time, value, grains = item.get("time"), item.get("value"), item.get("granularities", ["auto"])
+            if time in offered and (value is None or value in schema["series_value_options"] and value != time) and isinstance(grains, list) and grains and all(g in ("auto","hour","day","week","month") for g in grains):
+                series.append({"time": time, "value": value, "granularities": grains})
+        if series: out["time_series"] = series
+    else:
+        series = []
+        for item in sel.get("time_series") or []:
+            t, v, b = item.get("time"), item.get("value"), item.get("by")
+            if t not in names or (v is not None and v not in names): continue
+            if b is not None and b not in names: b = None
+            if len({t, v, b} - {None}) != len([x for x in (t, v, b) if x is not None]): continue
+            entry = {"time": t, "value": v}
+            if b is not None: entry["by"] = b
+            grains = [g for g in schema["ts_granularities"] if g in (item.get("granularities") or [])]
+            if grains: entry["granularities"] = grains
+            for k in TS_PASSTHROUGH:
+                if type(item.get(k)) is int: entry[k] = item[k]
+            series.append(entry)
+        if series: out["time_series"] = series
     columns = {}
     for n in names:
         chosen = (sel.get("columns") or {}).get(n) or {}
@@ -271,6 +282,15 @@ function configDocument(schema,sel){
   if(any){out.sections=sections;}
   var intervals=(sel.intervals||[]).filter(function(p){return names.indexOf(p[0])>=0&&names.indexOf(p[1])>=0&&p[0]!==p[1];}).map(function(p){return {start:p[0],end:p[1]};});
   if(intervals.length){out.intervals=intervals;}
+  if(schema.time_series_suggestions){
+    var offered=schema.time_series_suggestions.map(function(c){return c.column;});
+    var series=(sel.time_series||[]).map(function(item){
+      var grains=own(item,'granularities');
+      return {time:own(item,'time'),value:own(item,'value'),granularities:grains===undefined?['auto']:grains};
+    }).filter(function(item){return offered.indexOf(item.time)>=0&&(item.value==null||(schema.series_value_options.indexOf(item.value)>=0&&item.value!==item.time))&&Array.isArray(item.granularities)&&item.granularities.length&&item.granularities.every(function(g){return ['auto','hour','day','week','month'].indexOf(g)>=0;});}).map(function(item){return {time:item.time,value:item.value==null?null:item.value,granularities:item.granularities};});
+    if(series.length){out.time_series=series;}
+  }
+  else{
   var series=[];
   (sel.time_series||[]).forEach(function(item){
     var t=own(item,'time'),v=own(item,'value'),b=own(item,'by');
@@ -287,6 +307,7 @@ function configDocument(schema,sel){
     series.push(entry);
   });
   if(series.length){out.time_series=series;}
+  }
   var columns=new Map();
   names.forEach(function(n){
     var chosen=own(sel.columns,n)||{},entry={},extra=own(schema.base_columns,n)||{};
@@ -378,9 +399,14 @@ function selections(){
   $('[data-int]').forEach(function(el){var v=asInt(el);sel[el.getAttribute('data-int')]=(v===null||isNaN(v))?null:v;});
   $('[data-section]').forEach(function(el){sel.sections[el.getAttribute('data-section')]=el.checked;});
   $('[data-interval]').forEach(function(el){if(el.checked){var p=schema.interval_options[Number(el.getAttribute('data-interval'))];sel.intervals.push([p.start,p.end]);}});
+  if(schema.time_series_options){
+  sel.time_series=[];
+  $('[data-series]').forEach(function(el){if(el.checked){var i=Number(el.getAttribute('data-series')),p=schema.time_series_options[i],v=document.querySelector('[data-series-value="'+i+'"]').value,g=document.querySelector('[data-series-grain="'+i+'"]').value;sel.time_series.push({time:p.column,value:v===''?null:schema.series_value_options[Number(v)],granularities:[g]});}});
+  }else{
   $('[data-series]').forEach(function(el){if(el.checked){var i=el.getAttribute('data-series'),p=schema.series_options[Number(i)],item={time:p.time,value:p.value,by:seriesBy(i)};
     item.granularities=$('[data-series-grain="'+i+'"]').filter(function(g){return g.checked;}).map(function(g){return g.getAttribute('data-grain');});
     Object.keys(p.extra||{}).forEach(function(k){item[k]=p.extra[k];});sel.time_series.push(item);}});
+  }
   $('[data-col]').forEach(function(el){var n=colName(el),f=el.getAttribute('data-field');if(!own(sel.columns,n)){sel.columns[n]=Object.create(null);}
     if(f==='exclude_from_target'){if(el.checked){sel.columns[n].exclude_from_target=true;}}else if(el.value!==''){sel.columns[n][f]=el.value;}});
   return sel;
@@ -400,13 +426,16 @@ function manifest(){
   var controls=$('[data-key]').filter(function(el){return el.tagName!=='OUTPUT';}).map(function(el){
     var item={control:el.getAttribute('data-label'),value:el.id==='target'?selections().target:typedValue(el),state:stateOf(el)};
     if(el.hasAttribute('data-interval')){var p=schema.interval_options[Number(el.getAttribute('data-interval'))];item.interval={start:p.start,end:p.end};}
+    if(schema.time_series_options&&el.hasAttribute('data-series')){var i=Number(el.getAttribute('data-series'));var sv=document.querySelector('[data-series-value="'+i+'"]').value;item.series={time:schema.time_series_options[i].column,value:sv===''?null:schema.series_value_options[Number(sv)],granularity:document.querySelector('[data-series-grain="'+i+'"]').value};}
+    if(schema.time_series_options&&el.hasAttribute('data-series-value')){var si=Number(el.getAttribute('data-series-value'));item.time=schema.time_series_options[si].column;item.value=el.value===''?null:schema.series_value_options[Number(el.value)];}
+    if(schema.time_series_options&&el.hasAttribute('data-series-grain')){item.time=schema.time_series_options[Number(el.getAttribute('data-series-grain'))].column;}
     if(el.hasAttribute('data-col')){item.column=colName(el);}
-    var si=seriesIndex(el);if(si!==null){var sp=schema.series_options[si];item.series={time:sp.time,value:sp.value};if(el.hasAttribute('data-series-by')){item.value=seriesBy(si);}}
+    var si=seriesIndex(el);if(!schema.time_series_options&&si!==null){var sp=schema.series_options[si];item.series={time:sp.time,value:sp.value};if(el.hasAttribute('data-series-by')){item.value=seriesBy(si);}}
     if(item.state==='suggested'){item.suggestion_reason=el.getAttribute('data-reason');}
     return item;});
   var y=configYaml(schema,selections());
   return {kind:'fathom-config-manifest',advisory:'Provenance of each control on the configure page. Advisory only: Fathom does not read this file, and it is not an audit certificate; it records what the page showed, not what anyone verified.',
-          yaml_sha256:sha256Hex(y),yaml_sha256_basis:'sha256 of the exact UTF-8 bytes of the downloaded fathom.yaml',
+          yaml_sha256:sha256Hex(y),yaml_sha256_basis:'sha256 of the exact UTF-8 bytes of the downloaded '+schema.yaml_filename,
           dataset:schema.dataset,controls:controls};
 }
 function refresh(){
@@ -436,8 +465,7 @@ refresh();
 })();
 """
 
-CSS = """:root{--bg:#f5f8f7;--fg:#193e42;--muted:#4d676b;--line:#d5e1df;--card:#fff;--accent:#12656b;--sug:#8a5a00;--sel:#1d5fa8}
-@media (prefers-color-scheme:dark){:root{--bg:#10201f;--fg:#dbe9e6;--muted:#9ab5b1;--line:#2c4442;--card:#172c2a;--accent:#6cc4c0;--sug:#e0b45a;--sel:#8fb8ef}}
+CSS = theme_css() + KIND_CSS + """:root{--bg:var(--surface);--fg:var(--ink);--line:var(--border);--card:var(--panel);--sug:var(--kind-hypothesis);--sel:var(--kind-observation)}
 body{font:15px/1.5 system-ui,sans-serif;background:var(--bg);color:var(--fg);max-width:1180px;margin:auto;padding:24px 16px}
 h1{font-size:32px;margin:0 0 4px}h2{border-bottom:2px solid var(--accent);padding-bottom:6px;margin-top:32px}
 section{margin-bottom:24px}.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:16px}
@@ -446,10 +474,13 @@ td{overflow-wrap:anywhere}small,.muted{color:var(--muted)}select,input[type=text
 input[type=text]{width:100%;box-sizing:border-box}.state{display:inline-block;font-size:12px;padding:1px 7px;border-radius:10px;border:1px solid var(--line);color:var(--muted)}
 .state.suggested{color:var(--sug);border-color:var(--sug)}.state.selected,.state.existing-config{color:var(--sel);border-color:var(--sel)}
 .sug{color:var(--sug);font-size:13px}pre{background:var(--card);border:1px solid var(--line);padding:12px;overflow-x:auto;white-space:pre}
-.bar{position:sticky;top:0;background:var(--bg);padding:8px 0;z-index:1}button,a.btn{display:inline-block;margin-bottom:6px;font:inherit;background:var(--accent);color:var(--bg);border:0;border-radius:4px;padding:6px 12px;margin-right:8px;text-decoration:none;cursor:pointer}
-.legend span{margin-right:10px}#warnings{color:#b3261e}
+.bar{position:sticky;top:0;background:var(--bg);padding:8px 0;z-index:1}button,a.btn{display:inline-block;margin-bottom:6px;font:inherit;background:var(--tint);color:var(--link);border:0;border-radius:4px;padding:6px 12px;margin-right:8px;text-decoration:none;cursor:pointer}
+.legend span{margin-right:10px}#warnings{color:var(--kind-question)}
 .cols select{width:100%}.facts{min-width:150px}.sug small{display:block}.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,360px);gap:24px;align-items:start}@media(max-width:860px){.grid{grid-template-columns:minmax(0,1fr)}}
-.yaml-pane{position:sticky;top:12px}.series{border-top:1px solid var(--line);padding-top:4px}.series:first-of-type{border-top:0}.sub{margin:4px 0 4px 24px}.sub label{margin-right:6px}.sub label.g{white-space:nowrap}"""
+.yaml-pane{position:sticky;top:12px}
+article.finding{background:var(--panel);border-left:3px solid var(--soft-border);padding:8px 14px;margin:10px 0}article p{margin:5px 0}details{margin:10px 0}summary{cursor:pointer;color:var(--link)}a{color:var(--link)}.chart svg{max-width:100%;height:auto}.num{text-align:right;font-variant-numeric:tabular-nums}.table-scroll{overflow-x:auto}.review-table{max-width:100%}#brief{margin-bottom:48px}.axis-captions p{margin:3px 0}svg text{font:13px system-ui,sans-serif}
+.series{border-top:1px solid var(--line);padding-top:4px}.series:first-of-type{border-top:0}.sub{margin:4px 0 4px 24px}.sub label{margin-right:6px}.sub label.g{white-space:nowrap}
+"""
 
 
 def json_for_script(value) -> str:
@@ -473,7 +504,7 @@ def state(k: str) -> str:
     return f' <output class="state" data-for="{attr(k)}">default</output>'
 
 
-def render_page(schema: dict) -> str:
+def render_page(schema: dict, brief: str | None = None, download_name: str = "fathom.yaml") -> str:
     init, ds = schema["initial"], schema["dataset"]
     # Option lists are indexed so names never travel through attribute values the script trusts.
     target_options = [c["column"] for c in schema["target_candidates"]]
@@ -494,11 +525,16 @@ def render_page(schema: dict) -> str:
     for item in init["time_series"]:
         if item["by"] is not None and item["by"] not in by_options: by_options.append(item["by"])
     schema = {**schema, "target_options": target_options, "interval_options": interval_options, "series_options": series_options, "by_options": by_options}
+    schema["yaml_filename"] = download_name
+    if "time_series_suggestions" in schema: schema["time_series_options"] = schema["time_series_suggestions"]
     h = ['<h1>Configure Fathom</h1><p class="muted">Builds a YAML configuration for <code>guide profile --config</code> from a profile of <b>'
          + escape(ds["file"]) + '</b> (' + f'{ds["rows"]:,} rows, {ds["columns"]:,} columns' + '; sha256 ' + escape(ds["sha256"][:12])
          + '…). Nothing here changes the data or runs new analysis. Every value starts at the system default; suggestions are shown with their observable reason and apply only when you tick them.</p>',
          '<p class="legend"><span class="state">default</span> what Fathom does with no config <span class="state suggested">suggested</span> ticked by you from the profile <span class="state selected">selected</span> set by you <span class="state existing-config">existing config</span> from --config</p>',
          '<div class="grid"><div>']
+    if brief is not None:
+        h[0] = h[0].replace('<h1>Configure Fathom</h1>', '<h2 id="configurations">Configurations</h2>')
+        h.insert(0, brief)
     # Purpose
     h.append('<section><h2>Question and row unit</h2><div class="card">')
     for k, label, default_text in (("question", "Question", "none declared (documentation and QA fallback)"), ("row_unit", "Row unit", "unknown (not declared)")):
@@ -548,30 +584,47 @@ def render_page(schema: dict) -> str:
                  + control_attrs(k, f"intervals[{i}]", "false", "true" if declared else None, "true", p["reason"]) + '> start <b>'
                  + escape(p["start"]) + '</b> → end <b>' + escape(p["end"]) + '</b></label>' + state(k) + '<br><small>' + escape(p["reason"]) + '</small></p>')
     h.append('</div></section>')
-    # Time series
-    h.append('<section><h2>Time series</h2><div class="card"><p class="muted">Series offered unticked, by the same rule the report uses to ask about one. A series is a domain declaration: Fathom never infers one. Value <i>event counts</i> counts rows per period (<code>value: null</code>); a numeric value is summed per period. With no granularity ticked, Fathom uses <code>auto</code>.</p>')
-    if not series_options: h.append(f'<p>No temporal column with at least {MIN_N} distinct periods in this profile.</p>')
-    for i, o in enumerate(series_options):
-        k, oi = f"series:{i}", o.get("initial")
-        what = ("event counts" if o["value"] is None else "sum of <b>" + escape(o["value"]) + "</b>") + " by <b>" + escape(o["time"]) + "</b>"
-        h.append(f'<div class="series"><p><label><input type="checkbox" data-series="{i}"' + (' checked' if oi else '')
-                 + control_attrs(k, f"time_series[{i}]", "false", "true" if oi else None, "true", o["reason"]) + '> ' + what + '</label>' + state(k)
-                 + '<br><small>' + escape(o["reason"]) + '</small></p>')
-        bk, bi = f"series:{i}:by", (str(by_options.index(oi["by"])) if oi and oi["by"] is not None else None)
-        h.append(f'<p class="sub"><label>by <small>(optional; top {TOP_N} groups by row count)</small> <select data-series-by="{i}"' + control_attrs(bk, f"time_series[{i}].by", "", bi)
-                 + '><option value="">(none)</option>' + ''.join(f'<option value="{j}"' + (' selected' if str(j) == bi else '') + '>' + escape(n) + '</option>' for j, n in enumerate(by_options))
-                 + '</select></label>' + state(bk) + '</p><p class="sub">granularities: ')
-        for g in schema["ts_granularities"]:
-            gk, on = f"series:{i}:grain:{g}", bool(oi and g in oi["granularities"])
-            h.append(f'<label class="g"><input type="checkbox" data-series-grain="{i}" data-grain="{g}"' + (' checked' if on else '')
-                     + control_attrs(gk, f"time_series[{i}].granularities.{g}", "false", "true" if on else None) + f'> {g}</label>{state(gk)} ')
-        if o.get("extra"): h.append('<br><small>kept from --config: ' + escape(", ".join(f"{k} {v}" for k, v in o["extra"].items())) + '</small>')
-        h.append('</p></div>')
-    h.append('</div></section>')
+    # Liftoff-only optional controls; plain configure remains a stage-two configuration page.
+    if "time_series_options" in schema:
+        h.append('<section><h2>Declared time series</h2><div class="card"><p>Unticked suggestions are not declarations. Previews use event counts with auto granularities. Selecting a value or different grain changes the question; by-group series and lag controls remain direct YAML options.</p>')
+        if not schema["time_series_options"]: h.append('<p>No temporal column meets the30-distinct-period candidate rule.</p>')
+        for i, item in enumerate(schema["time_series_options"]):
+            k=f"series:{i}"
+            h.append(f'<p><label><input type="checkbox" data-series="{i}"'+control_attrs(k,f'time_series[{i}]',"false",suggested="true",reason=item['reason'])+'> '+escape(item['column'])+'</label>'+state(k)+'<br><small>'+escape(item['reason'])+'</small></p>')
+            h.append(f'<p><label>Value (only used when ticked) <select data-series-value="{i}"'+control_attrs(k+':value',f'time_series[{i}].value',"")+ '><option value="">Events (row counts)</option>')
+            for j, name in enumerate(schema['series_value_options']):
+                if name != item['column']: h.append(f'<option value="{j}">'+escape(name)+'</option>')
+            h.append('</select></label>'+state(k+':value')+'</p>')
+            h.append(f'<p><label>Granularity (only used when ticked) <select data-series-grain="{i}"'+control_attrs(k+':grain',f'time_series[{i}].granularity','auto')+'>')
+            h.extend('<option value="'+g+'">'+g+'</option>' for g in ('auto','hour','day','week','month'))
+            h.append('</select></label>'+state(k+':grain')+'</p>')
+        h.append('</div></section>')
+    else:
+        # Time series
+        h.append('<section><h2>Time series</h2><div class="card"><p class="muted">Series offered unticked, by the same rule the report uses to ask about one. A series is a domain declaration: Fathom never infers one. Value <i>event counts</i> counts rows per period (<code>value: null</code>); a numeric value is summed per period. With no granularity ticked, Fathom uses <code>auto</code>.</p>')
+        if not series_options: h.append(f'<p>No temporal column with at least {MIN_N} distinct periods in this profile.</p>')
+        for i, o in enumerate(series_options):
+            k, oi = f"series:{i}", o.get("initial")
+            what = ("event counts" if o["value"] is None else "sum of <b>" + escape(o["value"]) + "</b>") + " by <b>" + escape(o["time"]) + "</b>"
+            h.append(f'<div class="series"><p><label><input type="checkbox" data-series="{i}"' + (' checked' if oi else '')
+                     + control_attrs(k, f"time_series[{i}]", "false", "true" if oi else None, "true", o["reason"]) + '> ' + what + '</label>' + state(k)
+                     + '<br><small>' + escape(o["reason"]) + '</small></p>')
+            bk, bi = f"series:{i}:by", (str(by_options.index(oi["by"])) if oi and oi["by"] is not None else None)
+            h.append(f'<p class="sub"><label>by <small>(optional; top {TOP_N} groups by row count)</small> <select data-series-by="{i}"' + control_attrs(bk, f"time_series[{i}].by", "", bi)
+                     + '><option value="">(none)</option>' + ''.join(f'<option value="{j}"' + (' selected' if str(j) == bi else '') + '>' + escape(n) + '</option>' for j, n in enumerate(by_options))
+                     + '</select></label>' + state(bk) + '</p><p class="sub">granularities: ')
+            for g in schema["ts_granularities"]:
+                gk, on = f"series:{i}:grain:{g}", bool(oi and g in oi["granularities"])
+                h.append(f'<label class="g"><input type="checkbox" data-series-grain="{i}" data-grain="{g}"' + (' checked' if on else '')
+                         + control_attrs(gk, f"time_series[{i}].granularities.{g}", "false", "true" if on else None) + f'> {g}</label>{state(gk)} ')
+            if o.get("extra"): h.append('<br><small>kept from --config: ' + escape(", ".join(f"{k} {v}" for k, v in o["extra"].items())) + '</small>')
+            h.append('</p></div>')
+        h.append('</div></section>')
     # Knobs
     h.append('<section><h2>Bins, budget and samples</h2><div class="card">')
     labels = {"bins": ("Histogram bins (every histogram: values, positive log view, string lengths)", schema["bin_rule_default"]), "pair_budget": ("Relationship pair budget", "5"), "sample_rows": ("Sample rows per view", "20")}
-    for k, knob in schema["knobs"].items():
+    for k in INT_KNOBS:
+        knob = schema["knobs"][k]
         name, default_text = labels[k]
         iv = init.get(k)
         h.append(f'<p><label>{escape(name)} <small>default: {escape(default_text)}; allowed {knob["min"]}–{knob["max"]}</small>{state(k)}<br>'
@@ -595,8 +648,10 @@ def render_page(schema: dict) -> str:
     h.append('</div><div class="yaml-pane"><section><h2>Generated YAML</h2><div class="bar"><button id="copy" type="button">Copy</button><a class="btn" id="download" download="fathom.yaml" href="#">Download YAML</a><a class="btn" id="manifest" download="config-manifest.json" href="#">Download manifest</a></div>'
              '<pre id="yaml"></pre><p class="muted">Only system-default values are left out. Run <code>guide profile DATA.csv --config fathom.yaml --out DIR</code>. The manifest records which values were default, suggested or selected, and the sha256 of this YAML; it is advisory, not an audit certificate, and Fathom does not read it.</p>'
              '<noscript><p>JavaScript is off, so the YAML cannot be generated here. Write the keys by hand; see the README.</p></noscript></section></div></div>')
+    if brief is not None:
+        h[-1] = h[-1].replace('download="fathom.yaml"', 'download="'+attr(download_name)+'"').replace('--config fathom.yaml', '--config '+escape(download_name))
     return ('<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
-            '<title>Configure Fathom</title><style>' + CSS + '</style></head><body>' + '\n'.join(h)
+            '<title>'+('Fathom liftoff' if brief is not None else 'Configure Fathom')+'</title><style>' + CSS + '</style></head><body>' + '\n'.join(h)
             + '\n<script type="application/json" id="fathom-schema">' + json_for_script(schema) + '</script>\n'
             + '<script id="fathom-yaml">' + YAML_JS + '</script>\n<script>' + UI_JS + '</script>\n</body></html>\n')
 

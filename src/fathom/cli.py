@@ -30,9 +30,9 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="guide", description="Evidenced local table review")
     parser.add_argument("--version", action="version", version=f"guide {__version__}")
     commands = parser.add_subparsers(dest="command", required=True)
-    helps = {"configure": "write configure.html, a self-contained page that builds a YAML config from this table's profile "
+    helps = {"liftoff": "inspect a CSV without config; write a Brief + Configurations HTML page and its profile", "configure": "write configure.html, a self-contained page that builds a YAML config from this table's profile "
                           "(defaults, observable suggestions, explicit selections), and configure-profile.json, the profile it used"}
-    for command in ("profile", "render", "compare", "validate", "export", "configure"):
+    for command in ("profile", "render", "compare", "validate", "export", "configure", "liftoff"):
         sub = commands.add_parser(command, help=helps.get(command), description=helps.get(command))
         sub.add_argument("input", type=Path)
         if command == "compare":
@@ -46,6 +46,15 @@ def main(argv: list[str] | None = None) -> int:
             sub.add_argument("--deck",choices=("summary","full"),default="summary")
     args = parser.parse_args(argv)
     try:
+        if args.command == "liftoff":
+            from .liftoff import build_liftoff, render_liftoff
+            result = build_liftoff(CSVConnector(args.input).load())
+            page = render_liftoff(result)
+            args.out.mkdir(parents=True, exist_ok=True)
+            for name, contents in (("liftoff.html", page), ("liftoff-profile.json", result.to_json())):
+                (args.out / name).write_text(contents, encoding="utf-8", newline="\n")
+            print(f"guide: wrote {args.out / 'liftoff-profile.json'}, {args.out / 'liftoff.html'}; no suggestions applied")
+            return 0
         if args.command == "configure":
             from .configure import build_schema, render_page
             raw = read_config(args.config) if args.config else None
@@ -82,6 +91,13 @@ def main(argv: list[str] | None = None) -> int:
             result = ProfilingResult.load(args.input)
         else:
             result = compare(ProfilingResult.load(args.input), ProfilingResult.load(args.after))
+        if args.command == "render" and "liftoff" in result.document:
+            from .liftoff import render_liftoff
+            page = render_liftoff(result)
+            args.out.mkdir(parents=True, exist_ok=True)
+            (args.out / "liftoff.html").write_text(page, encoding="utf-8", newline="\n")
+            print(f"guide: wrote {args.out / 'liftoff.html'}")
+            return 0
         # Finish validation/computation/rendering before creating the directory.
         is_profile = result.document["kind"] == "profile"
         prefix = "report" if is_profile else "comparison"

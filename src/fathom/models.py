@@ -310,6 +310,9 @@ def validate_document(doc: dict) -> None:
             quality = doc["quality"]
             if not isinstance(quality,dict) or any(not isinstance(quality.get(k),dict) for k in ("rules","coverage","value_exclusions")):
                 raise ValueError("invalid quality evidence")
+        if 'liftoff' in doc:
+            from .liftoff import validate_liftoff
+            validate_liftoff(doc)
     else:
         if set(doc["contexts"]) != {"before", "after"}:
             raise ValueError("comparison needs before and after contexts")
