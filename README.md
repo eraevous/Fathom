@@ -14,9 +14,17 @@ remain for review. Tests and merge do not accept requirements.
 
 ## Try it with synthetic data
 
-Python 3.12+:
+Python 3.12+. The package is `fathom-guide`; it installs one command, `guide`
+(`python -m fathom` is the same CLI). `guide profile` and `guide validate` echo the
+question, target and row unit they resolved. Column `type` overrides use the names
+`numeric`, `categorical`, `boolean`, `temporal` (dates), `string`, `phone`, `email`,
+`url`, `latitude` and `longitude`; `date_format` takes `ISO`, `ISO_DATETIME`
+(`YYYY-MM-DD HH:MM[:SS]` or with a `T` separator, profiled by calendar date), `MDY`, `DMY` or `MON_D_Y`,
+not strftime patterns. `guide export` without the extra still exits 0 and says on stderr
+to run `pip install -e '.[exports]'` from the clone (the package is not on PyPI).
 
 ```bash
+git clone https://github.com/eraevous/fathom.git && cd fathom
 python -m venv .venv
 .venv/bin/pip install -e '.[test]'
 .venv/bin/python -m pytest

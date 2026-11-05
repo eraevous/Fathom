@@ -39,7 +39,7 @@ def identity_and_samples(data,cfg,columns):
     for term,pattern in [('identifiers/titles',r'(^id$|_id$|title|name|key)'),('amounts',r'(gross|amount|revenue|cost|price)'),('dates',r'(date|release)'),('categories',r'(category|genre|group|status)')]:
         matches=[name for name in names if re.search(pattern,name,re.I)]
         if matches: suggested.append(term+' ('+', '.join(matches[:5])+')')
-    description=f"Schema sketch: {n} rows and {len(names)} columns"+('; names suggest '+', '.join(suggested) if suggested else '; domain and row unit are unknown')+'. These readings are inferred, not domain facts.'
+    description=f"Schema sketch: {n} rows and {len(names)} columns"+('; names suggest '+', '.join(suggested) if suggested else '; domain '+('is unknown (row unit declared in the working record)' if cfg.get('row_unit') else 'and row unit are unknown'))+'. These readings are inferred, not domain facts.'
     dataset={'title':{'text':cfg.get('title') or Path(data.source['origin']).stem,'status':'human' if cfg.get('title') else 'inferred','generator':'human' if cfg.get('title') else 'rule:filename-v1'},
              'description':{'text':cfg.get('description') or description,'status':'human' if cfg.get('description') else 'inferred','generator':'human' if cfg.get('description') else 'rule:schema-sketch-v1'},
              'basis':{'filename':Path(data.source['origin']).name,'columns':names,'inferred_types':dict(sorted(Counter(c['inference']['type'] for c in columns).items()))}}
@@ -183,7 +183,7 @@ def temporal_profile(values,name,cfg,meta):
     gaps=[{'after':a.isoformat(),'before':b.isoformat(),'days':(b-a).days} for a,b in zip(unique,unique[1:]) if gap_basis and (b-a).days>3*gap_basis]
     stats={'valid':n,'invalid':len(values)-n,'earliest':min(dates).isoformat() if dates else None,'latest':max(dates).isoformat() if dates else None,
            'span_days':(max(dates)-min(dates)).days if dates else None,'parse_formats':dict(sorted(Counter(p['format'] for _,p in parsed).items())),
-           'parse_basis':'human format override' if meta.get('date_format') else 'inferred local formats; numeric ambiguity defaults MDY',
+           'parse_basis':('human format override' if meta.get('date_format') else 'inferred local formats; numeric ambiguity defaults MDY')+('; date-times are profiled by calendar date, time of day is not analysed' if any(p['format']=='ISO_DATETIME' for _,p in parsed) else ''),
            'two_digit_years':sum(p['two_digit_year'] for _,p in parsed),'ambiguous_dates':sum(bool(p['alternatives']) for _,p in parsed),
            'parsed_examples':[{'raw':v,**p} for v,p in parsed[:10]],
            'two_digit_examples':[{'raw':v,**p} for v,p in parsed if p['two_digit_year']][:10],
