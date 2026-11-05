@@ -1,0 +1,9 @@
+{
+  "taxis.csv": {
+    "url": "https://raw.githubusercontent.com/mwaskom/seaborn-data/de49440879bea4d563ccefe671fd7584cba08983/taxis.csv",
+    "sha256": "08d6d71784dbaa2651fee37fc03389754194c05d72d2d19cbc2c799dea6ac09d",
+    "rows": 6433,
+    "columns": 14
+  },
+  "other_csvs": "Authored synthetic fixed2019dates/loops; no random or runtime dates."
+}
