@@ -140,9 +140,10 @@ def validate_liftoff(doc):
 def brief_html(doc):
     from .renderers import finding_html,unknowns
     from .presentation import html_table
+    from .verdicts import headlines_html
     from .temporal_view import temporal_html
     b=doc['liftoff'];out=['<section id="brief"><h1>Fathom liftoff</h1><h2>Brief</h2>',
-        '<p>Automatically measured facts come first. Conditional measurements say <strong>If you declare …</strong>. No suggestion is applied; meaning, observation process and analytical relevance remain yours to declare.</p>',
+        headlines_html(doc),'<p>Automatically measured facts come first. Conditional measurements say <strong>If you declare …</strong>. No suggestion is applied; meaning, observation process and analytical relevance remain yours to declare.</p>',
         '<p><a href="#configurations">Configure an analysis</a> · <a href="#lift-questions">Open questions</a></p><h3>What the table looks like</h3>',html_table({'caption':'Dataset snapshot','headers':['Measure','Value'],'numeric':[1],
             'rows':[['Rows',f"{doc['overview']['rows']:,}"],['Columns',doc['overview']['columns']],['Missing cells',doc['overview']['missing_cells']],['Exact duplicate rows',doc['overview']['duplicate_rows']]]}),
         '<p>'+escape(doc['dataset']['description']['text'])+'</p>',
