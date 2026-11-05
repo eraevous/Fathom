@@ -1,0 +1,13 @@
+{
+  "download_roundtrip": {
+    "cash_group_valid": 1812,
+    "cash_min_max": [
+      0,
+      0
+    ],
+    "interval_equal_pairs": 6,
+    "series_exactly_equal": true,
+    "target": "tip",
+    "yaml_sha256": "47a9b4458e2e32d99ea8c42d89c9fc82e48099777bcf4823ec2eddaa49d2ed0c"
+  }
+}

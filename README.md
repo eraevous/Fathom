@@ -304,3 +304,27 @@ record scope, dependencies, clarification readings and trade-offs.
 | `docs/vision.md`, `docs/design.md` | the vision and the distilled April 2026 design |
 
 License: MIT. Contributions are welcome under the [CLA](CLA.md).
+
+## Liftoff: discover, then configure
+
+```bash
+guide liftoff DATA.csv --out discovery
+# Open discovery/liftoff.html; read the Brief, then explicitly choose controls.
+# Download liftoff.yaml from the page.
+guide profile DATA.csv --config liftoff.yaml --out report
+```
+
+Liftoff writes liftoff-profile.json(schema2) and a self-contained Brief +
+Configurations page. Automatic facts and questions are separate from conditional
+**If you declare…** interval/event-count previews. No target or declaration is
+applied; untouched YAML is{}. The configurator carries offline JS; the Brief
+and ordinary report sections are static. The advisory manifest stays separate
+from effective YAML. `guide render discovery/liftoff-profile.json --out restored`
+restores the same page. `guide configure` keeps its existing behavior.
+
+Previewed series use events and auto granularities, up to20candidates; changing
+value/granularity changes the question. All caps/omissions and rules are disclosed.
+The narrow all-zero-category observation asks whether zeros are structural or
+unrecorded; it does not assert a mechanism or add a stage-two zero rule. Brief/
+conditional temporal exports to PDF/PPTX are not added. See
+[spec013](specs/013-liftoff/spec.md) and [validation](specs/013-liftoff/validation.md).
