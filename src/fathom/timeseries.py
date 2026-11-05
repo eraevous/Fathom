@@ -183,8 +183,25 @@ def spectral(x, deps):
     return {"status": "computed", "peak_period": r10(1 / f), "peak_share_of_power": r10(p / sum(q for q, _ in pairs))}
 
 
-def analyse_grain(points, grain, mode, max_lag, deps):
+def edge_coverage(first, last, grain, last_resolution=1):
+    """Measured timestamp span, not an inferred observation/exposure window."""
+    a,b=floor(first,grain),floor(last,grain)
+    edges=[]
+    for key in dict.fromkeys((a,b)):
+        end=advance(key,grain)
+        start=max(first,key);stop=min(end,last+timedelta(seconds=last_resolution))
+        covered=max(0,(stop-start).total_seconds());length=(end-key).total_seconds()
+        edges.append({'period':label(key,grain),'position':'both' if a==b else 'first' if key==a else 'last',
+            'covered_start':start.isoformat(sep=' '),'covered_end_exclusive':stop.isoformat(sep=' '),
+            'covered_seconds':covered,'period_seconds':length,'coverage_share':r10(covered/length),
+            'partial':covered<length,'basis':'timestamp-span only; last timestamp includes its lexical resolution; observation exposure unknown'})
+    return edges
+
+
+def analyse_grain(points, grain, mode, max_lag, deps, last_resolution=1):
     first, last = min(points), max(points)
+    edges=edge_coverage(first,last,grain,last_resolution)
+    partial={e["period"] for e in edges if e["partial"]}
     periods = {}
     t = floor(first, grain)
     end = floor(last, grain)
@@ -230,7 +247,7 @@ def analyse_grain(points, grain, mode, max_lag, deps):
         calendar.append(entry)
     return {
         "granularity": grain, "periods_in_span": len(x), "first_period": label(floor(first, grain), grain),
-        "last_period": label(end, grain), "observed_periods": len(observed),
+        "last_period": label(end, grain), "observed_periods": len(observed), "edge_coverage": edges,
         "periods_with_rows": sum(1 for k in periods if rows[k]),
         "missing_periods": len(x) - len(observed) if mode == "values" else 0,
         "no_recorded_event_periods": sum(1 for k in periods if not rows[k]) if mode == "events" else 0,
@@ -243,7 +260,7 @@ def analyse_grain(points, grain, mode, max_lag, deps):
                        "spectral": spectral(x, deps)},
         "duration": {"zero_runs": summary(rl["zero"]), "nonzero_runs": summary(rl["nonzero"]),
                      "longest_zero_run": max(rl["zero"], default=0), "longest_nonzero_run": max(rl["nonzero"], default=0)},
-        "series": [{"period": label(k, grain), "value": stored(v)} for k, v in zip(periods, x)][:2000],
+        "series": [{"period": label(k, grain), "value": stored(v), "partial_edge":label(k,grain) in partial} for k, v in zip(periods, x)][:2000],
         "series_truncated": max(0, len(x) - 2000),
     }
 
@@ -315,6 +332,15 @@ def analyse(rows, names, cfg, item, deps, group=None, subset=None):
             value = finite_number(r[vi]) if r[vi] is not None else None
             no_value += value is None
         points[p[0]].append(value if vi is not None else 1.0)
+    last_resolution=1
+    if points:
+        last_stamp=max(points);resolutions=[]
+        for i in (subset if subset is not None else range(len(rows))):
+            text=rows[i][ti]
+            parsed_time=parse_time(text,fmt) if text is not None else None
+            if parsed_time and parsed_time[0]==last_stamp:
+                resolutions.append(1 if text.count(':')>=2 else 60 if ':' in text else 86400)
+        last_resolution=min(resolutions) if resolutions else 1
     total = len(subset) if subset is not None else len(rows)
     parsed = sum(len(v) for v in points.values())
     stamps = sorted(points)
@@ -339,7 +365,7 @@ def analyse(rows, names, cfg, item, deps, group=None, subset=None):
             out["skipped_granularities"].append({"granularity": g, "reason": "timestamps lack a time of day"}); continue
         if n > MAX_PERIODS or ("auto" in requested and g not in requested and n < 2):
             out["skipped_granularities"].append({"granularity": g, "reason": f"{n:,} periods in span (allowed 2..{MAX_PERIODS:,})"}); continue
-        out["granularities"].append(analyse_grain(points, g, mode, item.get("max_lag"), deps))
+        out["granularities"].append(analyse_grain(points, g, mode, item.get("max_lag"), deps, last_resolution))
     out["signals"] = signals(out["granularities"])
     out["charted"] = informative(out["granularities"])
     return out

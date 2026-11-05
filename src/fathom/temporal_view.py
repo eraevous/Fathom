@@ -5,6 +5,15 @@ from html import escape
 from .presentation import formatted, html_table, markdown_table
 from .palette import LIGHT as C
 
+TEMPORAL_CSS = ('.temporal-tables .table-scroll{max-width:100%;overflow-x:auto}'
+                '.temporal-tables .review-table{width:100%;max-width:none;table-layout:auto}'
+                '.temporal-tables .wide-table{min-width:760px}'
+                '.temporal-tables .wide-table th,.temporal-tables .wide-table td:first-child{white-space:nowrap}'
+                '.temporal-tables td{overflow-wrap:normal;word-break:normal}')
+
+EDGE_NOTE = ("Boundary coverage measures timestamp span, not observation exposure. The final timestamp includes one unit of its written precision "
+             "(day, minute or second). Amplitude totals include any flagged partial edges; they are not rescaled.")
+
 INTRO = ("Declared series only. Periods are regularised by aggregation; the four sparsity dimensions are measured per "
          "granularity. Statements are patterns under the stated rules, not causes; questions go to the data owner. "
          "\u201cAbsent\u201d means not detected under the rule, not evidence of absence; \u201cnot estimable\u201d means too few valid "
@@ -42,6 +51,24 @@ def corr_text(c):
     return f"n {c['n']}; signal {c['signal']} (max abs r {c['max_abs_acf']:.2f} vs family band {c['family_band']:.2f}); dominant lags {dom}"
 
 
+def amplitude_text(g, text):
+    edges=g.get('edge_coverage')
+    if edges is None:return text+' (boundary coverage not recorded)'
+    n=sum(e['partial'] for e in edges)
+    return text+(f' (includes {n} partial edge period(s); totals not comparable)' if n else '')
+
+
+def boundary_table(s):
+    rows=[]
+    for g in s['granularities']:
+        if 'edge_coverage' not in g:
+            rows.append([g['granularity'],'—','—','boundary coverage not recorded','—']);continue
+        for e in g['edge_coverage']:
+            rows.append([g['granularity'],e['period'],e['position'],formatted(e['covered_seconds'])+' / '+formatted(e['period_seconds'])+' s','Partial edge' if e['partial'] else 'Full timestamp span'])
+    return {'wide':True,'caption':'Boundary timestamp-span coverage',
+        'headers':['Granularity','Period','Edge','Covered / period length','Caution'],'numeric':[], 'rows':rows}
+
+
 def sparsity_table(s):
     grains = s["granularities"]
     def cell(g, f):
@@ -52,8 +79,8 @@ def sparsity_table(s):
         ("Frequency", "zero share", lambda g: formatted(g["frequency"]["zero_share"], True) if g["frequency"]["zero_share"] is not None else None),
         ("Frequency", "mean inter-event interval (ADI), periods", lambda g: g["frequency"]["adi"]),
         ("Frequency", "intervals spanning a missing period (excluded)", lambda g: g["frequency"]["intervals_spanning_missing"]),
-        ("Amplitude", "non-zero median [p25–p75]", lambda g: f"{formatted(g['amplitude']['nonzero']['median'])} [{formatted(g['amplitude']['nonzero']['p25'])}–{formatted(g['amplitude']['nonzero']['p75'])}]"),
-        ("Amplitude", "CV² of non-zero values", lambda g: g["amplitude"]["cv2"]),
+        ("Amplitude", "non-zero median [p25–p75]", lambda g: amplitude_text(g,f"{formatted(g['amplitude']['nonzero']['median'])} [{formatted(g['amplitude']['nonzero']['p25'])}–{formatted(g['amplitude']['nonzero']['p75'])}]")),
+        ("Amplitude", "CV² of non-zero values", lambda g: amplitude_text(g,formatted(g["amplitude"]["cv2"]))),
         ("Wavelength", "values ACF", lambda g: corr_text(g["wavelength"]["values"])),
         ("Wavelength", "occurrence ACF", lambda g: corr_text(g["wavelength"]["occurrence"])),
         ("Wavelength", "calendar lags", lambda g: "; ".join(f"{x['lag']}: " + (f"{x['acf']:.2f}, {x['status']}" if x["acf"] is not None else x["status"]) for x in g["wavelength"]["calendar_lags"])),
@@ -61,13 +88,13 @@ def sparsity_table(s):
         ("Duration", "zero runs: median / longest", lambda g: f"{formatted((g['duration']['zero_runs'] or {}).get('median'))} / {g['duration']['longest_zero_run']}"),
         ("Duration", "non-zero runs (bursts): median / longest", lambda g: f"{formatted((g['duration']['nonzero_runs'] or {}).get('median'))} / {g['duration']['longest_nonzero_run']}"),
     ]
-    return {"caption": "Sparsity dimensions × granularities", "headers": ["Dimension", "Measure"] + [g["granularity"] for g in grains],
+    return {'wide':True,"caption": "Sparsity dimensions × granularities", "headers": ["Dimension", "Measure"] + [g["granularity"] for g in grains],
             "rows": [[d, m] + [cell(g, f) for g in grains] for d, m, f in spec], "numeric": []}
 
 
 def signal_table(s):
     rows = [[x["signal"], ", ".join(x["present"]) or "—", ", ".join(x["absent"]) or "—", ", ".join(x["undefined"]) or "—", ", ".join(x["not estimable"]) or "—", ", ".join(x["insufficient evidence"]) or "—", x["rule"]] for x in s["signals"]]
-    return {"caption": "Signals: present / absent / undefined / not estimable / insufficient evidence (with the rule)", "headers": ["Signal", "Present", "Absent", "Undefined", "Not estimable", "Insufficient evidence", "Rule"], "rows": rows, "numeric": []}
+    return {'wide':True,"caption": "Signals: present / absent / undefined / not estimable / insufficient evidence (with the rule)", "headers": ["Signal", "Present", "Absent", "Undefined", "Not estimable", "Insufficient evidence", "Rule"], "rows": rows, "numeric": []}
 
 
 def lag_table(g):
@@ -77,7 +104,7 @@ def lag_table(g):
              "" if l["supported"] else ("poorly supported" if l["estimable"] else f"{l['pairs']} valid pairs"),
              formatted(olags[l["lag"]]["acf"]) if l["lag"] in olags else "—"] for l in c["lags"]]
     fam = f"{c['family_band']:.3f}" if c["family_band"] is not None else "n/a"
-    return {"caption": f"{g['granularity'].capitalize()} ACF/PACF (95% band ±{c['band']:.3f}; family band ±{fam}" + ("" if c["complete"] else "; widest per-lag bands, from valid pairs") + ")",
+    return {'wide':True,"caption": f"{g['granularity'].capitalize()} ACF/PACF (95% band ±{c['band']:.3f}; family band ±{fam}" + ("" if c["complete"] else "; widest per-lag bands, from valid pairs") + ")",
             "headers": ["Lag", "ACF", "PACF", "Outside 95% band", "Support", "Occurrence ACF"], "rows": rows, "numeric": [1, 2, 5]}
 
 
@@ -120,14 +147,14 @@ def blocks(d):
                         f"{entry['rows_in_other_groups']:,} rows in other groups and {entry['rows_missing_key']:,} rows with a missing key are not analysed.")
         for s in entry["groups"]:
             charted = [g for g in s["granularities"] if g["granularity"] in s["charted"]]
-            yield name(entry, s), head, [process_table(s), sparsity_table(s), signal_table(s)], charted, s
+            yield name(entry, s), head, [process_table(s), boundary_table(s), sparsity_table(s), signal_table(s)], charted, s
             head = []
 
 
 def temporal_html(d):
     ts = d.get("time_series") or {}
     if not ts.get("series"): return ""
-    out = ['<section id="temporal-structure"><h2>Temporal structure</h2><p>' + escape(INTRO) + "</p>"]
+    out = ['<section id="temporal-structure" class="temporal-tables"><h2>Temporal structure</h2><p>' + escape(INTRO) + "</p><p>" + escape(EDGE_NOTE) + "</p>"]
     for title, head, tables, charted, s in blocks(d):
         out += ["<h3>" + escape(title) + "</h3>"] + ["<p>" + escape(h) + "</p>" for h in head] + [html_table(t) for t in tables]
         if charted: out.append("<p>Charts: the two granularities with the most supported lags outside the family band (then larger n).</p>")
@@ -142,7 +169,7 @@ def temporal_html(d):
 def temporal_markdown(d):
     ts = d.get("time_series") or {}
     if not ts.get("series"): return []
-    lines = ["## Temporal structure", "", INTRO, ""]
+    lines = ["## Temporal structure", "", INTRO, "", EDGE_NOTE, ""]
     for title, head, tables, charted, s in blocks(d):
         lines += ["### " + title, ""] + [h + "\n" for h in head] + [markdown_table(t) for t in tables]
         for g in charted: lines += [stem(g, "acf"), "", stem(g, "pacf"), ""]

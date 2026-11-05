@@ -157,7 +157,7 @@ def test_report_has_temporal_section_with_stem_plots(make_profile):
     result = make_profile(*hourly_events())
     assert result.document["time_series"]["series"][0]["groups"][0]["charted"] == ["hour", "day"]
     html, md = render_html(result), render_markdown(result)
-    assert '<section id="temporal-structure"><h2>Temporal structure</h2>' in html and "## Temporal structure" in md
+    assert '<section id="temporal-structure" class="temporal-tables"><h2>Temporal structure</h2>' in html and "## Temporal structure" in md
     assert html.count('data-kind="stem"') == 4  # ACF + PACF for two granularities
     assert "Sparsity dimensions × granularities" in html and "Insufficient evidence" in html
 

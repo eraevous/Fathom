@@ -13,6 +13,7 @@ import re
 from html import escape
 from pathlib import Path
 
+from .presentation import categorical_hint
 from .config import BINS_RANGE, OPTIONAL_SECTIONS, validate_config
 from .models import TYPES
 from .parsing import DATE_FORMATS, parse_date, parse_datetime
@@ -20,6 +21,7 @@ from .rows import RULES as ROW_RULES
 from .timeseries import DEFAULT_LAG, GRAINS, MIN_N, TOP_N, undeclared
 from .univariate import BIN_RULE
 from .palette import theme_css
+from .temporal_view import TEMPORAL_CSS
 from .renderers import KIND_CSS
 
 CONTROLLED_COLUMN_KEYS = ("type", "date_format", "exclude_from_target")
@@ -78,6 +80,7 @@ def build_schema(doc: dict, frame, raw_config: dict | None) -> dict:
         populated = c["count"] - c["missing"]
         typ = c["effective_type"]
         facts = [f"{pct(populated, rows)} populated", f"{c['distinct']} distinct"]
+        if categorical_hint(c): facts.append(categorical_hint(c))
         formats = ((c.get("univariate") or {}).get("statistics") or {}).get("parse_formats") if typ == "temporal" else None
         if formats:
             facts.append("parsed date formats: " + ", ".join(f"{k} {v}" for k, v in formats.items()))
@@ -465,7 +468,7 @@ refresh();
 })();
 """
 
-CSS = theme_css() + KIND_CSS + """:root{--bg:var(--surface);--fg:var(--ink);--line:var(--border);--card:var(--panel);--sug:var(--kind-hypothesis);--sel:var(--kind-observation)}
+CSS = theme_css() + KIND_CSS + TEMPORAL_CSS + """:root{--bg:var(--surface);--fg:var(--ink);--line:var(--border);--card:var(--panel);--sug:var(--kind-hypothesis);--sel:var(--kind-observation)}
 body{font:15px/1.5 system-ui,sans-serif;background:var(--bg);color:var(--fg);max-width:1180px;margin:auto;padding:24px 16px}
 h1{font-size:32px;margin:0 0 4px}h2{border-bottom:2px solid var(--accent);padding-bottom:6px;margin-top:32px}
 section{margin-bottom:24px}.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:16px}

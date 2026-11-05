@@ -109,7 +109,8 @@ def tick_label(value):
 
 
 def html_table(table):
-    out=['<div class="table-scroll"><table class="review-table"><caption>'+escape(table['caption'])+'</caption><thead><tr>']
+    klass='review-table'+(' wide-table' if table.get('wide') else '')
+    out=['<div class="table-scroll"><table class="'+klass+'"><caption>'+escape(table['caption'])+'</caption><thead><tr>']
     for i,h in enumerate(table['headers']):out.append('<th scope="col"'+(' class="num"' if i in table['numeric'] else '')+'>'+escape(h)+'</th>')
     out.append('</tr></thead><tbody>')
     for row in table['rows']:
@@ -130,3 +131,10 @@ def original_tick(chart,value):
         try:value=10**value
         except OverflowError:value=float.fromhex('0x1.fffffffffffffp+1023')
     return tick_label(value)
+
+
+def categorical_hint(col):
+    """An explicit option at the existing inference cap, not a semantic inference."""
+    if col.get('effective_type')=='string' and col.get('distinct',0)>20:
+        return 'Many distinct strings: if these are category labels, declare type: categorical for this column. The 20-level grouping cap still applies.'
+    return ''
