@@ -92,6 +92,18 @@ def test_malformed_liftoff_envelope_fails_at_load(tmp_path,key,value):
     with pytest.raises(ValueError):ProfilingResult.load(path)
 
 
+@pytest.mark.parametrize('mutate',[
+    lambda b:b.pop('limits'),
+    lambda b:b.pop('zero_contrasts'),
+    lambda b:b['coverage'].pop('series_omitted'),
+    lambda b:b['automated_findings'].__setitem__(0,None),
+])
+def test_missing_renderer_fields_and_malformed_findings_fail_at_load(tmp_path,mutate):
+    d=copy.deepcopy(lift().document);mutate(d['liftoff'])
+    path=tmp_path/'bad.json';path.write_text(json.dumps(d))
+    with pytest.raises(ValueError):ProfilingResult.load(path)
+
+
 def test_brief_is_static_precedes_configurations_and_escapes_names(tmp_path):
     from fathom.liftoff import build_liftoff,render_liftoff
     evil='</script><img src=x onerror=alert(1)>'

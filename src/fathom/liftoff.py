@@ -106,7 +106,25 @@ def validate_liftoff(doc):
     if doc['schema_version']!=2 or doc['purpose'].get('target') is not None:raise ValueError('invalid liftoff default profile')
     if not isinstance(doc.get('row_structure'),dict) or not isinstance(doc.get('time_series'),dict):raise ValueError('invalid liftoff default structures')
     if doc.get('row_structure',{}).get('intervals') or doc.get('time_series',{}).get('declared'):raise ValueError('liftoff must not apply declarations')
-    if not isinstance(b.get('configuration'),dict) or not isinstance(b.get('automated_findings'),list) or not isinstance(b.get('coverage'),dict):raise ValueError('invalid liftoff fields')
+    if not isinstance(b.get('configuration'),dict) or not isinstance(b.get('automated_findings'),list):raise ValueError('invalid liftoff fields')
+    if not isinstance(b.get('limits'),list) or any(not isinstance(limit,str) for limit in b['limits']):raise ValueError('invalid liftoff limits')
+    coverage=b.get('coverage')
+    coverage_keys={f'{kind}_{measure}' for kind in ('interval','series') for measure in ('candidates','previewed','omitted')}
+    if not isinstance(coverage,dict) or not coverage_keys<=coverage.keys() or any(type(coverage[key]) is not int or coverage[key]<0 for key in coverage_keys):raise ValueError('invalid liftoff coverage')
+    zero=b.get('zero_contrasts')
+    if (not isinstance(zero,dict) or any(key not in zero for key in ('rule','omitted_numeric_columns','omitted_group_columns','omitted_results'))
+            or not isinstance(zero['rule'],str) or any(type(zero[key]) is not int or zero[key]<0 for key in ('omitted_numeric_columns','omitted_group_columns','omitted_results'))):raise ValueError('invalid liftoff zero contrasts')
+    def validate_finding(f,status):
+        if (not isinstance(f,dict) or not {'id','kind','message','rule','generator','evidence','uncertainty','provenance','status'}<=f.keys()
+                or f['status']!=status or f['kind'] not in ('observation','question')
+                or any(not isinstance(f[key],str) for key in ('id','kind','message','rule','generator','uncertainty'))
+                or not isinstance(f['provenance'],dict) or not isinstance(f['evidence'],list)):
+            raise ValueError('invalid liftoff finding')
+        for evidence in f['evidence']:
+            if not isinstance(evidence,dict) or not (isinstance(evidence.get('finding'),str) or (isinstance(evidence.get('path'),str) and 'value' in evidence)):
+                raise ValueError('invalid liftoff finding evidence')
+    for f in b['automated_findings']:
+        validate_finding(f,'automated')
     schema=b['configuration'];init=schema.get('initial')
     if not isinstance(init,dict) or init.get('target') is not None or init.get('intervals') or init.get('columns') or schema.get('base_columns') or schema.get('base')!={}:raise ValueError('liftoff controls must start unselected')
     if not isinstance(b.get('previews'),dict) or any(not isinstance(b['previews'].get(k),list) for k in ('intervals','time_series')):raise ValueError('invalid liftoff previews')
@@ -114,7 +132,9 @@ def validate_liftoff(doc):
         for p in b['previews'][kind]:
             if not isinstance(p,dict) or p.get('status')!='provisional' or not isinstance(p.get('declaration'),dict) or not isinstance(p.get('result'),dict) or not isinstance(p.get('findings'),list):raise ValueError('invalid liftoff preview')
             validate_config({kind:[p['declaration']]},[c['name'] for c in doc['columns']])
-            if any(f.get('status')!='provisional' or f.get('kind') not in ('observation','question') or not f.get('message','').startswith('If you declare') for f in p['findings']):raise ValueError('invalid provisional finding')
+            for f in p['findings']:
+                validate_finding(f,'provisional')
+                if not f['message'].startswith('If you declare'):raise ValueError('invalid provisional finding')
 
 
 def brief_html(doc):
