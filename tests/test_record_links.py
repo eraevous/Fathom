@@ -98,8 +98,13 @@ def test_followup_is_append_only_relation_only_and_idempotent():
     head=raw[:raw.index(marker)];tail=raw[raw.index(marker):]
     new,mapping=FOLLOWUP['followup'](head)
     assert len(new)==len(mapping)==12
-    assert tail.split('\n',1)[1]==''.join(json.dumps(r,ensure_ascii=False)+'\n' for r in new)
+    assert tail.split('\n',1)[1].startswith(''.join(json.dumps(r,ensure_ascii=False)+'\n' for r in new))  # later appends may follow
     assert FOLLOWUP['followup'](raw)==([],{})
+    # Every later follow-up (for example after a stacked PR merges) is again exactly what followup() derives from what precedes it.
+    at=raw.index(marker)
+    while marker in raw[at+1:]:
+        at=raw.index(marker,at+1);before=raw[:at];later,_=FOLLOWUP['followup'](before)
+        assert later and raw[at:].split('\n',1)[1].startswith(''.join(json.dumps(r,ensure_ascii=False)+'\n' for r in later))
     old={ref(r):r for r in records(head)}
     for a,b in mapping.items():
         previous,current=old[a],next(r for r in new if ref(r)==b)

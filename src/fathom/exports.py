@@ -9,7 +9,7 @@ import re
 import zipfile
 from xml.sax.saxutils import escape
 
-from .renderers import KINDS, repetition_groups, sample_cell, scalar, summary_rows
+from .renderers import KINDS, omitted, omitted_notes, repetition_groups, sample_cell, scalar, summary_rows
 from .presentation import formatted, column_tables, structured_tables, formatted_examples, display_charts, top_n_reason, original_tick
 from .target import target_tables
 from .palette import LIGHT as C
@@ -54,7 +54,7 @@ def summary_chart_topics(d):
 
 def summary_topics(d):
     if d['kind']=='profile':
-        yield 'Dataset summary',[name+': '+value for name,value,_ in summary_rows(d)]
+        yield 'Dataset summary',[name+': '+value for name,value,_ in summary_rows(d)]+omitted_notes(d)
         messages=dict(finding_topics(d))
         for title in ('Suggested actions','Observations','Open questions'):
             if title=='Observations' and d.get('target_analysis',{}).get('ranked'):
@@ -197,7 +197,7 @@ def pdf_bytes(d):
                     names=samples['columns'][start:start+4]
                     rows=[['Input row',*names]]+[[r['position'],*[sample_cell(x) for x in r['values'][start:start+4]]] for r in samples[key]]
                     table(rows,[42]+[448/len(names)]*len(names))
-        else:story.append(p('Sample rows unavailable in this saved artifact.'))
+        else:story.append(p(next((n for n in omitted_notes(d) if 'sections.samples' in n),'Sample rows unavailable in this saved artifact.')))
         heading('Provenance')
         table([['Field','Value'],['Connector',d['source']['connector']],['Source',d['source']['origin']]]+[[k,formatted(v)] for k,v in sorted(d['context'].items()) if not isinstance(v,(dict,list))],[180,310])
         story.append(p('Full provenance and raw evidence remain in the core report and saved artifact.'))
@@ -426,8 +426,10 @@ def export_bundle(result,formats,deck='summary'):
     status={'artifact_sha256':hashlib.sha256(result.to_json().encode()).hexdigest(),'formats':{}}
     for fmt in sorted(set(formats)):
         if fmt not in serializers:raise ValueError('Unsupported export format: '+fmt)
+        # Omitted optional sections (spec012) are dropped from the view, never from the artifact.
+        view={k:v for k,v in result.document.items() if k not in omitted(result.document)}
         try:
-            data,details=pptx_bytes(result.document,full=deck=='full') if fmt=='pptx' else serializers[fmt](result.document)
+            data,details=pptx_bytes(view,full=deck=='full') if fmt=='pptx' else serializers[fmt](view)
             files['report.'+fmt]=data
             status['formats'][fmt]={'status':'written','serializer':{'package':'reportlab' if fmt=='pdf' else 'python-pptx','version':version('reportlab' if fmt=='pdf' else 'python-pptx')},**details}
         except ImportError:

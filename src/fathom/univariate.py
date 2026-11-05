@@ -13,6 +13,19 @@ from .parsing import finite_number, parse_date, MONTH_NAMES
 PERCENTILES=(1,5,25,33,50,66,75,95,99)
 
 
+BIN_RULE='sqrt(n) rounded up, capped at 10 (system default)'
+
+
+def bin_rule(bins=None):
+    """Disclosed histogram bin rule; `bins` is the human `bins:` declaration (spec012)."""
+    return f'{bins} equal-width bins (declared in configuration)' if bins else BIN_RULE
+
+
+def bin_count(n,lo,hi,bins=None):
+    if hi==lo:return 1
+    return bins if bins else min(10,max(1,math.ceil(math.sqrt(n))))
+
+
 def stored(n,figures=6):
     """Stored-number rule (spec 008 FR-001): at least `figures` significant figures, never fewer than 10 decimals."""
     if n is None or not math.isfinite(n):return None
@@ -82,7 +95,7 @@ def identity_and_samples(data,cfg,columns):
                     'first':window(range(k)),'last':window(range(n-k,n)),'random':window(sorted(random.Random(seed).sample(range(n),k)))}
 
 
-def numeric_profile(values,name,units):
+def numeric_profile(values,name,units,bins=None):
     nums=[n for v in values if (n:=finite_number(v)) is not None];n=len(nums)
     percentiles={str(p):percentile(nums,p) for p in PERCENTILES}
     skew=kurt=None
@@ -103,7 +116,7 @@ def numeric_profile(values,name,units):
            'share_denominator':'finite values','formatting':'Local currency/thousands/parenthesis parsing; symbols do not establish units or comparability.'}
     charts=[]
     if nums:
-        lo,hi=min(nums),max(nums);bins=min(10,max(1,math.ceil(math.sqrt(n)))) if hi!=lo else 1
+        lo,hi=min(nums),max(nums);declared=bins;bins=bin_count(n,lo,hi,declared)
         # Normalized arithmetic avoids overflowing a finite but wide numeric range.
         scale=max(abs(lo),abs(hi),1);a,b=lo/scale,hi/scale
         edges=[(a+(b-a)*i/bins)*scale for i in range(bins+1)]
@@ -112,7 +125,7 @@ def numeric_profile(values,name,units):
             i=min(bins-1,int(((x/scale-a)/(b-a))*bins)) if b!=a else 0;cs[i]+=1
         data=[{'label':f'{edges[i]:.5g} to {edges[i+1]:.5g}','low':geometry(edges[i]),'high':geometry(edges[i+1]),'count':cs[i]} for i in range(bins)]
         axis=f'{name} ({units or "recorded values; units unknown"})'
-        charts=[chart('histogram',f'Distribution of {name}',axis,'Rows (count)',data=data),
+        charts=[chart('histogram',f'Distribution of {name}',axis,'Rows (count)',data=data,bin_rule=bin_rule(declared)),
                 chart('box',f'Five-number view of {name}',axis,'Column',box={'min':geometry(lo),'q1':raw_percentile(nums,25),'median':raw_percentile(nums,50),'q3':raw_percentile(nums,75),'max':geometry(hi)})]
         cumulative=0;points=[]
         for x,count in sorted(Counter(nums).items()):
@@ -123,7 +136,7 @@ def numeric_profile(values,name,units):
         positives=[x for x in nums if x>0]
         if len(positives)>=2 and len(set(positives))>1 and skew is not None and skew>=2:
             coverage={'positive':len(positives),'zeros':sum(x==0 for x in nums),'negatives':sum(x<0 for x in nums),'invalid':len(values)-n}
-            charts.append(histogram([math.log10(x) for x in positives],f'Positive log distribution of {name}',axis+' (log scale)',scale='log10',coverage_counts=coverage))
+            charts.append(histogram([math.log10(x) for x in positives],f'Positive log distribution of {name}',axis+' (log scale)',scale='log10',coverage_counts=coverage,bins=declared))
             points=[];cumulative=0
             for value,count in sorted(Counter(positives).items()):
                 cumulative+=count;points.append({'x':math.log10(value),'cumulative':cumulative/len(positives),'count':cumulative})
@@ -133,8 +146,8 @@ def numeric_profile(values,name,units):
     return stats,charts
 
 
-def histogram(nums,title,x_label,**metadata):
-    lo,hi=min(nums),max(nums);n=len(nums);bins=min(10,max(1,math.ceil(math.sqrt(n)))) if hi!=lo else 1
+def histogram(nums,title,x_label,bins=None,**metadata):
+    lo,hi=min(nums),max(nums);n=len(nums);metadata['bin_rule']=bin_rule(bins);bins=bin_count(n,lo,hi,bins)
     scale=max(abs(lo),abs(hi),1);a,b=lo/scale,hi/scale
     edges=[(a+(b-a)*i/bins)*scale for i in range(bins+1)];counts=[0]*bins
     for x in nums:counts[min(bins-1,int((x/scale-a)/(b-a)*bins)) if b!=a else 0]+=1
@@ -154,7 +167,7 @@ def missingness_patterns(columns,rows):
             'basis':'Canonical nulls only; exact row masks, not causal or within-group analysis.'}
 
 
-def text_profile(raw,name):
+def text_profile(raw,name,bins=None):
     values=[v for v in raw if v is not None];counts=Counter(values);n=len(values)
     blank={'empty':sum(v=='' for v in values),'whitespace':sum(bool(v) and not v.strip() for v in values),
            'tokens':sum(v.strip().casefold() in {'na','nan','none','null','blank','n/a'} for v in values),
@@ -178,7 +191,7 @@ def text_profile(raw,name):
         while remainder in counts:remainder+=' (aggregate)'
         data.append({'label':remainder,'count':other,'share':other/n,'is_other':True})
     charts=[chart('bar',f'Most common values of {name}','Values (count)','Value (top 10 + remainder)',data=data,coverage=sum(x['count'] for x in top)/n,denominator=n)] if top else []
-    if lengths:charts.append(histogram(lengths,f'String lengths in {name}','Raw string length (characters)',measure='string_length'))
+    if lengths:charts.append(histogram(lengths,f'String lengths in {name}','Raw string length (characters)',bins=bins,measure='string_length'))
     return stats,charts
 
 
@@ -241,9 +254,9 @@ def enrich_columns(columns,rows,raw_rows,cfg,emit,findings):
     for i,col in enumerate(columns):
         name=col['name'];meta=cfg['columns'].get(name,{});typ=col['effective_type']
         values=[r[i] for r in rows if r[i] is not None];raw=[r[i] for r in raw_rows]
-        if typ in {'numeric','latitude','longitude'}:stats,charts=numeric_profile(values,name,meta.get('units') or ('degrees (inferred)' if typ in {'latitude','longitude'} else None))
+        if typ in {'numeric','latitude','longitude'}:stats,charts=numeric_profile(values,name,meta.get('units') or ('degrees (inferred)' if typ in {'latitude','longitude'} else None),cfg.get('bins'))
         elif typ=='temporal':stats,charts=temporal_profile(values,name,cfg,meta)
-        else:stats,charts=text_profile(raw,name)
+        else:stats,charts=text_profile(raw,name,cfg.get('bins'))
         role=meta.get('role');basis='human' if role else 'inferred from column name'
         if role is None:
             role='identifier' if name in cfg['schema'].get('key',[]) or re.search(r'(^id$|_id$|key|code|title|name)',name,re.I) else 'quantity' if re.search(r'(gross|amount|revenue|cost|price)',name,re.I) else None

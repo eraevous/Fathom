@@ -90,6 +90,11 @@ def test_normal_and_offset_decoys_do_not_change(name):
     for doc in (main, now):
         doc.pop("schema_version"); doc["source"].pop("origin")
         doc["quality"].pop("missingness_tests", None); doc["quality"]["rules"].pop("missingness_varies_with", None)
+        # spec012 (configurator) adds disclosure-only fields: the report settings block and each histogram's bin rule.
+        doc.pop("report", None)
+        for col in doc["columns"]:
+            for ch in col.get("univariate", {}).get("charts", []):
+                ch.pop("bin_rule", None)
     assert now == main  # equal artifacts imply equal chart geometry, so normal-scale SVGs are unchanged
 
 
