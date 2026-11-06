@@ -13,6 +13,8 @@ from .temporal_view import temporal_html, temporal_markdown, TEMPORAL_CSS
 from .presentation import formatted, column_tables, html_table, markdown_table, metric_table, structured_tables, formatted_examples, display_charts, top_n_reason, categorical_hint
 from pathlib import Path
 from .verdicts import headlines_html, key_findings, skew_text, inline_rule
+from .summary_view import summary_html,summary_markdown,SUMMARY_CSS,TRANSPOSE_SCRIPT
+from .finding_view import finding_tree,html_tree,markdown_tree,evidence_html,evidence_markdown
 from .report_style import style_html, STYLE_CSS, NAV_SCRIPT, navigation, markdown_text
 
 KINDS = (("observation", "Observations"), ("interpretation", "Interpretations"),
@@ -203,12 +205,13 @@ def kind_tag(kind):
     return '<span class="kind-tag">'+escape(kind.capitalize())+'</span>'
 
 
-def finding_html(f, repeated_ids, context=None):
+def finding_html(f, repeated_ids, context=None, document=None):
     fid=escape(f['id'],quote=True)
     cls=('finding repetitive' if repetitive(f,repeated_ids) else 'finding')+' kind-'+escape(f['kind'],quote=True)
-    out=[f'<article id="{fid}" class="{cls}"><p>{kind_tag(f["kind"])}{escape(f["message"])}</p>']
+    tree=finding_tree(f,document)
+    out=[f'<article id="{fid}" class="{cls}"><div class="finding-verdict">{kind_tag(f["kind"])} {html_tree(tree,f.get("columns",[]),styled=False)}</div>']
     gate=inline_rule(f)
-    if gate:out.append('<p class="gate">Gate: '+escape(gate)+'</p>')
+    if gate and f.get('rule')!='target_group_contrast':out.append('<ul class="gate quantity-list">'+''.join('<li class="finding-line">Gate: '+escape(line)+'</li>' for line in [gate])+'</ul>')
     out.append('<details><summary>Evidence and uncertainty</summary>')
     if context:out.append('<p>'+escape(context)+'</p>')
     for item in f['evidence']:
@@ -216,7 +219,7 @@ def finding_html(f, repeated_ids, context=None):
             ref=escape(item['finding'],quote=True)
             out.append(f'<p>Supported by <a href="#{ref}">{ref}</a>.</p>')
         else:
-            out.append(readable_html({label(item['path']):item['value']}))
+            out.append(evidence_html({label(item['path']):item['value']}))
     out.append('<p>Generator: '+escape(f['generator'])+'</p><p>Uncertainty: '+escape(f['uncertainty'])+'</p>')
     out.append(readable_html({'provenance':f['provenance']}))
     return ''.join(out)+'</details></article>'
@@ -234,7 +237,7 @@ def dictionary_and_provenance_html(d):
     for c in d['columns']:
         meaning=c['meaning']['value']+' (human)' if c['meaning'] else 'Unknown meaning'
         basis='human override; inferred '+c['inference']['type'] if c['override'] else 'inferred, not a domain fact'
-        out += ['<details class="column-entry"><summary><h3>'+escape(c['name'])+'</h3> <span>'+escape(c['effective_type'])+' · '+formatted(c['missing'])+'/'+formatted(c['count'])+' missing · '+formatted(c['distinct'])+' distinct'+(' · '+datetime_note(c,d) if datetime_note(c,d) else '')+'</span></summary><p>'+escape(meaning)+' ('+escape(basis)+')</p>',
+        out += ['<details class="column-entry" id="dictionary-column-'+str(d['columns'].index(c))+'"><summary><h3>'+escape(c['name'])+'</h3> <span>'+escape(c['effective_type'])+' · '+formatted(c['missing'])+'/'+formatted(c['count'])+' missing · '+formatted(c['distinct'])+' distinct'+(' · '+datetime_note(c,d) if datetime_note(c,d) else '')+'</span></summary><p>'+escape(meaning)+' ('+escape(basis)+')</p>',
                 '<p>Examples: '+escape(', '.join(formatted_examples(c)))+'</p><div class="column-grid"><div class="column-statistics">']
         gate=d.get('quality',{}).get('skew_gates',{}).get(c['name'])
         if gate:out.insert(len(out)-1,'<p>'+escape(skew_text(gate))+'</p>')
@@ -255,7 +258,7 @@ def dictionary_and_provenance_html(d):
     return ''.join(out)
 
 
-def render_html(result: ProfilingResult):
+def render_html(result: ProfilingResult,report=None):
     if result.document['kind'] == 'panel':
         from .panel_view import html
         return html(result)
@@ -272,7 +275,8 @@ def render_html(result: ProfilingResult):
         if d.get('time_series',{}).get('series'):items.append(('temporal-structure','Temporal',len(d['time_series']['series'])))
         if d.get('target_analysis'):items.append(('report-target','Target',len(d['target_analysis'].get('ranked',[]))))
         items.extend([('report-exclusions','Exclusions',len(d['selection'].get('excluded',[]))),('report-provenance','Provenance',None)])
-        out += [navigation(items),headlines_html(d),dictionary_and_provenance_html(d)]
+        if d['columns']:items.insert(1,('distribution-summaries','Distributions',len(d['columns'])))
+        out += [navigation(items),headlines_html(d),summary_html(d,report),dictionary_and_provenance_html(d)]
         out += ['<section id="report-dataset" class="opening"><h2>Dataset summary</h2><table><thead><tr><th>Measure</th><th>Snapshot</th><th>Evidence</th></tr></thead><tbody>']
         for title,value,refs in summary_rows(d):
             links=' '.join(f'<a href="#{escape(ref,quote=True)}">Finding</a>' for ref in refs) or 'Stored measurement'
@@ -291,7 +295,7 @@ def render_html(result: ProfilingResult):
                 links=''.join('<p><a href="#'+escape(f['id'],quote=True)+'">Original item</a>: '+escape(f['message'])+'</p>'+readable_html({'evidence':f['evidence'],'generator':f['generator'],'uncertainty':f['uncertainty'],'provenance':f['provenance']}) for f in items)
                 out.append(f'<div class="summary-view"><p class="kind-{kind}">'+kind_tag(kind)+escape(message)+'</p><details><summary>Evidence, uncertainty and original items</summary>'+links+'</details></div>')
             fs=[f for f in d['findings'] if f['kind']==kind]
-            out.extend(finding_html(f,repeated_ids) for f in fs)
+            out.extend(finding_html(f,repeated_ids,document=d) for f in fs)
             if not fs: out.append('<p>None recorded.</p>')
         out += ['</div></section>',temporal_html(d)]
         out += ['<section id="report-relations"><h2>Relations</h2><p>'+escape(d['selection'].get('ranking_rule','Legacy input-order selection; no relevance ranking recorded.'))+'</p>',
@@ -312,9 +316,9 @@ def render_html(result: ProfilingResult):
     if d.get('annotations'):
         out += ['<section><h2>Labelled annotations</h2>',readable_html(d['annotations']),'</section>']
     css=theme_css()+KIND_CSS+TEMPORAL_CSS+'''body{font:16px/1.55 system-ui,sans-serif;background:var(--surface);color:var(--ink);max-width:1120px;padding:32px;margin:auto}h1{font-size:44px;margin-bottom:8px}h2{border-bottom:2px solid var(--rule);padding-bottom:7px;margin-top:40px}h3{margin-top:24px}section{margin-bottom:30px}.opening{background:var(--panel);padding:24px;border:1px solid var(--border);border-radius:8px}table{border-collapse:collapse;width:100%;background:var(--panel)}td,th{padding:10px;text-align:left;border-bottom:1px solid var(--border);vertical-align:top}td{overflow-wrap:anywhere}article{background:var(--panel);border-left:3px solid var(--soft-border);padding:8px 16px;margin:10px 0}article>p{margin:7px 0}details{margin:8px 0}summary{cursor:pointer;color:var(--link);font-weight:600}details[open]{padding-bottom:10px}a{color:var(--link)}small{color:var(--muted)}dt{font-weight:600;margin-top:8px}dd{margin-left:20px;overflow-wrap:anywhere}ul{padding-left:24px}.sample-scroll{overflow-x:auto}.sample-scroll td{min-width:90px;max-width:260px;white-space:pre-wrap}svg{width:100%;max-width:800px}svg text{font:13px system-ui,sans-serif}label{cursor:pointer;font-weight:600;margin-left:8px}.summary-view{background:var(--tint);padding:12px;margin-top:12px}.repetitive{display:none}.repetitive:target{display:block}#full-view:checked ~ .summary-view{display:none}#full-view:checked ~ .full-view .summary-view{display:none}#full-view:checked ~ .full-view .repetitive{display:block}@media(max-width:700px){body{padding:12px}td,th{padding:6px;font-size:14px}.opening{padding:12px}}@media print{body{background:var(--panel);padding:0}details{break-inside:avoid}.repetitive{display:block}}'''
-    css += '.column-entry{box-sizing:border-box;width:100%;border:1px solid var(--border);border-radius:6px;padding:20px;margin:24px 0}.column-entry h3{margin-top:0;overflow-wrap:anywhere}.review-table{table-layout:fixed;margin:12px 0 20px}.review-table td,.review-table th{padding:6px 10px}caption{text-align:left;font-weight:600;padding:8px 0}.num{text-align:right;font-variant-numeric:tabular-nums}.table-scroll{overflow-x:auto;max-width:100%}.chart{margin:20px 0;max-width:100%;overflow-x:auto}.chart svg{width:720px;max-width:none;display:block}.chart svg text{font:15px system-ui,sans-serif}.chart-title{font-weight:600}figcaption{font-size:14px;margin:8px 0;color:var(--muted)}p{overflow-wrap:anywhere}'
+    css += '.finding-verdict{max-width:90ch}.quantity-list{margin:8px 0}.quantity-list li{margin:4px 0}.column-entry{box-sizing:border-box;width:100%;border:1px solid var(--border);border-radius:6px;padding:20px;margin:24px 0}.column-entry h3{margin-top:0;overflow-wrap:anywhere}.review-table{table-layout:fixed;margin:12px 0 20px}.review-table td,.review-table th{padding:6px 10px}caption{text-align:left;font-weight:600;padding:8px 0}.num{text-align:right;font-variant-numeric:tabular-nums}.table-scroll{overflow-x:auto;max-width:100%}.chart{margin:20px 0;max-width:100%;overflow-x:auto}.chart svg{width:720px;max-width:none;display:block}.chart svg text{font:15px system-ui,sans-serif}.chart-title{font-weight:600}figcaption{font-size:14px;margin:8px 0;color:var(--muted)}p{overflow-wrap:anywhere}'
     css += '.target-chart .review-table{max-width:none;min-width:680px;table-layout:auto}.target-chart .review-table .num{white-space:nowrap}.target-tables td{white-space:pre-line}.target-tables .review-table{max-width:none;min-width:640px;table-layout:auto}.column-entry{padding:12px 16px;margin:10px 0}.column-entry>summary{display:list-item}.column-entry>summary h3{display:inline;margin:0 16px 0 0;font-size:18px}.column-entry>summary span{font-size:14px;font-weight:400;color:var(--muted)}.column-grid{display:grid;grid-template-columns:minmax(230px,.75fr) minmax(0,1.25fr);gap:24px;align-items:start}.column-statistics{min-width:0;max-width:360px;position:sticky;top:12px;max-height:65vh;overflow-y:auto}.column-plots{min-width:0}.review-table{max-width:420px}.chart{max-width:760px}.chart svg{width:100%;max-width:100%;height:auto}.chart svg text{font:18px system-ui,sans-serif}.chart h4{font-size:16px;margin:8px 0}.axis-captions p{margin:3px 0;font-size:14px;overflow-wrap:anywhere}.box-summary{max-width:320px}.chart{overflow:visible;margin:10px 0 20px}.column-entry .table-scroll{max-width:100%}@media(max-width:800px){.column-grid{grid-template-columns:minmax(0,1fr)}.column-entry{padding:10px}.column-statistics{max-width:100%;position:static;max-height:none;overflow:visible}}@media(max-width:500px){.chart svg text{font-size:22px}}'
-    return style_html('<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Fathom — '+escape(d['kind'])+'</title><style>'+css+STYLE_CSS+'</style></head><body>'+'\n'.join(out)+NAV_SCRIPT+'</body></html>\n', columns=[c['name'] for c in d.get('columns',[])])
+    return style_html('<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Fathom — '+escape(d['kind'])+'</title><style>'+css+STYLE_CSS+SUMMARY_CSS+'</style></head><body>'+'\n'.join(out)+NAV_SCRIPT+TRANSPOSE_SCRIPT+'</body></html>\n', columns=[c['name'] for c in d.get('columns',[])])
 
 
 def dictionary_and_provenance_markdown(d):
@@ -324,14 +328,14 @@ def dictionary_and_provenance_markdown(d):
     if d.get('missingness_patterns') and 'missingness_patterns' not in omitted(d):lines += [svg_chart(d['missingness_patterns']['chart'])]
     for c in d['columns']:
         meaning=c['meaning']['value']+' (human)' if c['meaning'] else 'Unknown meaning'
-        lines += ['### '+markdown_text(c['name'],literal=True),'',md_text(meaning+'; effective '+c['effective_type']+(' (human override)' if c['override'] else ' (inferred)')+('; '+datetime_note(c,d) if datetime_note(c,d) else '')),'','Examples: '+markdown_text(', '.join(formatted_examples(c)),literal=True),'',md_text(categorical_hint(c)),'',charts_markdown(c),'',
+        lines += ['<a id="dictionary-column-'+str(d['columns'].index(c))+'"></a>','### '+markdown_text(c['name'],literal=True),'',md_text(meaning+'; effective '+c['effective_type']+(' (human override)' if c['override'] else ' (inferred)')+('; '+datetime_note(c,d) if datetime_note(c,d) else '')),'','Examples: '+markdown_text(', '.join(formatted_examples(c)),literal=True),'',md_text(categorical_hint(c)),'',charts_markdown(c),'',
                   md_text(skew_text(d.get('quality',{}).get('skew_gates',{}).get(c['name'])),verdict=True,columns=[c['name']]) if c['effective_type']=='numeric' else '', '<details class="raw-evidence"><summary>Raw evidence</summary>','',readable_md(c),'</details>','']
     lines += ['## Provenance','','Source and context are recorded; technical details are collapsed.','','<details><summary>Provenance internals</summary>','',readable_md({'source':d['source'],'context':d['context'],'schema':d['schema'],'dependencies':d['dependencies'],'identity_basis':d.get('dataset',{}).get('basis',{})}),
               '### Working record (human declarations)','',readable_md(d['working_record']),'</details>','']
     return lines
 
 
-def render_markdown(result: ProfilingResult):
+def render_markdown(result: ProfilingResult,report=None):
     if result.document['kind'] == 'panel':
         from .panel_view import markdown
         return markdown(result)
@@ -344,8 +348,8 @@ def render_markdown(result: ProfilingResult):
             lines += ['## '+title,'','\n'.join(markdown_table(t) for t in structured_tables(title,value)),'']
     else:
         items=key_findings(d)
-        lines += ['## Key findings','']+[(('- ' if len(items)>=3 else '')+markdown_text(i['message'],columns=[c['name'] for c in d['columns']],verdict=True)+'\n') for i in items]+['']
-        lines += dictionary_and_provenance_markdown(d)
+        lines += ['## Key findings','']+[(markdown_tree(finding_tree(i.get('finding',{'id':i['ref'],'kind':'observation','message':i['message'],'evidence':[]}),d),columns=[c['name'] for c in d['columns']])+'\n') for i in items]+['']
+        lines += [summary_markdown(d,report)]+dictionary_and_provenance_markdown(d)
         lines += ['## Dataset summary','','| Measure | Snapshot | Evidence |','| --- | --- | --- |']
         for title,value,refs in summary_rows(d):
             links=', '.join('[Finding](#'+ref+')' for ref in refs) or 'Stored measurement'
@@ -361,11 +365,11 @@ def render_markdown(result: ProfilingResult):
             for message,items in summaries:
                 if items and items[0]['kind']==kind: lines += [md_text(message,verdict=True,inferred=kind in {'hypothesis','interpretation'}),'']
             fs=[f for f in d['findings'] if f['kind']==kind and not repetitive(f,repeated_ids)]
-            for f in fs: lines += markdown_finding(f)
+            for f in fs: lines += markdown_finding(f,d)
             if not fs: lines += ['No additional items recorded.','']
         if repeated:
             lines += ['<details><summary>Full repetitive per-column findings</summary>','']
-            for f in repeated: lines += markdown_finding(f)
+            for f in repeated: lines += markdown_finding(f,d)
             lines += ['</details>','']
         lines += temporal_markdown(d)
         lines += ['## Relations','',md_text(d['selection'].get('ranking_rule','Legacy input-order selection; no relevance ranking recorded.')),'',
@@ -383,6 +387,6 @@ def render_markdown(result: ProfilingResult):
     return '\n'.join(lines).rstrip()+'\n'
 
 
-def markdown_finding(f):
-    return [f'<a id="{escape(f["id"],quote=True)}"></a>',md_text(f['message'],columns=f.get('columns',[]),verdict=True,inferred=f['kind'] in {'hypothesis','interpretation'}),'',md_text('Gate: '+inline_rule(f),verdict=True,columns=f.get('columns',[])) if inline_rule(f) else '',
-            '<details><summary>Evidence and uncertainty</summary>','',readable_md({'evidence':f['evidence'],'generator':f['generator'],'uncertainty':f['uncertainty'],'provenance':f['provenance']}),'</details>','']
+def markdown_finding(f,document=None):
+    return [f'<a id="{escape(f["id"],quote=True)}"></a>',markdown_tree(finding_tree(f,document),columns=f.get('columns',[])),'','\n'.join('- '+md_text('Gate: '+line,verdict=True,columns=f.get('columns',[])) for line in [inline_rule(f)]) if inline_rule(f) and f.get('rule')!='target_group_contrast' else '',
+            '<details><summary>Evidence and uncertainty</summary>','',evidence_markdown({'evidence':f['evidence'],'generator':f['generator'],'uncertainty':f['uncertainty'],'provenance':f['provenance']}),'</details>','']

@@ -12,8 +12,10 @@ from html import escape as html_escape
 from .renderers import KINDS, omitted, omitted_notes, repetition_groups, sample_cell, scalar, summary_rows
 from .presentation import formatted, column_tables, structured_tables, formatted_examples, display_charts, top_n_reason, original_tick
 from .target import target_tables
-from .palette import LIGHT as C
+from .palette import LIGHT as C,KIND_COLOURS
 from .report_style import runs
+from .summary_view import summary_panels,report_options
+from .finding_view import finding_tree
 
 
 def escape(value):
@@ -26,7 +28,7 @@ def finding_topics(d):
     repeated={f['id'] for _,items in groups for f in items}
     for kind,title in KINDS:
         messages=[message for message,items in groups if items and items[0]['kind']==kind]
-        messages += [f['message'] for f in d.get('findings',[]) if f['kind']==kind and f['id'] not in repeated]
+        messages += [finding_tree(f,d)['text']+''.join('\n  - '+line for line in finding_tree(f,d)['children']) for f in d.get('findings',[]) if f['kind']==kind and f['id'] not in repeated]
         if messages:yield title,messages
 
 
@@ -75,7 +77,7 @@ def summary_topics(d):
             yield name,[x[:210]+('… [full report]' if len(x)>210 else '') for x in lines[:5]]+[f'Showing {min(5,len(lines))} of {len(lines)} measures; full detail in saved artifact/full deck.']
 
 
-def pdf_bytes(d):
+def pdf_bytes(d,report=None):
     from reportlab import rl_config
     from reportlab.lib import colors
     from reportlab.lib.enums import TA_RIGHT
@@ -97,10 +99,12 @@ def pdf_bytes(d):
         replacements+=sum(ord(c) not in supported and c not in '\n\r\t' for c in value)
         return ''.join(c if ord(c) in supported or c in '\n\r\t' else '?' for c in value)
     styles=getSampleStyleSheet()
-    for style in styles.byName.values():style.fontName=font
+    for style in styles.byName.values():style.fontName=font;style.textColor=colors.HexColor(C['ink'])
     styles['BodyText'].fontSize=8;styles['BodyText'].leading=11;styles['BodyText'].wordWrap='CJK'
     columns=[c['name'] for c in d.get('columns',[])]
     def p(value,style='BodyText'):
+        # Vera has no right-arrow glyph; spell out the generated gate connector.
+        if str(value).startswith('gate: '):value=str(value).replace(' → ',' leads to ')
         if str(value).startswith('Examples: '):return Paragraph('Examples: <font name="Courier">'+escape(text(str(value)[10:]))+'</font>',styles[style])
         markup=[]
         inferred=(str(value)==identity(d)[1] and d.get('dataset',{}).get('description',{}).get('status')=='inferred') or (style=='Title' and d.get('dataset',{}).get('title',{}).get('status')=='inferred')
@@ -118,6 +122,14 @@ def pdf_bytes(d):
     title,description,basis=identity(d)
     story.extend([p(title,'Title'),p(description),p(basis),p('Unsupported characters are replaced with ?. Exact source text remains in HTML/Markdown and JSON.')])
 
+    if d['kind']=='profile':
+        heading('Distribution summaries')
+        story.append(p('Stored metrics only; n valid/finite/nonmissing; missing share uses all rows. Top value share uses nonmissing values; text entropy/length use stored raw lexemes including blanks. Parse coverage is not calendar completeness. Unavailable statistics are not reconstructed.'))
+        for panel in summary_panels(d,report,max_columns=5):
+            story.append(p(panel['caption'],'Heading3'))
+            widths=[105]+[385/(len(panel['headers'])-1)]*(len(panel['headers'])-1)
+            table([panel['headers'],*panel['rows']],widths)
+
     class Chart(Flowable):
         def __init__(self,ch):
             super().__init__();self.ch=ch;self.width=480
@@ -126,7 +138,7 @@ def pdf_bytes(d):
                 self.height=min(600,plot_marks(ch)[1]*480/560+50)
             else:self.height=140 if ch['kind']=='box' else 250 if ch['kind']!='bar' else max(200,110+len(ch.get('data',[]))*12)
         def draw(self):
-            c=self.canv;ch=self.ch;c.setFont(font,8)
+            c=self.canv;ch=self.ch;c.setFont(font,8);c.setFillColor(colors.HexColor(C['ink']));c.setStrokeColor(colors.HexColor(C['accent']))
             from .charts import linear_ticks, count_ticks
             from .presentation import tick_label
             def wrapped(value,y):
@@ -230,9 +242,12 @@ def pdf_bytes(d):
                 story.append(p(t['caption']));table([t['headers'],*t['rows']],[490/len(t['headers'])]*len(t['headers']),t['numeric'])
     for name,messages in finding_topics(d):
         story.append(p(name,'Heading3'))
-        if len(messages)>=3:story.append(ListFlowable([p(message) for message in messages],bulletType='bullet',leftIndent=12,bulletFontName=font,bulletFontSize=8))
-        else:
-            for message in messages:story.append(p(message))
+        for message in messages:
+            parts=message.split('\n  - ')
+            if len(parts)>1:
+                for start in range(1,len(parts),8):
+                    story.append(KeepTogether([p(parts[0]+(' (continued)' if start>1 else '')),ListFlowable([p(line) for line in parts[start:start+8]],bulletType='bullet',leftIndent=16,bulletFontName=font,bulletFontSize=8)]))
+            else:story.append(p(parts[0]))
     if d['kind']=='profile':
         heading('Relations')
         story.append(p(d['selection'].get('ranking_rule','Ranking not recorded.')))
@@ -246,7 +261,9 @@ def pdf_bytes(d):
             for t in structured_tables('Relationship statistics',pair['statistics']):
                 story.append(p(t['caption']));table([t['headers'],*t['rows']],[490/len(t['headers'])]*len(t['headers']),t['numeric'])
     output=io.BytesIO()
-    SimpleDocTemplate(output,pagesize=(612,792),leftMargin=56,rightMargin=56,topMargin=40,bottomMargin=40,title=text(title),author='Fathom',invariant=1,pageCompression=0).build(story)
+    def page_background(canvas,doc):
+        canvas.saveState();canvas.setFillColor(colors.HexColor(C['panel']));canvas.rect(0,0,612,792,stroke=0,fill=1);canvas.restoreState()
+    SimpleDocTemplate(output,pagesize=(612,792),leftMargin=56,rightMargin=56,topMargin=40,bottomMargin=40,title=text(title),author='Fathom',invariant=1,pageCompression=0).build(story,onFirstPage=page_background,onLaterPages=page_background)
     return output.getvalue(),{'unsupported_glyph_replacements':replacements}
 
 
@@ -288,55 +305,86 @@ def target_slide_views(chart):
     return views
 
 
-def pptx_bytes(d,full=False):
+def pptx_bytes(d,full=False,report=None):
     from pptx import Presentation
     from pptx.chart.data import CategoryChartData, XyChartData
     from pptx.enum.chart import XL_CHART_TYPE, XL_DATA_LABEL_POSITION, XL_TICK_MARK
     from pptx.enum.shapes import MSO_SHAPE
     from pptx.util import Inches, Pt
     from pptx.enum.text import PP_ALIGN
+    from pptx.dml.color import RGBColor
     deck=Presentation();deck.slide_width=Inches(13.333);deck.slide_height=Inches(7.5)
     title,description,basis=identity(d)
     props=deck.core_properties;props.title=title;props.author='Fathom';props.last_modified_by='Fathom';props.created=datetime(2000,1,1);props.modified=datetime(2000,1,1);props.revision=1
+    def paint(shape):
+        shape.fill.solid();shape.fill.fore_color.rgb=RGBColor.from_string(C['accent'][1:]);shape.line.fill.background();return shape
     def slide(name,lines=(),enumeration=False):
         s=deck.slides.add_slide(deck.slide_layouts[5]);s.shapes.title.text=name
+        s.background.fill.solid();s.background.fill.fore_color.rgb=RGBColor.from_string(C['panel'][1:])
         for paragraph in s.shapes.title.text_frame.paragraphs:
-            paragraph.font.size=Pt(24)
+            paragraph.font.size=Pt(24);paragraph.font.color.rgb=RGBColor.from_string(C['ink'][1:])
             if name==title and d.get('dataset',{}).get('title',{}).get('status')=='inferred':paragraph.font.italic=True
         box=s.shapes.add_textbox(Inches(.6),Inches(1.5),Inches(12),Inches(5.5));tf=box.text_frame;tf.word_wrap=True
-        for i,line in enumerate(lines):
-            p=tf.paragraphs[0] if i==0 else tf.add_paragraph();p.font.size=Pt(17)
-            if enumeration:
+        expanded=[(part.removeprefix('  - '),1 if part.startswith('  - ') else 0) for line in lines for part in str(line).split('\n') if part]
+        for i,(line,depth) in enumerate(expanded):
+            p=tf.paragraphs[0] if i==0 else tf.add_paragraph();p.font.size=Pt(15 if depth else 17);p.font.color.rgb=RGBColor.from_string(C['ink'][1:]);p.level=depth
+            if enumeration or depth:
                 from pptx.oxml.xmlchemy import OxmlElement
-                pr=p._p.get_or_add_pPr();pr.set('marL','228600');pr.set('indent','-114300')
+                pr=p._p.get_or_add_pPr();pr.set('marL',str(228600+depth*228600));pr.set('indent','-114300')
                 bullet=OxmlElement('a:buChar');bullet.set('char','•');pr.insert_element_before(bullet,'a:tabLst','a:defRPr','a:extLst')
             inferred=str(line)==description and d.get('dataset',{}).get('description',{}).get('status')=='inferred'
             for part,role in runs(line,columns=[c['name'] for c in d.get('columns',[])],verdict=True,inferred=inferred):
-                run=p.add_run();run.text=part;run.font.bold=role=='verdict';run.font.italic=role=='inferred'
+                run=p.add_run();run.text=part;run.font.bold=role=='verdict';run.font.italic=role=='inferred';run.font.color.rgb=RGBColor.from_string(C['ink'][1:])
                 if role=='literal':run.font.name='Courier New'
         return s
     def topics(name,lines):
-        # Bound text per slide; continuation retains the same single topic.
+        # Keep a complete small finding together; repeat context for a long continuation.
         chunks=[];current=[];length=0
-        for line in lines:
-            for start in range(0,max(1,len(line)),280):
-                part=line[start:start+280]
-                if current and (len(current)>=6 or length+len(part)>850):chunks.append(current);current=[];length=0
-                current.append(part);length+=len(part)
+        for message in lines:
+            parts=[part for part in message.split('\n') if part];size=sum(map(len,parts))
+            if len(parts)<=10 and size<=950:
+                if current and (len(current)+len(parts)>10 or length+size>950):chunks.append(current);current=[];length=0
+                current.extend(parts);length+=size
+            else:
+                if current:chunks.append(current);current=[];length=0
+                parent=parts[0] if parts else name
+                for part in parts:
+                    if current and (len(current)>=10 or length+len(part)>950):chunks.append(current);current=[parent+' (continued)'];length=len(parent)+12
+                    current.append(part);length+=len(part)
+                if current:chunks.append(current);current=[];length=0
         if current or not chunks:chunks.append(current)
         for i,chunk in enumerate(chunks):slide(name+(f' ({i+1}/{len(chunks)})' if len(chunks)>1 else ''),chunk,enumeration=len(lines)>=3)
     available=chart_topics(d);requested=available if full else summary_chart_topics(d)
-    chosen=[];remaining=7
+    all_panels=summary_panels(d,report,max_columns=6,max_rows=10) if d['kind']=='profile' else []
+    if full:panels=all_panels
+    else:
+        panels=[];seen=set()
+        for panel in all_panels:
+            typ=panel['caption'].split(' column metrics')[0]
+            if typ not in seen and len(panels)<5:panels.append(panel);seen.add(typ)
+        for panel in all_panels:
+            if len(panels)>=5:break
+            if panel not in panels:panels.append(panel)
+    chosen=[];remaining=7-len(panels)
     for ch in requested:
         cost=len(target_slide_views(ch))
         if full or cost<=remaining:
             chosen.append(ch);remaining-=cost
     views=[view for ch in chosen for view in target_slide_views(ch)]
     if not full:
-        slide(title,[description,basis,f'Summary deck: {len(chosen)} of {len(available)} charts; bounded findings. Multi-panel charts share the7chart-slide budget. Use --deck full for all topics.','Rule-based observations; suggested actions need human review.'])
+        slide(title,[description,basis,f'Summary deck: {len(chosen)} of {len(available)} charts; bounded findings. Multi-panel charts share the7chart-slide budget. Use --deck full for all topics.','Rule-based observations; suggested actions need human review.',f'Summary tables: {len(panels)} of {len(all_panels)} panels; configured orientation. Use --deck full for omitted panels.'])
         for name,lines in summary_topics(d):slide(name,lines,enumeration=len(lines)>=3)
     else:
         topics(title,[description,basis,'Full deck: all available topics and charts. Rule-based observations require review.'])
+    for panel in panels:
+        s=slide(panel['caption']);grid=[panel['headers'],*panel['rows']]
+        shape=s.shapes.add_table(len(grid),len(grid[0]),Inches(.6),Inches(1.6),Inches(12),Inches(min(5.1,.42*len(grid))));table=shape.table
+        table.columns[0].width=Inches(2.2)
+        for col in list(table.columns)[1:]:col.width=Inches(9.8/(len(grid[0])-1))
+        for ri,row in enumerate(grid):
+            for ci,value in enumerate(row):
+                cell=table.cell(ri,ci);cell.text=str(value);cell.fill.solid();cell.fill.fore_color.rgb=RGBColor.from_string(C['tint' if ri==0 else 'panel'][1:])
+                for para in cell.text_frame.paragraphs:para.font.size=Pt(13);para.font.color.rgb=RGBColor.from_string(C['ink'][1:])
     if full and d['kind']=='profile':topics('Dataset summary',[name+': '+value for name,value,_ in summary_rows(d)])
     elif full:
         for name,key in [('Contexts','contexts'),('Context differences','context_differences'),('Measured deltas','deltas'),('Limitations','limitations')]:
@@ -390,11 +438,11 @@ def pptx_bytes(d,full=False):
             b=ch['box'];scale=max(abs(b['min']),abs(b['max']),1);lo=b['min']/scale;span=b['max']/scale-lo
             def x(v):return Inches(1+11*((v/scale-lo)/span if span else .5))
             for a,z,y,h in [('min','max',3.4,.02),('q1','q3',3.3,.2),('median','median',3.3,.2)]:
-                s.shapes.add_shape(MSO_SHAPE.RECTANGLE,x(b[a]),Inches(y),max(Inches(.02),x(b[z])-x(b[a])),Inches(h))
+                paint(s.shapes.add_shape(MSO_SHAPE.RECTANGLE,x(b[a]),Inches(y),max(Inches(.02),x(b[z])-x(b[a])),Inches(h)))
             from .charts import linear_ticks
             from .presentation import tick_label
             for value in linear_ticks(b['min'],b['max']):
-                s.shapes.add_shape(MSO_SHAPE.RECTANGLE,x(value),Inches(4.2),Inches(.01),Inches(.1))
+                paint(s.shapes.add_shape(MSO_SHAPE.RECTANGLE,x(value),Inches(4.2),Inches(.01),Inches(.1)))
                 label=s.shapes.add_textbox(x(value)-Inches(.5),Inches(4.35),Inches(1),Inches(.35))
                 label.text_frame.text=tick_label(value)
                 for paragraph in label.text_frame.paragraphs:
@@ -415,9 +463,16 @@ def pptx_bytes(d,full=False):
                 chart_type=XL_CHART_TYPE.BAR_CLUSTERED if ch['kind']=='bar' else XL_CHART_TYPE.COLUMN_CLUSTERED
             chart=s.shapes.add_chart(chart_type,Inches(.7),Inches(1.6),Inches(12),Inches(4.8),values).chart
             chart.has_legend=False;chart.has_title=False
+            for series in chart.series:
+                series.format.fill.solid();series.format.fill.fore_color.rgb=RGBColor.from_string(C['accent'][1:]);series.format.line.color.rgb=RGBColor.from_string(C['accent'][1:])
             chart.category_axis.has_title=True;chart.category_axis.axis_title.text_frame.text=ch['y_label'] if ch['kind']=='bar' else ch['x_label']
             chart.value_axis.has_title=True;chart.value_axis.axis_title.text_frame.text=ch['x_label'] if ch['kind']=='bar' else ch['y_label']
             chart.category_axis.tick_labels.font.size=Pt(12);chart.value_axis.tick_labels.font.size=Pt(12)
+            chart.category_axis.tick_labels.font.color.rgb=RGBColor.from_string(C['ink'][1:]);chart.value_axis.tick_labels.font.color.rgb=RGBColor.from_string(C['ink'][1:])
+            for axis in [chart.category_axis,chart.value_axis]:
+                axis.format.line.color.rgb=RGBColor.from_string(C['accent_faint'][1:])
+                if axis.has_major_gridlines:axis.major_gridlines.format.line.color.rgb=RGBColor.from_string(C['accent_faint'][1:])
+                for para in axis.axis_title.text_frame.paragraphs:para.font.color.rgb=RGBColor.from_string(C['ink'][1:])
             chart.value_axis.tick_labels.number_format='#,##0.###'
             if ch['kind']=='ecdf':
                 import math
@@ -431,7 +486,7 @@ def pptx_bytes(d,full=False):
                     log=OxmlElement('c:logBase');log.set('val','10');chart.category_axis._element.scaling.insert(0,log)
             else:
                 chart.value_axis.minimum_scale=0
-                chart.plots[0].has_data_labels=True;labels=chart.plots[0].data_labels;labels.position=XL_DATA_LABEL_POSITION.OUTSIDE_END;labels.font.size=Pt(11);labels.number_format='#,##0;-#,##0;'
+                chart.plots[0].has_data_labels=True;labels=chart.plots[0].data_labels;labels.position=XL_DATA_LABEL_POSITION.OUTSIDE_END;labels.font.size=Pt(11);labels.font.color.rgb=RGBColor.from_string(C['ink'][1:]);labels.number_format='#,##0;-#,##0;'
             notes=[]
             if ch['kind']!='ecdf' and shortened!=categories:
                 notes.append('Long labels shortened with …; full labels in slide notes and artifact.')
@@ -445,11 +500,17 @@ def pptx_bytes(d,full=False):
             if notes:
                 box=s.shapes.add_textbox(Inches(.7),Inches(6.6),Inches(12),Inches(.65));box.text_frame.text=' '.join(notes)
                 for paragraph in box.text_frame.paragraphs:paragraph.font.size=Pt(12)
+    for slide_item in deck.slides:
+        for shape in slide_item.shapes:
+            if shape.has_text_frame:
+                for para in shape.text_frame.paragraphs:
+                    para.font.color.rgb=RGBColor.from_string(C['ink'][1:])
+                    for run in para.runs:run.font.color.rgb=RGBColor.from_string(C['ink'][1:])
     output=io.BytesIO();deck.save(output)
-    return normalized_zip(output.getvalue()),{'slides':len(deck.slides),'mode':'full' if full else 'summary','included_charts':len(chosen),'omitted_charts':len(available)-len(chosen),'chart_slides':len(views)}
+    return normalized_zip(output.getvalue()),{'slides':len(deck.slides),'mode':'full' if full else 'summary','included_charts':len(chosen),'omitted_charts':len(available)-len(chosen),'chart_slides':len(views),'included_summary_panels':len(panels),'omitted_summary_panels':len(all_panels)-len(panels),'summary_orientation':report_options({'report':report or {}})['summary_orientation']}
 
 
-def export_bundle(result,formats,deck='summary'):
+def export_bundle(result,formats,deck='summary',report=None):
     if deck not in {'summary','full'}:raise ValueError('deck must be summary or full')
     serializers={'pdf':pdf_bytes,'pptx':pptx_bytes};files={}
     status={'artifact_sha256':hashlib.sha256(result.to_json().encode()).hexdigest(),'formats':{}}
@@ -458,7 +519,7 @@ def export_bundle(result,formats,deck='summary'):
         # Omitted optional sections (spec012) are dropped from the view, never from the artifact.
         view={k:v for k,v in result.document.items() if k not in omitted(result.document)}
         try:
-            data,details=pptx_bytes(view,full=deck=='full') if fmt=='pptx' else serializers[fmt](view)
+            data,details=pptx_bytes(view,full=deck=='full',report=report) if fmt=='pptx' else serializers[fmt](view,report=report)
             files['report.'+fmt]=data
             status['formats'][fmt]={'status':'written','serializer':{'package':'reportlab' if fmt=='pdf' else 'python-pptx','version':version('reportlab' if fmt=='pdf' else 'python-pptx')},**details}
         except ImportError:

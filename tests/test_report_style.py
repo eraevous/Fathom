@@ -1,3 +1,4 @@
+from html_helpers import assert_finding_preserved
 """Reader-facing semantics, not a second set of analytical verdict rules."""
 from html.parser import HTMLParser
 from pathlib import Path
@@ -73,7 +74,7 @@ def test_finding_verdict_remains_outside_collapsed_provenance_and_order_unchange
     p=fixture();h=render_html(p);r=Read();r.feed(h)
     for f in p.document['findings']:
         # Repetition summaries may hide the original; all source messages remain.
-        assert f['message'] in ReadText(h)
+        assert_finding_preserved(f,h)
     for t,s in r.nodes:
         if any(tag=='article' and 'finding' in a.get('class','') for tag,a in s) and 'Generator:' in t:
             assert any(tag=='details' and 'open' not in a for tag,a in s)

@@ -11,7 +11,7 @@ PALETTE=CATEGORICAL
 def plot_marks(ch):
     """Return width,height and simple vector marks; original values stay in artifact."""
     kind=ch['kind'];marks=[];width=560;left,right,top,bottom=75,510,25,235
-    def line(x1,y1,x2,y2,color=C['grid']):marks.append(('line',x1,y1,x2,y2,color))
+    def line(x1,y1,x2,y2,color=C['accent_faint']):marks.append(('line',x1,y1,x2,y2,color))
     def text(x,y,value,anchor='start',size=18):marks.append(('text',x,y,str(value),anchor,size))
     def rect(x,y,w,h,color):marks.append(('rect',x,y,w,h,color))
     def axis(values,lo,hi,scale,start,end,horizontal=True):
@@ -43,7 +43,7 @@ def plot_marks(ch):
             text(left-12,y+16,sample,'end',14)
             b=row.get('box')
             if b:
-                line(xp(b['min']),y,xp(b['max']),y,C['accent']);rect(xp(b['q1']),y-9,max(1,xp(b['q3'])-xp(b['q1'])),18,C['soft_border']);line(xp(b['median']),y-10,xp(b['median']),y+10,C['ink'])
+                line(xp(b['min']),y,xp(b['max']),y,C['accent']);rect(xp(b['q1']),y-9,max(1,xp(b['q3'])-xp(b['q1'])),18,C['accent_faint']);line(xp(b['median']),y-10,xp(b['median']),y+10,C['ink'])
             else:text(left,y+5,'No positive values',size=14)
         return width,bottom+35,marks
     # Rates: one stacked bar per bin/group, explicit n including empty bins.

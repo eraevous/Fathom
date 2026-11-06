@@ -118,7 +118,7 @@ def stem(g, which):
     title = f"{g['granularity'].capitalize()} {'ACF' if which == 'acf' else 'PACF'} — stem plot"
     out = [f'<svg role="img" data-kind="stem" aria-label="{escape(title, quote=True)}" viewBox="0 0 {w} {h}"><title>{escape(title)}</title>']
     for v in (-1, -.5, 0, .5, 1):
-        out.append(f'<line x1="{left}" y1="{py(v):.1f}" x2="{right}" y2="{py(v):.1f}" stroke="{C["border"]}"/>')
+        out.append(f'<line x1="{left}" y1="{py(v):.1f}" x2="{right}" y2="{py(v):.1f}" stroke="{C["accent_faint"]}"/>')
         out.append(f'<text x="{left-6}" y="{py(v)+5:.1f}" text-anchor="end" class="tick-label">{v:g}</text>')
     for b, dash in ((c["band"], "5 4"), (c["family_band"], "2 3")):
         if b is None: continue

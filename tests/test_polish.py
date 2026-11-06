@@ -10,7 +10,7 @@ from fathom.presentation import column_tables
 
 def test_compact_closed_headers_and_scaled_grid(make_profile):
     html=render_html(make_profile('amount\n1\n2\n3\n'))
-    assert '<details class="column-entry">' in html
+    assert '<details class="column-entry" id="dictionary-column-' in html
     assert '<details class="column-entry" open' not in html
     assert 'column-grid' in html and 'grid-template-columns' in html
     assert '.chart svg{width:100%' in html
