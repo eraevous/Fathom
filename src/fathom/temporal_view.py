@@ -12,7 +12,7 @@ TEMPORAL_CSS = ('.temporal-tables .table-scroll{max-width:100%;overflow-x:auto}'
                 '.temporal-tables td{overflow-wrap:normal;word-break:normal}')
 
 EDGE_NOTE = ("Boundary coverage measures timestamp span, not observation exposure. The final timestamp includes one unit of its written precision "
-             "(day, minute or second). Amplitude totals include any flagged partial edges; they are not rescaled.")
+             "(year, day, minute or second). Amplitude totals include any flagged partial edges; they are not rescaled.")
 
 INTRO = ("Declared series only. Periods are regularised by aggregation; the four sparsity dimensions are measured per "
          "granularity. Statements are patterns under the stated rules, not causes; questions go to the data owner. "

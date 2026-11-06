@@ -137,8 +137,10 @@ def temporal(rows, columns, cfg, observe):
         dated = [(i, date.fromisoformat(p["date"])) for i, r in enumerate(rows)
                  if r[index] is not None and (p := parse_date(r[index], fmt)) is not None]
         entry = {"column": name, "dated_values": len(dated), "period": None, "fence": None, "duplicate_timestamps": None}
+        resolution='year precision (1 January anchors)' if fmt=='YEAR' else 'day resolution'
         if len(dated) >= 20:
-            for grain, label in (("month", lambda d: d.strftime("%Y-%m")), ("year", lambda d: str(d.year))):
+            periods_to_check=(("year",lambda d:str(d.year)),) if fmt=='YEAR' else (("month",lambda d:d.strftime("%Y-%m")),("year",lambda d:str(d.year)))
+            for grain, label in periods_to_check:
                 periods = Counter(label(d) for _, d in dated)
                 top, count = sorted(periods.items(), key=lambda x: (-x[1], x[0]))[0]
                 if count < len(dated) and count / len(dated) >= .99:
@@ -147,7 +149,7 @@ def temporal(rows, columns, cfg, observe):
                     entry["period"] = {"grain": grain, "period": top, "inside": count, "outside": len(outside), "share_inside": count / len(dated),
                                        "positions": positions(outside), "values": values[:LIMIT]}
                     observe(f"rows-period-{index}", "temporal_period", [name],
-                            f"{count:,} of {len(dated):,} {name} values ({count/len(dated):.2%}) fall in {grain} {top}; {len(outside):,} outside it at day resolution "
+                            f"{count:,} of {len(dated):,} {name} values ({count/len(dated):.2%}) fall in {grain} {top}; {len(outside):,} outside it at {resolution} "
                             f"({shown(outside)}: {', '.join(values[:3])}{'…' if len(values) > 3 else ''}). Stragglers inside {top} are not detected by this rule.",
                             entry["period"], f"Do the {name} values outside {top} belong to this extract?")
                     break
@@ -161,7 +163,7 @@ def temporal(rows, columns, cfg, observe):
                     entry["fence"] = {"low": date.fromordinal(max(1, int(-(-low // 1)))).isoformat(), "high": date.fromordinal(min(date.max.toordinal(), int(high // 1))).isoformat(),
                                       "iqr_days": iqr, "count": len(far), "positions": positions(far)}
                     observe(f"rows-fence-{index}", "temporal_fence", [name],
-                            f"{len(far)} {name} values lie outside {entry['fence']['low']}..{entry['fence']['high']} (quartiles ± 3×IQR at day resolution, IQR {iqr:g} days; {shown(far)}).",
+                            f"{len(far)} {name} values lie outside {entry['fence']['low']}..{entry['fence']['high']} (quartiles ± 3×IQR at {resolution}, IQR {iqr:g} days; {shown(far)}).",
                             entry["fence"], f"Are the far {name} values genuine, mis-keyed, or placeholders?")
         stamped = [(i, p[0]) for i, r in enumerate(rows) if r[index] is not None and (p := parse_datetime(r[index])) is not None and p[1]]
         values = [r[index] for r in rows if r[index] is not None]

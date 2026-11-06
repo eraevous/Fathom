@@ -23,12 +23,14 @@ def usable(p):
 def floor(d, grain):
     if grain == 'day': return d
     if grain == 'week': return d - timedelta(days=d.weekday())
+    if grain == 'year': return d.replace(month=1,day=1)
     return d.replace(day=1)
 
 
 def advance(d, grain):
     if grain == 'day': return d + timedelta(days=1)
     if grain == 'week': return d + timedelta(days=7)
+    if grain == 'year': return date(d.year+1,1,1)
     return date(d.year + (d.month == 12), d.month % 12 + 1, 1)
 
 
@@ -76,6 +78,8 @@ def seasonal(periods, grain, cycle):
             end = advance(start, cycle) if cycle != 'year' else date(start.year + 1, 1, 1)
             if start >= first and end - timedelta(days=1) <= last: covered += 1
             start = end
+    if grain=='year':
+        return {'calendar_cycles_covered':covered,'complete_cycles':0,'strength':estimate(status='not estimable',reason='annual totals cannot resolve within-year seasonality')}
     if cycle == 'week' and grain != 'day' or cycle == 'month' and grain != 'day':
         return {'calendar_cycles_covered': covered, 'complete_cycles': 0, 'strength': estimate(status='not estimable', reason='native grain cannot resolve this cycle')}
     for p in periods:
