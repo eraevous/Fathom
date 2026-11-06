@@ -59,7 +59,10 @@ def key_findings(d):
 
 def headlines_html(d):
     items=key_findings(d)
-    return '<section id="key-findings"><h2>Key findings</h2>'+('<ul>'+''.join('<li>'+escape(i['message'])+' <a href="#'+escape(i['ref'].split('#')[0],quote=True)+'">Evidence</a></li>' for i in items)+'</ul>' if items else '<p>No matching headline evidence; this is not a quality verdict.</p>')+'</section>'
+    tag='li' if len(items)>=3 else 'p'
+    body=''.join('<'+tag+'>'+escape(i['message'])+' <a href="#'+escape(i['ref'].split('#')[0],quote=True)+'">Evidence</a></'+tag+'>' for i in items)
+    return '<section id="key-findings"><h2>Key findings</h2>'+('<ul>'+body+'</ul>' if len(items)>=3 else body or '<p>No matching headline evidence; this is not a quality verdict.</p>')+'</section>'
+
 
 
 def inline_rule(f):

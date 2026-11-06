@@ -1,0 +1,20 @@
+{
+  "parent_artifacts_identical": {
+    "brief.json": "56a3e6565f0a27dabe1e316847b4806c1dfa45971aad9d30dbb7db96cfe8b0ad",
+    "panel.json": "9d40c5479abab55ffe6d3e0d3fb281083377d5f2212d497cbf299c43e4d4f3e5",
+    "profile.json": "5009348d72d4d66f4ea5b005f97e8649e538f29f91dab2aae74ced705219555f"
+  },
+  "rerun_all_files_identical": [
+    "brief.html",
+    "brief.json",
+    "hashes.json",
+    "panel.html",
+    "panel.json",
+    "panel.md",
+    "profile.html",
+    "profile.json",
+    "profile.md",
+    "report.pdf",
+    "report.pptx"
+  ]
+}

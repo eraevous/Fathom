@@ -13,6 +13,7 @@ from .renderers import KINDS, omitted, omitted_notes, repetition_groups, sample_
 from .presentation import formatted, column_tables, structured_tables, formatted_examples, display_charts, top_n_reason, original_tick
 from .target import target_tables
 from .palette import LIGHT as C
+from .report_style import runs
 
 
 def escape(value):
@@ -81,10 +82,13 @@ def pdf_bytes(d):
     from reportlab.lib.styles import getSampleStyleSheet
     from reportlab.pdfbase import pdfmetrics
     from reportlab.pdfbase.ttfonts import TTFont
-    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Flowable, KeepTogether
+    from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Flowable, KeepTogether, ListFlowable
     font='FathomVera'
     if font not in pdfmetrics.getRegisteredFontNames():
         pdfmetrics.registerFont(TTFont(font,str(Path(rl_config.__file__).parent/'fonts'/'Vera.ttf')))
+    for suffix,filename in [('Bold','VeraBd.ttf'),('Oblique','VeraIt.ttf'),('BoldOblique','VeraBI.ttf')]:
+        if font+'-'+suffix not in pdfmetrics.getRegisteredFontNames():pdfmetrics.registerFont(TTFont(font+'-'+suffix,str(Path(rl_config.__file__).parent/'fonts'/filename)))
+    pdfmetrics.registerFontFamily(font,normal=font,bold=font+'-Bold',italic=font+'-Oblique',boldItalic=font+'-BoldOblique')
     supported=pdfmetrics.getFont(font).face.charToGlyph
     replacements=0
     def text(value):
@@ -95,7 +99,15 @@ def pdf_bytes(d):
     styles=getSampleStyleSheet()
     for style in styles.byName.values():style.fontName=font
     styles['BodyText'].fontSize=8;styles['BodyText'].leading=11;styles['BodyText'].wordWrap='CJK'
-    def p(value,style='BodyText'):return Paragraph(escape(text(value)).replace('\n','<br/>'),styles[style])
+    columns=[c['name'] for c in d.get('columns',[])]
+    def p(value,style='BodyText'):
+        if str(value).startswith('Examples: '):return Paragraph('Examples: <font name="Courier">'+escape(text(str(value)[10:]))+'</font>',styles[style])
+        markup=[]
+        inferred=(str(value)==identity(d)[1] and d.get('dataset',{}).get('description',{}).get('status')=='inferred') or (style=='Title' and d.get('dataset',{}).get('title',{}).get('status')=='inferred')
+        for part,role in runs(text(value),columns=columns,verdict=style=='BodyText',inferred=inferred):
+            safe=escape(part).replace('\n','<br/>')
+            markup.append('<b>'+safe+'</b>' if role=='verdict' else '<i>'+safe+'</i>' if role=='inferred' else '<font name="Courier">'+safe+'</font>' if role=='literal' else safe)
+        return Paragraph(''.join(markup),styles[style])
     story=[]
     def heading(value):story.extend([Spacer(1,10),p(value,'Heading2')])
     right=styles['BodyText'].clone('Numeric');right.alignment=TA_RIGHT
@@ -218,7 +230,9 @@ def pdf_bytes(d):
                 story.append(p(t['caption']));table([t['headers'],*t['rows']],[490/len(t['headers'])]*len(t['headers']),t['numeric'])
     for name,messages in finding_topics(d):
         story.append(p(name,'Heading3'))
-        for message in messages:story.append(p(message))
+        if len(messages)>=3:story.append(ListFlowable([p(message) for message in messages],bulletType='bullet',leftIndent=12,bulletFontName=font,bulletFontSize=8))
+        else:
+            for message in messages:story.append(p(message))
     if d['kind']=='profile':
         heading('Relations')
         story.append(p(d['selection'].get('ranking_rule','Ranking not recorded.')))
@@ -284,12 +298,22 @@ def pptx_bytes(d,full=False):
     deck=Presentation();deck.slide_width=Inches(13.333);deck.slide_height=Inches(7.5)
     title,description,basis=identity(d)
     props=deck.core_properties;props.title=title;props.author='Fathom';props.last_modified_by='Fathom';props.created=datetime(2000,1,1);props.modified=datetime(2000,1,1);props.revision=1
-    def slide(name,lines=()):
+    def slide(name,lines=(),enumeration=False):
         s=deck.slides.add_slide(deck.slide_layouts[5]);s.shapes.title.text=name
-        for paragraph in s.shapes.title.text_frame.paragraphs:paragraph.font.size=Pt(24)
+        for paragraph in s.shapes.title.text_frame.paragraphs:
+            paragraph.font.size=Pt(24)
+            if name==title and d.get('dataset',{}).get('title',{}).get('status')=='inferred':paragraph.font.italic=True
         box=s.shapes.add_textbox(Inches(.6),Inches(1.5),Inches(12),Inches(5.5));tf=box.text_frame;tf.word_wrap=True
         for i,line in enumerate(lines):
-            p=tf.paragraphs[0] if i==0 else tf.add_paragraph();p.text=str(line);p.font.size=Pt(17)
+            p=tf.paragraphs[0] if i==0 else tf.add_paragraph();p.font.size=Pt(17)
+            if enumeration:
+                from pptx.oxml.xmlchemy import OxmlElement
+                pr=p._p.get_or_add_pPr();pr.set('marL','228600');pr.set('indent','-114300')
+                bullet=OxmlElement('a:buChar');bullet.set('char','•');pr.insert_element_before(bullet,'a:tabLst','a:defRPr','a:extLst')
+            inferred=str(line)==description and d.get('dataset',{}).get('description',{}).get('status')=='inferred'
+            for part,role in runs(line,columns=[c['name'] for c in d.get('columns',[])],verdict=True,inferred=inferred):
+                run=p.add_run();run.text=part;run.font.bold=role=='verdict';run.font.italic=role=='inferred'
+                if role=='literal':run.font.name='Courier New'
         return s
     def topics(name,lines):
         # Bound text per slide; continuation retains the same single topic.
@@ -300,7 +324,7 @@ def pptx_bytes(d,full=False):
                 if current and (len(current)>=6 or length+len(part)>850):chunks.append(current);current=[];length=0
                 current.append(part);length+=len(part)
         if current or not chunks:chunks.append(current)
-        for i,chunk in enumerate(chunks):slide(name+(f' ({i+1}/{len(chunks)})' if len(chunks)>1 else ''),chunk)
+        for i,chunk in enumerate(chunks):slide(name+(f' ({i+1}/{len(chunks)})' if len(chunks)>1 else ''),chunk,enumeration=len(lines)>=3)
     available=chart_topics(d);requested=available if full else summary_chart_topics(d)
     chosen=[];remaining=7
     for ch in requested:
@@ -310,7 +334,7 @@ def pptx_bytes(d,full=False):
     views=[view for ch in chosen for view in target_slide_views(ch)]
     if not full:
         slide(title,[description,basis,f'Summary deck: {len(chosen)} of {len(available)} charts; bounded findings. Multi-panel charts share the7chart-slide budget. Use --deck full for all topics.','Rule-based observations; suggested actions need human review.'])
-        for name,lines in summary_topics(d):slide(name,lines)
+        for name,lines in summary_topics(d):slide(name,lines,enumeration=len(lines)>=3)
     else:
         topics(title,[description,basis,'Full deck: all available topics and charts. Rule-based observations require review.'])
     if full and d['kind']=='profile':topics('Dataset summary',[name+': '+value for name,value,_ in summary_rows(d)])

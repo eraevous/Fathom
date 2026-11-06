@@ -1,3 +1,4 @@
+from html_helpers import visible_text
 import io
 import re
 
@@ -34,7 +35,7 @@ def test_order_rounding_and_examples(make_profile):
     assert [x for x in labels if x in ('Min','Q1','Median','Q3','Mean','Max')]==['Min','Q1','Median','Q3','Mean','Max']
     html=render_html(p)
     assert '85,343,400' in html and '146,083' in html
-    assert 'Examples: 146,083' in html
+    assert 'Examples: 146,083' in visible_text(html)
     assert 'column-statistics' in html
 
 

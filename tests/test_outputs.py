@@ -1,3 +1,4 @@
+from html_helpers import visible_text, assert_navigation_only_script
 import copy
 import json
 
@@ -19,7 +20,7 @@ def test_artifact_roundtrip_and_standalone_views(make_profile, tmp_path):
     for word in ("Dictionary", "Findings", "Working record", "Source", "inferred", "rule:review-v1"):
         assert word in html
     assert "<svg" in html
-    assert "<script" not in html and 'src="http' not in html and 'href="http' not in html
+    assert_navigation_only_script(html)
 
 
 def test_html_and_markdown_treat_input_as_text(make_profile):
