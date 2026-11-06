@@ -508,6 +508,7 @@ def state(k: str) -> str:
 
 
 def render_page(schema: dict, brief: str | None = None, download_name: str = "fathom.yaml") -> str:
+    from .report_style import style_html, STYLE_CSS, NAV_SCRIPT
     init, ds = schema["initial"], schema["dataset"]
     # Option lists are indexed so names never travel through attribute values the script trusts.
     target_options = [c["column"] for c in schema["target_candidates"]]
@@ -653,10 +654,11 @@ def render_page(schema: dict, brief: str | None = None, download_name: str = "fa
              '<noscript><p>JavaScript is off, so the YAML cannot be generated here. Write the keys by hand; see the README.</p></noscript></section></div></div>')
     if brief is not None:
         h[-1] = h[-1].replace('download="fathom.yaml"', 'download="'+attr(download_name)+'"').replace('--config fathom.yaml', '--config '+escape(download_name))
-    return ('<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
-            '<title>'+('Fathom liftoff' if brief is not None else 'Configure Fathom')+'</title><style>' + CSS + '</style></head><body>' + '\n'.join(h)
+    page = ('<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
+            '<title>'+('Fathom liftoff' if brief is not None else 'Configure Fathom')+'</title><style>' + CSS + STYLE_CSS + '</style></head><body>' + '\n'.join(h)
             + '\n<script type="application/json" id="fathom-schema">' + json_for_script(schema) + '</script>\n'
-            + '<script id="fathom-yaml">' + YAML_JS + '</script>\n<script>' + UI_JS + '</script>\n</body></html>\n')
+            + '<script id="fathom-yaml">' + YAML_JS + '</script>\n<script>' + UI_JS + '</script>\n'+(NAV_SCRIPT if brief is not None else '')+'</body></html>\n')
+    return style_html(page,columns=[c['name'] for c in schema['columns']])
 
 
 def schema_from_page(page: str) -> dict:

@@ -1,0 +1,50 @@
+{
+  "after-pdf-findings-1280.png": {
+    "page": 13,
+    "pages": 15,
+    "renderer": "ReportLab/PyMuPDF",
+    "width": 1280
+  },
+  "after-pdf-findings-390.png": {
+    "page": 13,
+    "pages": 15,
+    "renderer": "ReportLab/PyMuPDF",
+    "width": 390
+  },
+  "after-pdf-head-1280.png": {
+    "page": 1,
+    "pages": 15,
+    "renderer": "ReportLab/PyMuPDF",
+    "width": 1280
+  },
+  "after-pdf-head-390.png": {
+    "page": 1,
+    "pages": 15,
+    "renderer": "ReportLab/PyMuPDF",
+    "width": 390
+  },
+  "after-pptx-head-1280.png": {
+    "page": 1,
+    "pages": 10,
+    "renderer": "LibreOffice Impress/PyMuPDF",
+    "width": 1280
+  },
+  "after-pptx-head-390.png": {
+    "page": 1,
+    "pages": 10,
+    "renderer": "LibreOffice Impress/PyMuPDF",
+    "width": 390
+  },
+  "after-pptx-ranking-1280.png": {
+    "page": 4,
+    "pages": 10,
+    "renderer": "LibreOffice Impress/PyMuPDF",
+    "width": 1280
+  },
+  "after-pptx-ranking-390.png": {
+    "page": 4,
+    "pages": 10,
+    "renderer": "LibreOffice Impress/PyMuPDF",
+    "width": 390
+  }
+}

@@ -1,5 +1,6 @@
 """spec012: `guide configure` page, shared control schema, Python/JS YAML parity, escaping."""
 
+from html_helpers import visible_text, assert_navigation_only_script
 import json
 import os
 from pathlib import Path
@@ -176,7 +177,7 @@ def test_kate_acceptance_unseen_csv_configure_then_profile(tmp_path):
         cannot = text.split("What the data cannot tell")[1][:2000]
         assert "Sample rows section omitted by configuration" in cannot and "sections.samples: false" in cannot.replace("\\", "")
         assert "Random rows" not in text and "Histogram bins: 4 equal-width bins" in text
-    assert "<script" not in (report / "report.html").read_text()
+    assert_navigation_only_script((report / "report.html").read_text())
     assert doc["samples"]["first"]  # omitted from the views only, still in the artifact
 
 

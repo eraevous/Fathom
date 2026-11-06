@@ -133,8 +133,8 @@ def stem(g, which):
     out.append("</svg>")
     note = ("Dashed: per-lag 95% band ±1.96/√n; dotted: family-wise band; pale stems: lags beyond n/4 (poorly supported). "
             f"n = {c['n']} {g['granularity']} periods." + ("" if c["complete"] else " Missing periods: bands drawn are the widest per-lag bands (valid pairs); not-estimable lags are omitted."))
-    return ('<figure class="chart"><h4>' + escape(title) + "</h4>" + "".join(out) + '<div class="axis-captions"><p><strong>X:</strong> lag ('
-            + escape(g["granularity"]) + 's)</p><p><strong>Y:</strong> ' + ("autocorrelation" if which == "acf" else "partial autocorrelation")
+    return ('<figure class="chart"><p class="chart-title">' + escape(title) + "</p>" + "".join(out) + '<div class="axis-captions"><p>X: lag ('
+            + escape(g["granularity"]) + 's)</p><p>Y: ' + ("autocorrelation" if which == "acf" else "partial autocorrelation")
             + "</p></div><figcaption>" + escape(note) + "</figcaption></figure>")
 
 
@@ -162,7 +162,7 @@ def temporal_html(d):
         for g in s["granularities"]:
             if g["wavelength"]["values"]["status"] == "computed":
                 out += ["<details><summary>" + escape(g["granularity"].capitalize()) + " lag table</summary>", html_table(lag_table(g)), "</details>"]
-    out += ["<details><summary>Rules</summary><ul>" + "".join(f"<li><strong>{escape(k)}</strong>: {escape(v)}</li>" for k, v in ts["rules"].items()) + "</ul></details></section>"]
+    out += ["<details><summary>Rules</summary><ul>" + "".join(f"<li><code>{escape(k)}</code>: {escape(v)}</li>" for k, v in ts["rules"].items()) + "</ul></details></section>"]
     return "".join(out)
 
 

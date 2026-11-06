@@ -1,3 +1,4 @@
+from html_helpers import visible_text, assert_navigation_only_script
 from copy import deepcopy
 import csv
 import io
@@ -84,7 +85,7 @@ def test_column_inline_tables_formatting_and_raw_disclosure(make_profile):
     assert '10,014,234' in html and '47.24' in html and 'USD' in html
     assert 'Value</th>' in html and 'Share</th>' in html and 'class="num"' in html
     assert '10,014,234' in md
-    assert '<script' not in html
+    assert_navigation_only_script(html)
     hostile=make_profile('label\n"![x](https://example.org/x)"\n')
     assert '| ![x](' not in render_markdown(hostile)
 

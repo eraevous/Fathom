@@ -114,14 +114,15 @@ def html_table(table):
     for i,h in enumerate(table['headers']):out.append('<th scope="col"'+(' class="num"' if i in table['numeric'] else '')+'>'+escape(h)+'</th>')
     out.append('</tr></thead><tbody>')
     for row in table['rows']:
-        out.append('<tr>'+''.join('<td'+(' class="num"' if i in table['numeric'] else '')+'>'+escape(str(v))+'</td>' for i,v in enumerate(row))+'</tr>')
+        out.append('<tr>'+''.join('<td'+(' class="num"' if i in table['numeric'] else ' class="literal-data"' if table['headers'][i]=='Value' and i==0 else '')+'>'+escape(str(v))+'</td>' for i,v in enumerate(row))+'</tr>')
     return ''.join(out)+'</tbody></table></div>'
 
 
 def markdown_table(table):
     def cell(v):return re.sub(r'([\\`*_{}\[\]()#!])',r'\\\1',escape(str(v),quote=False).replace('|','&#124;').replace('\n',' '))
-    lines=['**'+cell(table['caption'])+'**','', '| '+' | '.join(map(cell,table['headers']))+' |','| '+' | '.join('---:' if i in table['numeric'] else '---' for i in range(len(table['headers'])))+' |']
-    return '\n'.join(lines+['| '+' | '.join(map(cell,row))+' |' for row in table['rows']])+'\n'
+    lines=[cell(table['caption']),'', '| '+' | '.join(map(cell,table['headers']))+' |','| '+' | '.join('---:' if i in table['numeric'] else '---' for i in range(len(table['headers'])))+' |']
+    from .report_style import markdown_text
+    return '\n'.join(lines+['| '+' | '.join(markdown_text(v,literal=True).replace('|','&#124;') if i==0 and table['headers'][i]=='Value' else cell(v) for i,v in enumerate(row))+' |' for row in table['rows']])+'\n'
 
 
 def original_tick(chart,value):

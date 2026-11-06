@@ -1,3 +1,4 @@
+from html_helpers import visible_text, assert_navigation_only_script
 from copy import deepcopy
 from html import unescape
 from pathlib import Path
@@ -21,7 +22,7 @@ def test_person_first_order_and_no_primary_json_dump():
         assert '"source_sha256"' not in view and '"effective_type"' not in view
     html = render_html(p)
     assert '<pre>' not in html
-    assert '<script' not in html and 'src="http' not in html
+    assert_navigation_only_script(html)
     assert '<svg' in html
 
 
@@ -34,10 +35,10 @@ def test_native_global_toggle_and_all_original_items(make_profile):
     assert '#full-view:checked' in html
     assert 'class="summary-view"' in html and 'class="full-view"' in html
     assert '3 columns have inferred type readings' in html
-    assert 'Domain meaning is unknown for 3 columns' in html
+    assert 'Domain meaning is unknown for 3 columns' in visible_text(html)
     for finding in p.document["findings"]:
         assert f'id="{finding["id"]}"' in html
-        assert finding["message"] in unescape(html)
+        assert finding["message"] in visible_text(html)
     assert '<details' in html and 'Evidence and uncertainty' in html
 
 

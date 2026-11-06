@@ -28,7 +28,7 @@ def svg_chart(chart):
             elif kind=='rect':out.append(f'<rect x="{v[0]}" y="{v[1]}" width="{v[2]}" height="{v[3]}" fill="{v[4]}"/>')
             elif kind=='circle':out.append(f'<circle cx="{v[0]}" cy="{v[1]}" r="{v[2]}" fill="{v[3]}" opacity=".65"/>')
             else:out.append(f'<text x="{v[0]}" y="{v[1]}" text-anchor="{v[3]}" style="font-size:{v[4]}px">{escape(v[2])}</text>')
-        return '<figure class="chart target-chart"><h4>'+escape(chart['title'])+'</h4>'+f'<svg role="img" data-kind="{chart["kind"]}" aria-label="{escape(chart["title"],quote=True)}" viewBox="0 0 {w} {h}">'+''.join(out)+'</svg><div class="axis-captions"><p>X: '+escape(chart['x_label'])+'</p><p>Y: '+escape(chart['y_label'])+'</p></div><figcaption>'+escape(coverage_note(chart))+'</figcaption><details><summary>Chart values</summary>'+html_table(chart_values(chart))+'</details></figure>'
+        return '<figure class="chart target-chart"><p class="chart-title">'+escape(chart['title'])+'</p>'+f'<svg role="img" data-kind="{chart["kind"]}" aria-label="{escape(chart["title"],quote=True)}" viewBox="0 0 {w} {h}">'+''.join(out)+'</svg><div class="axis-captions"><p>X: '+escape(chart['x_label'])+'</p><p>Y: '+escape(chart['y_label'])+'</p></div><figcaption>'+escape(coverage_note(chart))+'</figcaption><details><summary>Chart values</summary>'+html_table(chart_values(chart))+'</details></figure>'
     def e(v):return escape(str(v))
     kind=chart['kind'];data=chart.get('data',[]);width=560
     labels=[]
@@ -99,4 +99,4 @@ def svg_chart(chart):
     if kind=='box':rows=[[k.upper() if k in {'q1','q3'} else k.capitalize(),formatted(chart['box'][k])] for k in ('min','q1','median','q3','max')]
     table=html_table({'caption':'Five-number summary' if kind=='box' else 'Plotted values','headers':['Value','Cumulative share' if kind=='ecdf' else 'Measurement' if kind=='box' else 'Count'],'rows':rows,'numeric':[1]})
     summary='<div class="box-summary">'+table+'</div>' if kind=='box' else '<details><summary>Chart values</summary>'+table+'</details>'
-    return '<figure class="chart"><h4>'+e(chart['title'])+'</h4>'+''.join(out)+'<div class="axis-captions"><p><strong>X:</strong> '+e(chart['x_label'])+'</p>'+('' if kind=='box' else '<p><strong>Y:</strong> '+e(chart['y_label'])+'</p>')+'</div>'+''.join('<figcaption>'+e(n)+'</figcaption>' for n in notes)+summary+'</figure>'
+    return '<figure class="chart"><p class="chart-title">'+e(chart['title'])+'</p>'+''.join(out)+'<div class="axis-captions"><p>X: '+e(chart['x_label'])+'</p>'+('' if kind=='box' else '<p>Y: '+e(chart['y_label'])+'</p>')+'</div>'+''.join('<figcaption>'+e(n)+'</figcaption>' for n in notes)+summary+'</figure>'

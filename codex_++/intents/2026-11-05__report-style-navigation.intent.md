@@ -19,3 +19,9 @@ existing summary/full deck policy and use styled text runs. No new deck structur
 native charts or boilerplate reduction scope. The supplied private election table
 is unavailable: use the repository's authored/public fixtures. Builder visual
 checks are not Kate's acceptance or the independent review.
+
+Rendering canonicalizes a copy of the artifact before formatting: the new loaded
+artifact control exposed existing target statistics insertion-order differences
+between fresh and JSON-loaded results. This affects presentation order of technical
+statistic keys only; source artifacts, finding order and numerical content stay
+identical. Literal HTML in Markdown uses escaped inline code, retaining safe text.

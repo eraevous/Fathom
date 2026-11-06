@@ -4,6 +4,7 @@ import json
 
 from .palette import theme_css
 from .presentation import formatted
+from .report_style import style_html,STYLE_CSS,markdown_text
 
 
 def cell(value):
@@ -52,10 +53,10 @@ def html(result):
     @media(max-width:800px){.cards{grid-template-columns:minmax(0,1fr)}body{padding:16px 12px}th,td{padding:6px}}
     @media print{details{break-inside:auto}.cards{display:block}}'''
     out = ['<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">',
-           '<title>Fathom panel signals</title><style>' + css + '</style><body><h1>Panel signals</h1>',
+           '<title>Fathom panel signals</title><style>' + css + STYLE_CSS + '</style><body><h1>Panel signals</h1>',
            '<p>Declared series and calendar. Every signal and model parameter uses <strong>training only</strong>. Evaluation contributes volume context only. Missing measurements, absent periods and closures are not zeros.</p>',
-           table(['Measure', 'Value'], [['Signal rows', len(d['rows'])], ['Source', d['source'].get('origin')], ['Source SHA256', d['source'].get('sha256')],
-                                       ['Native period', d['configuration'].get('period')], ['Aggregation rule', d.get('lineage', {}).get('rule', 'not applied')]], 'Dataset and provenance'),
+           table(['Measure', 'Value'], [['Signal rows', len(d['rows'])], ['Native period', d['configuration'].get('period')], ['Aggregation rule', d.get('lineage', {}).get('rule', 'not applied')]], 'Dataset'),
+           '<details><summary>Provenance</summary>'+table(['Measure','Value'],[['Source',d['source'].get('origin')],['Source SHA256',d['source'].get('sha256')]],'Source evidence')+'</details>',
            '<p>Unequal exposure is a separate flag. Comparable-exposure SBC, seasonal and noise estimates are withheld where it occurs. Noise floors are <strong>model-conditional oracle estimates</strong>, not fitted forecasts or a guaranteed bound.</p>']
     out.append('<details><summary>Declared column roles</summary>' + table(['Measure', 'Value'], [[k.replace('_', ' '), d['configuration'].get(k)] for k in ('series', 'time', 'value', 'period', 'exposure', 'observation_state')]) + '</details>')
     out.append('<p>Rule-generated observations (<code>rule:panel-v1</code>). Open a series/window for its four dimensions and evidence. Rows can repeat the same source periods.</p>')
@@ -97,7 +98,7 @@ def html(result):
     out.append('<p>What is the row meaning and observation process? Are unavailable measurements unrecorded, or is another mechanism involved? Metric direction remains a human declaration. Current-regime age is not estimable in this slice. Seasonal strength is descriptive adjusted phase variance; short histories are not evidence of absence. Generated mean views have changed units; do their volume boundaries remain meaningful?</p>')
     if d.get('lineage'): out.append('<details><summary>Aggregation lineage</summary>' + table(['Field', 'Value'], sorted(d['lineage'].items())) + '</details>')
     out.append('</body></html>')
-    return '\n'.join(out) + '\n'
+    return style_html('\n'.join(out) + '\n',columns=[d['configuration'].get(k,'') for k in ('time','value','exposure','observation_state') if isinstance(d['configuration'].get(k),str)]+d['configuration'].get('series',[]))
 
 
 def markdown(result):
@@ -108,6 +109,6 @@ def markdown(result):
         for dim in ('duration', 'amplitude', 'wavelength', 'frequency', 'sbc', 'noise', 'volumes', 'thresholds'):
             out += ['### ' + dim.title(), '', '| Measure | Value |', '| --- | --- |']
             value = r[dim] if isinstance(r[dim], dict) else {'declared': r[dim]}
-            out += ['| ' + k.replace('|', '\\|') + ' | ' + cell(v).replace('|', '\\|').replace('\n', ' ') + ' |' for k, v in flatten(value).items()]
+            out += ['| ' + k.replace('|', '\\|') + ' | ' + markdown_text(cell(v),verdict=True).replace('|', '\\|') + ' |' for k, v in flatten(value).items()]
             out += ['']
     return '\n'.join(out) + '\n'
