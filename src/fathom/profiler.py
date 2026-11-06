@@ -46,7 +46,7 @@ def infer(values: list[str], name="", meta=None) -> dict:
         typ, reason = "string", "No nonmissing values; type is unknown, string is the storage fallback."
     elif all(v.lower() in {"true", "false"} for v in values):
         typ, reason = "boolean", "All nonmissing values are lexical true/false."
-    elif meta.get("date_format") or (sum(parse_temporal(v,meta.get("date_format")) is not None for v in values)>=len(values)*(.8 if re.search(r"date|release|time|stamp|clock",name,re.I) else 1)):
+    elif meta.get("date_format") or (sum(parse_temporal(v,meta.get("date_format"),meta.get('frame_rate')) is not None for v in values)>=len(values)*(.8 if re.search(r"date|release|time|stamp|clock",name,re.I) else 1)):
         typ, reason = "temporal", "Local temporal formats recognized; ambiguous readings and format evidence are retained."
     elif (all(number(v) is not None for v in values) or (re.search(r"gross|amount|cost|price|revenue|rating|score|count|quantity",name,re.I) and sum(number(v) is not None for v in values)>=.8*len(values))) and not any(re.match(r"^[+-]?0\d", v.strip()) for v in values):
         typ, reason = "numeric", "Finite numeric readings (local currency/thousands syntax allowed); named numeric columns may retain up to 20% incompatible values, counted separately."
@@ -77,13 +77,13 @@ def summarize(values: list[str], typ: str, meta=None) -> dict:
                  "zeros": sum(n == 0 for n in nums), "negatives": sum(n < 0 for n in nums)}
         return stats
     if typ == "temporal":
-        parsed=[p for v in values if (p:=parse_temporal(v,(meta or {}).get('date_format'))) is not None]
+        parsed=[p for v in values if (p:=parse_temporal(v,(meta or {}).get('date_format'),(meta or {}).get('frame_rate'))) is not None]
         dates=[p['date'] for p in parsed if 'date' in p]
         clocks=[p['time'] for p in parsed if 'time' in p]
         stats={'valid':len(parsed),'invalid':len(values)-len(parsed),'min':min(dates) if dates else None,'max':max(dates) if dates else None}
         if parsed and not dates:
             stats.update(temporal_kind='time',earliest_clock=min(clocks) if len({p['clock_basis'] for p in parsed})==1 else None,latest_clock=max(clocks) if len({p['clock_basis'] for p in parsed})==1 else None,clock_basis='local wall clock; separate offset bases; no calendar date')
-        failure=temporal_failure(values,(meta or {}).get('date_format')) if not parsed else None
+        failure=temporal_failure(values,(meta or {}).get('date_format'),frame_rate=(meta or {}).get('frame_rate')) if not parsed else None
         if failure:stats['parse_failure']=failure
         if (meta or {}).get('date_format')=='YEAR':stats['precision']='year; 1 January anchor, not an observed month/day'
         return stats

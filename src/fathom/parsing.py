@@ -80,10 +80,10 @@ def parse_datetime(value):
     except (ValueError,OverflowError): return None
 
 
-def temporal_failure(values, hint=None, supported_formats=None):
+def temporal_failure(values, hint=None, supported_formats=None, frame_rate=None):
     """Diagnose a wholly failed declaration; never apply another parse implicitly."""
     values=[v for v in values if v is not None]
-    if not values or any(parse_temporal(v,hint) is not None for v in values):return None
+    if not values or any(parse_temporal(v,hint,frame_rate) is not None for v in values):return None
     supported=DATE_FORMATS if supported_formats is None else supported_formats
     tried=[hint] if hint else sorted(supported-{'YEAR'})
     counts={fmt:sum(parse_temporal(v,fmt) is not None for v in values) for fmt in sorted(supported)}

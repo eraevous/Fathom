@@ -17,3 +17,17 @@ def intraday_profile(parsed,name,chart):
                       'weekday_hour_counts':matrix if any('date' in p for p in ps) else {}})
         charts.append(chart('bar',f'Hour of day for {name} — {basis} (written local clock)','Rows (count)','Hour of day',data=[{'label':h,'count':n} for h,n in hours.items()]))
     return {'basis':'written local clocks; naive and each UTC offset kept separate; no conversion; time-only values have no date','bases':bases},charts
+
+
+
+def subsecond_profile(parsed):
+    """No unresolved fourth field contributes a fractional or frame measurement."""
+    ps=[p for _,p in parsed]
+    unknown=[p['fourth_field']['raw'] for p in ps if p.get('fourth_field',{}).get('kind')=='undeclared']
+    fractions=[p['microsecond'] for p in ps if p.get('fractional_digits',0)>0]
+    frames=[p['fourth_field'] for p in ps if p.get('fourth_field',{}).get('kind')=='frame']
+    return {'undeclared_count':len(unknown),'undeclared_examples':unknown[:10],
+            'exclusion_reason':'Undeclared fourth field may be fractional seconds or frames; retained as written and excluded from sub-second statistics. Declare %f or %F plus frame_rate.',
+            'fraction_count':len(fractions),'fraction_min_microsecond':min(fractions) if fractions else None,'fraction_max_microsecond':max(fractions) if fractions else None,
+            'frame_count':len(frames),'frame_groups':[{'frame_rate':rate,'count':sum(f['frame_rate']==rate for f in frames),'min':min(f['frame'] for f in frames if f['frame_rate']==rate),'max':max(f['frame'] for f in frames if f['frame_rate']==rate)} for rate in sorted({f['frame_rate'] for f in frames})],
+            'frame_basis':'Declared frame indices/rates only; no frame-to-microsecond or drop-frame conversion.'}
