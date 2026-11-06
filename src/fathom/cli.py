@@ -23,8 +23,12 @@ def summary_line(d: dict) -> str:
     for entry in ta.get("excluded", []):
         reason = entry.get("reason", "unspecified")
         if reason == "target column": continue
-        category = ("by config" if "config" in reason else "unsupported type" if reason.startswith("unsupported type")
-                    else "budget" if "budget" in reason else "other eligibility")
+        category = (
+            "by config" if reason in {"target excluded by config", "excluded by config: exclude_from_target"}
+            else "unsupported type" if reason.startswith("unsupported type")
+            else "budget" if reason == "pair budget exhausted"
+            else "other eligibility"
+        )
         item = entry["column"] + " (" + reason + ")"
         if item not in categories[category]: categories[category].append(item)
     target = (f"target: {ta['target']}; excluded from target " + "; ".join(k + ": " + (", ".join(v) or "none") for k,v in categories.items())
