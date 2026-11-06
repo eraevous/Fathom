@@ -149,7 +149,7 @@ def brief_html(doc):
     if b['previews']['time_series']:items.append(('report-temporal','Temporal',len(b['previews']['time_series'])))
     items.extend([('report-exclusions','Exclusions',len(b['limits'])),('report-provenance','Provenance',None)])
     out=['<section id="brief"><h1>Fathom liftoff</h1><h2>Brief</h2>',
-        navigation(items),headlines_html(doc),'<p>Automatically measured facts come first. Conditional measurements say <strong>If you declare …</strong>. No suggestion is applied; meaning, observation process and analytical relevance remain yours to declare.</p>',
+        navigation(items),headlines_html(doc),'<p>Measured facts come first; <strong>If you declare …</strong> marks the conditional ones. Nothing is applied for you: meaning and relevance stay yours to declare.</p>',
         '<p><a href="#configurations">Configure an analysis</a> · <a href="#lift-questions">Open questions</a></p><h3 id="report-dataset">What the table looks like</h3>',html_table({'caption':'Dataset snapshot','headers':['Measure','Value'],'numeric':[1],
             'rows':[['Rows',f"{doc['overview']['rows']:,}"],['Columns',doc['overview']['columns']],['Missing cells',doc['overview']['missing_cells']],['Exact duplicate rows',doc['overview']['duplicate_rows']]]}),
         '<p'+(' class="inferred-reading"' if doc['dataset']['description']['status']=='inferred' else '')+'>'+escape(doc['dataset']['description']['text'])+'</p>',

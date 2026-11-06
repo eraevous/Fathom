@@ -1,14 +1,13 @@
 # Fathom
 
-Fathom turns raw or semi-cleaned tabular data into understanding someone can use and pass on: an enhanced data dictionary, a diagnostic EDA engine and a repeatable working record. It answers what is in a dataset, what can't be known from it, and what it is good for.
+Fathom turns raw tables into understanding you can pass on: an enhanced data dictionary, diagnostic EDA and a repeatable record of what's in the data, what can't be known, and what it's good for.
 
 **Status: target-analysis and distribution-polish slice.** Fathom is the successor to Data Guide.
 It starts from guiding documents and decisions, with no earlier implementation,
 and is built with [AEC](https://github.com/eraevous/AEC) and Spec Kit.
 
-Fathom helps decide **what needs review before using a table**: an
-enhanced dictionary, evidenced review actions, explicit unknowns, human decisions
-and context-first before/after comparison. The slice-3 report scope is accepted; FT-R14 detail and
+It asks **what needs review before you use a table**, and answers with evidence,
+open unknowns, your decisions and context-first before/after comparisons. The slice-3 report scope is accepted; FT-R14 detail and
 its algorithmic refinements and usefulness
 remain for review. Tests and merge do not accept requirements.
 
