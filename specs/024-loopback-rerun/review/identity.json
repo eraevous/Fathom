@@ -1,0 +1,13 @@
+{
+  "hash_seeds": [
+    1,
+    73
+  ],
+  "outbound_attempts": 0,
+  "server_matches_cli": true,
+  "sha256": {
+    "guide-profile.json": "7421145d125b1a868fd225e91915ba7f5f625fce90da1d8a0468e3c584446420",
+    "report.html": "4a322fdc84c5a50277779268980abc4e554dd47e13206c41069084601ededd54",
+    "report.md": "0c915005b6c74bea326d0f0c194f1e10230e1a9985c71397e15b0728796c56e9"
+  }
+}
