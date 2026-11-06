@@ -1,0 +1,29 @@
+{
+  "blocked_network": true,
+  "file_sha256": {
+    "configure/configure-profile.json": "c5b45c6b31ee21a6a172442cb7cba9e2e87e9773dca1038340bfc110692725e4",
+    "configure/configure.html": "f33ba6ab43edde3c2956fbc66981f41dfa07a25e7b0fcb79896df313a9dced23",
+    "exports/export-status.json": "f1a05a3f214733253c17915c309c03b62fcf30430cf7513d2d93b200e48260ec",
+    "exports/report.html": "75697d58a279c3d2b4a9d5d9ca8e2effd2a94b1e490baaa262cbadee4febfc31",
+    "exports/report.md": "e2aa5f4c3ebf5aba59b3a298442afb552bdc9458db93d72b48c177409663b77c",
+    "exports/report.pdf": "1a8e648066a9b3f74e52fbd5f21d4e59e32ebd40b3d44feca3bfb5e708998b2a",
+    "exports/report.pptx": "ae34c49feccca1e090158c0bf1ade8d092f7bb79b3b9d1e1cab3a8d1c33ac4fb",
+    "panel/joined-signals.csv": "ad46b4110d398e9c6246fdbc32e50c87c33f9089f5231fcc277491558081fa8c",
+    "panel/metric-disagreement.csv": "0a34c2a06115ce93855f9d1fa812fb8bcf6f8d873a120f35664745a4ebb2e194",
+    "panel/panel.html": "39b3cd538d304b42da7ab148ca302cb8c698795634e70463a2e28829ed0e350f",
+    "panel/panel.json": "8785d31aad02eb9a52e94ba1c9a4728f8c1110c29a535461e79f7e053779f6d8",
+    "panel/panel.md": "07cb9f5e4c7345c8bebc465dfbc38edd25de07e8f389dcf6564ce52f11ffabec",
+    "panel/series-signals.csv": "5d66fb3a5eb0b0bbb59bf1c80fa9ad8b243681ece734863f54dfc27faaeb90fe",
+    "panel/targets/0/guide-profile.json": "68190a9db7db8659c494022e1b778a1c8ed2355cca1cc938ba25b21ffae34c97",
+    "panel/targets/0/report.html": "b02569ed3001f1fc3b324c6a413e6f4058ddb54d8d0d58cb6bf0c43ce7115c4c",
+    "panel/targets/0/report.md": "be8cfb11c977e2a6acf9ed960e52e4d94ed7352b486dd97e56df297ea1987184",
+    "panel/view-comparison.csv": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "profile/guide-profile.json": "1de2d56a13e25afe035383dc0193244f7a824ad0ec7aaa71ed1ac6f4f1429642",
+    "profile/report.html": "75697d58a279c3d2b4a9d5d9ca8e2effd2a94b1e490baaa262cbadee4febfc31",
+    "profile/report.md": "e2aa5f4c3ebf5aba59b3a298442afb552bdc9458db93d72b48c177409663b77c"
+  },
+  "hash_seeds": [
+    1,
+    73
+  ]
+}

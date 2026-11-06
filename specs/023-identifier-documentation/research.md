@@ -1,0 +1,2 @@
+# Research decisions
+Declared roles override name/schema inference. Central rank filtering is required because quality_pairs are appended after target_candidates. Schema keys get explicit human basis. Exact Decimal/integer readings preserve >2^53 labels; sorted distinct integer gaps are bounded ranges with no assumption of missing observations. Format-class signatures are descriptive only. Shared renderer helpers provide meaningful evidence rather than dumping dictionaries. No guessed cross-file panel links; panel itself owns its series anchors.

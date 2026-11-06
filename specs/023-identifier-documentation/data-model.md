@@ -1,0 +1,2 @@
+# Identifier data
+Per-column identifier metadata: role_basis, counts/missing/distinct, unique_nonmissing/unique_per_row, duplicate value/extra-row/participating-row counts, bounded value/position examples, length and character-class counts, leading-zero counts/examples, numeric reading with order/ranges/aliases and limits. All values come from raw strings; role is human or labelled inference. Panel uses same metadata for declared component names and source input coverage. Existing artifacts may omit all identifier metadata.

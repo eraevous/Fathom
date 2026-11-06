@@ -1,0 +1,2 @@
+# Contract
+Configurator columns.NAME.role:identifier|quantity; default absent. Inferred suggestions unticked; existing role removable/changeable. Raw labels never normalized for uniqueness. Example limit10 and omissions explicit. Numeric input-order reading ignores missing, preserves exact finite decimals; consecutive integer-label gaps only. No entity or completeness claim from repetition/gaps. Identifier targets and all ranking candidates touching IDs excluded with reasons before budget. Only real report/series anchors emitted.

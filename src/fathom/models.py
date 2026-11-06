@@ -241,6 +241,9 @@ def validate_document(doc: dict) -> None:
                     if not isinstance(s.get(key),list) or any(not isinstance(v,str) for v in s[key]):raise ValueError('invalid special examples')
                 if not isinstance(s.get('domains'),list) or any(not isinstance(v,dict) or not isinstance(v.get('value'),str) or type(v.get('count')) is not int or v['count']<0 for v in s['domains']):raise ValueError('invalid special domains')
             if "exclude_from_target" in col and type(col["exclude_from_target"]) is not bool:raise ValueError("invalid exclusion declaration")
+            if 'identifier' in col:
+                from .identifiers import validate_identifier
+                validate_identifier(col['identifier'])
             if "univariate" in col:
                 u=col["univariate"]
                 if not isinstance(u,dict) or not isinstance(u.get("statistics"),dict) or not isinstance(u.get("charts"),list):raise ValueError("invalid univariate profile")

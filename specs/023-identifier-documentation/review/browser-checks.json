@@ -1,0 +1,86 @@
+{
+  "configure-dark-1280": {
+    "errors": [],
+    "overflow": false,
+    "real_anchor_destinations": false,
+    "requests": [],
+    "role_yaml_checked": true
+  },
+  "configure-dark-390": {
+    "errors": [],
+    "overflow": false,
+    "real_anchor_destinations": false,
+    "requests": [],
+    "role_yaml_checked": true
+  },
+  "configure-light-1280": {
+    "errors": [],
+    "overflow": false,
+    "real_anchor_destinations": false,
+    "requests": [],
+    "role_yaml_checked": true
+  },
+  "configure-light-390": {
+    "errors": [],
+    "overflow": false,
+    "real_anchor_destinations": false,
+    "requests": [],
+    "role_yaml_checked": true
+  },
+  "panel-dark-1280": {
+    "errors": [],
+    "overflow": false,
+    "real_anchor_destinations": true,
+    "requests": [],
+    "role_yaml_checked": false
+  },
+  "panel-dark-390": {
+    "errors": [],
+    "overflow": false,
+    "real_anchor_destinations": true,
+    "requests": [],
+    "role_yaml_checked": false
+  },
+  "panel-light-1280": {
+    "errors": [],
+    "overflow": false,
+    "real_anchor_destinations": true,
+    "requests": [],
+    "role_yaml_checked": false
+  },
+  "panel-light-390": {
+    "errors": [],
+    "overflow": false,
+    "real_anchor_destinations": true,
+    "requests": [],
+    "role_yaml_checked": false
+  },
+  "profile-dark-1280": {
+    "errors": [],
+    "overflow": false,
+    "real_anchor_destinations": true,
+    "requests": [],
+    "role_yaml_checked": false
+  },
+  "profile-dark-390": {
+    "errors": [],
+    "overflow": false,
+    "real_anchor_destinations": true,
+    "requests": [],
+    "role_yaml_checked": false
+  },
+  "profile-light-1280": {
+    "errors": [],
+    "overflow": false,
+    "real_anchor_destinations": true,
+    "requests": [],
+    "role_yaml_checked": false
+  },
+  "profile-light-390": {
+    "errors": [],
+    "overflow": false,
+    "real_anchor_destinations": true,
+    "requests": [],
+    "role_yaml_checked": false
+  }
+}
