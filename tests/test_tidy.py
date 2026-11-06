@@ -49,3 +49,14 @@ def test_nesting_measurement_depth_definition_is_explicit():
     assert m['keys']['a']['max_depth']==3 and m['keys']['a']['median_depth']==2.5
     assert m['keys']['empty']['max_depth']==0 and m['keys']['scalar']['median_depth']==0
     assert '/a/b/1/c' in m['deepest_paths']
+
+
+def test_liftoff_findings_include_all_automatic_and_conditional_collections():
+    from fathom.liftoff import build_liftoff
+    from fathom.tidy import tidy_files
+    p=build_liftoff(CSVConnector('tests/fixtures/liftoff/planted.csv').load());d=p.document
+    data=rows(tidy_files(d)['findings.csv'])
+    expected=len(d['findings'])+len(d['liftoff']['automated_findings'])+sum(len(p['findings']) for previews in d['liftoff']['previews'].values() for p in previews)
+    assert len(data)==expected
+    assert any(r['collection']=='liftoff.automated_findings' for r in data)
+    assert any(r['collection'].startswith('liftoff.previews.time_series') and r['message'].startswith('If you declare') for r in data)

@@ -1,0 +1,14 @@
+{
+  "byte_identical_files": [
+    "columns.csv",
+    "findings.csv",
+    "profile.html",
+    "profile.json",
+    "profile.md",
+    "relations.csv",
+    "report.pdf",
+    "report.pptx",
+    "samples.csv"
+  ],
+  "schema2_matches_parent": true
+}

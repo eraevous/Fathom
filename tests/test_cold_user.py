@@ -135,7 +135,7 @@ def test_export_without_extras_names_missing_extra(tmp_path, capsys, monkeypatch
     assert not (tmp_path / "e" / "report.pdf").exists()
     monkeypatch.setattr(builtins, "__import__", real)
     import fathom.exports
-    monkeypatch.setattr(fathom.exports, "export_bundle", lambda result, formats, deck: (
+    monkeypatch.setattr(fathom.exports, "export_bundle", lambda result, formats, deck, report=None: (
         {"report.pdf": b"%PDF"}, {"artifact_sha256": "x", "formats": {"pdf": {"status": "written"}}}))
     code, out, err = run(["export", tmp_path / "p" / "guide-profile.json", "--out", tmp_path / "w", "--formats", "pdf"], capsys)
     assert code == 0 and err == ""  # decoy: a written format produces no notice

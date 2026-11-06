@@ -46,3 +46,24 @@ collapses the list initially at widths ≤600px. Native buttons/links support Ta
 Enter and Space with visible focus. If scripts are disabled or fail, the list
 stays expanded and usable. Printing hides navigation. Narrow tables retain local
 horizontal scrolling; the page itself should not overflow.
+
+## Related quantities and summaries (spec020, proposed)
+
+Two or more related quantities are an explicit exception to the minimum-three
+bullet convention: the verdict stays in a parent line and each group/rest/gate
+quantity gets a child bullet. Each prose line contains at most one comparison;
+literal names/values are not comparison operators. Source-order facts and false
+gates remain. HTML, Markdown and fixed exports share the same derived tree.
+
+Per-type summary tables follow Key findings. Counts, missing shares and IQR use
+stored values or disclosed display arithmetic; unavailable metrics stay explicit.
+Tiny marks repeat stored values. Transpose changes only table orientation and is
+hidden without scripts; fixed exports use the configured orientation and paginate.
+
+Spec020 proposes replacing the earlier teal palette with the handoff's tool tokens;
+that proposal supersedes the unchanged-palette sentence above for this slice only.
+Low-contrast grid/soft-fill colors remain decorative; informative strokes/fills use
+accent_faint and opaque markers. Every finding kind keeps its text label. Palette
+acceptance remains Zach's; `fathom.palette` remains the single color source.
+
+Summary text n and top-value share use stored nonmissing counts/frequencies; entropy and length retain the stored raw-lexeme basis including blanks, explicitly disclosed. Empty text columns show n=0 and no top-value share. PDF generated gate arrows are spelled out as "leads to" for the bundled font.

@@ -8,14 +8,20 @@ _LITERAL=re.compile(r'`[^`]*`|"[^"\n]*"|\x27[^\x27\n]*\x27')
 _NUM=re.compile(r'(?<!\w)[+-]?\d+(?:[.,]\d+)*(?:e[+-]?\d+)?',re.I)
 
 
-def comparison_count(text):return len(_OP.findall(_LITERAL.sub('',text)))
+def masked_text(text,columns=()):
+    for name in sorted(set(columns),key=lambda x:(-len(x),x)):
+        if name:text=re.sub(r'(?<!\w)'+re.escape(name)+r'(?!\w)',lambda m:' '*len(m.group()),text)
+    return _LITERAL.sub(lambda m:' '*len(m.group()),text)
 
 
-def quantity_lines(text):
+def comparison_count(text,columns=()):return len(_OP.findall(masked_text(text,columns)))
+
+
+def quantity_lines(text,columns=()):
     """Retain source clauses; line boundaries replace punctuation, never quantities."""
     lines=[]
     # Splitting semicolons/commas/paired conjunctions is a presentation boundary only.
-    masked=_LITERAL.sub(lambda m:' '*len(m.group()),text)
+    masked=masked_text(text,columns)
     separators=list(re.finditer(r';\s*|\n+|,\s+(?=[\w|])|\s+(?:vs|versus)\s+|\s+and\s+(?=\d)',masked))
     parts=[];pos=0
     for sep in separators:parts.append(text[pos:sep.start()]);pos=sep.end()
@@ -23,8 +29,8 @@ def quantity_lines(text):
     for part in parts:
         part=part.strip()
         if not part:continue
-        while comparison_count(part)>1:
-            ops=list(_OP.finditer(_LITERAL.sub(lambda m:' '*len(m.group()),part)));second=ops[1]
+        while comparison_count(part,columns)>1:
+            ops=list(_OP.finditer(masked_text(part,columns)));second=ops[1]
             prefix=part[:second.start()];field=re.search(r'[\w|.−-]+\s*$',prefix)
             cut=field.start() if field and field.start()>0 else second.start()
             if cut<=0:break
@@ -46,21 +52,24 @@ def finding_tree(f):
                              'rest: '+kind+' '+formatted(contrast['rest'],share)+' (n = '+str(evidence.get('rest_n' if kind=='missing share' else 'rest_valid','unknown'))+')'])
         from .verdicts import gate_text
         children.extend('gate: '+gate_text(g) for g in evidence.get('gates',[]))
+        if evidence.get('small'):children.append('Caution: too small to read reliably (valid n < 5)')
         children.extend(['Group rows: '+str(evidence.get('n','unknown')),'Rest rows: '+str(evidence.get('rest_n','unknown')),'Group missing: '+str(evidence.get('missing','unknown'))])
-        return {'text':text,'children':[line for s in children for line in quantity_lines(s)]}
-    lines=quantity_lines(message)
-    numeric=len(_NUM.findall(_LITERAL.sub('',message)))>=2
-    if len(lines)>1 and (numeric or comparison_count(message)>1):
+        return {'text':text,'children':[line for s in children for line in quantity_lines(s,names)]}
+    names=f.get('columns',[])
+    lines=quantity_lines(message,names)
+    numeric=len(_NUM.findall(masked_text(message,names)))>=2
+    if len(lines)>1 and (numeric or comparison_count(message,names)>1):
         prefix=message.split(':',1)[0]
-        parent=prefix if ':' in message and not _NUM.search(prefix) and comparison_count(prefix)<=1 else f.get('kind','finding').capitalize()+' — '+(', '.join(f.get('columns',[])) or f.get('rule',f.get('id','quantities')).replace('_',' '))
+        parent=prefix if ':' in message and not _NUM.search(prefix) and comparison_count(prefix,names)<=1 else f.get('kind','finding').capitalize()+' — '+(', '.join(f.get('columns',[])) or f.get('rule',f.get('id','quantities')).replace('_',' '))
         return {'text':parent,'children':lines}
     return {'text':message,'children':[]}
 
 
-def html_tree(tree,columns=()):
+def html_tree(tree,columns=(),styled=True):
     from .report_style import html_text
     children=tree['children']
-    return html_text(tree['text'],columns=columns,verdict=True)+('<ul class="quantity-list">'+''.join('<li class="finding-line">'+html_text(s,columns=columns,verdict=True)+'</li>' for s in children)+'</ul>' if children else '')
+    text=lambda s:html_text(s,columns=columns,verdict=True) if styled else escape(s)
+    return text(tree['text'])+('<ul class="quantity-list">'+''.join('<li class="finding-line">'+text(s)+'</li>' for s in children)+'</ul>' if children else '')
 
 
 def markdown_tree(tree,columns=()):
@@ -77,3 +86,13 @@ def evidence_html(value):
     if isinstance(value,list):return '<ul>'+''.join('<li>'+evidence_html(v)+'</li>' for v in value)+'</ul>' if value else '<code>[]</code>'
     if isinstance(value,str) and comparison_count(value)>1:return '<ul>'+''.join('<li class="finding-line">'+escape(s)+'</li>' for s in quantity_lines(value))+'</ul>'
     return escape(str(value))
+
+
+def evidence_markdown(value,depth=0):
+    from .report_style import markdown_text
+    pad='  '*depth
+    if isinstance(value,dict):
+        return ''.join(pad+'- '+markdown_text(str(k),literal=True)+':\n'+evidence_markdown(v,depth+1) for k,v in sorted(value.items(),key=lambda item:str(item[0]))) or pad+'- {}\n'
+    if isinstance(value,list):return ''.join(evidence_markdown(v,depth) for v in value) or pad+'- []\n'
+    lines=quantity_lines(str(value)) if isinstance(value,str) and comparison_count(value)>1 else [str(value)]
+    return ''.join(pad+'- '+markdown_text(line,verdict=True)+'\n' for line in lines)

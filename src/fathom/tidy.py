@@ -36,6 +36,8 @@ def csv_text(rows,first,extras=()):
 
 def unit_for(path,column):
     leaf=path.rsplit('.',1)[-1]
+    if '.length.' in path:return 'characters'
+    if leaf=='span_days':return 'days'
     if leaf in {'count','valid','invalid','finite','missing','distinct','zeros','negatives','raw_lexemes'} or path in {'count','missing','distinct'}:return 'count'
     if leaf in {'share','missing_share','coverage'}:return 'proportion'
     if any(x in path for x in ['entropy','skew','kurtosis','correlation']):return 'bits' if 'entropy' in path else ''

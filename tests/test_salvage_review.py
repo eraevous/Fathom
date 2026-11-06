@@ -17,14 +17,14 @@ def test_categorical_marks_have_light_and_dark_theme_tokens():
 
 
 def test_print_palette_overrides_system_and_explicit_dark_selectors():
-    from fathom.palette import theme_css
+    from fathom.palette import theme_css,THEMES
     css=theme_css();before,printing=css.split('@media print{',1)
     # Dark root selectors must have equally specific later light-print counterparts.
     selectors=re.findall(r'([^{}]+)\{color-scheme:dark;',before)
     assert selectors
     print_selector=printing.split('{',1)[0].split(',')
     assert all(selector in print_selector for selector in selectors)
-    assert '--panel:#ffffff' in printing
+    assert '--panel:'+THEMES['light']['panel'] in printing
 
 
 def test_temporal_stem_marks_follow_the_theme():
@@ -36,4 +36,4 @@ def test_temporal_stem_marks_follow_the_theme():
     for name in ('band','accent_faint','accent','border'):
         assert f'svg [stroke="{THEMES["light"][name]}"]{{stroke:var(--{name.replace("_","-")})}}' in css, name
     assert contrast(THEMES['dark']['band'],THEMES['dark']['panel'])>=3 and contrast(THEMES['dark']['accent_faint'],THEMES['dark']['panel'])>=3
-    assert contrast('#a0522d',THEMES['dark']['panel'])<3  # Decoy: the light band colour would fail on the dark panel.
+    assert contrast(THEMES['dark']['grid'],THEMES['dark']['panel'])<3  # Decoy: the light band colour would fail on the dark panel.

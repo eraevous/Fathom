@@ -103,6 +103,8 @@ def pdf_bytes(d,report=None):
     styles['BodyText'].fontSize=8;styles['BodyText'].leading=11;styles['BodyText'].wordWrap='CJK'
     columns=[c['name'] for c in d.get('columns',[])]
     def p(value,style='BodyText'):
+        # Vera has no right-arrow glyph; spell out the generated gate connector.
+        if str(value).startswith('gate: '):value=str(value).replace(' → ',' leads to ')
         if str(value).startswith('Examples: '):return Paragraph('Examples: <font name="Courier">'+escape(text(str(value)[10:]))+'</font>',styles[style])
         markup=[]
         inferred=(str(value)==identity(d)[1] and d.get('dataset',{}).get('description',{}).get('status')=='inferred') or (style=='Title' and d.get('dataset',{}).get('title',{}).get('status')=='inferred')
@@ -122,7 +124,7 @@ def pdf_bytes(d,report=None):
 
     if d['kind']=='profile':
         heading('Distribution summaries')
-        story.append(p('Stored metrics only; n valid/finite/nonmissing; missing share uses all rows. Parse coverage is not calendar completeness. Unavailable statistics are not reconstructed.'))
+        story.append(p('Stored metrics only; n valid/finite/nonmissing; missing share uses all rows. Top value share uses nonmissing values; text entropy/length use stored raw lexemes including blanks. Parse coverage is not calendar completeness. Unavailable statistics are not reconstructed.'))
         for panel in summary_panels(d,report,max_columns=5):
             story.append(p(panel['caption'],'Heading3'))
             widths=[105]+[385/(len(panel['headers'])-1)]*(len(panel['headers'])-1)
@@ -242,8 +244,10 @@ def pdf_bytes(d,report=None):
         story.append(p(name,'Heading3'))
         for message in messages:
             parts=message.split('\n  - ')
-            story.append(p(parts[0]))
-            if len(parts)>1:story.append(ListFlowable([p(line) for line in parts[1:]],bulletType='bullet',leftIndent=16,bulletFontName=font,bulletFontSize=8))
+            if len(parts)>1:
+                for start in range(1,len(parts),8):
+                    story.append(KeepTogether([p(parts[0]+(' (continued)' if start>1 else '')),ListFlowable([p(line) for line in parts[start:start+8]],bulletType='bullet',leftIndent=16,bulletFontName=font,bulletFontSize=8)]))
+            else:story.append(p(parts[0]))
     if d['kind']=='profile':
         heading('Relations')
         story.append(p(d['selection'].get('ranking_rule','Ranking not recorded.')))
@@ -334,13 +338,20 @@ def pptx_bytes(d,full=False,report=None):
                 if role=='literal':run.font.name='Courier New'
         return s
     def topics(name,lines):
-        # Bound expanded text per slide; retain nested-quantity indentation.
+        # Keep a complete small finding together; repeat context for a long continuation.
         chunks=[];current=[];length=0
-        for line in [part for message in lines for part in message.split('\n')]:
-            for start in range(0,max(1,len(line)),280):
-                part=line[start:start+280]
-                if current and (len(current)>=6 or length+len(part)>850):chunks.append(current);current=[];length=0
-                current.append(part);length+=len(part)
+        for message in lines:
+            parts=[part for part in message.split('\n') if part];size=sum(map(len,parts))
+            if len(parts)<=10 and size<=950:
+                if current and (len(current)+len(parts)>10 or length+size>950):chunks.append(current);current=[];length=0
+                current.extend(parts);length+=size
+            else:
+                if current:chunks.append(current);current=[];length=0
+                parent=parts[0] if parts else name
+                for part in parts:
+                    if current and (len(current)>=10 or length+len(part)>950):chunks.append(current);current=[parent+' (continued)'];length=len(parent)+12
+                    current.append(part);length+=len(part)
+                if current:chunks.append(current);current=[];length=0
         if current or not chunks:chunks.append(current)
         for i,chunk in enumerate(chunks):slide(name+(f' ({i+1}/{len(chunks)})' if len(chunks)>1 else ''),chunk,enumeration=len(lines)>=3)
     available=chart_topics(d);requested=available if full else summary_chart_topics(d)

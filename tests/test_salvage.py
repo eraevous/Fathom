@@ -246,7 +246,7 @@ def test_dark_mode_overrides_kind_tags_and_no_script():
     assert ":root[data-theme=dark]{" in html and "color-scheme:light dark" in html
     assert "@media print{:root," in html
     assert_navigation_only_script(html)
-    assert re.search(r'<article id="q-missing-test-0" class="finding kind-observation"><p><span class="kind-tag">Observation</span>', html)
+    assert re.search(r'<article id="q-missing-test-0" class="finding kind-observation"><div class="finding-verdict"><span class="kind-tag">Observation</span>', html)
     for kind in ("observation", "interpretation", "hypothesis", "action", "question"):
         assert f"--kind-{kind}:" in html and f'class="kind-heading kind-{kind}"' in html
     # SVG marks keep light attributes (portable Markdown) and HTML maps them to tokens.

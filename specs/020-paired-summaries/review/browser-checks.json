@@ -1,0 +1,66 @@
+{
+  "after-dark-1280": {
+    "overflow": false,
+    "requests": []
+  },
+  "after-dark-390": {
+    "overflow": false,
+    "requests": []
+  },
+  "after-light-1280": {
+    "overflow": false,
+    "requests": []
+  },
+  "after-light-390": {
+    "overflow": false,
+    "requests": []
+  },
+  "before-dark-1280": {
+    "overflow": false,
+    "requests": []
+  },
+  "before-dark-390": {
+    "overflow": false,
+    "requests": []
+  },
+  "before-light-1280": {
+    "overflow": false,
+    "requests": []
+  },
+  "before-light-390": {
+    "overflow": false,
+    "requests": []
+  },
+  "nojs-columns_as_rows-dark-1280": {
+    "controls_hidden": true,
+    "orientation": "columns_as_rows"
+  },
+  "nojs-columns_as_rows-dark-390": {
+    "controls_hidden": true,
+    "orientation": "columns_as_rows"
+  },
+  "nojs-columns_as_rows-light-1280": {
+    "controls_hidden": true,
+    "orientation": "columns_as_rows"
+  },
+  "nojs-columns_as_rows-light-390": {
+    "controls_hidden": true,
+    "orientation": "columns_as_rows"
+  },
+  "nojs-metrics_as_rows-dark-1280": {
+    "controls_hidden": true,
+    "orientation": "metrics_as_rows"
+  },
+  "nojs-metrics_as_rows-dark-390": {
+    "controls_hidden": true,
+    "orientation": "metrics_as_rows"
+  },
+  "nojs-metrics_as_rows-light-1280": {
+    "controls_hidden": true,
+    "orientation": "metrics_as_rows"
+  },
+  "nojs-metrics_as_rows-light-390": {
+    "controls_hidden": true,
+    "orientation": "metrics_as_rows"
+  }
+}

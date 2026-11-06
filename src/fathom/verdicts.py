@@ -61,7 +61,7 @@ def headlines_html(d):
     items=key_findings(d)
     from .finding_view import finding_tree,html_tree
     tag='li' if len(items)>=3 else 'div'
-    body=''.join('<'+tag+'>'+html_tree(finding_tree({'id':i['ref'],'kind':'observation','message':i['message'],'evidence':[]} ),[c['name'] for c in d.get('columns',[])])+' <a href="#'+escape(i['ref'].split('#')[0],quote=True)+'">Evidence</a></'+tag+'>' for i in items)
+    body=''.join('<'+tag+'>'+html_tree(finding_tree({'id':i['ref'],'kind':'observation','message':i['message'],'evidence':[]} ),[c['name'] for c in d.get('columns',[])],styled=False)+' <a href="#'+escape(i['ref'].split('#')[0],quote=True)+'">Evidence</a></'+tag+'>' for i in items)
     return '<section id="key-findings"><h2>Key findings</h2>'+('<ul>'+body+'</ul>' if len(items)>=3 else body or '<p>No matching headline evidence; this is not a quality verdict.</p>')+'</section>'
 
 

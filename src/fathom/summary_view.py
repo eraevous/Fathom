@@ -29,10 +29,11 @@ def summary_tables(d,report=None):
         missing=ratio(c['missing'],c['count']);q=u.get('percentiles',{});unit=c.get('univariate',{}).get('units') or {}
         unit=unit.get('value') if isinstance(unit,dict) else str(unit)
         if numeric:
+            box=next((ch['box'] for ch in c.get('univariate',{}).get('charts',[]) if ch.get('kind')=='box' and ch.get('scale')!='log10'),{})
             heads=['Column','n','Missing %','Distinct','Mean','Median','SD','IQR','Skew','Zero %','Min','Max','Units','Distribution']
             iqr=q['75']-q['25'] if q.get('75') is not None and q.get('25') is not None else None
-            vals=[c['name'],s.get('valid',u.get('finite')),missing,c['distinct'],s.get('mean'),s.get('median',q.get('50')),s.get('population_std'),iqr,u.get('skewness'),u.get('zeros',{}).get('share'),s.get('min'),s.get('max'),unit or 'Unknown','']
-            mark={'kind':'box','min':s.get('min'),'max':s.get('max'),'q1':q.get('25'),'q3':q.get('75'),'median':s.get('median',q.get('50'))}
+            vals=[c['name'],s.get('valid',u.get('finite')),missing,c['distinct'],s.get('mean'),s.get('median',q.get('50')),s.get('population_std'),iqr,u.get('skewness'),u.get('zeros',{}).get('share'),s.get('min',box.get('min')),s.get('max',box.get('max')),unit or 'Unknown','']
+            mark={'kind':'box','min':s.get('min',box.get('min')),'max':s.get('max',box.get('max')),'q1':q.get('25'),'q3':q.get('75'),'median':s.get('median',q.get('50'))}
         elif temporal:
             heads=['Column','Span','Parse coverage','Declared period','Gaps','Distribution']
             periods=[]
@@ -48,7 +49,7 @@ def summary_tables(d,report=None):
             mark={'kind':'share','share':coverage}
         else:
             heads=['Column','n','Missing %','Distinct','Top value share','Entropy (bits)','Length range','Distribution']
-            n=u.get('raw_lexemes',c['count']-c['missing']);common=u.get('most_common',c.get('frequencies',[]));top=ratio(common[0]['count'],n) if common else None
+            n=c['count']-c['missing'];common=c.get('frequencies',[]);top=ratio(common[0]['count'],n) if common else None
             length=u.get('length',{});vals=[c['name'],n,missing,c['distinct'],top,u.get('entropy_bits'),f"{length['min']}–{length['max']}" if length.get('min') is not None else None,'']
             mark={'kind':'share','share':top}
         if typ not in tables:tables[typ]={'type':typ,'caption':typ.capitalize()+' column metrics','headers':heads,'rows':[],'orientation':'columns_as_rows','links':{},'marks':{}}
@@ -80,7 +81,7 @@ def mark_svg(mark):
     elif mark['kind']=='box' and all(isinstance(mark.get(k),(int,float)) for k in ['min','max','q1','q3','median']):
         lo,hi=mark['min'],mark['max'];scale=max(abs(lo),abs(hi),1);span=hi/scale-lo/scale
         def x(v):return 2+92*((v/scale-lo/scale)/span if span else .5)
-        desc='Stored min '+formatted(lo)+', median '+formatted(mark['median'])+', max '+formatted(hi)
+        desc='Stored min '+formatted(lo)+', q1 '+formatted(mark['q1'])+', median '+formatted(mark['median'])+', q3 '+formatted(mark['q3'])+', max '+formatted(hi)
         shapes=f'<line x1="2" y1="10" x2="94" y2="10" stroke="{C["accent"]}"/><rect x="{x(mark["q1"]):.6f}" y="5" width="{max(1,x(mark["q3"])-x(mark["q1"])):.6f}" height="10" fill="{C["accent_faint"]}"/><line x1="{x(mark["median"]):.6f}" y1="3" x2="{x(mark["median"]):.6f}" y2="17" stroke="{C["ink"]}"/>'
     if not shapes:return '<span>'+UNAVAILABLE+'</span>'
     return '<svg class="summary-mark" role="img" aria-label="'+escape(desc,quote=True)+'" viewBox="0 0 96 20" width="96" height="20">'+shapes+'</svg>'
@@ -89,7 +90,7 @@ def mark_svg(mark):
 def summary_html(d,report=None):
     tables=summary_tables(d,report)
     if not tables:return ''
-    out=['<section id="distribution-summaries"><h2>Distribution summaries</h2><p>Stored metrics only. n is valid/finite (text: nonmissing); missing % uses all rows. Unknown units and unavailable statistics stay explicit. Parse coverage is not calendar completeness; gaps follow the stored univariate rule, not a declared schedule. Distribution marks repeat stored values.</p>']
+    out=['<section id="distribution-summaries"><h2>Distribution summaries</h2><p>Stored metrics only. n is valid/finite (text: nonmissing); missing % uses all rows. Top value share uses nonmissing values; text entropy and lengths retain the stored raw-lexeme basis, including blank strings. Unknown units and unavailable statistics stay explicit. Parse coverage is not calendar completeness; gaps follow the stored univariate rule, not a declared schedule. Distribution marks repeat stored values.</p>']
     for i,t in enumerate(tables):
         tid='summary-table-'+str(i);pressed=t['orientation']=='metrics_as_rows'
         out.append('<button hidden type="button" class="transpose" data-transpose="'+tid+'" aria-controls="'+tid+'" aria-pressed="'+str(pressed).lower()+'">Transpose '+escape(t['type'])+' table</button><div class="table-scroll"><table class="review-table distribution-table" id="'+tid+'" data-orientation="'+t['orientation']+'"><caption>'+escape(t['caption'])+'</caption><thead><tr>')
@@ -109,12 +110,16 @@ def summary_html(d,report=None):
 
 
 def summary_markdown(d,report=None):
-    out=['## Distribution summaries','','Stored metrics only; n is valid/finite/nonmissing. Missing % uses all rows. Parse coverage is not calendar completeness. Unknown/unavailable stays explicit.','']
+    out=['## Distribution summaries','','Stored metrics only; n is valid/finite/nonmissing. Missing % uses all rows. Top value share uses nonmissing values; text entropy and lengths retain the stored raw-lexeme basis, including blank strings. Parse coverage is not calendar completeness. Unknown/unavailable stays explicit.','']
+    from .report_style import markdown_text
     for t in summary_tables(d,report):
         grid=formatted_grid(t,marks=False)
-        esc=lambda s:str(s).replace('|','&#124;').replace('\n',' ')
-        out += [t['caption'],'','| '+' | '.join(map(esc,grid[0]))+' |','| '+' | '.join('---' for _ in grid[0])+' |']
-        out += ['| '+' | '.join(map(esc,row))+' |' for row in grid[1:]];out.append('')
+        def cell(value,ri,ci):
+            if value in t['links'] and ((t['orientation']=='metrics_as_rows' and ri==0 and ci) or (t['orientation']=='columns_as_rows' and ri and ci==0)):
+                return '['+markdown_text(value,literal=True)+'](#'+t['links'][value]+')'
+            return escape(str(value),quote=False).replace('|','&#124;').replace('\n',' ')
+        out += [t['caption'],'','| '+' | '.join(cell(v,0,j) for j,v in enumerate(grid[0]))+' |','| '+' | '.join('---' for _ in grid[0])+' |']
+        out += ['| '+' | '.join(cell(v,i,j) for j,v in enumerate(row))+' |' for i,row in enumerate(grid[1:],1)];out.append('')
     return '\n'.join(out)+'\n'
 
 

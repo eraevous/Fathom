@@ -27,3 +27,14 @@ Tidy export is raw scalar CSV, not a schema migration. Escaped paths prevent amb
 keys; docs state null/empty-container semantics. Schema3 document proposes normalized
 stats/evidence/units, migration/compatibility, and needs Zach's decision. No new analysis,
 network feature, dependency, real/non-public fixture or org-specific content.
+
+Update after relay:merged eccdba1 (the requested ordinary #28/#27 update), retained
+every ledger line from both parents verbatim, then ordinarily merged main e6af6a1
+after #28 merged. Final PR targets main. README lines3/9 and Brief intro untouched
+for #32; no edits to README/liftoff.py. Direct linear-box extrema may be reused for
+coordinate min/max (already stored exact measurements), without reconstructing
+mean/SD from chart points. Generic prose preserves literal column names containing
+operators. Active work paused when the execution environment became unavailable;
+resume from the intact worktree and revalidate before publication.
+
+Summary text n and top-value share use stored nonmissing counts/frequencies; entropy and length retain the stored raw-lexeme basis including blanks, explicitly disclosed. Empty text columns show n=0 and no top-value share. PDF generated gate arrows are spelled out as "leads to" for the bundled font.

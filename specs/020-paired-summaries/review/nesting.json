@@ -1,0 +1,150 @@
+{
+  "artifact_sha256": "619d3240ebc00895694f601620eefc96d5dad57bda3e595781426f5946ae1dc2",
+  "deepest_paths": [
+    "/time_series/series/0/groups/0/granularities/0/wavelength/occurrence/dominant_lags/0/acf",
+    "/time_series/series/0/groups/0/granularities/0/wavelength/occurrence/dominant_lags/0/family_band",
+    "/time_series/series/0/groups/0/granularities/0/wavelength/occurrence/dominant_lags/0/lag",
+    "/time_series/series/0/groups/0/granularities/0/wavelength/occurrence/dominant_lags/1/acf",
+    "/time_series/series/0/groups/0/granularities/0/wavelength/occurrence/dominant_lags/1/family_band",
+    "/time_series/series/0/groups/0/granularities/0/wavelength/occurrence/dominant_lags/1/lag",
+    "/time_series/series/0/groups/0/granularities/0/wavelength/occurrence/dominant_lags/2/acf",
+    "/time_series/series/0/groups/0/granularities/0/wavelength/occurrence/dominant_lags/2/family_band",
+    "/time_series/series/0/groups/0/granularities/0/wavelength/occurrence/dominant_lags/2/lag",
+    "/time_series/series/0/groups/0/granularities/0/wavelength/occurrence/lags/0/acf",
+    "/time_series/series/0/groups/0/granularities/0/wavelength/occurrence/lags/0/acf_outside_band",
+    "/time_series/series/0/groups/0/granularities/0/wavelength/occurrence/lags/0/band",
+    "/time_series/series/0/groups/0/granularities/0/wavelength/occurrence/lags/0/estimable",
+    "/time_series/series/0/groups/0/granularities/0/wavelength/occurrence/lags/0/family_band",
+    "/time_series/series/0/groups/0/granularities/0/wavelength/occurrence/lags/0/lag",
+    "/time_series/series/0/groups/0/granularities/0/wavelength/occurrence/lags/0/pacf",
+    "/time_series/series/0/groups/0/granularities/0/wavelength/occurrence/lags/0/pairs",
+    "/time_series/series/0/groups/0/granularities/0/wavelength/occurrence/lags/0/supported",
+    "/time_series/series/0/groups/0/granularities/0/wavelength/occurrence/lags/1/acf",
+    "/time_series/series/0/groups/0/granularities/0/wavelength/occurrence/lags/1/acf_outside_band"
+  ],
+  "definition": "Depth is container-edge count below each top-level value; scalar/empty container depth0; arrays count one edge per index. Global depth includes the top-level edge. Median over all terminal leaves.",
+  "fixture": "tests/fixtures/summary/mixed.csv",
+  "keys": {
+    "annotations": {
+      "max_depth": 0,
+      "median_depth": 0,
+      "terminals": 1
+    },
+    "bivariate": {
+      "max_depth": 5,
+      "median_depth": 3.0,
+      "terminals": 78
+    },
+    "columns": {
+      "max_depth": 7,
+      "median_depth": 6,
+      "terminals": 1733
+    },
+    "context": {
+      "max_depth": 1,
+      "median_depth": 1.0,
+      "terminals": 4
+    },
+    "dataset": {
+      "max_depth": 3,
+      "median_depth": 3.0,
+      "terminals": 20
+    },
+    "dataset_summary": {
+      "max_depth": 3,
+      "median_depth": 2.0,
+      "terminals": 32
+    },
+    "dependencies": {
+      "max_depth": 1,
+      "median_depth": 1,
+      "terminals": 1
+    },
+    "findings": {
+      "max_depth": 8,
+      "median_depth": 3.0,
+      "terminals": 838
+    },
+    "kind": {
+      "max_depth": 0,
+      "median_depth": 0,
+      "terminals": 1
+    },
+    "missingness_patterns": {
+      "max_depth": 4,
+      "median_depth": 3.0,
+      "terminals": 24
+    },
+    "overview": {
+      "max_depth": 1,
+      "median_depth": 1.0,
+      "terminals": 4
+    },
+    "purpose": {
+      "max_depth": 1,
+      "median_depth": 1,
+      "terminals": 5
+    },
+    "quality": {
+      "max_depth": 3,
+      "median_depth": 2.0,
+      "terminals": 58
+    },
+    "report": {
+      "max_depth": 1,
+      "median_depth": 1.0,
+      "terminals": 4
+    },
+    "row_structure": {
+      "max_depth": 3,
+      "median_depth": 2.0,
+      "terminals": 30
+    },
+    "samples": {
+      "max_depth": 4,
+      "median_depth": 4.0,
+      "terminals": 674
+    },
+    "schema": {
+      "max_depth": 1,
+      "median_depth": 1.0,
+      "terminals": 6
+    },
+    "schema_version": {
+      "max_depth": 0,
+      "median_depth": 0,
+      "terminals": 1
+    },
+    "selection": {
+      "max_depth": 3,
+      "median_depth": 3.0,
+      "terminals": 62
+    },
+    "source": {
+      "max_depth": 1,
+      "median_depth": 1,
+      "terminals": 3
+    },
+    "target_analysis": {
+      "max_depth": 7,
+      "median_depth": 5,
+      "terminals": 531
+    },
+    "time_series": {
+      "max_depth": 11,
+      "median_depth": 11.0,
+      "terminals": 904
+    },
+    "working_record": {
+      "max_depth": 1,
+      "median_depth": 1,
+      "terminals": 5
+    }
+  },
+  "max_root_depth": 12,
+  "omitted_deepest_paths": 496,
+  "shape": [
+    60,
+    9
+  ]
+}
