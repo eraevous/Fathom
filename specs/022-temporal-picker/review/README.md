@@ -1,10 +1,10 @@
 # HO-DG-20261106-8RZJ PR A review
 
-Spec022, provisional; Kate first, Zach merges. Built from main628cf40 while #34 remained open; #32 merged subsequently, and its README/Brief intro lines are untouched. No new dependency, network feature, protected-document change or data lookup.
+Spec022, provisional; Kate first, Zach merges. Started from main628cf40 while #34 remained open; ordinary merge of maina0fcf56 now includes #34/#32. Every ledger line from both parents retained; edges regenerated; README/Brief intro lines untouched. No new dependency, network feature, protected-document change or data lookup.
 
 ## Validation
 
-Full installed test/stats/export suite after final ledger appends: **439passed, 2skipped**, one dependency deprecation warning ([output](tests.txt)). Pinned Telosmith b0e202fa4b20: **0errors, 100inherited warnings** ([check](aec-check.txt)); [report-only impact](code-impact.txt). Purpose refs resolve structurally, spec-quality checklist passes. Structural evidence is not acceptance.
+Full installed test/stats/export suite after final ledger appends: **460passed, 2skipped**, one dependency deprecation warning ([output](tests.txt)). Pinned Telosmith b0e202fa4b20: **0errors, 100inherited warnings** ([check](aec-check.txt)); [report-only impact](code-impact.txt). Purpose refs resolve structurally, spec-quality checklist passes. Structural evidence is not acceptance.
 
 [Fresh-process identity](identity.json): profile/configure/liftoff/export, two hash seeds1/99, sockets and networking clients denied; **12files byte-identical** including actual PDF and PowerPoint. No optional extra silently missing. [Browser checks](browser-checks.json): actual offline Chromium, zero requests/errors/document overflow; keyboard input, custom20/20 match, bad%Q error blocks YAML, canonical built-in/custom selection and generated YAML checked. Scripts-off retains raw samples/formats/commands and hides live-only controls.
 
