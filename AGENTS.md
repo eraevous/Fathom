@@ -30,7 +30,7 @@ Where these conflict, follow the higher item and record the conflict. Don't sett
 
 Spec Kit skills are in `.agents/skills/`: `speckit-constitution`, `-specify`, `-clarify`, `-plan`, `-tasks`, `-analyze` and `-implement`. The AEC extension adds report-only hooks after specify, tasks and implement (`.specify/extensions/aec/`).
 
-1. **Constitution.** `.specify/memory/constitution.md` is still the template. When you fill it, it must restate `CHARTER.md` and point to it. It must not add principles of its own. A principle the charter lacks is a proposal for Zach, recorded in an intent note.
+1. **Constitution.** `.specify/memory/constitution.md` restates `CHARTER.md` and points to it. It must not add principles of its own. A principle the charter lacks is a proposal for Zach, recorded in an intent note.
 2. **Specify, plan, tasks, implement, one feature at a time,** in `specs/NNN-name/`. Each spec names the records it serves (for example `Serves: P0@2, DG-RA@1`).
 3. **Records come before code.**
    - For each feature, append a `requirement` record if the feature needs one that isn't there yet. Mark it provisional and say it is for Zach to accept.

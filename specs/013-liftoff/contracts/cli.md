@@ -1,6 +1,6 @@
 # CLI and page contract
 
-`guide liftoff DATA.csv --out DIR` → liftoff-profile.json(schema2),liftoff.html.
+`guide liftoff DATA.csv --out DIR` → liftoff-profile.json (schema 2), liftoff.html.
 No --config. On invalid input no partial output directory. Page contains Brief,
 Configurations, read-only rules, exact-evidence details and generated YAML pane.
 No selections →{}; selected controls → supported existing config keys only.
