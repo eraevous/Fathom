@@ -88,8 +88,8 @@ def validate_config(raw: dict | None = None, columns: list[str] | None = None) -
         text(item.get("value"), "time_series.value", nullable=True)
         text(item.get("by"), "time_series.by", nullable=True)
         grains = item.get("granularities", ["auto"])
-        if not isinstance(grains, list) or not grains or any(g not in {"auto", "hour", "day", "week", "month"} for g in grains):
-            raise ValueError("time_series.granularities must be a nonempty list of auto, hour, day, week, month")
+        if not isinstance(grains, list) or not grains or any(g not in {"auto", "hour", "day", "week", "month", "year"} for g in grains):
+            raise ValueError("time_series.granularities must be a nonempty list of auto, hour, day, week, month, year")
         for key, low, high in (("max_lag", 1, 400), ("top_n", 1, 20)):
             if item.get(key) is not None and (type(item[key]) is not int or not low <= item[key] <= high):
                 raise ValueError(f"time_series.{key} must be an integer from {low} to {high}")
@@ -99,7 +99,7 @@ def validate_config(raw: dict | None = None, columns: list[str] | None = None) -
         if columns is not None and any(c not in columns for c in used):
             raise ValueError("time_series references an unknown column")
         cleaned.append({"time": item["time"], "value": item.get("value"), "by": item.get("by"),
-                        "granularities": sorted(set(grains), key=["auto", "hour", "day", "week", "month"].index),
+                        "granularities": sorted(set(grains), key=["auto", "hour", "day", "week", "month", "year"].index),
                         "max_lag": item.get("max_lag"), **({"top_n": item["top_n"]} if "top_n" in item else {})})
     cfg["time_series"] = cleaned
     if columns is not None and cfg.get("group_by") is not None and cfg["group_by"] not in columns:raise ValueError("group_by references an unknown column")

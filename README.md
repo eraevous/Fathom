@@ -19,7 +19,7 @@ Python 3.12+. The package is `fathom-guide`; it installs one command, `guide`
 question, target and row unit they resolved. Column `type` overrides use the names
 `numeric`, `categorical`, `boolean`, `temporal` (dates), `string`, `phone`, `email`,
 `url`, `latitude` and `longitude`; `date_format` takes `ISO`, `ISO_DATETIME`
-(`YYYY-MM-DD HH:MM[:SS]` or with a `T` separator, profiled by calendar date), `MDY`, `DMY` or `MON_D_Y`,
+(`YYYY-MM-DD HH:MM[:SS]` or with a `T` separator, profiled by calendar date), `MDY`, `DMY`, `MON_D_Y` or explicit `YEAR` (four digits, annual precision; 1 January anchor),
 not strftime patterns. `guide export` without the extra still exits 0 and says on stderr
 to run `pip install -e '.[exports]'` from the clone (the package is not on PyPI).
 
@@ -277,6 +277,41 @@ each rule. Fewer than 30 periods is insufficient; a constant series is undefined
 beyond n/4 are marked poorly supported. Without a declaration, one question suggests
 one. See [spec011](specs/011-time-series/spec.md).
 
+## Explicit bare-year dates
+
+Four-digit values remain numeric unless you declare their meaning. For annual data:
+
+```yaml
+columns:
+  year: {type: temporal, date_format: YEAR}
+time_series:
+  - {time: year, value: value, by: entity, granularities: [year]}
+```
+
+`YEAR` accepts four-digit strings or integers and maps to 1 January as a labelled
+calendar anchor, not an observed day. It does not invent month/weekday patterns.
+For a declared `YEAR` column, `[auto]` uses annual periods only; other formats keep
+the existing hour/day/week/month auto selection. Yearly totals cannot resolve
+within-year seasonality. Wholly failed temporal declarations list attempted formats
+and suggest the closest supported syntax by parse count, without applying it.
+
+The separate panel command accepts this time-column configuration:
+
+```yaml
+series: [entity, candidate]
+time: year
+value: value
+period: year
+date_format: YEAR
+```
+
+Declare every key needed for one observation per series/year; duplicate keys fail
+rather than silently aggregating. Missing years remain absent, not observed zeros.
+Optional window bounds remain ISO dates, such as `1976-01-01` through `2024-12-31`.
+Existing panel bounds are 0002–9997. Temporal target association remains unsupported;
+use declared time-series or panel analysis rather than treating date anchors as
+numeric predictors. See [spec018](specs/018-bare-year-dates/spec.md).
+
 ## Scope and limits
 
 This is a local, in-memory, single CSV/wide slice under `DG-D1`'s data-to-decisions
@@ -361,7 +396,7 @@ is allowed. No current command needs even loopback sockets; no server is include
 
 `guide panel LONG.csv --config panel.yaml --out DIR --aggregate week,month`
 profiles declared long panels. Configuration names the series key(s), ISO date,
-nonnegative value, native day/week/month period, and optional exposure/state columns.
+nonnegative value, native day/week/month/year period, and optional exposure/state columns.
 Windows separate training signals from evaluation-volume context. Missing, absent,
 closed and observed-zero periods remain distinct; unequal exposure is a separate flag.
 

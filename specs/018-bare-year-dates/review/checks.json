@@ -1,0 +1,30 @@
+{
+  "after-failure-1280": {
+    "overflow": false,
+    "requests": []
+  },
+  "after-failure-390": {
+    "overflow": false,
+    "requests": []
+  },
+  "annual-1280": {
+    "overflow": false,
+    "requests": []
+  },
+  "annual-390": {
+    "overflow": false,
+    "requests": []
+  },
+  "before-failure-1280": {
+    "overflow": false,
+    "requests": []
+  },
+  "panel-1280": {
+    "overflow": false,
+    "requests": []
+  },
+  "panel-390": {
+    "overflow": false,
+    "requests": []
+  }
+}
