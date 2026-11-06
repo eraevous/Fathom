@@ -37,17 +37,22 @@ def main(argv: list[str] | None = None) -> int:
         sub.add_argument("input", type=Path)
         if command == "compare":
             sub.add_argument("after", type=Path)
-        if command in {"profile", "validate", "configure", "panel"}:
-            sub.add_argument("--config", type=Path, required=command == 'panel', help="existing YAML config" + ("; its values start the page as 'existing config'" if command == "configure" else ""))
+        if command in {"profile", "validate", "configure", "panel", "render", "export"}:
+            sub.add_argument("--config", type=Path, required=command == 'panel', help=("presentation options only; saved measurements are unchanged" if command in {"render","export"} else "existing YAML config") + ("; its values start the page as 'existing config'" if command == "configure" else ""))
         if command == 'panel':
             sub.add_argument('--aggregate', help='separate week,month views from daily input')
         if command != "validate":
-            sub.add_argument("--out", type=Path, required=True)
+            sub.add_argument("--out", type=Path, required=command!="export")
         if command == "export":
-            sub.add_argument("--formats", nargs="+", choices=("pdf", "pptx"), default=["pdf", "pptx"])
+            sub.add_argument("--formats", nargs="+", choices=("pdf", "pptx"), default=None)
+            sub.add_argument("--tidy",type=Path,help="write saved-profile columns/findings/relations/samples CSVs; no Office extra required")
             sub.add_argument("--deck",choices=("summary","full"),default="summary")
     args = parser.parse_args(argv)
+    if args.command=='export' and args.out is None and args.tidy is None:parser.error('export needs --out or --tidy')
+    if args.command=='export' and args.formats and args.out is None:parser.error('--formats requires --out')
     try:
+        from .summary_view import report_options
+        options=report_options(read_config(args.config) if getattr(args,'config',None) else None)
         if args.command == 'panel':
             from .panel import build_panel, panel_files
             raw = read_config(args.config)
@@ -104,6 +109,15 @@ def main(argv: list[str] | None = None) -> int:
             result = profile(data, cfg)
         elif args.command in {"render", "export"}:
             result = ProfilingResult.load(args.input)
+            if args.config:validate_config(read_config(args.config)) # syntax only, no analysis declarations applied
+            if args.command=='export' and args.tidy is not None:
+                from .tidy import tidy_files
+                tidy=tidy_files(result.document)
+                if args.out is None:
+                    args.tidy.mkdir(parents=True,exist_ok=True)
+                    for name,value in tidy.items():(args.tidy/name).write_text(value,encoding='utf-8',newline='\n')
+                    print('guide: wrote '+', '.join(str(args.tidy/name) for name in sorted(tidy)))
+                    return 0
             if result.document['kind'] == 'panel':
                 if args.command == 'export': raise ValueError('panel Office export is not supported; use panel CSV/HTML')
                 from .panel import panel_files
@@ -124,13 +138,13 @@ def main(argv: list[str] | None = None) -> int:
         # Finish validation/computation/rendering before creating the directory.
         is_profile = result.document["kind"] == "profile"
         prefix = "report" if is_profile else "comparison"
-        files = {prefix + ".md": render_markdown(result), prefix + ".html": render_html(result)}
+        files = {prefix + ".md": render_markdown(result,report=options), prefix + ".html": render_html(result,report=options)}
         if args.command not in {"render", "export"}:
             files["guide-profile.json" if is_profile else "guide-comparison.json"] = result.to_json()
         binaries = {}
         if args.command == "export":
             from .exports import export_bundle
-            binaries, status = export_bundle(result, args.formats,deck=args.deck)
+            binaries, status = export_bundle(result, args.formats or ["pdf","pptx"],deck=args.deck,report=options)
             files['export-status.json'] = canonical_json(status)
         args.out.mkdir(parents=True, exist_ok=True)
         for name, contents in files.items():
@@ -138,6 +152,10 @@ def main(argv: list[str] | None = None) -> int:
         for name, contents in binaries.items():
             (args.out / name).write_bytes(contents)
         print(f"guide: wrote {', '.join(str(args.out / name) for name in sorted([*files, *binaries]))}")
+        if args.command=='export' and args.tidy is not None:
+            args.tidy.mkdir(parents=True,exist_ok=True)
+            for name,value in tidy.items():(args.tidy/name).write_text(value,encoding='utf-8',newline='\n')
+            print('guide: wrote '+', '.join(str(args.tidy/name) for name in sorted(tidy)))
         if args.command == "profile":
             print(summary_line(result.document))
             from .parsing import temporal_failure_message

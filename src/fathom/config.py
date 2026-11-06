@@ -30,7 +30,10 @@ def mapping(value: object, name: str, allowed: set[str]) -> dict:
 def validate_config(raw: dict | None = None, columns: list[str] | None = None) -> dict:
     cfg = dict(mapping({} if raw is None else raw, "config", {
         "question", "target", "pair_budget", "columns", "row_unit", "generating_process",
-        "missingness_mechanism", "decisions", "context", "schema", "title", "description", "sample_rows", "sample_seed", "sample_text_limit", "group_by", "intervals", "time_series", "bins", "sections"}))
+        "missingness_mechanism", "decisions", "context", "schema", "title", "description", "sample_rows", "sample_seed", "sample_text_limit", "group_by", "intervals", "time_series", "bins", "sections", "report"}))
+    from .summary_view import report_options
+    report_options(cfg)
+    cfg.pop("report",None)
     for key in ("question", "target", "row_unit", "generating_process", "missingness_mechanism", "title", "description", "group_by"):
         text(cfg.get(key), key, nullable=True)
     for key,default,low,high in (("sample_rows",20,0,100),("sample_seed",0,0,2**32-1),("sample_text_limit",120,20,1000)):
