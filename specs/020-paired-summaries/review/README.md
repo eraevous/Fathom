@@ -69,3 +69,6 @@ Use pinned pandas2.2.3, test/stats/export extras. `PYTHONPATH=src python specs/0
 | nojs-columns_as_rows-light | [open](nojs-columns_as_rows-light-1280.png) | [open](nojs-columns_as_rows-light-390.png) |
 | nojs-metrics_as_rows-dark | [open](nojs-metrics_as_rows-dark-1280.png) | [open](nojs-metrics_as_rows-dark-390.png) |
 | nojs-metrics_as_rows-light | [open](nojs-metrics_as_rows-light-1280.png) | [open](nojs-metrics_as_rows-light-390.png) |
+
+## PR34 independent-review correction
+The historical screenshots above exposed merged relationships and an Adventure group mean presented beside the rest label. They are superseded by the [structured-only corrective review](structured-fix/README.md), with exact public-film regressions and before/after light/dark screenshots. Generic prose splitting has been removed; unstructured findings remain single lines.

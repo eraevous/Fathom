@@ -14,7 +14,7 @@ from .presentation import formatted, column_tables, html_table, markdown_table, 
 from pathlib import Path
 from .verdicts import headlines_html, key_findings, skew_text, inline_rule
 from .summary_view import summary_html,summary_markdown,SUMMARY_CSS,TRANSPOSE_SCRIPT
-from .finding_view import finding_tree,html_tree,markdown_tree,quantity_lines,evidence_html,evidence_markdown
+from .finding_view import finding_tree,html_tree,markdown_tree,evidence_html,evidence_markdown
 from .report_style import style_html, STYLE_CSS, NAV_SCRIPT, navigation, markdown_text
 
 KINDS = (("observation", "Observations"), ("interpretation", "Interpretations"),
@@ -205,13 +205,13 @@ def kind_tag(kind):
     return '<span class="kind-tag">'+escape(kind.capitalize())+'</span>'
 
 
-def finding_html(f, repeated_ids, context=None):
+def finding_html(f, repeated_ids, context=None, document=None):
     fid=escape(f['id'],quote=True)
     cls=('finding repetitive' if repetitive(f,repeated_ids) else 'finding')+' kind-'+escape(f['kind'],quote=True)
-    tree=finding_tree(f)
+    tree=finding_tree(f,document)
     out=[f'<article id="{fid}" class="{cls}"><div class="finding-verdict">{kind_tag(f["kind"])} {html_tree(tree,f.get("columns",[]),styled=False)}</div>']
     gate=inline_rule(f)
-    if gate and f.get('rule')!='target_group_contrast':out.append('<ul class="gate quantity-list">'+''.join('<li class="finding-line">Gate: '+escape(line)+'</li>' for line in quantity_lines(gate))+'</ul>')
+    if gate and f.get('rule')!='target_group_contrast':out.append('<ul class="gate quantity-list">'+''.join('<li class="finding-line">Gate: '+escape(line)+'</li>' for line in [gate])+'</ul>')
     out.append('<details><summary>Evidence and uncertainty</summary>')
     if context:out.append('<p>'+escape(context)+'</p>')
     for item in f['evidence']:
@@ -295,7 +295,7 @@ def render_html(result: ProfilingResult,report=None):
                 links=''.join('<p><a href="#'+escape(f['id'],quote=True)+'">Original item</a>: '+escape(f['message'])+'</p>'+readable_html({'evidence':f['evidence'],'generator':f['generator'],'uncertainty':f['uncertainty'],'provenance':f['provenance']}) for f in items)
                 out.append(f'<div class="summary-view"><p class="kind-{kind}">'+kind_tag(kind)+escape(message)+'</p><details><summary>Evidence, uncertainty and original items</summary>'+links+'</details></div>')
             fs=[f for f in d['findings'] if f['kind']==kind]
-            out.extend(finding_html(f,repeated_ids) for f in fs)
+            out.extend(finding_html(f,repeated_ids,document=d) for f in fs)
             if not fs: out.append('<p>None recorded.</p>')
         out += ['</div></section>',temporal_html(d)]
         out += ['<section id="report-relations"><h2>Relations</h2><p>'+escape(d['selection'].get('ranking_rule','Legacy input-order selection; no relevance ranking recorded.'))+'</p>',
@@ -348,7 +348,7 @@ def render_markdown(result: ProfilingResult,report=None):
             lines += ['## '+title,'','\n'.join(markdown_table(t) for t in structured_tables(title,value)),'']
     else:
         items=key_findings(d)
-        lines += ['## Key findings','']+[(markdown_tree(finding_tree({'id':i['ref'],'kind':'observation','message':i['message'],'evidence':[]}),columns=[c['name'] for c in d['columns']])+'\n') for i in items]+['']
+        lines += ['## Key findings','']+[(markdown_tree(finding_tree(i.get('finding',{'id':i['ref'],'kind':'observation','message':i['message'],'evidence':[]}),d),columns=[c['name'] for c in d['columns']])+'\n') for i in items]+['']
         lines += [summary_markdown(d,report)]+dictionary_and_provenance_markdown(d)
         lines += ['## Dataset summary','','| Measure | Snapshot | Evidence |','| --- | --- | --- |']
         for title,value,refs in summary_rows(d):
@@ -365,11 +365,11 @@ def render_markdown(result: ProfilingResult,report=None):
             for message,items in summaries:
                 if items and items[0]['kind']==kind: lines += [md_text(message,verdict=True,inferred=kind in {'hypothesis','interpretation'}),'']
             fs=[f for f in d['findings'] if f['kind']==kind and not repetitive(f,repeated_ids)]
-            for f in fs: lines += markdown_finding(f)
+            for f in fs: lines += markdown_finding(f,d)
             if not fs: lines += ['No additional items recorded.','']
         if repeated:
             lines += ['<details><summary>Full repetitive per-column findings</summary>','']
-            for f in repeated: lines += markdown_finding(f)
+            for f in repeated: lines += markdown_finding(f,d)
             lines += ['</details>','']
         lines += temporal_markdown(d)
         lines += ['## Relations','',md_text(d['selection'].get('ranking_rule','Legacy input-order selection; no relevance ranking recorded.')),'',
@@ -387,6 +387,6 @@ def render_markdown(result: ProfilingResult,report=None):
     return '\n'.join(lines).rstrip()+'\n'
 
 
-def markdown_finding(f):
-    return [f'<a id="{escape(f["id"],quote=True)}"></a>',markdown_tree(finding_tree(f),columns=f.get('columns',[])),'','\n'.join('- '+md_text('Gate: '+line,verdict=True,columns=f.get('columns',[])) for line in quantity_lines(inline_rule(f))) if inline_rule(f) and f.get('rule')!='target_group_contrast' else '',
+def markdown_finding(f,document=None):
+    return [f'<a id="{escape(f["id"],quote=True)}"></a>',markdown_tree(finding_tree(f,document),columns=f.get('columns',[])),'','\n'.join('- '+md_text('Gate: '+line,verdict=True,columns=f.get('columns',[])) for line in [inline_rule(f)]) if inline_rule(f) and f.get('rule')!='target_group_contrast' else '',
             '<details><summary>Evidence and uncertainty</summary>','',evidence_markdown({'evidence':f['evidence'],'generator':f['generator'],'uncertainty':f['uncertainty'],'provenance':f['provenance']}),'</details>','']

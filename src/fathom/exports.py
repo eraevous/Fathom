@@ -15,7 +15,7 @@ from .target import target_tables
 from .palette import LIGHT as C,KIND_COLOURS
 from .report_style import runs
 from .summary_view import summary_panels,report_options
-from .finding_view import finding_tree,quantity_lines
+from .finding_view import finding_tree
 
 
 def escape(value):
@@ -28,7 +28,7 @@ def finding_topics(d):
     repeated={f['id'] for _,items in groups for f in items}
     for kind,title in KINDS:
         messages=[message for message,items in groups if items and items[0]['kind']==kind]
-        messages += [finding_tree(f)['text']+''.join('\n  - '+line for line in finding_tree(f)['children']) for f in d.get('findings',[]) if f['kind']==kind and f['id'] not in repeated]
+        messages += [finding_tree(f,d)['text']+''.join('\n  - '+line for line in finding_tree(f,d)['children']) for f in d.get('findings',[]) if f['kind']==kind and f['id'] not in repeated]
         if messages:yield title,messages
 
 

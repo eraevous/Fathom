@@ -38,3 +38,7 @@ operators. Active work paused when the execution environment became unavailable;
 resume from the intact worktree and revalidate before publication.
 
 Summary text n and top-value share use stored nonmissing counts/frequencies; entropy and length retain the stored raw-lexeme basis including blanks, explicitly disclosed. Empty text columns show n=0 and no top-value share. PDF generated gate arrows are spelled out as "leads to" for the bundled font.
+
+PR34 independent review found a correctness defect: headline evidence was discarded and combined messages split at punctuation, misattributing an Adventure mean. Replace the generic clause parser with structured-only trees. Headline selection uses the same rank/coverage order and five-item cap, with each relationship now its own item (later slots may fall beyond the cap). Legacy/unstructured findings and textual rules remain intact. Three-decimal coefficients are presentation-only. Evidence-path joins provide declared/inferred basis without parsing messages.
+
+Correction implementation joins relationship display basis by exact ordered column identity in the saved bivariate list; numeric values/counts come directly from the finding evidence. The actual public rest has2652total rows/2651valid; both are labelled. Final corrected full extras446passed/2skipped; all9outputs repeat byte-identically; see structured-fix review.

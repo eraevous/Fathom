@@ -1,0 +1,70 @@
+F.FFF                                                                    [100%]
+=================================== FAILURES ===================================
+___________ test_films_headline_roles_and_independent_relationships ____________
+
+films = ProfilingResult(document={'schema_version': 2, 'kind': 'profile', 'source': {'connector': 'csv', 'origin': 'tests/fixt...stem default', 'bins': None, 'bin_rule': 'sqrt(n) rounded up, capped at 10 (system default)', 'omitted_sections': []}})
+
+    def test_films_headline_roles_and_independent_relationships(films):
+        before=films.to_json();reader=Headlines();reader.feed(render_html(films))
+        pairs=[x for x in reader.items if "× Worldwide Gross" in x["parent"]]
+>       assert len(pairs)==2
+E       assert 0 == 2
+E        +  where 0 = len([])
+
+tests/test_structured_findings.py:38: AssertionError
+__________ test_unstructured_sentences_and_literal_decoys_stay_whole ___________
+
+    def test_unstructured_sentences_and_literal_decoys_stay_whole():
+        for message in ["Before = 1; after = 2. Complete n=3. Descriptive, not causal.","x=y: 'a,b; c.d' is literal. Meaning unknown."]:
+            f={"message":message,"id":"legacy","kind":"observation","evidence":[]}
+>           assert finding_tree(f)=={"text":message,"children":[]}
+E           AssertionError: assert {'text': 'Obs...not causal.']} == {'text': 'Bef...children': []}
+E             
+E             Differing items:
+E             {'text': 'Observation — legacy'} != {'text': 'Before = 1; after = 2. Complete n=3. Descriptive, not causal.'}
+E             {'children': ['Before = 1', 'after = 2. Complete', 'n=3. Descriptive', 'not causal.']} != {'children': []}
+E             Use -v to get more diff
+
+tests/test_structured_findings.py:72: AssertionError
+______________ test_raw_evidence_string_is_not_split_into_claims _______________
+
+    def test_raw_evidence_string_is_not_split_into_claims():
+        from fathom.finding_view import evidence_html,evidence_markdown
+        sentence='mean = 1; rest = 2. Complete n=3. Descriptive, not causal.'
+        html=evidence_html({'note':sentence})
+>       assert html.count('<li>')==1 and sentence in html
+E       assert (1 == 1 and 'mean = 1; rest = 2. Complete n=3. Descriptive, not causal.' in '<ul class="evidence-quantities"><li><code>note</code>: <ul><li class="finding-line">mean = 1</li><li class="finding-l...2. Complete</li><li class="finding-line">n=3. Descriptive</li><li class="finding-line">not causal.</li></ul></li></ul>')
+E        +  where 1 = <built-in method count of str object at 0x7fe320e0c4b0>('<li>')
+E        +    where <built-in method count of str object at 0x7fe320e0c4b0> = '<ul class="evidence-quantities"><li><code>note</code>: <ul><li class="finding-line">mean = 1</li><li class="finding-l...2. Complete</li><li class="finding-line">n=3. Descriptive</li><li class="finding-line">not causal.</li></ul></li></ul>'.count
+
+tests/test_structured_findings.py:79: AssertionError
+_________ test_relationship_precision_is_display_only_in_every_format __________
+
+films = ProfilingResult(document={'schema_version': 2, 'kind': 'profile', 'source': {'connector': 'csv', 'origin': 'tests/fixt...stem default', 'bins': None, 'bin_rule': 'sqrt(n) rounded up, capped at 10 (system default)', 'omitted_sections': []}})
+
+    def test_relationship_precision_is_display_only_in_every_format(films):
+        from fathom.exports import finding_topics
+        d=copy.deepcopy(films.document);original=copy.deepcopy(d)
+        f=next(f for f in d["findings"] if f.get("rule")=="selected_relation")
+        f["message"]="Selected relationship: stale coefficient=999. Then a sentence."
+        p=ProfilingResult(d)
+        for text in [render_html(p),render_markdown(p),str(list(finding_topics(d)))]:
+>           assert "0.940" in text and "complete cases" in text
+E           assert ('0.940' in '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initia...metrics_as_rows\':\'columns_as_rows\';b.setAttribute(\'aria-pressed\',String(flipped));});});</script></body></html>\n' and 'complete cases' in '<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initia...metrics_as_rows\':\'columns_as_rows\';b.setAttribute(\'aria-pressed\',String(flipped));});});</script></body></html>\n')
+
+tests/test_structured_findings.py:90: AssertionError
+=============================== warnings summary ===============================
+../../../opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/site-packages/anyio/pytest_plugin.py:14
+  /opt/codex/runtimes/codex-primary-runtime/dependencies/python/lib/python3.12/site-packages/anyio/pytest_plugin.py:14: PytestRemovedIn10Warning: _pytest.python.CallSpec2 has been renamed to CallSpec.
+  The CallSpec2 alias will be removed in pytest 10.
+  Update imports to use CallSpec instead.
+  See https://docs.pytest.org/en/stable/deprecations.html#callspec2-renamed
+    from _pytest.python import CallSpec2
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ============================
+FAILED tests/test_structured_findings.py::test_films_headline_roles_and_independent_relationships
+FAILED tests/test_structured_findings.py::test_unstructured_sentences_and_literal_decoys_stay_whole
+FAILED tests/test_structured_findings.py::test_raw_evidence_string_is_not_split_into_claims
+FAILED tests/test_structured_findings.py::test_relationship_precision_is_display_only_in_every_format
+4 failed, 1 passed, 1 warning in 5.66s

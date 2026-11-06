@@ -15,3 +15,9 @@
 ## Validation
 - [x] T009 Full extras/offline/identity checks after final records; AEC edges/check/impact.
 - [x] T010 Actual visual pass, resolve/list issues, prepare one PR, CLA empty, Kate first.
+
+## PR34 review correction
+- [x] Append clarified provisional record/spec/intent before code.
+- [x] Exact public Adventure/relationship regression and clean/swapped-role/literal/legacy decoys; demonstrate4fail/1pass on old head.
+- [x] Structured-only shared trees, source findings in headlines, three-decimal display; preserve artifact.
+- [x] Full extras446passed/2skipped; AEC0errors; deterministic/offline controls; actual1280light/dark before/after screenshots.

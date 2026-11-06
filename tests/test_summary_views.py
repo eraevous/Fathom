@@ -31,12 +31,10 @@ def test_numeric_contrast_nested_quantities_preserves_all_gates_and_decoy():
 def test_generic_comparison_lines_and_literal_identifiers_are_safe():
     from fathom.finding_view import finding_tree,comparison_count
     f={'id':'paired','kind':'observation','message':'Training mean = 3; evaluation mean = 4; gap 1 ≥ SD 0.5; observed = 8 vs expected = 9.','columns':[],'evidence':[]}
-    t=finding_tree(f)
-    assert t['children'] and all(comparison_count(s)<=1 for s in [t['text'],*t['children']])
-    assert all(str(x) in ' '.join(t['children']) for x in [3,4,1,8,9])
+    assert finding_tree(f)=={'text':f['message'],'children':[]}
     assert comparison_count('`x=y` and "a≥b" are literal labels.')==0
     named={'id':'named','kind':'observation','columns':['x=y'],'message':'x=y mean = 3; rest mean = 4.','evidence':[]}
-    assert any('x=y' in line for line in finding_tree(named)['children'])
+    assert finding_tree(named)=={'text':named['message'],'children':[]}
     clean={'id':'q','kind':'question','message':'What is the row unit?','evidence':[]}
     assert finding_tree(clean)=={'text':clean['message'],'children':[]}
 
@@ -97,31 +95,13 @@ def test_palette_exact_tokens_actual_text_and_graphic_roles():
     assert 'opacity=".65"' not in render_html(p)
 
 
-def test_actual_finding_lines_have_at_most_one_comparison():
-    from html.parser import HTMLParser
-    class Lines(HTMLParser):
-        def __init__(self):super().__init__();self.active=False;self.blocks=[];self.code=0;self.lines=[]
-        def handle_starttag(self,tag,attrs):
-            if tag=='article' and 'finding' in dict(attrs).get('class','').split():self.active=True
-            if not self.active:return
-            if tag=='code':self.code+=1
-            if tag in {'article','div','p','li','ul','summary','dd','dt'}:self.blocks.append([])
-        def handle_endtag(self,tag):
-            if not self.active:return
-            if tag=='code':self.code-=1
-            if tag in {'article','div','p','li','ul','summary','dd','dt'} and self.blocks:self.lines.append(''.join(self.blocks.pop()))
-            if tag=='article':self.active=False
-        def handle_data(self,text):
-            if self.active and self.blocks and not self.code:self.blocks[-1].append(text)
-    p=result();h=render_html(p);lines=Lines();lines.feed(h)
-    operators=re.compile(r'==|!=|>=|<=|=|≥|\bvs\b')
-    assert lines.lines
-    assert all(len(operators.findall(line))<=1 for line in lines.lines),[line for line in lines.lines if len(operators.findall(line))>1]
-    md=render_markdown(p).split('## Findings',1)[1].split('## Temporal',1)[0].split('## Relations',1)[0]
-    # Source values may contain literal operators; code spans are not comparisons.
-    for line in md.splitlines():
-        if line.lstrip().startswith('- ') and not '`' in line:
-            assert len(operators.findall(line))<=1,line
+def test_structured_finding_lines_have_at_most_one_comparison():
+    from fathom.finding_view import finding_tree,comparison_count
+    p=result()
+    for f in p.document['findings']:
+        t=finding_tree(f,p.document)
+        if t['children']:
+            assert all(comparison_count(s,f.get('columns',[]))<=1 for s in [t['text'],*t['children']])
 
 
 def test_empty_legacy_and_hostile_summary_links_remain_truthful():
@@ -162,7 +142,7 @@ def test_multiple_rate_contrasts_and_small_group_caution_keep_source_counts():
     source=copy.deepcopy(group)
     f={'id':'rates','kind':'observation','rule':'target_group_contrast','columns':['group','label'],'message':'Stored contrasts','evidence':[{'value':group}]}
     t=finding_tree(f);text=' '.join(t['children'])
-    assert '100.0%' in text and '0.0%' in text and '(n = 2)' in text and '(n = 20)' in text
+    assert '100.0%' in text and '0.0%' in text and '2 rows (2 valid)' in text and '20 rows (20 valid)' in text
     assert 'too small to read reliably' in text and 'not marked' in text
     assert source==group
 

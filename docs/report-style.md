@@ -67,3 +67,5 @@ accent_faint and opaque markers. Every finding kind keeps its text label. Palett
 acceptance remains Zach's; `fathom.palette` remains the single color source.
 
 Summary text n and top-value share use stored nonmissing counts/frequencies; entropy and length retain the stored raw-lexeme basis including blanks, explicitly disclosed. Empty text columns show n=0 and no top-value share. PDF generated gate arrows are spelled out as "leads to" for the bundled font.
+
+PR34 review correction (2026-11-06): nested quantity lists are derived only from structured finding evidence, with one parent per relationship/contrast and role-labelled group/rest values. Displayed relationship coefficients have three decimals; storage is unchanged. Raw evidence strings and findings without structured pairs remain intact, overriding the earlier conservative clause-splitting reading. Each relationship occupies one headline slot under the existing five-item cap.

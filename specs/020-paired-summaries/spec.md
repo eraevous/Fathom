@@ -82,3 +82,6 @@ missing% uses all input rows; invalid counts remain in the dictionary. Parse cov
 is valid/nonmissing, not calendar completeness. Gaps are the stored univariate rule's
 gaps. Periods are declared grains/YEAR precision, otherwise not declared. No new
 statistical inference or entropy/cadence/expected-cell computation is added.
+
+## PR34 review correction (2026-11-06)
+Serves:FT-VIEW20-R1@2 (provisional). Nest only structured quantities, never parsed sentence clauses. One parent per relationship/contrast; coefficient display three decimals; all source values/gates retain roles. Findings without a structured pair remain intact single lines, overriding the earlier generic multi-comparison splitting reading. Each selected relationship occupies its own headline slot under the existing five-item cap and ranked order.

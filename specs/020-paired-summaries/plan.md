@@ -31,3 +31,5 @@ artifacts, transpose twice/default/no-JS, CSV values/paths and CLI blocked socke
 Then full extras after final ledger appends, AEC edges/check/impact, actual screenshot
 review at both widths/themes/scripts states plus PDF/PPTX. No external research or
 lookup; local Spec Kit research agents inventoried paths and contrast constraints.
+
+PR34 corrective plan: carry source findings into headlines, join relationship metadata by evidence path/column identity, and share structured finding_tree across profile/Brief/Markdown/export. Remove all prose-splitting fallbacks, including raw evidence and textual gates. Add exact Adventure/relationship and swapped-mean decoys before fixes; rerun full extras/AEC/identity and actual public-film screenshots. No measurement/schema/order change.

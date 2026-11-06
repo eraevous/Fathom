@@ -5,7 +5,6 @@ from .presentation import formatted
 
 _OP=re.compile(r'>=|<=|==|!=|=|≥|≤|<|>|\b(?:vs|versus)\b')
 _LITERAL=re.compile(r'`[^`]*`|"[^"\n]*"|\x27[^\x27\n]*\x27')
-_NUM=re.compile(r'(?<!\w)[+-]?\d+(?:[.,]\d+)*(?:e[+-]?\d+)?',re.I)
 
 
 def masked_text(text,columns=()):
@@ -17,52 +16,36 @@ def masked_text(text,columns=()):
 def comparison_count(text,columns=()):return len(_OP.findall(masked_text(text,columns)))
 
 
-def quantity_lines(text,columns=()):
-    """Retain source clauses; line boundaries replace punctuation, never quantities."""
-    lines=[]
-    # Splitting semicolons/commas/paired conjunctions is a presentation boundary only.
-    masked=masked_text(text,columns)
-    separators=list(re.finditer(r';\s*|\n+|,\s+(?=[\w|])|\s+(?:vs|versus)\s+|\s+and\s+(?=\d)',masked))
-    parts=[];pos=0
-    for sep in separators:parts.append(text[pos:sep.start()]);pos=sep.end()
-    parts.append(text[pos:])
-    for part in parts:
-        part=part.strip()
-        if not part:continue
-        while comparison_count(part,columns)>1:
-            ops=list(_OP.finditer(masked_text(part,columns)));second=ops[1]
-            prefix=part[:second.start()];field=re.search(r'[\w|.−-]+\s*$',prefix)
-            cut=field.start() if field and field.start()>0 else second.start()
-            if cut<=0:break
-            lines.append(part[:cut].strip());part=part[cut:].strip()
-        if part:lines.append(part)
-    return lines
-
-
-def finding_tree(f):
-    message=f['message'];evidence=next((e.get('value') for e in f.get('evidence',[]) if isinstance(e.get('value'),dict)),{})
-    if f.get('rule')=='target_group_contrast' and f.get('kind')=='observation' and 'contrasts' in evidence:
-        names=f.get('columns',[]);label=names[0] if names else 'group';measure=names[1] if len(names)>1 else 'value'
+def finding_tree(f,document=None):
+    """Use saved typed fields only; unstructured prose is never tokenized."""
+    fallback={'text':f['message'],'children':[]}
+    evidence=next((e.get('value') for e in f.get('evidence',[]) if isinstance(e.get('value'),dict)),{})
+    names=f.get('columns',[])
+    if f.get('kind')!='observation':return fallback
+    if f.get('rule')=='selected_relation' and len(names)==2:
+        pair=next((p for p in (document or {}).get('bivariate',[]) if [p['left'],p['right']]==names),{})
+        measures=[(label,evidence[key]) for key,label in [('pearson_r','Pearson r'),('eta','Correlation ratio eta'),('cramers_v',"Cramer's V")] if isinstance(evidence.get(key),(int,float))]
+        if not measures or not isinstance(evidence.get('n'),int):return fallback
+        basis=' ('+pair['semantics']+')' if pair.get('semantics') else ''
+        return {'text':'selected: '+names[0]+' × '+names[1]+basis,
+                'children':[label+': '+format(value,'.3f') for label,value in measures]+['complete cases: '+formatted(evidence['n']),'descriptive, not causal']}
+    if f.get('rule')=='target_group_contrast' and 'contrasts' in evidence and len(names)==2:
         status='marked' if evidence['contrasts'] else 'not marked'
-        text=status+': '+repr(evidence.get('value'))+' in '+label+' — '+measure+' contrast with rest'
+        text=status+': '+names[1]+' differs in '+names[0]+' = '+repr(evidence.get('value'))
         children=[]
         for contrast in evidence['contrasts']:
             kind=contrast['measure'];share=kind.startswith('rate:') or kind=='missing share'
-            children.extend(['group: '+kind+' '+formatted(contrast['group'],share)+' (n = '+str(evidence.get('n' if kind=='missing share' else 'valid','unknown'))+')',
-                             'rest: '+kind+' '+formatted(contrast['rest'],share)+' (n = '+str(evidence.get('rest_n' if kind=='missing share' else 'rest_valid','unknown'))+')'])
+            group_count=formatted(evidence.get('n'))+' rows ('+formatted(evidence.get('valid'))+' valid)'
+            rest_count=formatted(evidence.get('rest_n'))+' rows ('+formatted(evidence.get('rest_valid'))+' valid)'
+            children.extend(['group: '+group_count+', '+kind+' '+formatted(contrast['group'],share),
+                             'rest: '+rest_count+', '+kind+' '+formatted(contrast['rest'],share)])
         from .verdicts import gate_text
         children.extend('gate: '+gate_text(g) for g in evidence.get('gates',[]))
         if evidence.get('small'):children.append('Caution: too small to read reliably (valid n < 5)')
-        children.extend(['Group rows: '+str(evidence.get('n','unknown')),'Rest rows: '+str(evidence.get('rest_n','unknown')),'Group missing: '+str(evidence.get('missing','unknown'))])
-        return {'text':text,'children':[line for s in children for line in quantity_lines(s,names)]}
-    names=f.get('columns',[])
-    lines=quantity_lines(message,names)
-    numeric=len(_NUM.findall(masked_text(message,names)))>=2
-    if len(lines)>1 and (numeric or comparison_count(message,names)>1):
-        prefix=message.split(':',1)[0]
-        parent=prefix if ':' in message and not _NUM.search(prefix) and comparison_count(prefix,names)<=1 else f.get('kind','finding').capitalize()+' — '+(', '.join(f.get('columns',[])) or f.get('rule',f.get('id','quantities')).replace('_',' '))
-        return {'text':parent,'children':lines}
-    return {'text':message,'children':[]}
+        if not evidence['contrasts']:children.extend(['Group rows: '+formatted(evidence.get('n')),'Rest rows: '+formatted(evidence.get('rest_n'))])
+        children.append('Group missing: '+formatted(evidence.get('missing')))
+        return {'text':text,'children':children}
+    return fallback
 
 
 def html_tree(tree,columns=(),styled=True):
@@ -84,7 +67,6 @@ def evidence_html(value):
     if isinstance(value,dict):
         return '<ul class="evidence-quantities">'+''.join('<li><code>'+escape(str(k))+'</code>: '+evidence_html(v)+'</li>' for k,v in sorted(value.items(),key=lambda item:str(item[0])))+'</ul>' if value else '<code>{}</code>'
     if isinstance(value,list):return '<ul>'+''.join('<li>'+evidence_html(v)+'</li>' for v in value)+'</ul>' if value else '<code>[]</code>'
-    if isinstance(value,str) and comparison_count(value)>1:return '<ul>'+''.join('<li class="finding-line">'+escape(s)+'</li>' for s in quantity_lines(value))+'</ul>'
     return escape(str(value))
 
 
@@ -94,5 +76,5 @@ def evidence_markdown(value,depth=0):
     if isinstance(value,dict):
         return ''.join(pad+'- '+markdown_text(str(k),literal=True)+':\n'+evidence_markdown(v,depth+1) for k,v in sorted(value.items(),key=lambda item:str(item[0]))) or pad+'- {}\n'
     if isinstance(value,list):return ''.join(evidence_markdown(v,depth) for v in value) or pad+'- []\n'
-    lines=quantity_lines(str(value)) if isinstance(value,str) and comparison_count(value)>1 else [str(value)]
+    lines=[str(value)]
     return ''.join(pad+'- '+markdown_text(line,verdict=True)+'\n' for line in lines)
