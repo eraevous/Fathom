@@ -245,6 +245,16 @@ def validate_document(doc: dict) -> None:
                 u=col["univariate"]
                 if not isinstance(u,dict) or not isinstance(u.get("statistics"),dict) or not isinstance(u.get("charts"),list):raise ValueError("invalid univariate profile")
                 if 'top_n_suppression' in u and not isinstance(u['top_n_suppression'],str):raise ValueError('invalid top-N suppression')
+                intraday=u['statistics'].get('intraday')
+                if intraday is not None:
+                    if not isinstance(intraday,dict) or not isinstance(intraday.get('basis'),str) or not isinstance(intraday.get('bases'),list):raise ValueError('invalid intraday profile')
+                    for basis in intraday['bases']:
+                        if not isinstance(basis,dict) or any(not isinstance(basis.get(k),str) for k in ['basis','earliest','latest']) or type(basis.get('count')) is not int or basis['count']<0:raise ValueError('invalid intraday basis')
+                        for key in ['hour_counts','minute_counts','second_counts','precision_counts']:
+                            counts=basis.get(key)
+                            if not isinstance(counts,dict) or any(not isinstance(k,str) or type(v) is not int or v<0 for k,v in counts.items()):raise ValueError('invalid intraday counts')
+                        matrix=basis.get('weekday_hour_counts')
+                        if not isinstance(matrix,dict) or any(not isinstance(row,dict) or any(type(v) is not int or v<0 for v in row.values()) for row in matrix.values()):raise ValueError('invalid weekday/hour counts')
                 for chart in u["charts"]:
                     if not isinstance(chart,dict) or any(not isinstance(chart.get(k),str) or not chart[k] for k in ("kind","title","x_label","y_label")):raise ValueError("invalid chart labels")
                     if chart["kind"] not in {"bar","time","histogram","box","ecdf"}:raise ValueError("unsupported chart kind")

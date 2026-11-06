@@ -34,6 +34,8 @@ def process_table(s):
             ["Time of day carried", p["time_of_day"]], ["First / last", f"{p['first']} / {p['last']}"]]
     if s["mode"] == "values":
         rows += [["Rows without a parsed value", formatted(p["rows_without_value"])], ["Rows with an explicit 0", formatted(p["explicit_zero_rows"])]]
+    if p.get('clock_basis'):rows.append(['Clock basis',p['clock_basis']])
+    if p.get('unsupported_clock_reason'):rows.append(['Not analysed',p['unsupported_clock_reason']])
     ia = p["native_interarrival_seconds"]
     if ia: rows.append(["Native inter-arrival (s): median / max", f"{formatted(ia['median'])} / {formatted(ia['max'])}"])
     for g in s["granularities"]:

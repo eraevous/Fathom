@@ -76,6 +76,13 @@ def column_tables(col):
         if key in s:
             denominator=s.get('special_character_total') if key=='special_characters' else s.get('substring_total') if key=='common_substrings' else s.get('raw_lexemes',s.get('finite',col['count']-col['missing']))
             tables.append(frequency_table(title(key),s[key],denominator))
+    for basis in s.get('intraday',{}).get('bases',[]):
+        label='Local clock — '+basis['basis']
+        tables.append(metric_table(label,{'rows':basis['count'],'earliest':basis['earliest'],'latest':basis['latest']}))
+        tables.append(metric_table(label+' precision',basis['precision_counts']))
+        tables.append({'caption':label+' minute/second components (other components zero; not elapsed intervals)','headers':['Component','Minute count','Second count'],'numeric':[1,2],'rows':[[str(i),formatted(basis['minute_counts'][f'{i:02d}']),formatted(basis['second_counts'][f'{i:02d}'])] for i in range(60) if basis['minute_counts'][f'{i:02d}'] or basis['second_counts'][f'{i:02d}']]})
+        matrix=basis['weekday_hour_counts']
+        if matrix:tables.append({'caption':label+' weekday × hour (written dates)','headers':['Weekday',*[f'{h:02d}' for h in range(24)]],'numeric':list(range(1,25)),'rows':[[day,*[formatted(n) for n in counts.values()]] for day,counts in matrix.items()]})
     if col.get('special'):
         special=col['special'];tables.append(metric_table('Local syntax/range checks',{k:special[k] for k in ('valid','invalid','placeholders','test_values')}))
         if special['domains']:tables.append(frequency_table('Most common valid domains',special['domains'],special['valid']))
