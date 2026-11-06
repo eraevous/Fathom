@@ -1,0 +1,12 @@
+title: Synthetic distribution review
+description: Authored groups, zeros, gaps and unavailable values; no real observations.
+target: amount
+pair_budget: 4
+columns:
+  group: {type: categorical}
+  category: {type: categorical}
+  amount: {type: numeric, units: credits}
+  when: {type: temporal}
+  latitude: {type: latitude}
+time_series:
+  - {time: when, value: amount, granularities: [day]}

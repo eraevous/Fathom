@@ -1,3 +1,4 @@
+from html_helpers import assert_finding_preserved
 """Exact quality evidence plus clean decoys; builder acceptance is not owner acceptance."""
 
 from html_helpers import visible_text, assert_navigation_only_script
@@ -42,7 +43,7 @@ def test_diagnostic_violation_and_decoy(make_profile, values, clean, rule):
     assert matches and not rules(decoy, rule)
     for f in matches:
         assert f["evidence"] and f["uncertainty"] and f["generator"] == "rule:quality-v1"
-        assert f["message"] in visible_text(render_html(profile_result(dirty)))
+        assert_finding_preserved(f,render_html(profile_result(dirty)))
         assert any(a["kind"] == "action" and {"finding": f["id"]} in a["evidence"] for a in dirty["findings"])
     if rule in {"sentinel", "dummy", "placeholder"}:
         assert any(f["kind"] == "hypothesis" and f.get("rule") == rule for f in dirty["findings"])

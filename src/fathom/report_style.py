@@ -8,7 +8,7 @@ from html.parser import HTMLParser
 import re
 
 MAX_BOLD_WORDS = 8
-VERDICTS = ('not strongly skewed', 'strongly skewed', 'insufficient evidence',
+VERDICTS = ('selected', 'not strongly skewed', 'strongly skewed', 'insufficient evidence',
             'not estimable', 'not marked', 'marked', 'insufficient', 'not constant', 'constant',
             'undefined', 'computed', 'present', 'absent', 'smooth', 'erratic', 'intermittent', 'lumpy')
 _STATE = re.compile(r'(?<![\w-])(?:'+'|'.join(VERDICTS)+r')(?![\w-])',re.I)

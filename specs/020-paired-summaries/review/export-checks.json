@@ -1,0 +1,86 @@
+{
+  "after-pdf-finding-1280.png": {
+    "page": 29,
+    "pages": 35,
+    "renderer": "ReportLab/PyMuPDF",
+    "topic": "paired finding",
+    "width": 1280
+  },
+  "after-pdf-finding-390.png": {
+    "page": 29,
+    "pages": 35,
+    "renderer": "ReportLab/PyMuPDF",
+    "topic": "paired finding",
+    "width": 390
+  },
+  "after-pdf-metrics-1280.png": {
+    "page": 1,
+    "pages": 35,
+    "renderer": "ReportLab/PyMuPDF",
+    "topic": "Numeric column metrics",
+    "width": 1280
+  },
+  "after-pdf-metrics-390.png": {
+    "page": 1,
+    "pages": 35,
+    "renderer": "ReportLab/PyMuPDF",
+    "topic": "Numeric column metrics",
+    "width": 390
+  },
+  "after-pdf-rows-1280.png": {
+    "page": 1,
+    "pages": 35,
+    "renderer": "ReportLab/PyMuPDF",
+    "topic": "Numeric column metrics",
+    "width": 1280
+  },
+  "after-pdf-rows-390.png": {
+    "page": 1,
+    "pages": 35,
+    "renderer": "ReportLab/PyMuPDF",
+    "topic": "Numeric column metrics",
+    "width": 390
+  },
+  "after-pptx-full-1280.png": {
+    "page": 19,
+    "pages": 56,
+    "renderer": "LibreOffice Impress/PyMuPDF",
+    "topic": "contrast with rest",
+    "width": 1280
+  },
+  "after-pptx-full-390.png": {
+    "page": 19,
+    "pages": 56,
+    "renderer": "LibreOffice Impress/PyMuPDF",
+    "topic": "contrast with rest",
+    "width": 390
+  },
+  "after-pptx-metrics-1280.png": {
+    "page": 7,
+    "pages": 12,
+    "renderer": "LibreOffice Impress/PyMuPDF",
+    "topic": "Numeric column metrics",
+    "width": 1280
+  },
+  "after-pptx-metrics-390.png": {
+    "page": 7,
+    "pages": 12,
+    "renderer": "LibreOffice Impress/PyMuPDF",
+    "topic": "Numeric column metrics",
+    "width": 390
+  },
+  "after-pptx-rows-1280.png": {
+    "page": 7,
+    "pages": 12,
+    "renderer": "LibreOffice Impress/PyMuPDF",
+    "topic": "Numeric column metrics",
+    "width": 1280
+  },
+  "after-pptx-rows-390.png": {
+    "page": 7,
+    "pages": 12,
+    "renderer": "LibreOffice Impress/PyMuPDF",
+    "topic": "Numeric column metrics",
+    "width": 390
+  }
+}

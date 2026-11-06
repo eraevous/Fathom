@@ -1,0 +1,17 @@
+{
+  "public_films_source": "tests/fixtures/polish/movies.csv (Vega movies, sources.json beside fixture)",
+  "public_html_md_rerun_identical": true,
+  "public_profile_sha256": "a420b0b388c7c293df083b380863fa9bf5bf4b0633bc1cdb1ddd72c696c44971",
+  "public_profile_unchanged": true,
+  "synthetic_all_extra_rerun_sha256": {
+    "columns.csv": "8bcfda1653fdf001b76f4729355c6473b545cdc937b23dde9b3754beaf0f7d10",
+    "findings.csv": "1787564365ca02c16c09508e35f85459112adf579927bfd04856472c237c092b",
+    "profile.json": "654ea2aa935ff6af19cabeb8ca2a136a26022d6c2d777cf3deac88627be63e67",
+    "relations.csv": "729444696810d96f78351ec13424371a30da01aea98a0995761e4f1ded5bf211",
+    "report.html": "c1203a04557e4111fe40a814b47040b51e722330f6cafb03bbab8cb6915dd00b",
+    "report.md": "55c8bb91ccec906b6713224b36803f1329d844481bf58d9922fcfd132ab0ff16",
+    "report.pdf": "5b8ad4c1f53ff4741f9d816f732d07768ddaab9db74f736c11fda6fe420e8459",
+    "report.pptx": "31d9f241e86d16ca80d2ff7a38596a008dac4873e9cb1e899db1f830081ef84f",
+    "samples.csv": "dac51adb75462122a5f28eaa441be434fb43e0c903cfc7bd3ee47d81b543bf40"
+  }
+}

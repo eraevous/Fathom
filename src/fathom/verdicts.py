@@ -21,20 +21,19 @@ def skew_text(g):
 def key_findings(d):
     """Stable coverage slots; existing pair rank/order is retained, never recomputed."""
     findings=d.get('findings',[]);out=[];seen=set()
-    def add(message,ref,status='automated'):
+    def add(message,ref,status='automated',finding=None):
         if len(out)<5 and ref not in seen:
-            out.append({'message':message,'ref':ref,'status':status});seen.add(ref)
+            out.append({'message':message,'ref':ref,'status':status,**({'finding':finding} if finding is not None else {})});seen.add(ref)
     lift=d.get('liftoff',{})
     for f in lift.get('automated_findings',[]):
-        if f['kind']=='observation':add(f['message'],f['id']);break
+        if f['kind']=='observation':add(f['message'],f['id'],finding=f);break
     rank={(r['left'],r['right']):r['rank'] for r in d.get('selection',{}).get('ranked',[]) if r.get('selected')}
     pairs=[f for f in findings if f.get('rule')=='selected_relation' and f['kind']=='observation']
     pairs.sort(key=lambda f:rank.get(tuple(f.get('columns',[])),10**9))
     if pairs:
-        selected=pairs[:2]
-        add(' '.join(f['message'] for f in selected),selected[0]['id'])
+        for f in pairs[:2]:add(f['message'],f['id'],finding=f)
     for f in findings:
-        if f.get('rule')=='target_group_contrast' and f['kind']=='observation':add(f['message'],f['id']);break
+        if f.get('rule')=='target_group_contrast' and f['kind']=='observation':add(f['message'],f['id'],finding=f);break
     series=[(s,False,'temporal-structure') for e in d.get('time_series',{}).get('series',[]) for s in e.get('groups',[])]
     for i,p in enumerate(lift.get('previews',{}).get('time_series',[])):
         series.extend((s,True,f'lift-series-detail-{i}') for s in p['result'].get('groups',[]))
@@ -53,14 +52,15 @@ def key_findings(d):
             message,ref,cond=items[0];add(message,ref+'#'+suffix,'provisional' if cond else 'automated')
     for f in findings:
         if f['kind']=='observation' and f.get('rule') not in {'dataset_summary','selected_relation','target_group_contrast'} and f['id'] not in {'duplicates','overview','shape'}:
-            add(f['message'],f['id'])
+            add(f['message'],f['id'],finding=f)
     return out
 
 
 def headlines_html(d):
     items=key_findings(d)
-    tag='li' if len(items)>=3 else 'p'
-    body=''.join('<'+tag+'>'+escape(i['message'])+' <a href="#'+escape(i['ref'].split('#')[0],quote=True)+'">Evidence</a></'+tag+'>' for i in items)
+    from .finding_view import finding_tree,html_tree
+    tag='li' if len(items)>=3 else 'div'
+    body=''.join('<'+tag+'>'+html_tree(finding_tree(i.get('finding',{'id':i['ref'],'kind':'observation','message':i['message'],'evidence':[]}),d),[c['name'] for c in d.get('columns',[])],styled=False)+' <a href="#'+escape(i['ref'].split('#')[0],quote=True)+'">Evidence</a></'+tag+'>' for i in items)
     return '<section id="key-findings"><h2>Key findings</h2>'+('<ul>'+body+'</ul>' if len(items)>=3 else body or '<p>No matching headline evidence; this is not a quality verdict.</p>')+'</section>'
 
 

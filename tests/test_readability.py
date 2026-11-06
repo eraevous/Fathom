@@ -1,3 +1,4 @@
+from html_helpers import assert_finding_preserved
 from html_helpers import visible_text, assert_navigation_only_script
 from copy import deepcopy
 from html import unescape
@@ -38,7 +39,7 @@ def test_native_global_toggle_and_all_original_items(make_profile):
     assert 'Domain meaning is unknown for 3 columns' in visible_text(html)
     for finding in p.document["findings"]:
         assert f'id="{finding["id"]}"' in html
-        assert finding["message"] in visible_text(html)
+        assert_finding_preserved(finding,html)
     assert '<details' in html and 'Evidence and uncertainty' in html
 
 

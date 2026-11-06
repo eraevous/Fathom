@@ -26,7 +26,7 @@ def svg_chart(chart):
             kind,*v=mark
             if kind=='line':out.append(f'<line x1="{v[0]}" y1="{v[1]}" x2="{v[2]}" y2="{v[3]}" stroke="{v[4]}"/>')
             elif kind=='rect':out.append(f'<rect x="{v[0]}" y="{v[1]}" width="{v[2]}" height="{v[3]}" fill="{v[4]}"/>')
-            elif kind=='circle':out.append(f'<circle cx="{v[0]}" cy="{v[1]}" r="{v[2]}" fill="{v[3]}" opacity=".65"/>')
+            elif kind=='circle':out.append(f'<circle cx="{v[0]}" cy="{v[1]}" r="{v[2]}" fill="{v[3]}" />')
             else:out.append(f'<text x="{v[0]}" y="{v[1]}" text-anchor="{v[3]}" style="font-size:{v[4]}px">{escape(v[2])}</text>')
         return '<figure class="chart target-chart"><p class="chart-title">'+escape(chart['title'])+'</p>'+f'<svg role="img" data-kind="{chart["kind"]}" aria-label="{escape(chart["title"],quote=True)}" viewBox="0 0 {w} {h}">'+''.join(out)+'</svg><div class="axis-captions"><p>X: '+escape(chart['x_label'])+'</p><p>Y: '+escape(chart['y_label'])+'</p></div><figcaption>'+escape(coverage_note(chart))+'</figcaption><details><summary>Chart values</summary>'+html_table(chart_values(chart))+'</details></figure>'
     def e(v):return escape(str(v))
@@ -40,7 +40,7 @@ def svg_chart(chart):
     out=[f'<svg role="img" aria-label="{escape(chart["title"],quote=True)}" viewBox="0 0 {width} {height}"><title>{e(chart["title"])}</title>']
     def text(x,y,value,anchor='start',cls=''):
         out.append(f'<text x="{x}" y="{y}" text-anchor="{anchor}"'+(f' class="{cls}"' if cls else '')+'>'+e(value)+'</text>')
-    def grid(x1,y1,x2,y2):out.append(f'<line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke="{C["border"]}"/>')
+    def grid(x1,y1,x2,y2):out.append(f'<line x1="{x1}" y1="{y1}" x2="{x2}" y2="{y2}" stroke="{C["accent_faint"]}"/>')
     if kind=='bar':
         maximum=max((d['count'] for d in data),default=1) or 1
         for value in count_ticks(maximum):
@@ -70,7 +70,7 @@ def svg_chart(chart):
                 x=px(value);grid(x,top,x,bottom);text(x,102 if kind=='box' else 255,original_tick(chart,value),'middle','tick-label')
         if kind=='box':
             b=chart['box'];y=48
-            out += [f'<line x1="{px(lo)}" y1="{y}" x2="{px(hi)}" y2="{y}" stroke="{C["ink"]}"/><rect x="{px(b["q1"])}" y="38" width="{max(1,px(b["q3"])-px(b["q1"]))}" height="20" fill="{C["accent_soft"]}" stroke="{C["accent"]}"/><line x1="{px(b["median"])}" y1="38" x2="{px(b["median"])}" y2="58" stroke="{C["ink"]}"/>']
+            out += [f'<line x1="{px(lo)}" y1="{y}" x2="{px(hi)}" y2="{y}" stroke="{C["ink"]}"/><rect x="{px(b["q1"])}" y="38" width="{max(1,px(b["q3"])-px(b["q1"]))}" height="20" fill="{C["accent_faint"]}" stroke="{C["accent"]}"/><line x1="{px(b["median"])}" y1="38" x2="{px(b["median"])}" y2="58" stroke="{C["ink"]}"/>']
         else:
             maximum=1 if kind=='ecdf' else max((d['count'] for d in data),default=1) or 1
             for value in (linear_ticks(0,1) if kind=='ecdf' else count_ticks(maximum)):
