@@ -647,7 +647,7 @@ def render_page(schema: dict, brief: str | None = None, download_name: str = "fa
     # YAML pane
     h.append('</div><div class="yaml-pane"><section><h2>Generated YAML</h2><div class="bar"><button id="copy" type="button">Copy</button><a class="btn" id="download" download="fathom.yaml" href="#">Download YAML</a><a class="btn" id="manifest" download="config-manifest.json" href="#">Download manifest</a></div>'
              '<pre id="yaml"></pre><p class="muted">Only system-default values are left out. Run <code>guide profile DATA.csv --config fathom.yaml --out DIR</code>. The manifest records which values were default, suggested or selected, and the sha256 of this YAML; it is advisory, not an audit certificate, and Fathom does not read it.</p>'
-             '<noscript><p>JavaScript is off, so the YAML cannot be generated here. Write the keys by hand; see the README.</p></noscript></section></div></div>')
+             '<noscript><p>JavaScript is off. For the exact untouched Liftoff page defaults, run <code>guide liftoff DATA.csv --out discovery --yaml liftoff.yaml</code>, then edit YAML to declare choices and run <code>guide profile DATA.csv --config liftoff.yaml --out report</code>. Suggested controls stay unticked; this command does not accept them. Existing page edits must be transferred to YAML explicitly.</p></noscript></section></div></div>')
     if brief is not None:
         h[-1] = h[-1].replace('download="fathom.yaml"', 'download="'+attr(download_name)+'"').replace('--config fathom.yaml', '--config '+escape(download_name))
     return ('<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
