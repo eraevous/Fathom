@@ -19,8 +19,19 @@ from .renderers import render_html, render_markdown
 def summary_line(d: dict) -> str:
     """One deterministic line of what profile resolved; no timestamps."""
     purpose, record, ta = d.get("purpose") or {}, d.get("working_record") or {}, d.get("target_analysis") or {}
-    excluded = [e["column"] for e in ta.get("excluded", []) if e.get("reason") != "target column"]
-    target = (f"target: {ta['target']}; excluded from target: {', '.join(excluded) or 'none'}"
+    categories = {"by config": [], "unsupported type": [], "budget": [], "other eligibility": []}
+    for entry in ta.get("excluded", []):
+        reason = entry.get("reason", "unspecified")
+        if reason == "target column": continue
+        category = (
+            "by config" if reason in {"target excluded by config", "excluded by config: exclude_from_target"}
+            else "unsupported type" if reason.startswith("unsupported type")
+            else "budget" if reason == "pair budget exhausted"
+            else "other eligibility"
+        )
+        item = entry["column"] + " (" + reason + ")"
+        if item not in categories[category]: categories[category].append(item)
+    target = (f"target: {ta['target']}; excluded from target " + "; ".join(k + ": " + (", ".join(v) or "none") for k,v in categories.items())
               if ta.get("target") else "target: not declared")
     return (f"guide: question: {purpose.get('question') or 'none declared'}; {target}; "
             f"row unit: {record.get('row_unit') or 'unknown (not declared)'}")
@@ -39,6 +50,9 @@ def main(argv: list[str] | None = None) -> int:
             sub.add_argument("after", type=Path)
         if command in {"profile", "validate", "configure", "panel", "render", "export"}:
             sub.add_argument("--config", type=Path, required=command == 'panel', help=("presentation options only; saved measurements are unchanged" if command in {"render","export"} else "existing YAML config") + ("; its values start the page as 'existing config'" if command == "configure" else ""))
+        if command == 'liftoff':
+            sub.add_argument('--yaml', type=Path, help='write exactly the page default selection as YAML; no suggestions applied')
+
         if command == 'panel':
             sub.add_argument('--aggregate', help='separate week,month views from daily input')
         if command != "validate":
@@ -68,12 +82,26 @@ def main(argv: list[str] | None = None) -> int:
             return 0
         if args.command == "liftoff":
             from .liftoff import build_liftoff, render_liftoff
+            if args.yaml is not None:
+                protected = (args.input, args.out / 'liftoff.html', args.out / 'liftoff-profile.json')
+                if any(
+                    args.yaml.resolve() == path.resolve() or
+                    (args.yaml.exists() and path.exists() and args.yaml.samefile(path))
+                    for path in protected
+                ):
+                    raise ValueError('--yaml must not overwrite the source or standard Liftoff artifacts')
             result = build_liftoff(CSVConnector(args.input).load())
             page = render_liftoff(result)
             args.out.mkdir(parents=True, exist_ok=True)
             for name, contents in (("liftoff.html", page), ("liftoff-profile.json", result.to_json())):
                 (args.out / name).write_text(contents, encoding="utf-8", newline="\n")
+            if args.yaml is not None:
+                from .configure import config_yaml
+                schema = result.document['liftoff']['configuration']
+                args.yaml.parent.mkdir(parents=True, exist_ok=True)
+                args.yaml.write_text(config_yaml(schema, schema['initial']), encoding='utf-8', newline='\n')
             print(f"guide: wrote {args.out / 'liftoff-profile.json'}, {args.out / 'liftoff.html'}; no suggestions applied")
+            if args.yaml is not None: print(f"guide: wrote {args.yaml}; exact page defaults; edit YAML to declare choices")
             return 0
         if args.command == "configure":
             from .configure import build_schema, render_page
@@ -157,7 +185,7 @@ def main(argv: list[str] | None = None) -> int:
             for name,value in tidy.items():(args.tidy/name).write_text(value,encoding='utf-8',newline='\n')
             print('guide: wrote '+', '.join(str(args.tidy/name) for name in sorted(tidy)))
         if args.command == "profile":
-            print(summary_line(result.document))
+            print(summary_line(result.document), file=sys.stderr)
             from .parsing import temporal_failure_message
             for column in result.document['columns']:
                 failure=column['statistics'].get('parse_failure')

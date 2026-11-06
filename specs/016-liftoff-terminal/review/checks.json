@@ -1,0 +1,10 @@
+{
+  "after": {
+    "fallback": "JavaScript is off. For the exact untouched Liftoff page defaults, run guide liftoff DATA.csv --out discovery --yaml liftoff.yaml, then edit YAML to declare choices and run guide profile DATA.csv --config liftoff.yaml --out report. Suggested controls stay unticked; this command does not accept them. Existing page edits must be transferred to YAML explicitly.",
+    "requests": []
+  },
+  "before": {
+    "fallback": "JavaScript is off, so the YAML cannot be generated here. Write the keys by hand; see the README.",
+    "requests": []
+  }
+}
