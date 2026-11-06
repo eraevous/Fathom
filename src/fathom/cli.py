@@ -72,8 +72,14 @@ def main(argv: list[str] | None = None) -> int:
             return 0
         if args.command == "liftoff":
             from .liftoff import build_liftoff, render_liftoff
-            if args.yaml is not None and args.yaml.resolve() in {args.input.resolve(), (args.out / 'liftoff.html').resolve(), (args.out / 'liftoff-profile.json').resolve()}:
-                raise ValueError('--yaml must not overwrite the source or standard Liftoff artifacts')
+            if args.yaml is not None:
+                protected = (args.input, args.out / 'liftoff.html', args.out / 'liftoff-profile.json')
+                if any(
+                    args.yaml.resolve() == path.resolve() or
+                    (args.yaml.exists() and path.exists() and args.yaml.samefile(path))
+                    for path in protected
+                ):
+                    raise ValueError('--yaml must not overwrite the source or standard Liftoff artifacts')
             result = build_liftoff(CSVConnector(args.input).load())
             page = render_liftoff(result)
             args.out.mkdir(parents=True, exist_ok=True)
