@@ -63,11 +63,11 @@ Constant/near-constant/copy and identifier-like predictors have explicit exclusi
 `columns.NAME.exclude_from_target: true` marks known leakage/unwanted predictors;
 unmarked derived predictors may remain ranked. Unique continuous numbers stay eligible.
 
-Target pairs and quality missingness contrasts share pair_budget0–20. Light target
+Target pairs and quality missingness contrasts share pair_budget 0–20. Light target
 candidate ranking is separate from selected detail. Selected category-bearing pairs
 carry within-group count/share/valid/missing, means/medians or rates, marked contrasts
-and n<5cautions. For numeric targets one category slot is reserved at budget>=2;
-`group_by` can name a category and reserve it at budget1. Group summaries remain
+and n<5 cautions. For numeric targets one category slot is reserved at budget>=2;
+`group_by` can name a category and reserve it at budget 1. Group summaries remain
 pair-local; this does not summarize every column under every grouping. The report
 discloses the reservation and exclusions. No target gives an explicit skipped reason
 and keeps documentation/QA fallback. Selected numeric relationships have bounded
@@ -225,7 +225,7 @@ ticks. Single-variable box plots are slim strips; desktop statistics stay in vie
 while plots scroll (the statistics panel itself can scroll). Identifier-like/near-unique
 top-N charts are replaced by a repetition explanation.
 
-PowerPoint defaults to a summary of at most12slides, with omitted chart counts;
+PowerPoint defaults to a summary of at most 12 slides, with omitted chart counts;
 `guide export PROFILE --out DIR --deck full` selects all topics/charts.
 Fixed PDF pages and slides still require zoom on phones; dynamic layout building
 remains future work under DG-D7. See
@@ -342,26 +342,25 @@ record scope, dependencies, clarification readings and trade-offs.
 | `CHARTER.md` | engineering rules |
 | `docs/vision.md`, `docs/design.md` | the vision and the distilled April 2026 design |
 
-License: MIT. Contributions are welcome under the [CLA](CLA.md).
-
 ## Liftoff: discover, then configure
 
 ```bash
-guide liftoff DATA.csv --out discovery
+guide liftoff DATA.csv --out discovery --yaml liftoff.yaml
 # Open discovery/liftoff.html; read the Brief, then explicitly choose controls.
-# Download liftoff.yaml from the page.
+# Download liftoff.yaml from the page, or edit the terminal-generated file explicitly.
+# --yaml writes the exact untouched page defaults ({}); it accepts no suggestions.
 guide profile DATA.csv --config liftoff.yaml --out report
 ```
 
-Liftoff writes liftoff-profile.json(schema2) and a self-contained Brief +
+Liftoff writes liftoff-profile.json (schema 2) and a self-contained Brief +
 Configurations page. Automatic facts and questions are separate from conditional
 **If you declare…** interval/event-count previews. No target or declaration is
-applied; untouched YAML is{}. The configurator carries offline JS; the Brief
+applied; untouched YAML is {}. The configurator carries offline JS; the Brief
 and ordinary report sections are static. The advisory manifest stays separate
 from effective YAML. `guide render discovery/liftoff-profile.json --out restored`
 restores the same page. `guide configure` keeps its existing behavior.
 
-Previewed series use events and auto granularities, up to20candidates; changing
+Previewed series use events and auto granularities, up to 20 candidates; changing
 value/granularity changes the question. All caps/omissions and rules are disclosed.
 The narrow all-zero-category observation asks whether zeros are structural or
 unrecorded; it does not assert a mechanism or add a stage-two zero rule. Brief/
@@ -408,3 +407,5 @@ selected metrics reuse the existing target-analysis report. Metric disagreement 
 not failure; repeated series across models/windows are not independent evidence.
 No volume boundaries or metric definitions are supplied by default. See
 [spec014](specs/014-offline-panel/spec.md) and its [CLI contract](specs/014-offline-panel/contracts/cli.md).
+
+License: MIT. Contributions are welcome under the [CLA](CLA.md).
