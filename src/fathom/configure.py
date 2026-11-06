@@ -13,6 +13,7 @@ import re
 from html import escape
 from pathlib import Path
 
+from .presentation import categorical_hint
 from .config import BINS_RANGE, OPTIONAL_SECTIONS, validate_config
 from .models import TYPES
 from .parsing import DATE_FORMATS, parse_date, parse_datetime
@@ -20,6 +21,7 @@ from .rows import RULES as ROW_RULES
 from .timeseries import DEFAULT_LAG, GRAINS, MIN_N, TOP_N, undeclared
 from .univariate import BIN_RULE
 from .palette import theme_css
+from .temporal_view import TEMPORAL_CSS
 from .renderers import KIND_CSS
 
 CONTROLLED_COLUMN_KEYS = ("type", "date_format", "exclude_from_target")
@@ -78,6 +80,7 @@ def build_schema(doc: dict, frame, raw_config: dict | None) -> dict:
         populated = c["count"] - c["missing"]
         typ = c["effective_type"]
         facts = [f"{pct(populated, rows)} populated", f"{c['distinct']} distinct"]
+        if categorical_hint(c): facts.append(categorical_hint(c))
         formats = ((c.get("univariate") or {}).get("statistics") or {}).get("parse_formats") if typ == "temporal" else None
         if formats:
             facts.append("parsed date formats: " + ", ".join(f"{k} {v}" for k, v in formats.items()))
@@ -172,7 +175,7 @@ def config_document(schema: dict, sel: dict) -> dict:
         series = []
         for item in sel.get("time_series") or []:
             time, value, grains = item.get("time"), item.get("value"), item.get("granularities", ["auto"])
-            if time in offered and (value is None or value in schema["series_value_options"] and value != time) and isinstance(grains, list) and grains and all(g in ("auto","hour","day","week","month") for g in grains):
+            if time in offered and (value is None or value in schema["series_value_options"] and value != time) and isinstance(grains, list) and grains and all(g in ("auto","hour","day","week","month","year") for g in grains):
                 series.append({"time": time, "value": value, "granularities": grains})
         if series: out["time_series"] = series
     else:
@@ -287,7 +290,7 @@ function configDocument(schema,sel){
     var series=(sel.time_series||[]).map(function(item){
       var grains=own(item,'granularities');
       return {time:own(item,'time'),value:own(item,'value'),granularities:grains===undefined?['auto']:grains};
-    }).filter(function(item){return offered.indexOf(item.time)>=0&&(item.value==null||(schema.series_value_options.indexOf(item.value)>=0&&item.value!==item.time))&&Array.isArray(item.granularities)&&item.granularities.length&&item.granularities.every(function(g){return ['auto','hour','day','week','month'].indexOf(g)>=0;});}).map(function(item){return {time:item.time,value:item.value==null?null:item.value,granularities:item.granularities};});
+    }).filter(function(item){return offered.indexOf(item.time)>=0&&(item.value==null||(schema.series_value_options.indexOf(item.value)>=0&&item.value!==item.time))&&Array.isArray(item.granularities)&&item.granularities.length&&item.granularities.every(function(g){return ['auto','hour','day','week','month','year'].indexOf(g)>=0;});}).map(function(item){return {time:item.time,value:item.value==null?null:item.value,granularities:item.granularities};});
     if(series.length){out.time_series=series;}
   }
   else{
@@ -465,7 +468,7 @@ refresh();
 })();
 """
 
-CSS = theme_css() + KIND_CSS + """:root{--bg:var(--surface);--fg:var(--ink);--line:var(--border);--card:var(--panel);--sug:var(--kind-hypothesis);--sel:var(--kind-observation)}
+CSS = theme_css() + KIND_CSS + TEMPORAL_CSS + """:root{--bg:var(--surface);--fg:var(--ink);--line:var(--border);--card:var(--panel);--sug:var(--kind-hypothesis);--sel:var(--kind-observation)}
 body{font:15px/1.5 system-ui,sans-serif;background:var(--bg);color:var(--fg);max-width:1180px;margin:auto;padding:24px 16px}
 h1{font-size:32px;margin:0 0 4px}h2{border-bottom:2px solid var(--accent);padding-bottom:6px;margin-top:32px}
 section{margin-bottom:24px}.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:16px}
@@ -505,6 +508,7 @@ def state(k: str) -> str:
 
 
 def render_page(schema: dict, brief: str | None = None, download_name: str = "fathom.yaml") -> str:
+    from .report_style import style_html, STYLE_CSS, NAV_SCRIPT
     init, ds = schema["initial"], schema["dataset"]
     # Option lists are indexed so names never travel through attribute values the script trusts.
     target_options = [c["column"] for c in schema["target_candidates"]]
@@ -596,7 +600,7 @@ def render_page(schema: dict, brief: str | None = None, download_name: str = "fa
                 if name != item['column']: h.append(f'<option value="{j}">'+escape(name)+'</option>')
             h.append('</select></label>'+state(k+':value')+'</p>')
             h.append(f'<p><label>Granularity (only used when ticked) <select data-series-grain="{i}"'+control_attrs(k+':grain',f'time_series[{i}].granularity','auto')+'>')
-            h.extend('<option value="'+g+'">'+g+'</option>' for g in ('auto','hour','day','week','month'))
+            h.extend('<option value="'+g+'">'+g+'</option>' for g in ('auto','hour','day','week','month','year'))
             h.append('</select></label>'+state(k+':grain')+'</p>')
         h.append('</div></section>')
     else:
@@ -650,10 +654,11 @@ def render_page(schema: dict, brief: str | None = None, download_name: str = "fa
              '<noscript><p>JavaScript is off. For the exact untouched Liftoff page defaults, run <code>guide liftoff DATA.csv --out discovery --yaml liftoff.yaml</code>, then edit YAML to declare choices and run <code>guide profile DATA.csv --config liftoff.yaml --out report</code>. Suggested controls stay unticked; this command does not accept them. Existing page edits must be transferred to YAML explicitly.</p></noscript></section></div></div>')
     if brief is not None:
         h[-1] = h[-1].replace('download="fathom.yaml"', 'download="'+attr(download_name)+'"').replace('--config fathom.yaml', '--config '+escape(download_name))
-    return ('<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
-            '<title>'+('Fathom liftoff' if brief is not None else 'Configure Fathom')+'</title><style>' + CSS + '</style></head><body>' + '\n'.join(h)
+    page = ('<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
+            '<title>'+('Fathom liftoff' if brief is not None else 'Configure Fathom')+'</title><style>' + CSS + STYLE_CSS + '</style></head><body>' + '\n'.join(h)
             + '\n<script type="application/json" id="fathom-schema">' + json_for_script(schema) + '</script>\n'
-            + '<script id="fathom-yaml">' + YAML_JS + '</script>\n<script>' + UI_JS + '</script>\n</body></html>\n')
+            + '<script id="fathom-yaml">' + YAML_JS + '</script>\n<script>' + UI_JS + '</script>\n'+(NAV_SCRIPT if brief is not None else '')+'</body></html>\n')
+    return style_html(page,columns=[c['name'] for c in schema['columns']])
 
 
 def schema_from_page(page: str) -> dict:

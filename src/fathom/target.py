@@ -58,12 +58,15 @@ def target_candidates(rows,columns,cfg,quality):
         if i==ti:reason='target column'
         elif target_excluded:reason='target excluded by config'
         elif cfg['columns'].get(name,{}).get('exclude_from_target'):reason='excluded by config: exclude_from_target'
+        elif a=='temporal' and c['statistics'].get('parse_failure'):
+            from .parsing import temporal_failure_message
+            reason=temporal_failure_message(name,c['statistics']['parse_failure'])
         elif copy_evidence([r[i] for r in rows],[r[ti] for r in rows])['near']:reason='near-duplicate of target (row agreement >=95%)'
         elif name in blocked:reason='constant numeric input' if blocked[name]=='constant column' and a in NUMERIC else blocked[name]
         elif (a in CATEGORY and len(set(nonmissing))>20) or (b in CATEGORY and len(set(v for v in tv if v is not None))>20):reason='more than twenty groups; summary omitted'
         elif c.get('univariate',{}).get('role')=='identifier':reason='identifier-like column'
         elif a not in NUMERIC and a!='temporal' and len(nonmissing)>=5 and len(set(nonmissing))/len(nonmissing)>=.9:reason='near-unique identifier-like category/text (>=90% distinct)'
-        elif not ((a in NUMERIC|CATEGORY) and (b in NUMERIC|CATEGORY)):reason=f'unsupported type pair: {a} × {b}'
+        elif not ((a in NUMERIC|CATEGORY) and (b in NUMERIC|CATEGORY)):reason=f'unsupported type pair: {a} × {b}'+('; use declared time_series or guide panel for temporal dimensions' if 'temporal' in (a,b) else '')
         elif len(cases)<2:reason='fewer than two complete finite cases'
         else:
             measure=association(a,b,cases)
@@ -199,6 +202,6 @@ def target_tables(d):
             gates='; '.join(gate_text(x) for x in g.get('gates',[])) or 'gate evidence unavailable in this saved artifact'
             stats=g['statistics'];detail='\n'.join(k+': '+formatted(v) for k,v in stats.items() if k!='rates')
             if 'rates' in stats:detail='\n'.join(r['value']+': '+formatted(r['share'],True)+f" ({r['count']}/{g['valid']})" for r in stats['rates'])
-            rows.append([g['value'],formatted(g['n']),formatted(g['share'],True),f"{g['valid']} / {g['missing']}",detail,('too small to read reliably; ' if g['small'] else '')+('marked descriptive contrast' if g['contrasts'] else 'No marked contrast')+'; '+gates])
+            rows.append([g['value'],formatted(g['n']),formatted(g['share'],True),f"{g['valid']} / {g['missing']}",detail,('too small to read reliably (valid n<5); ' if g['small'] else '')+('marked descriptive contrast' if g['contrasts'] else 'No marked contrast')+'; '+gates])
         tables.append({'caption':f"{s['value_column']} within {s['group_column']} — shares of {s['share_denominator']} rows; {s['group_missing']} missing grouping rows",'headers':['Group','Count','Share','Valid / missing','Key statistics / rates','Caution'],'rows':rows,'numeric':[1,2]})
     return tables

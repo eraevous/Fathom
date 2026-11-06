@@ -109,18 +109,20 @@ def tick_label(value):
 
 
 def html_table(table):
-    out=['<div class="table-scroll"><table class="review-table"><caption>'+escape(table['caption'])+'</caption><thead><tr>']
+    klass='review-table'+(' wide-table' if table.get('wide') else '')
+    out=['<div class="table-scroll"><table class="'+klass+'"><caption>'+escape(table['caption'])+'</caption><thead><tr>']
     for i,h in enumerate(table['headers']):out.append('<th scope="col"'+(' class="num"' if i in table['numeric'] else '')+'>'+escape(h)+'</th>')
     out.append('</tr></thead><tbody>')
     for row in table['rows']:
-        out.append('<tr>'+''.join('<td'+(' class="num"' if i in table['numeric'] else '')+'>'+escape(str(v))+'</td>' for i,v in enumerate(row))+'</tr>')
+        out.append('<tr>'+''.join('<td'+(' class="num"' if i in table['numeric'] else ' class="literal-data"' if table['headers'][i]=='Value' and i==0 else '')+'>'+escape(str(v))+'</td>' for i,v in enumerate(row))+'</tr>')
     return ''.join(out)+'</tbody></table></div>'
 
 
 def markdown_table(table):
     def cell(v):return re.sub(r'([\\`*_{}\[\]()#!])',r'\\\1',escape(str(v),quote=False).replace('|','&#124;').replace('\n',' '))
-    lines=['**'+cell(table['caption'])+'**','', '| '+' | '.join(map(cell,table['headers']))+' |','| '+' | '.join('---:' if i in table['numeric'] else '---' for i in range(len(table['headers'])))+' |']
-    return '\n'.join(lines+['| '+' | '.join(map(cell,row))+' |' for row in table['rows']])+'\n'
+    lines=[cell(table['caption']),'', '| '+' | '.join(map(cell,table['headers']))+' |','| '+' | '.join('---:' if i in table['numeric'] else '---' for i in range(len(table['headers'])))+' |']
+    from .report_style import markdown_text
+    return '\n'.join(lines+['| '+' | '.join(markdown_text(v,literal=True).replace('|','&#124;') if i==0 and table['headers'][i]=='Value' else cell(v) for i,v in enumerate(row))+' |' for row in table['rows']])+'\n'
 
 
 def original_tick(chart,value):
@@ -130,3 +132,10 @@ def original_tick(chart,value):
         try:value=10**value
         except OverflowError:value=float.fromhex('0x1.fffffffffffffp+1023')
     return tick_label(value)
+
+
+def categorical_hint(col):
+    """An explicit option at the existing inference cap, not a semantic inference."""
+    if col.get('effective_type')=='string' and col.get('distinct',0)>20:
+        return 'Many distinct strings: if these are category labels, declare type: categorical for this column. The 20-level grouping cap still applies.'
+    return ''

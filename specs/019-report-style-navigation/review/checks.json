@@ -1,0 +1,66 @@
+{
+  "after-brief-1280": {
+    "overflow": false,
+    "requests": []
+  },
+  "after-brief-390": {
+    "overflow": false,
+    "requests": []
+  },
+  "after-panel-1280": {
+    "overflow": false,
+    "requests": []
+  },
+  "after-panel-390": {
+    "overflow": false,
+    "requests": []
+  },
+  "after-profile-1280": {
+    "overflow": false,
+    "requests": []
+  },
+  "after-profile-390": {
+    "overflow": false,
+    "requests": []
+  },
+  "before-brief-1280": {
+    "overflow": false,
+    "requests": []
+  },
+  "before-brief-390": {
+    "overflow": false,
+    "requests": []
+  },
+  "before-panel-1280": {
+    "overflow": false,
+    "requests": []
+  },
+  "before-panel-390": {
+    "overflow": false,
+    "requests": []
+  },
+  "before-profile-1280": {
+    "overflow": false,
+    "requests": []
+  },
+  "before-profile-390": {
+    "overflow": false,
+    "requests": []
+  },
+  "brief-nojs-1280": {
+    "all_nav_links_visible": true,
+    "overflow": false
+  },
+  "brief-nojs-390": {
+    "all_nav_links_visible": true,
+    "overflow": false
+  },
+  "profile-nojs-1280": {
+    "all_nav_links_visible": true,
+    "overflow": false
+  },
+  "profile-nojs-390": {
+    "all_nav_links_visible": true,
+    "overflow": false
+  }
+}

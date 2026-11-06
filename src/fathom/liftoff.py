@@ -140,13 +140,19 @@ def validate_liftoff(doc):
 def brief_html(doc):
     from .renderers import finding_html,unknowns
     from .presentation import html_table
-    from .verdicts import headlines_html
+    from .verdicts import headlines_html,key_findings
     from .temporal_view import temporal_html
-    b=doc['liftoff'];out=['<section id="brief"><h1>Fathom liftoff</h1><h2>Brief</h2>',
-        headlines_html(doc),'<p>Measured facts come first; <strong>If you declare …</strong> marks the conditional ones. Nothing is applied for you: meaning and relevance stay yours to declare.</p>',
-        '<p><a href="#configurations">Configure an analysis</a> · <a href="#lift-questions">Open questions</a></p><h3>What the table looks like</h3>',html_table({'caption':'Dataset snapshot','headers':['Measure','Value'],'numeric':[1],
+    from .report_style import navigation
+    from .renderers import readable_html
+    b=doc['liftoff']
+    items=[('key-findings','Key findings',len(key_findings(doc))),('report-dataset','Dataset',None),('report-findings','Findings',len(doc['findings'])+len(b['automated_findings'])+sum(len(p['findings']) for previews in b['previews'].values() for p in previews))]
+    if b['previews']['time_series']:items.append(('report-temporal','Temporal',len(b['previews']['time_series'])))
+    items.extend([('report-exclusions','Exclusions',len(b['limits'])),('report-provenance','Provenance',None)])
+    out=['<section id="brief"><h1>Fathom liftoff</h1><h2>Brief</h2>',
+        navigation(items),headlines_html(doc),'<p>Measured facts come first; <strong>If you declare …</strong> marks the conditional ones. Nothing is applied for you: meaning and relevance stay yours to declare.</p>',
+        '<p><a href="#configurations">Configure an analysis</a> · <a href="#lift-questions">Open questions</a></p><h3 id="report-dataset">What the table looks like</h3>',html_table({'caption':'Dataset snapshot','headers':['Measure','Value'],'numeric':[1],
             'rows':[['Rows',f"{doc['overview']['rows']:,}"],['Columns',doc['overview']['columns']],['Missing cells',doc['overview']['missing_cells']],['Exact duplicate rows',doc['overview']['duplicate_rows']]]}),
-        '<p>'+escape(doc['dataset']['description']['text'])+'</p>',
+        '<p'+(' class="inferred-reading"' if doc['dataset']['description']['status']=='inferred' else '')+'>'+escape(doc['dataset']['description']['text'])+'</p>',
         '<h3>Observation process</h3><p>Row unit and generating process are not declared. Repeated records or timestamps are measured structures, not proof of duplicate events or independent observations.</p>']
     process=[]
     for t in doc.get('row_structure',{}).get('temporal',[]):
@@ -154,13 +160,13 @@ def brief_html(doc):
         process.append([t['column'],f"{t['dated_values']:,}",f"{dt['distinct']:,}" if dt else 'Not measured',f"{dt['rows_repeating']:,}" if dt else 'Not measured'])
     if process:out.append(html_table({'caption':'Automatic temporal coverage (timestamp distinctness only where the existing rule applies)','headers':['Column','Parsed dates','Distinct timestamps','Repeat rows'],'numeric':[1,2,3],'rows':process}))
     primary=[f for f in doc['findings'] if f['kind']=='observation' and f.get('rule')!='dataset_summary' and not (f['id']=='duplicates' and not doc['overview']['duplicate_rows'])]
-    out+=['<h3>Automatically measured findings</h3>']
+    out+=['<h3 id="report-findings">Automatically measured findings</h3>']
     for f in primary+b['automated_findings']:
-        if f['kind']=='observation':out+=[finding_html(f,set()),'<p class="muted">Automatic · rule '+escape(f.get('rule',f['generator']))+'</p>']
+        if f['kind']=='observation':out+=[finding_html(f,set(),context='Automatic · rule '+f.get('rule',f['generator']))]
     if not primary and not b['automated_findings']:out+=['<p>No matching automatic diagnostic under the disclosed rules; silence is not a quality verdict.</p>']
     out+=['<details><summary>All default-profile findings (including rule-generated suggested actions requiring human review)</summary>']+[finding_html(f,set()) for f in doc['findings'] if f not in primary]+['</details>']
     # Primary originals were already rendered; no duplicate IDs in the full disclosure.
-    out+=['<h3>Conditional measurements — not declarations</h3>']
+    out+=['<h3 id="report-temporal">Conditional measurements — not declarations</h3>']
     for kind in ('intervals','time_series'):
         for i,p in enumerate(b['previews'][kind]):
             for f in p['findings']:
@@ -172,7 +178,7 @@ def brief_html(doc):
                     shown['message']=(f"If you declare event counts by {p['declaration']['time']} (auto granularities): "+
                                       f"{process['rows_with_parsed_time']:,} of {process['raw_rows']:,} rows parsed; {process['distinct_timestamps']:,} distinct timestamps; "+
                                       f"{process['duplicate_timestamp_rows']:,} repeat rows. Repeating cycle: {states}.")
-                out+=[finding_html(shown,set()),'<p class="muted">Provisional · rule '+escape(f['rule'])+'</p>']
+                out+=[finding_html(shown,set(),context='Provisional · rule '+f['rule'])]
                 if shown is not f:out.append('<details><summary>Full temporal signal statement</summary><p>'+escape(f['message'])+'</p></details>')
             if kind=='time_series':
                 label='If you declare event counts by '+p['declaration']['time']+' (auto granularities)'
@@ -183,11 +189,11 @@ def brief_html(doc):
     out+=['<h3 id="lift-questions">Open questions</h3>','<ul>']+['<li>'+escape(q)+'</li>' for q in unknowns(doc)]+['</ul>']
     for f in b['automated_findings']:
         if f['kind']=='question':out.append(finding_html(f,set()))
-    out+=['<h3>What awaits a declaration or was not examined</h3><ul>']+['<li>'+escape(v)+'</li>' for v in b['limits']]+['</ul>',
+    out+=['<h3 id="report-exclusions">What awaits a declaration or was not examined</h3><ul>']+['<li>'+escape(v)+'</li>' for v in b['limits']]+['</ul>',
            html_table({'caption':'Candidate coverage (bounded, not exhaustive)','headers':['Candidate','Found','Previewed','Omitted'],'numeric':[1,2,3],
                        'rows':[[k,b['coverage'][k+'_candidates'],b['coverage'][k+'_previewed'],b['coverage'][k+'_omitted']] for k in ('interval','series')]}),
            '<p>Zero check: '+escape(b['zero_contrasts']['rule'])+f". Omitted numeric/group columns: {b['zero_contrasts']['omitted_numeric_columns']}/{b['zero_contrasts']['omitted_group_columns']}; matching patterns omitted: {b['zero_contrasts']['omitted_results']}.</p>",
-           '</section><!-- end brief -->']
+           '<details id="report-provenance"><summary>Provenance</summary>'+readable_html({'source':doc['source'],'context':doc['context']})+'</details></section><!-- end brief -->']
     return ''.join(out)
 
 

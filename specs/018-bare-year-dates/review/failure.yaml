@@ -1,0 +1,4 @@
+title: Synthetic annual observations
+description: Authored annual data with entity and candidate keys; no real observations.
+columns:
+  year: {type: temporal}

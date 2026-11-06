@@ -106,7 +106,7 @@ def test_profile_and_validate_echo_resolved_settings(tmp_path, capsys):
     assert code == 0
     lines = out.splitlines()
     assert len(lines) == 1 and "guide-profile.json" in lines[0] and "report.html" in lines[0]
-    assert err.strip() == "guide: question: What drives tip?; target: tip; excluded from target by config: none; unsupported type: pickup (unsupported type pair: temporal × numeric); budget: none; other eligibility: none; row unit: one trip"
+    assert err.strip() == "guide: question: What drives tip?; target: tip; excluded from target by config: none; unsupported type: pickup (unsupported type pair: temporal × numeric; use declared time_series or guide panel for temporal dimensions); budget: none; other eligibility: none; row unit: one trip"
     _, quiet, quiet_err = run(["profile", table(tmp_path), "--out", tmp_path / "none"], capsys)
     assert quiet_err.strip() == "guide: question: none declared; target: not declared; row unit: unknown (not declared)"
     code2, out2, _ = run(["profile", table(tmp_path), "--config", cfg, "--out", tmp_path / "out"], capsys)
