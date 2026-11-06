@@ -4,11 +4,10 @@
   authorities). Never edit a line; append a new version. Vocabulary:
   https://github.com/eraevous/AEC/blob/main/docs/reasoning-vocabulary.md
 - `edges.jsonl`: the structural snapshot of the code (`aec edges`). Regenerate it; never hand-edit it.
-- `snippets/`: a Claude Code hook and a CI job to copy into place. Nothing here is active until you do.
+- `snippets/`: the Claude Code hook and CI job as `aec init` generated them. Both are installed
+  byte-identical, at `.claude/settings.json` and `.github/workflows/aec.yml`.
 
-Start by replacing the purpose stub `P0` with a new version stating what this project is for, in your
-own words (`"version": 2`, `"epistemic": "provisional"` while you are still discovering it,
-`"committed"` once changes to it should need your authorization).
+The purpose stub `P0` has been replaced; `AGENTS.md` lists the accepted records to read first.
 
 All AEC results are structural: they show what changed and what relied on it, not whether the
 remaining evidence is good enough. That stays a review question.

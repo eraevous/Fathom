@@ -41,7 +41,7 @@ versions remain; latest completeness is the check.
 | DG-D6@2 | -evening-5.md: “quality score off for now” |
 | DG-D7@2 | -evening-6.md: “Layouts will need to have some better dynamism in the future as well.” |
 
-The other 54 become provisional:14 claims, 12 evaluations, 27 evidence and 1 authority.
+The other 54 become provisional: 14 claims, 12 evaluations, 27 evidence and 1 authority.
 Builder observations/tests/merges are not owner commitment. AU-owner's conservative
 label does not change its governs field or any existing decided_by/status field.
 Latest totals: **34 committed, 71 provisional, 0 unlabelled** (was 27/17/61).
