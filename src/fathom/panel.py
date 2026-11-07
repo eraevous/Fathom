@@ -324,7 +324,7 @@ def join_metrics(doc, cfg, root):
     source = {'connector': 'panel-metric-join', 'origin': 'joined-signals.csv', 'sha256': sha256(csv_text(joined).encode()).hexdigest()}
     for target in m['targets']:
         result = profile(GuideDataFrame(frame, SchemaContract().resolve(fields), source),
-                         {'target': target, 'columns': {n: {'type': 'categorical', 'exclude_from_target': True} for n in key_names + (['horizon'] if horizon else [])},
+                         {'target': target, 'columns': {n: {'type': 'categorical', 'exclude_from_target': True, 'role': 'identifier'} for n in key_names + (['horizon'] if horizon else [])},
                           'row_unit': 'series/model/window/horizon observations; repeated series are not independent'})
         doc['target_profiles'].append({'metric': target, 'artifact': result.document})
 
@@ -336,6 +336,8 @@ def build_panel(data, raw_config, root=Path('.')):
            'metric_join': None, 'disagreement': [], 'target_profiles': [], 'findings': [],
            'coverage': {'input_rows': len(data.frame), 'input_series': len(series), 'window_rows': len(ws),
                         'series_without_windows': [list(k) for k in sorted(series) if list(k) not in [w['series'] for w in ws]], 'windows_source': wsource}}
+    from .identifiers import identifier_profile
+    doc['identifiers']=[{'column':name,'profile':identifier_profile(data.frame[name].tolist(),'human (declared panel series-key component)')} for name in cfg['series']]
     contexts = []
     for w in ws:
         ps = series[tuple(w['series'])];train = regularize(ps, w['train_start'], w['train_end'], cfg['period']);evaluation = regularize(ps, w['eval_start'], w['eval_end'], cfg['period'])
@@ -354,6 +356,7 @@ def build_panel(data, raw_config, root=Path('.')):
         view = {'kind': 'panel', 'schema_version': 2, 'source': data.source, 'configuration': {**cfg, 'period': grain, 'aggregate': [], 'series': cfg['aggregation']['group_by'] or cfg['series']},
                 'rules': RULES, 'rows': [], 'periods': [], 'views': {}, 'comparison': [], 'joined': [], 'metric_join': None, 'disagreement': [], 'target_profiles': [], 'findings': [],
                 'coverage': {}, 'lineage': {'source': data.source, 'source_period': cfg['period'], 'rule': cfg['aggregation']['rule'], 'group_by': cfg['aggregation']['group_by'], 'state_exposure_rule': RULES['aggregation'], 'members': []}}
+        view['identifiers']=[{'column':name,'profile':identifier_profile(data.frame[name].tolist(),'human (declared panel series-key component; whole source input)')} for name in view['configuration']['series']]
         for identity, members in sorted(grouped.items(), key=lambda x: str(x[0])):
             w = {**members[0][0], 'series': list(identity[0])}
             a = aggregate_periods([v[1] for v in members], grain, cfg['aggregation']['rule']);b = aggregate_periods([v[2] for v in members], grain, cfg['aggregation']['rule'])
@@ -432,6 +435,11 @@ def validate_panel(d):
     if not isinstance(d['configuration'].get('series'), list) or not d['configuration']['series'] or any(not isinstance(x, str) for x in d['configuration']['series']): raise ValueError('invalid panel series roles')
     if any(not isinstance(d['source'].get(k), str) for k in ('origin', 'sha256')): raise ValueError('invalid panel source')
     if 'lineage' in d and not isinstance(d['lineage'], dict): raise ValueError('invalid panel lineage')
+    from .identifiers import validate_identifier
+    if not isinstance(d.get('identifiers',[]),list):raise ValueError('invalid panel identifiers')
+    for item in d.get('identifiers',[]):
+        if not isinstance(item,dict) or not isinstance(item.get('column'),str):raise ValueError('invalid panel identifier')
+        validate_identifier(item.get('profile'))
     for r, ps in zip(d['rows'], d['periods']):
         if not isinstance(r, dict) or not isinstance(r.get('series'), list) or any(not isinstance(x, (str, type(None))) for x in r['series']) or any(not isinstance(r.get(k), str) for k in ('model', 'window', 'period', 'train_start', 'train_end')): raise ValueError('invalid panel row key')
         for name in ('duration', 'amplitude', 'frequency', 'wavelength', 'sbc', 'noise', 'volumes'):

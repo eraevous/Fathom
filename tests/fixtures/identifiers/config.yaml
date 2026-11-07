@@ -1,0 +1,6 @@
+target: value
+columns:
+  row_code: {role: identifier}
+  entity_key: {role: identifier}
+  sequence: {role: identifier}
+  format_code: {role: identifier}

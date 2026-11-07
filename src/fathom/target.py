@@ -50,12 +50,16 @@ def association(a,b,cases):
 def target_candidates(rows,columns,cfg,quality):
     target=cfg['target'];ti=next(i for i,c in enumerate(columns) if c['name']==target);tc=columns[ti];b=tc['effective_type']
     selection={'target':target,'budget':cfg['pair_budget'],'selected':[],'excluded':[]};pairs=[]
+    from .identifiers import is_identifier,identifier_reason
+    target_identifier=is_identifier(tc)
     blocked=quality.get('value_exclusions',{});target_excluded=cfg['columns'].get(target,{}).get('exclude_from_target',False)
     for i,c in enumerate(columns):
         a=c['effective_type'];name=c['name'];values=[cell(r[i],a) for r in rows];tv=[cell(r[ti],b) for r in rows]
         cases=[(x,y) for x,y in zip(values,tv) if x is not None and y is not None]
         nonmissing=[v for v in values if v is not None];reason=None
-        if i==ti:reason='target column'
+        if is_identifier(c):reason=identifier_reason(c)
+        elif target_identifier:reason=('target excluded by config: ' if tc.get('univariate',{}).get('role_basis','').startswith('human') else 'target inferred as ')+'identifier role; association ranking not performed'
+        elif i==ti:reason='target column'
         elif target_excluded:reason='target excluded by config'
         elif cfg['columns'].get(name,{}).get('exclude_from_target'):reason='excluded by config: exclude_from_target'
         elif a=='temporal' and c['statistics'].get('parse_failure'):

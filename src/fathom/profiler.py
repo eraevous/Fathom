@@ -173,6 +173,8 @@ def profile(data: GuideDataFrame, config: dict | None = None) -> ProfilingResult
     temporal_structure = time_series(rows, columns, cfg, finding)
     enrich_columns(columns,rows,data.raw_rows if data.raw_rows is not None else rows,cfg,finding,findings)
     enrich_special(columns,rows,finding)
+    from .identifiers import enrich_identifiers
+    enrich_identifiers(columns,rows,finding)
     dataset,samples=identity_and_samples(data,cfg,columns)
     selection, pairs, dependencies = select_pairs(rows, columns, cfg, quality, quality_pairs)
     from .target import build_target_analysis
@@ -239,6 +241,15 @@ def select_pairs(rows: list, columns: list, cfg: dict, quality=None, quality_pai
 def rank_pairs(rows, columns, cfg, selection, candidates, dependencies):
     """Use only core metrics to select; enrich only the chosen numeric pairs."""
     target, question = cfg.get("target"), (cfg.get("question") or "").casefold()
+    from .identifiers import is_identifier,identifier_reason
+    ids={c['name'] for c in columns if is_identifier(c)}
+    candidates=[] if target in ids else [p for p in candidates if not ids.intersection((p['left'],p['right']))]
+    for name in sorted(ids):
+        existing=next((e for e in selection['excluded'] if e['column']==name),None)
+        reason=identifier_reason(next(c for c in columns if c['name']==name))
+        if existing:existing['reason']=existing['reason']+'; '+reason if existing['reason'].startswith('excluded by config: exclude_from_target') else reason
+        else:selection['excluded'].append({'column':name,'reason':reason})
+
     vectors = {c["name"]: [row[i] for row in rows] for i,c in enumerate(columns)}
     for pair in candidates:
         names = (pair["left"], pair["right"])

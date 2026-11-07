@@ -15,6 +15,7 @@ from .target import target_tables
 from .palette import LIGHT as C,KIND_COLOURS
 from .report_style import runs
 from .summary_view import summary_panels,report_options
+from .identifier_view import identifier_columns,identifier_tables
 from .finding_view import finding_tree
 
 
@@ -122,6 +123,12 @@ def pdf_bytes(d,report=None):
     title,description,basis=identity(d)
     story.extend([p(title,'Title'),p(description),p(basis),p('Unsupported characters are replaced with ?. Exact source text remains in HTML/Markdown and JSON.')])
 
+    if d['kind']=='profile' and identifier_columns(d):
+        heading('Identifiers')
+        story.append(p('Identifier role columns are excluded from distribution summaries and target ranking. Numeric label gaps are not missing records.'))
+        for _,col in identifier_columns(d):
+            story.append(p(col['name']+' — '+col['univariate'].get('role_basis','unknown'),'Heading3'))
+            for t in identifier_tables(col):table([t['headers'],*t['rows']],[490/len(t['headers'])]*len(t['headers']),t['numeric'])
     if d['kind']=='profile':
         heading('Distribution summaries')
         story.append(p('Stored metrics only; n valid/finite/nonmissing; missing share uses all rows. Top value share uses nonmissing values; text entropy/length use stored raw lexemes including blanks. Parse coverage is not calendar completeness. Unavailable statistics are not reconstructed.'))
@@ -385,6 +392,10 @@ def pptx_bytes(d,full=False,report=None):
             for ci,value in enumerate(row):
                 cell=table.cell(ri,ci);cell.text=str(value);cell.fill.solid();cell.fill.fore_color.rgb=RGBColor.from_string(C['tint' if ri==0 else 'panel'][1:])
                 for para in cell.text_frame.paragraphs:para.font.size=Pt(13);para.font.color.rgb=RGBColor.from_string(C['ink'][1:])
+    if d['kind']=='profile' and identifier_columns(d):
+        for _,col in identifier_columns(d):
+            if full:
+                for t in identifier_tables(col):topics('Identifier: '+col['name'],[t['caption']]+['; '.join(str(v) for v in r) for r in t['rows']])
     if full and d['kind']=='profile':topics('Dataset summary',[name+': '+value for name,value,_ in summary_rows(d)])
     elif full:
         for name,key in [('Contexts','contexts'),('Context differences','context_differences'),('Measured deltas','deltas'),('Limitations','limitations')]:

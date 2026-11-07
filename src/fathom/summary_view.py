@@ -3,6 +3,7 @@ from copy import deepcopy
 from html import escape
 from .presentation import formatted
 from .palette import LIGHT as C
+from .identifiers import is_identifier
 
 ORIENTATIONS={'columns_as_rows','metrics_as_rows'}
 UNAVAILABLE='Not stored'
@@ -24,6 +25,7 @@ def ratio(a,b):return a/b if isinstance(a,(int,float)) and isinstance(b,(int,flo
 def summary_tables(d,report=None):
     orientation=report_options({'report':report or {}})['summary_orientation'];tables={}
     for i,c in enumerate(d.get('columns',[])):
+        if is_identifier(c):continue
         typ=c['effective_type'];s=c.get('statistics',{});u=c.get('univariate',{}).get('statistics',{})
         numeric=typ in {'numeric','latitude','longitude'};temporal=typ=='temporal'
         missing=ratio(c['missing'],c['count']);q=u.get('percentiles',{});unit=c.get('univariate',{}).get('units') or {}
@@ -89,8 +91,10 @@ def mark_svg(mark):
 
 def summary_html(d,report=None):
     tables=summary_tables(d,report)
-    if not tables:return ''
+    excluded=[c['name'] for c in d.get('columns',[]) if is_identifier(c)]
+    if not tables and not excluded:return ''
     out=['<section id="distribution-summaries"><h2>Distribution summaries</h2><p>Stored metrics only. n is valid/finite (text: nonmissing); missing % uses all rows. Top value share uses nonmissing values; text entropy and lengths retain the stored raw-lexeme basis, including blank strings. Unknown units and unavailable statistics stay explicit. Parse coverage is not calendar completeness; gaps follow the stored univariate rule, not a declared schedule. Distribution marks repeat stored values.</p>']
+    if excluded:out.append('<p>Excluded from distribution summaries: '+', '.join('<code>'+escape(n)+'</code>' for n in excluded)+' — identifier role; see <a href="#report-identifiers">Identifiers</a>.</p>')
     for i,t in enumerate(tables):
         tid='summary-table-'+str(i);pressed=t['orientation']=='metrics_as_rows'
         out.append('<button hidden type="button" class="transpose" data-transpose="'+tid+'" aria-controls="'+tid+'" aria-pressed="'+str(pressed).lower()+'">Transpose '+escape(t['type'])+' table</button><div class="table-scroll"><table class="review-table distribution-table" id="'+tid+'" data-orientation="'+t['orientation']+'"><caption>'+escape(t['caption'])+'</caption><thead><tr>')
@@ -112,6 +116,8 @@ def summary_html(d,report=None):
 def summary_markdown(d,report=None):
     out=['## Distribution summaries','','Stored metrics only; n is valid/finite/nonmissing. Missing % uses all rows. Top value share uses nonmissing values; text entropy and lengths retain the stored raw-lexeme basis, including blank strings. Parse coverage is not calendar completeness. Unknown/unavailable stays explicit.','']
     from .report_style import markdown_text
+    excluded=[c['name'] for c in d.get('columns',[]) if is_identifier(c)]
+    if excluded:out+=['Excluded from distribution summaries: '+', '.join(markdown_text(n,literal=True) for n in excluded)+' — identifier role; see Identifiers.','']
     for t in summary_tables(d,report):
         grid=formatted_grid(t,marks=False)
         def cell(value,ri,ci):

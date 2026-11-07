@@ -24,7 +24,7 @@ def summary_line(d: dict) -> str:
         reason = entry.get("reason", "unspecified")
         if reason == "target column": continue
         category = (
-            "by config" if reason in {"target excluded by config", "excluded by config: exclude_from_target"}
+            "by config" if reason.startswith(("target excluded by config", "excluded by config:"))
             else "unsupported type" if reason.startswith("unsupported type")
             else "budget" if reason == "pair budget exhausted"
             else "other eligibility"
