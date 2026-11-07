@@ -17,6 +17,8 @@ Acceptance findings:
 |Liftoff, on|[light](liftoff-scripts-light-1280.png) / [dark](liftoff-scripts-dark-1280.png)|[light](liftoff-scripts-light-390.png) / [dark](liftoff-scripts-dark-390.png)|
 |Liftoff, off|[light](liftoff-no-js-light-1280.png) / [dark](liftoff-no-js-dark-1280.png)|[light](liftoff-no-js-light-390.png) / [dark](liftoff-no-js-dark-390.png)|
 
+Rate YAML:24.0,29.97 and scientific notation round-trip identically through Python/browser generators and the strict loader; exponent forms include a decimal point so YAML1.1 reads a number.
+
 Visual problems fixed: inherited picker 36 px first-column rule crushed the new card's headers/raw values at 390; scoped field/preview column widths restore readable labels. Irrelevant frame hints hide after another role is selected; space and common-rate qualifications are explicit. Native selects wrap within the card, failure names/values remain labelled, and scripts-off fallback exposes tokens/config/command with no inert live button. Retained Fathom palette/typography; no new CSS/JS library.
 
 Limits: min/max describe aligned stored samples, not unseen data. Literal/ignore is exact. No guessed rate, wildcard grammar, drop-frame/SMPTE interpretation or rounded chronology. Linux/Chromium review; no new network feature. Builder conformance, not owner acceptance/held-out usefulness.

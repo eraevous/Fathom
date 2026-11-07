@@ -234,6 +234,19 @@ def yaml_scalar(v) -> str:
     if v is True: return "true"
     if v is False: return "false"
     if type(v) is int: return str(v)
+    if type(v) is float:
+        import math
+        from decimal import Decimal
+        if not math.isfinite(v):raise ValueError('configure emits only finite numbers')
+        if v==0:return '0'
+        # Match ECMAScript Number's decimal/exponent thresholds for rate YAML.
+        if 1e-6<=abs(v)<1e21:
+            text=format(Decimal(repr(v)),'f')
+            return text.rstrip('0').rstrip('.') if '.' in text else text
+        mantissa,exponent=repr(v).lower().split('e')
+        if '.' not in mantissa:mantissa+='.0'
+        power=int(exponent)
+        return mantissa+'e'+('+' if power>=0 else '-')+str(abs(power))
     if isinstance(v, str): return yaml_string(v)
     if isinstance(v, dict): return "{}"
     if isinstance(v, list): return "[]"
@@ -344,10 +357,17 @@ function yamlString(s){
 function yamlKey(k,schema){return (/^[A-Za-z_][A-Za-z0-9_]*$/.test(k)&&schema.reserved.indexOf(k.toLowerCase())<0)?k:yamlString(k);}
 function isMap(v){return v instanceof Map||(v!==null&&typeof v==='object'&&!Array.isArray(v));}
 function size(v){return v instanceof Map?v.size:Array.isArray(v)?v.length:Object.keys(v).length;}
+function yamlNumber(v){
+ if(!Number.isFinite(v)){throw Error('configure emits only finite numbers');}
+ const text=String(v);if(!text.includes('e')){return text;}
+ let parts=text.split('e'),mantissa=parts[0],power=Number(parts[1]);
+ if(!mantissa.includes('.')){mantissa+='.0';}
+ return mantissa+'e'+(power>=0?'+':'-')+Math.abs(power);
+}
 function yamlScalar(v){
   if(v===null||v===undefined){return 'null';}
   if(v===true){return 'true';} if(v===false){return 'false';}
-  if(typeof v==='number'){return String(v);} if(typeof v==='string'){return yamlString(v);}
+  if(typeof v==='number'){return yamlNumber(v);} if(typeof v==='string'){return yamlString(v);}
   return Array.isArray(v)?'[]':'{}';
 }
 function orderedKeys(keys,path,schema){

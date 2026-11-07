@@ -1,4 +1,4 @@
-# derived 26 change event(s) from the structural diff
+# derived 27 change event(s) from the structural diff
 # aec impact
 
 - change: revise code:src.fathom.config.validate_config (by code, authorized_by None)
@@ -23,6 +23,7 @@
 - change: revise code:tests.test_time_definition.test_custom_clock_with_literal_prefix_keeps_named_faults_when_all_invalid (by code, authorized_by None)
 - change: revise code:tests.test_time_definition.test_declared_fraction_or_frames_never_silently_interchange (by code, authorized_by None)
 - change: revise code:tests.test_time_definition.test_fourth_field_python_browser_value_and_named_fault_parity (by code, authorized_by None)
+- change: revise code:tests.test_time_definition.test_fractional_rate_yaml_python_browser_parity (by code, authorized_by None)
 - change: revise code:tests.test_time_definition.test_frame_declarations_fail_before_output (by code, authorized_by None)
 - change: revise code:tests.test_time_definition.test_new_subsecond_artifact_validation_and_clean_legacy (by code, authorized_by None)
 - change: revise code:tests.test_time_definition.test_profile_explains_ambiguity_and_named_frame_faults_with_clean_decoy (by code, authorized_by None)
@@ -98,8 +99,8 @@
     via code:src.fathom.univariate.enrich_columns -> FT-UNI-E1@3
 [needs_review] FT-UNI-E2@3: Film table surfaces non-ISO/two-digit/future/placeholder/invalid dates, rare zero gross and repeated title; clean table has no actions. Late table exposes unsupported partial month precision, low-scale zero heuristic miss and review noise for a valid planned future date. Proposed FT-R14 changes are in spec003 validation.md.
     via code:src.fathom.univariate.enrich_columns -> FT-UNI-E2@3
-[needs_review] FT-CLOCK25-E1@1: Synthetic fourth-field/24fps violations and ordinary-clock/fraction/29.97fps decoys check no guessed sub-second values, named faults, raw/leading-zero preservation, all-invalid clocks and pre-output declaration rejection. Exact Python/in-page JS values, fault codes/messages, generated patterns and YAML rate editing agree. Actual configure/Liftoff browser card tests cover keyboard, explicit Use, removal of stale frame rate, scripts on/off at1280/390light/dark with no request/error/overflow. Full extras, optional exports, blocked-network hash-seed identity and AEC evidence are in spec025/review.
-    via code:tests.test_time_definition.test_all_out_of_rate_and_decimal_clock_clean_profiles -> FT-CLOCK25-E1@1
+[needs_review] FT-CLOCK25-E1@2: Synthetic fourth-field/24fps violations and ordinary-clock/fraction/29.97fps decoys check no guessed sub-second values, named faults, raw/leading-zero preservation, all-invalid clocks and pre-output declaration rejection. Exact Python/in-page JS values, fault codes/messages, generated patterns and YAML rate editing agree. Actual configure/Liftoff browser card tests cover keyboard, explicit Use, removal of stale frame rate, scripts on/off at1280/390light/dark with no request/error/overflow. Full extras, optional exports, blocked-network hash-seed identity and AEC evidence are in spec025/review. Additional fractional-rate YAML round-trip checks cover24.0,29.97 and scientific notation; both generators emit finite numeric YAML that the strict loader accepts.
+    via code:tests.test_time_definition.test_all_out_of_rate_and_decimal_clock_clean_profiles -> FT-CLOCK25-E1@2
 [needs_review] FT-TA-C1@3: Spec007 implements tested FT-R7 target ranking with Pearson/eta/Cramer V, configured and structural exclusions, shared bounded quality/value pairs, pair-local group summaries/contrasts/cautions and selected plots; FT-R19 original-unit log ticks, slim boxes, sticky statistics and positive-only log ECDFs reviewed across outputs. Builder misses and independent-acceptance limits explicit.
     via code:src.fathom.config.validate_config -> FT-TA-R1@3 -> FT-TA-C1@3
 [needs_review] FT-TA-C2@3: PR15 repair round fixes all eight reviewed target-analysis cases: plotted-positive box counts/cautions, unrounded geometry, rate captions, strict envelope/group/count loading, accessible exact chart values and bounded PowerPoint panels/legends. Existing spec007 requirements remain provisional; no new feature or acceptance claimed.
@@ -164,6 +165,14 @@
 [finding] structural: code:tests.test_temporal_picker.test_portable_python_javascript_values_and_errors_match reaches changed code:src.fathom.temporal_picker.PARSER_JS (references, depth 1); no status change; candidate for attention: FT-TIME22-E1@1
 [finding] structural: code:tests.test_temporal_picker.test_sample_rank_denominator_ambiguity_and_no_declaration reaches changed code:src.fathom.temporal_picker.picker_schema (calls, depth 1); no status change; candidate for attention: FT-TIME22-E1@1
 [finding] structural: code:tests.test_terminal.test_terminal_yaml_matches_page_defaults_and_runs_second_stage reaches changed code:src.fathom.configure.YAML_JS (references, depth 1); no status change; candidate for attention: FT-DEMO2-E1@1, FT-DEMO2-E1@2
+[finding] structural: code:tests.test_time_definition.test_card_fields_evidence_literal_safety_and_yaml_rate_roundtrip reaches changed code:src.fathom.config.validate_config (calls, depth 1); no status change; candidate for attention: FT-CLOCK25-E1@1
+[finding] structural: code:tests.test_time_definition.test_card_fields_evidence_literal_safety_and_yaml_rate_roundtrip reaches changed code:src.fathom.configure.render_page (calls, depth 1); no status change; candidate for attention: FT-CLOCK25-E1@1
+[finding] structural: code:tests.test_time_definition.test_card_fields_evidence_literal_safety_and_yaml_rate_roundtrip reaches changed code:src.fathom.temporal_picker.PARSER_JS (references, depth 1); no status change; candidate for attention: FT-CLOCK25-E1@1
+[finding] structural: code:tests.test_time_definition.test_declared_fraction_or_frames_never_silently_interchange reaches changed code:src.fathom.temporal_formats.parse_temporal (calls, depth 1); no status change; candidate for attention: FT-CLOCK25-E1@1
+[finding] structural: code:tests.test_time_definition.test_fourth_field_python_browser_value_and_named_fault_parity reaches changed code:src.fathom.temporal_formats.parse_temporal (references, depth 1); no status change; candidate for attention: FT-CLOCK25-E1@1
+[finding] structural: code:tests.test_time_definition.test_fourth_field_python_browser_value_and_named_fault_parity reaches changed code:src.fathom.temporal_picker.PARSER_JS (references, depth 1); no status change; candidate for attention: FT-CLOCK25-E1@1
+[finding] structural: code:tests.test_time_definition.test_frame_declarations_fail_before_output reaches changed code:src.fathom.config.validate_config (calls, depth 1); no status change; candidate for attention: FT-CLOCK25-E1@1
+[finding] structural: code:tests.test_time_definition.test_undeclared_fourth_preserves_clock_without_subsecond_guess reaches changed code:src.fathom.temporal_formats.parse_temporal (calls, depth 1); no status change; candidate for attention: FT-CLOCK25-E1@1
 [finding] structural: code:tests.test_time_series.test_invalid_declarations_are_refused reaches changed code:src.fathom.config.validate_config (calls, depth 1); no status change; candidate for attention: FT-TS1-E1@1, FT-TS1-E1@2, FT-TS1-E1@3, FT-TS1-E1@4, FT-TS1-E1@5
 [finding] structural: FT-CFG-V1@4 references superseded FT-CFG-C1@3; FT-CFG-C1@4 changed (stale); no status change; candidate for attention: FT-CFG-V1@4
 [finding] structural: FT-CU-V1@3 references superseded FT-CU-C1@2; FT-CU-C1@3 changed (stale); no status change; candidate for attention: FT-CU-V1@3
@@ -181,6 +190,6 @@
 [finding] structural: FT-UNI-V1@3 references superseded FT-UNI-E1@2; FT-UNI-E1@3 changed (needs_review); no status change; candidate for attention: FT-UNI-V1@3
 [finding] structural: FT-UNI-V1@3 references superseded FT-UNI-E2@2; FT-UNI-E2@3 changed (needs_review); no status change; candidate for attention: FT-UNI-V1@3
 [finding] structural: FT-UNI-V1@3 references superseded FT-UNI-C1@2; FT-UNI-C1@3 changed (needs_review); no status change; candidate for attention: FT-UNI-V1@3
-[note] reach depth 1; 3 changed symbols at depth 2 not reported (use --reach-depth 2)
+[note] reach depth 1; 4 changed symbols at depth 2 not reported (use --reach-depth 2)
 
-49 affected, 92 conclusions with no status change (55 pointer(s) above: candidates for attention)
+49 affected, 92 conclusions with no status change (63 pointer(s) above: candidates for attention)

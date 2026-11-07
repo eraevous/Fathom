@@ -150,3 +150,19 @@ def test_custom_clock_with_literal_prefix_keeps_named_faults_when_all_invalid():
     p=profile(data,{'columns':{'clock':{'date_format':'at %H:%M:%S:%F','frame_rate':24}}})
     s=p.document['columns'][0]['univariate']['statistics']
     assert s['temporal_kind']=='time' and s['parse_faults']['frame_at_or_above_rate']['count']==6
+
+
+@pytest.mark.parametrize('rate',[24.0,29.97,1e-6,1e-7,1e20,1e21])
+def test_fractional_rate_yaml_python_browser_parity(rate):
+    from fathom.configure import build_schema,config_yaml,render_page,yaml_js_from_page
+    data=CSVConnector(FIX).load()
+    raw={'columns':{'clock':{'date_format':'%I:%M:%S:%F %p','frame_rate':rate}}}
+    schema=build_schema(profile(data,raw).document,data.frame,raw)
+    y=config_yaml(schema,schema['initial'])
+    loaded=__import__('yaml').safe_load(y)
+    # YAML1.1 treats bare JS exponents as text; config validation must see numbers.
+    validate_config(loaded)
+    assert loaded['columns']['clock']['frame_rate']==rate
+    if shutil.which('node'):
+        code=yaml_js_from_page(render_page(schema))+'\nconsole.log(configYaml('+json.dumps(schema)+','+json.dumps(schema['initial'])+'));'
+        assert subprocess.check_output(['node','-e',code],text=True).rstrip()==y.rstrip()
