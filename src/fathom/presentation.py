@@ -83,7 +83,13 @@ def column_tables(col):
         tables.append({'caption':label+' minute/second components (other components zero; not elapsed intervals)','headers':['Component','Minute count','Second count'],'numeric':[1,2],'rows':[[str(i),formatted(basis['minute_counts'][f'{i:02d}']),formatted(basis['second_counts'][f'{i:02d}'])] for i in range(60) if basis['minute_counts'][f'{i:02d}'] or basis['second_counts'][f'{i:02d}']]})
         matrix=basis['weekday_hour_counts']
         if matrix:tables.append({'caption':label+' weekday × hour (written dates)','headers':['Weekday',*[f'{h:02d}' for h in range(24)]],'numeric':list(range(1,25)),'rows':[[day,*[formatted(n) for n in counts.values()]] for day,counts in matrix.items()]})
+    sub=s.get('subsecond')
+    if sub:
+        tables.append(metric_table('Sub-second coverage (unresolved fourth fields excluded)',{k:sub[k] for k in ['undeclared_count','fraction_count','frame_count','fraction_min_microsecond','fraction_max_microsecond']}))
+        if sub['frame_groups']:
+            tables.append({'caption':sub['frame_basis'],'headers':['Declared fps','Count','Min frame','Max frame'],'numeric':[0,1,2,3],'rows':[[formatted(f[k]) for k in ['frame_rate','count','min','max']] for f in sub['frame_groups']]})
     if col.get('special'):
+
         special=col['special'];tables.append(metric_table('Local syntax/range checks',{k:special[k] for k in ('valid','invalid','placeholders','test_values')}))
         if special['domains']:tables.append(frequency_table('Most common valid domains',special['domains'],special['valid']))
     return [t for t in tables if t['rows']]

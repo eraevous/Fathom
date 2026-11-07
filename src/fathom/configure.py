@@ -20,20 +20,20 @@ from .parsing import DATE_FORMATS, parse_date, parse_datetime, parse_temporal
 from .rows import RULES as ROW_RULES
 from .timeseries import DEFAULT_LAG, GRAINS, MIN_N, TOP_N, undeclared
 from .univariate import BIN_RULE
-from .temporal_formats import validate_format
+from .temporal_formats import validate_format,validate_declaration
 from .temporal_picker import picker_schema,render_picker,PARSER_JS,UI_JS as PICKER_UI_JS
 from .palette import theme_css
 from .temporal_view import TEMPORAL_CSS
 from .renderers import KIND_CSS
 
-CONTROLLED_COLUMN_KEYS = ("type", "date_format", "exclude_from_target")
+CONTROLLED_COLUMN_KEYS = ("type", "date_format", "frame_rate", "exclude_from_target")
 TEXT_KEYS = ("question", "row_unit")
 INT_KNOBS = {"pair_budget": (5, 0, 20), "sample_rows": (20, 0, 100), "bins": (None, *BINS_RANGE)}
 CONTROLLED_KEYS = (*TEXT_KEYS, "target", *INT_KNOBS, "sections", "intervals", "time_series")
 KEY_ORDER = ["title", "description", "question", "row_unit", "generating_process", "missingness_mechanism",
              "target", "group_by", "pair_budget", "sample_rows", "sample_seed", "sample_text_limit",
              "bins", "sections", "intervals", "time_series", "columns"]
-COLUMN_KEY_ORDER = ["type", "date_format", "exclude_from_target", "role", "units", "meaning"]
+COLUMN_KEY_ORDER = ["type", "date_format", "frame_rate", "exclude_from_target", "role", "units", "meaning"]
 NESTED_KEY_ORDER = ["start", "end", "time", "value", "by", "granularities", "max_lag", "top_n"]
 RESERVED = {"y", "yes", "n", "no", "true", "false", "on", "off", "null", "~"}
 SUGGEST_SHARE = 0.8
@@ -203,6 +203,9 @@ def config_document(schema: dict, sel: dict) -> dict:
         entry = {}
         if chosen.get("type") in schema["types"]: entry["type"] = chosen["type"]
         if chosen.get("date_format"): entry["date_format"] = validate_format(chosen["date_format"])
+        rate=chosen.get('frame_rate')
+        validate_declaration(chosen.get('date_format') or None,rate)
+        if rate is not None:entry['frame_rate']=rate
         if chosen.get("exclude_from_target") is True: entry["exclude_from_target"] = True
         for k, v in (schema["base_columns"].get(n) or {}).items(): entry[k] = v
         if entry: columns[n] = entry
@@ -231,6 +234,19 @@ def yaml_scalar(v) -> str:
     if v is True: return "true"
     if v is False: return "false"
     if type(v) is int: return str(v)
+    if type(v) is float:
+        import math
+        from decimal import Decimal
+        if not math.isfinite(v):raise ValueError('configure emits only finite numbers')
+        if v==0:return '0'
+        # Match ECMAScript Number's decimal/exponent thresholds for rate YAML.
+        if 1e-6<=abs(v)<1e21:
+            text=format(Decimal(repr(v)),'f')
+            return text.rstrip('0').rstrip('.') if '.' in text else text
+        mantissa,exponent=repr(v).lower().split('e')
+        if '.' not in mantissa:mantissa+='.0'
+        power=int(exponent)
+        return mantissa+'e'+('+' if power>=0 else '-')+str(abs(power))
     if isinstance(v, str): return yaml_string(v)
     if isinstance(v, dict): return "{}"
     if isinstance(v, list): return "[]"
@@ -320,6 +336,8 @@ function configDocument(schema,sel){
     var chosen=own(sel.columns,n)||{},entry={},extra=own(schema.base_columns,n)||{};
     if(schema.types.indexOf(chosen.type)>=0){entry.type=chosen.type;}
     if(chosen.date_format){entry.date_format=temporalValidate(chosen.date_format);}
+    temporalDeclaration(chosen.date_format||null,chosen.frame_rate);
+    if(chosen.frame_rate!==undefined&&chosen.frame_rate!==null){entry.frame_rate=chosen.frame_rate;}
     if(chosen.exclude_from_target===true){entry.exclude_from_target=true;}
     Object.keys(extra).forEach(function(k){entry[k]=extra[k];});
     if(Object.keys(entry).length){columns.set(n,entry);}
@@ -339,10 +357,17 @@ function yamlString(s){
 function yamlKey(k,schema){return (/^[A-Za-z_][A-Za-z0-9_]*$/.test(k)&&schema.reserved.indexOf(k.toLowerCase())<0)?k:yamlString(k);}
 function isMap(v){return v instanceof Map||(v!==null&&typeof v==='object'&&!Array.isArray(v));}
 function size(v){return v instanceof Map?v.size:Array.isArray(v)?v.length:Object.keys(v).length;}
+function yamlNumber(v){
+ if(!Number.isFinite(v)){throw Error('configure emits only finite numbers');}
+ const text=String(v);if(!text.includes('e')){return text;}
+ let parts=text.split('e'),mantissa=parts[0],power=Number(parts[1]);
+ if(!mantissa.includes('.')){mantissa+='.0';}
+ return mantissa+'e'+(power>=0?'+':'-')+Math.abs(power);
+}
 function yamlScalar(v){
   if(v===null||v===undefined){return 'null';}
   if(v===true){return 'true';} if(v===false){return 'false';}
-  if(typeof v==='number'){return String(v);} if(typeof v==='string'){return yamlString(v);}
+  if(typeof v==='number'){return yamlNumber(v);} if(typeof v==='string'){return yamlString(v);}
   return Array.isArray(v)?'[]':'{}';
 }
 function orderedKeys(keys,path,schema){
@@ -415,7 +440,7 @@ function selections(){
     Object.keys(p.extra||{}).forEach(function(k){item[k]=p.extra[k];});sel.time_series.push(item);}});
   }
   $('[data-col]').forEach(function(el){var n=colName(el),f=el.getAttribute('data-field');if(!own(sel.columns,n)){sel.columns[n]=Object.create(null);}
-    if(f==='exclude_from_target'){if(el.checked){sel.columns[n].exclude_from_target=true;}}else if(el.value!==''){sel.columns[n][f]=el.value;}});
+    if(f==='exclude_from_target'){if(el.checked){sel.columns[n].exclude_from_target=true;}}else if(el.value!==''){sel.columns[n][f]=f==='frame_rate'?Number(el.value):el.value;}});
   return sel;
 }
 function seriesBy(i){var b=document.querySelector('[data-series-by="'+i+'"]');return b.value===''?null:schema.by_options[Number(b.value)];}
@@ -492,6 +517,7 @@ input[type=text]{width:100%;box-sizing:border-box}.state{display:inline-block;fo
 .legend span{margin-right:10px}#warnings{color:var(--kind-question)}
 .format-picker{margin-top:16px;min-width:0}.format-picker h3{font-size:1.1rem}.format-picker table{min-width:520px}.format-picker td{overflow-wrap:anywhere}.format-live[hidden]{display:none}@media(max-width:600px){.format-picker table{min-width:0!important;table-layout:fixed}.format-picker td,.format-picker th{padding:7px 4px;overflow-wrap:anywhere}.format-picker th:first-child{width:36px}.format-picker code{overflow-wrap:anywhere;white-space:normal}}.cols select{width:100%}.facts{min-width:150px}.sug small{display:block}.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,360px);gap:24px;align-items:start}@media(max-width:860px){.grid{grid-template-columns:minmax(0,1fr)}}
 .yaml-pane{position:sticky;top:12px}
+.time-definition table{width:100%;table-layout:fixed}.time-definition .definition-fields th:first-child{width:18%}.time-definition .definition-fields th:nth-child(2){width:40%}.time-definition .definition-values th:first-child{width:45%}.time-definition td,.time-definition th{white-space:normal;overflow-wrap:anywhere}.time-definition select{width:100%;min-width:0}.time-definition .definition-pattern{white-space:pre-wrap;overflow-wrap:anywhere}
 article.finding{background:var(--panel);border-left:3px solid var(--soft-border);padding:8px 14px;margin:10px 0}article p{margin:5px 0}details{margin:10px 0}summary{cursor:pointer;color:var(--link)}a{color:var(--link)}.chart svg{max-width:100%;height:auto}.num{text-align:right;font-variant-numeric:tabular-nums}.table-scroll{overflow-x:auto}.review-table{max-width:100%}#brief{margin-bottom:48px}.axis-captions p{margin:3px 0}svg text{font:13px system-ui,sans-serif}
 .series{border-top:1px solid var(--line);padding-top:4px}.series:first-of-type{border-top:0}.sub{margin:4px 0 4px 24px}.sub label{margin-right:6px}.sub label.g{white-space:nowrap}
 """
@@ -520,6 +546,10 @@ def state(k: str) -> str:
 
 def render_page(schema: dict, brief: str | None = None, download_name: str = "fathom.yaml") -> str:
     from .report_style import style_html, STYLE_CSS, NAV_SCRIPT
+    from .time_definition import definition_fields
+    # Saved spec022 Liftoff configurations have samples but no field-card schema.
+    # Derive the additive view on a copy; never mutate a loaded artifact.
+    schema={**schema,'columns':[{**c,'temporal_picker':{**c['temporal_picker'],'definition':c['temporal_picker'].get('definition') or definition_fields(c['temporal_picker']['samples'])}} if c.get('temporal_picker') else c for c in schema['columns']]}
     init, ds = schema["initial"], schema["dataset"]
     # Option lists are indexed so names never travel through attribute values the script trusts.
     target_options = [c["column"] for c in schema["target_candidates"]]
@@ -580,6 +610,9 @@ def render_page(schema: dict, brief: str | None = None, download_name: str = "fa
             label = f"columns[{i}].{field}"
             if field=='date_format':
                 canonical=(f'<label>Named format or custom pattern <input type="text" data-col="{i}" data-field="{field}" value="{attr(iv or "")}"'+control_attrs(k,label,"",iv,s and s["value"],s and s["reason"])+'> </label>'+state(k).replace('>default<','>existing config<' if iv else '>default<'))
+                rate=ic.get('frame_rate')
+                rate_control=(f'<label>Declared frame rate (only with %F) <input type="number" step="any" data-col="{i}" data-field="frame_rate" value="{attr(rate if rate is not None else "")}"'+control_attrs(f'col:{i}:frame_rate',f'columns[{i}].frame_rate',"",str(rate) if rate is not None else None)+'> </label>')
+                canonical+=rate_control
                 if c.get('temporal_picker'):
                     pickers.append(render_picker(i,c,canonical))
                     cell=f'<a href="#format-picker-{i}">Preview / choose format</a>'

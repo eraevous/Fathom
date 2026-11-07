@@ -1,0 +1,24 @@
+{
+  "hash_seeds": [
+    1,
+    73
+  ],
+  "identical_files": {
+    "configure/configure-profile.json": "25b80ed32b18622c8e83158794deacda72c7ae4cd81c26147194482f4b80670d",
+    "configure/configure.html": "d052931256fc278c504d7bee662b9a954547cd61f80e69c5b66707cd04f05432",
+    "exports/export-status.json": "3dc7b60e7a458f92c5863fe4ff13e0a565332b21701367e1e61f66a7731a62ef",
+    "exports/report.html": "8237772314980b1765584c0d06c1f8042a34e30baaa88e7b241da63b8c566f40",
+    "exports/report.md": "2e0b1a6e78fb29a7de88aea95da200e50aa3c77ed9ec7a76940fd88bdb92f643",
+    "exports/report.pdf": "b3838b5df2199c69243691442e6ffd3d90326dc5c91704c8493feb8895098ea4",
+    "exports/report.pptx": "0e98553454de50c4a31bfb6d8cc9fd5d19760345b59df6b2a563b710beb6200f",
+    "frames/guide-profile.json": "259f10ac1870336f8d7f7e9750e9d9efddca945e53279202b6ebbeba4a70c717",
+    "frames/report.html": "8237772314980b1765584c0d06c1f8042a34e30baaa88e7b241da63b8c566f40",
+    "frames/report.md": "2e0b1a6e78fb29a7de88aea95da200e50aa3c77ed9ec7a76940fd88bdb92f643",
+    "liftoff/liftoff-profile.json": "783d666bcf1b4421d349e862ccfc914c66ae8fb5ae7d4d7b29d1e17050230d4f",
+    "liftoff/liftoff.html": "1b69ff2698de9f92db16faeb89ffff42befa8a5043225f8d503d71f7ab53abde",
+    "profile/guide-profile.json": "25b80ed32b18622c8e83158794deacda72c7ae4cd81c26147194482f4b80670d",
+    "profile/report.html": "2d527ed7f34bbe07fa494b638cc154c196841a47e8084251430eb8a19ddb2717",
+    "profile/report.md": "bb1f4fc790fae9a947b111788a477cad21a743113a587cfdcf5fab0dc489e7c7"
+  },
+  "socket_attempts": 0
+}
