@@ -40,8 +40,8 @@ def test_hourly_scope_does_not_claim_time_of_day_excluded(make_profile):
     data='when,value\n2024-01-01 00:00,1\n2024-01-02 00:30,2\n'
     p=make_profile(data,declare('hour'))
     for text in [render_html(p),render_markdown(p)]:
-        assert DATETIME_NOTE not in text and 'hourly series retains time of day' in text
-    for text in [render_html(make_profile(data)),render_markdown(make_profile(data))]:assert DATETIME_NOTE in text
+        assert DATETIME_NOTE not in text and 'written local clocks profiled separately' in text
+    for text in [render_html(make_profile(data)),render_markdown(make_profile(data))]:assert DATETIME_NOTE not in text and 'written local clocks profiled separately' in text
 
 
 def test_high_cardinality_string_hint_is_optional_and_retains_caps(make_profile,tmp_path):

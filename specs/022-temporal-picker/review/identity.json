@@ -1,0 +1,51 @@
+{
+  "blocked_network": true,
+  "commands": [
+    [
+      "profile",
+      "tests/fixtures/temporal/clocks.csv",
+      "--config",
+      "/tmp/time22-review.yaml",
+      "--out",
+      "/tmp/time22-identity/profile"
+    ],
+    [
+      "configure",
+      "tests/fixtures/temporal/clocks.csv",
+      "--config",
+      "/tmp/time22-review.yaml",
+      "--out",
+      "/tmp/time22-identity/configure"
+    ],
+    [
+      "liftoff",
+      "tests/fixtures/temporal/clocks.csv",
+      "--out",
+      "/tmp/time22-identity/liftoff"
+    ],
+    [
+      "export",
+      "/tmp/time22-identity/profile/guide-profile.json",
+      "--out",
+      "/tmp/time22-identity/exports"
+    ]
+  ],
+  "file_sha256": {
+    "configure/configure-profile.json": "b1e125b25356d64c51a22fbaad39db0ef899f797c7e9495e05eef2a358adf09a",
+    "configure/configure.html": "d5ae4e43a95e0fc413503b99a0451007c58df246b0cb20396d07fb43b9b2c273",
+    "exports/export-status.json": "357b27393465101ee92f25ea120d5b15cee6c0ddc70bc5584b588e1dc8aeb2d7",
+    "exports/report.html": "5b2da6c0ce6610241494c09c393c2ea28af630c9df6ee2ecb4c213401bb3c7e1",
+    "exports/report.md": "b91eea13583122e0aae9f07a20e6d1ea355e239fe968d8beb8c85cf8bb71bb06",
+    "exports/report.pdf": "652e7c5667ba3fefc121cf43781d0f4b90db837b0e6ecdea51b07348b118e4b8",
+    "exports/report.pptx": "a5e63e5baea77c77dcb5846f491897981830109d5d3c5e5dc3f9159242439ae7",
+    "liftoff/liftoff-profile.json": "8c2b001cadbd6483ff0759285cfd5cd57d1d399d754199d59e501bc0dfffc8ed",
+    "liftoff/liftoff.html": "a1f5374080274f9c9d15c3840341e677931ce9731ed11c15084318793c785846",
+    "profile/guide-profile.json": "b1e125b25356d64c51a22fbaad39db0ef899f797c7e9495e05eef2a358adf09a",
+    "profile/report.html": "5b2da6c0ce6610241494c09c393c2ea28af630c9df6ee2ecb4c213401bb3c7e1",
+    "profile/report.md": "b91eea13583122e0aae9f07a20e6d1ea355e239fe968d8beb8c85cf8bb71bb06"
+  },
+  "hash_seeds": [
+    1,
+    99
+  ]
+}

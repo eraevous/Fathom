@@ -16,10 +16,12 @@ from pathlib import Path
 from .presentation import categorical_hint
 from .config import BINS_RANGE, OPTIONAL_SECTIONS, validate_config
 from .models import TYPES
-from .parsing import DATE_FORMATS, parse_date, parse_datetime
+from .parsing import DATE_FORMATS, parse_date, parse_datetime, parse_temporal
 from .rows import RULES as ROW_RULES
 from .timeseries import DEFAULT_LAG, GRAINS, MIN_N, TOP_N, undeclared
 from .univariate import BIN_RULE
+from .temporal_formats import validate_format
+from .temporal_picker import picker_schema,render_picker,PARSER_JS,UI_JS as PICKER_UI_JS
 from .palette import theme_css
 from .temporal_view import TEMPORAL_CSS
 from .renderers import KIND_CSS
@@ -86,7 +88,7 @@ def build_schema(doc: dict, frame, raw_config: dict | None) -> dict:
             facts.append("parsed date formats: " + ", ".join(f"{k} {v}" for k, v in formats.items()))
         suggestions = []
         if typ != "temporal" and values:
-            counts = {fmt: sum(parse_date(v, fmt) is not None for v in values) for fmt in sorted(DATE_FORMATS)}
+            counts = {fmt: sum(parse_temporal(v, fmt) is not None for v in values) for fmt in sorted(DATE_FORMATS)}
             best = max(counts.values())
             tied = [f for f, n in counts.items() if n == best]
             if best >= SUGGEST_SHARE * len(values):
@@ -98,6 +100,8 @@ def build_schema(doc: dict, frame, raw_config: dict | None) -> dict:
                     facts.append("date format ambiguous between " + " and ".join(tied) + "; declare one")
         columns.append({"name": c["name"], "inferred_type": c["inference"]["type"], "effective_type": typ,
                         "override": bool(c.get("override")), "facts": facts, "suggestions": suggestions})
+        pick=picker_schema(doc,i,(raw.get('columns',{}).get(c['name']) or {}).get('date_format'))
+        if pick:columns[-1]['temporal_picker']=pick
         if typ in {"numeric", "categorical", "boolean"} and populated and not (typ != "numeric" and c["distinct"] == populated):
             candidates.append({"column": c["name"], "reason": f"{typ}; {pct(populated, rows)} populated; {c['distinct']} distinct"})
         if typ == "temporal":
@@ -198,7 +202,7 @@ def config_document(schema: dict, sel: dict) -> dict:
         chosen = (sel.get("columns") or {}).get(n) or {}
         entry = {}
         if chosen.get("type") in schema["types"]: entry["type"] = chosen["type"]
-        if chosen.get("date_format") in schema["date_formats"]: entry["date_format"] = chosen["date_format"]
+        if chosen.get("date_format"): entry["date_format"] = validate_format(chosen["date_format"])
         if chosen.get("exclude_from_target") is True: entry["exclude_from_target"] = True
         for k, v in (schema["base_columns"].get(n) or {}).items(): entry[k] = v
         if entry: columns[n] = entry
@@ -270,7 +274,7 @@ def config_yaml(schema: dict, sel: dict) -> str:
     return "\n".join(yaml_lines(doc, 0, [], schema)) + "\n" if doc else "{}\n"
 
 
-YAML_JS = r"""
+YAML_JS = PARSER_JS + r"""
 function own(o,k){return o!=null&&Object.prototype.hasOwnProperty.call(o,k)?o[k]:undefined;}
 function stripWs(s){return s.replace(/^[ \t\n\r]+|[ \t\n\r]+$/g,'');}
 function configDocument(schema,sel){
@@ -315,7 +319,7 @@ function configDocument(schema,sel){
   names.forEach(function(n){
     var chosen=own(sel.columns,n)||{},entry={},extra=own(schema.base_columns,n)||{};
     if(schema.types.indexOf(chosen.type)>=0){entry.type=chosen.type;}
-    if(schema.date_formats.indexOf(chosen.date_format)>=0){entry.date_format=chosen.date_format;}
+    if(chosen.date_format){entry.date_format=temporalValidate(chosen.date_format);}
     if(chosen.exclude_from_target===true){entry.exclude_from_target=true;}
     Object.keys(extra).forEach(function(k){entry[k]=extra[k];});
     if(Object.keys(entry).length){columns.set(n,entry);}
@@ -436,7 +440,8 @@ function manifest(){
     var si=seriesIndex(el);if(!schema.time_series_options&&si!==null){var sp=schema.series_options[si];item.series={time:sp.time,value:sp.value};if(el.hasAttribute('data-series-by')){item.value=seriesBy(si);}}
     if(item.state==='suggested'){item.suggestion_reason=el.getAttribute('data-reason');}
     return item;});
-  var y=configYaml(schema,selections());
+  var y='';
+  try{y=configYaml(schema,selections());}catch(e){return {status:'invalid configuration',error:e.message};}
   return {kind:'fathom-config-manifest',advisory:'Provenance of each control on the configure page. Advisory only: Fathom does not read this file, and it is not an audit certificate; it records what the page showed, not what anyone verified.',
           yaml_sha256:sha256Hex(y),yaml_sha256_basis:'sha256 of the exact UTF-8 bytes of the downloaded '+schema.yaml_filename,
           dataset:schema.dataset,controls:controls};
@@ -445,10 +450,13 @@ function refresh(){
   var bad=[];
   $('[data-int]').forEach(function(el){var v=asInt(el),kn=schema.knobs[el.getAttribute('data-int')];if(v!==null&&(isNaN(v)||v<kn.min||v>kn.max)){bad.push(el.getAttribute('data-label')+' must be an integer from '+kn.min+' to '+kn.max+'; not emitted');}});
   $('[data-key]').forEach(function(el){if(el.tagName==='OUTPUT'){return;}var o=document.querySelector('output[data-for="'+key(el)+'"]');if(o){o.textContent=stateOf(el);o.className='state '+stateOf(el).replace(' ','-');}});
-  var y=configYaml(schema,selections());
+  var y='';
+  try{y=configYaml(schema,selections());}catch(e){bad.push(e.message+'; YAML not emitted');}
+  document.getElementById('copy').disabled=bad.length>0;
+  document.getElementById('download').setAttribute('aria-disabled',String(bad.length>0));
   document.getElementById('yaml').textContent=y;
   document.getElementById('warnings').textContent=bad.join('; ');
-  document.getElementById('download').href='data:application/yaml;charset=utf-8,'+encodeURIComponent(y);
+  if(bad.length){document.getElementById('download').removeAttribute('href');}else{document.getElementById('download').href='data:application/yaml;charset=utf-8,'+encodeURIComponent(y);}
   document.getElementById('manifest').href='data:application/json;charset=utf-8,'+encodeURIComponent(JSON.stringify(manifest(),null,2)+'\n');
 }
 $('[data-key]').forEach(function(el){if(el.tagName==='OUTPUT'){return;}
@@ -464,9 +472,12 @@ document.getElementById('copy').addEventListener('click',function(){
   if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(y);}
   else{var r=document.createRange();r.selectNodeContents(document.getElementById('yaml'));var s=window.getSelection();s.removeAllRanges();s.addRange(r);document.execCommand('copy');}
 });
+PICKER_SETUP
 refresh();
 })();
 """
+
+UI_JS=UI_JS.replace('PICKER_SETUP',PICKER_UI_JS)
 
 CSS = theme_css() + KIND_CSS + TEMPORAL_CSS + """:root{--bg:var(--surface);--fg:var(--ink);--line:var(--border);--card:var(--panel);--sug:var(--kind-hypothesis);--sel:var(--kind-observation)}
 body{font:15px/1.5 system-ui,sans-serif;background:var(--bg);color:var(--fg);max-width:1180px;margin:auto;padding:24px 16px}
@@ -479,7 +490,7 @@ input[type=text]{width:100%;box-sizing:border-box}.state{display:inline-block;fo
 .sug{color:var(--sug);font-size:13px}pre{background:var(--card);border:1px solid var(--line);padding:12px;overflow-x:auto;white-space:pre}
 .bar{position:sticky;top:0;background:var(--bg);padding:8px 0;z-index:1}button,a.btn{display:inline-block;margin-bottom:6px;font:inherit;background:var(--tint);color:var(--link);border:0;border-radius:4px;padding:6px 12px;margin-right:8px;text-decoration:none;cursor:pointer}
 .legend span{margin-right:10px}#warnings{color:var(--kind-question)}
-.cols select{width:100%}.facts{min-width:150px}.sug small{display:block}.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,360px);gap:24px;align-items:start}@media(max-width:860px){.grid{grid-template-columns:minmax(0,1fr)}}
+.format-picker{margin-top:16px;min-width:0}.format-picker h3{font-size:1.1rem}.format-picker table{min-width:520px}.format-picker td{overflow-wrap:anywhere}.format-live[hidden]{display:none}@media(max-width:600px){.format-picker table{min-width:0!important;table-layout:fixed}.format-picker td,.format-picker th{padding:7px 4px;overflow-wrap:anywhere}.format-picker th:first-child{width:36px}.format-picker code{overflow-wrap:anywhere;white-space:normal}}.cols select{width:100%}.facts{min-width:150px}.sug small{display:block}.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,360px);gap:24px;align-items:start}@media(max-width:860px){.grid{grid-template-columns:minmax(0,1fr)}}
 .yaml-pane{position:sticky;top:12px}
 article.finding{background:var(--panel);border-left:3px solid var(--soft-border);padding:8px 14px;margin:10px 0}article p{margin:5px 0}details{margin:10px 0}summary{cursor:pointer;color:var(--link)}a{color:var(--link)}.chart svg{max-width:100%;height:auto}.num{text-align:right;font-variant-numeric:tabular-nums}.table-scroll{overflow-x:auto}.review-table{max-width:100%}#brief{margin-bottom:48px}.axis-captions p{margin:3px 0}svg text{font:13px system-ui,sans-serif}
 .series{border-top:1px solid var(--line);padding-top:4px}.series:first-of-type{border-top:0}.sub{margin:4px 0 4px 24px}.sub label{margin-right:6px}.sub label.g{white-space:nowrap}
@@ -556,6 +567,7 @@ def render_page(schema: dict, brief: str | None = None, download_name: str = "fa
     h.append('</select></label></p></div></section>')
     # Columns
     h.append('<section><h2>Columns</h2><p class="muted">Type and date-format overrides are human declarations; the inference is kept beside them in the report. Removing a column is not offered: it would suppress that column\'s findings.</p><div class="scroll"><table class="cols"><thead><tr><th>Column</th><th>Inferred / observed</th><th>Type override</th><th>Date format</th><th>exclude_from_target</th></tr></thead><tbody>')
+    pickers=[]
     for i, c in enumerate(schema["columns"]):
         ic = init["columns"].get(c["name"], {})
         sug = {s["key"]: s for s in c["suggestions"]}
@@ -566,9 +578,16 @@ def render_page(schema: dict, brief: str | None = None, download_name: str = "fa
             s = sug.get(field)
             iv = ic.get(field)
             label = f"columns[{i}].{field}"
-            cell = (f'<select data-col="{i}" data-field="{field}"' + control_attrs(k, label, "", iv, s and s["value"], s and s["reason"]) + '>'
-                    + '<option value="">(default)</option>'
-                    + ''.join(f'<option value="{attr(o)}"' + (' selected' if o == iv else '') + f'>{escape(o)}</option>' for o in options) + '</select>' + state(k))
+            if field=='date_format':
+                canonical=(f'<label>Named format or custom pattern <input type="text" data-col="{i}" data-field="{field}" value="{attr(iv or "")}"'+control_attrs(k,label,"",iv,s and s["value"],s and s["reason"])+'> </label>'+state(k).replace('>default<','>existing config<' if iv else '>default<'))
+                if c.get('temporal_picker'):
+                    pickers.append(render_picker(i,c,canonical))
+                    cell=f'<a href="#format-picker-{i}">Preview / choose format</a>'
+                else:cell=canonical
+            else:
+                cell = (f'<select data-col="{i}" data-field="{field}"' + control_attrs(k, label, "", iv, s and s["value"], s and s["reason"]) + '>'
+                        + '<option value="">(default)</option>'
+                        + ''.join(f'<option value="{attr(o)}"' + (' selected' if o == iv else '') + f'>{escape(o)}</option>' for o in options) + '</select>' + state(k))
             if s:
                 cell += f'<br><label class="sug"><input type="checkbox" data-accept="{attr(k)}"> suggested: {escape(s["value"])}<small>{escape(s["reason"])}</small></label>'
             cells.append('<td>' + cell + '</td>')
@@ -577,7 +596,7 @@ def render_page(schema: dict, brief: str | None = None, download_name: str = "fa
         cells.append(f'<td><input type="checkbox" data-col="{i}" data-field="exclude_from_target"' + (' checked' if iv else '')
                      + control_attrs(k, f"columns[{i}].exclude_from_target", "false", "true" if iv else None) + '>' + state(k) + '</td>')
         h.append('<tr>' + ''.join(cells) + '</tr>')
-    h.append('</tbody></table></div></section>')
+    h.append('</tbody></table></div>'+''.join(pickers)+'</section>')
     # Intervals
     h.append('<section><h2>Declared intervals</h2><div class="card"><p class="muted">Pairs of temporal columns, offered unticked. An interval is a domain declaration: Fathom checks end before start, end equal to start and durations only for declared pairs.</p>')
     if not interval_options: h.append('<p>No pair of temporal columns in this profile.</p>')

@@ -1,0 +1,66 @@
+{
+  "configure-dark-1280": {
+    "custom_preview_matches": 20,
+    "errors": [],
+    "invalid_pattern_blocks_yaml": true,
+    "keyboard_reachable": true,
+    "overflow": false,
+    "requests": []
+  },
+  "configure-dark-390": {
+    "custom_preview_matches": 20,
+    "errors": [],
+    "invalid_pattern_blocks_yaml": true,
+    "keyboard_reachable": true,
+    "overflow": false,
+    "requests": []
+  },
+  "configure-light-1280": {
+    "custom_preview_matches": 20,
+    "errors": [],
+    "invalid_pattern_blocks_yaml": true,
+    "keyboard_reachable": true,
+    "overflow": false,
+    "requests": []
+  },
+  "configure-light-390": {
+    "custom_preview_matches": 20,
+    "errors": [],
+    "invalid_pattern_blocks_yaml": true,
+    "keyboard_reachable": true,
+    "overflow": false,
+    "requests": []
+  },
+  "liftoff-dark-1280": {
+    "custom_preview_matches": 20,
+    "errors": [],
+    "invalid_pattern_blocks_yaml": true,
+    "keyboard_reachable": true,
+    "overflow": false,
+    "requests": []
+  },
+  "liftoff-dark-390": {
+    "custom_preview_matches": 20,
+    "errors": [],
+    "invalid_pattern_blocks_yaml": true,
+    "keyboard_reachable": true,
+    "overflow": false,
+    "requests": []
+  },
+  "liftoff-light-1280": {
+    "custom_preview_matches": 20,
+    "errors": [],
+    "invalid_pattern_blocks_yaml": true,
+    "keyboard_reachable": true,
+    "overflow": false,
+    "requests": []
+  },
+  "liftoff-light-390": {
+    "custom_preview_matches": 20,
+    "errors": [],
+    "invalid_pattern_blocks_yaml": true,
+    "keyboard_reachable": true,
+    "overflow": false,
+    "requests": []
+  }
+}

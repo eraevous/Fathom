@@ -10,7 +10,7 @@ import statistics
 from .config import validate_config
 from .models import GuideDataFrame, ProfilingResult
 from .quality import quality_profile, copy_evidence
-from .parsing import finite_number, parse_date, temporal_failure, temporal_failure_message
+from .parsing import finite_number, parse_date, parse_temporal, temporal_failure, temporal_failure_message
 from .univariate import enrich_columns, identity_and_samples, missingness_patterns, stored
 
 SCHEMA_VERSION = 2
@@ -46,8 +46,8 @@ def infer(values: list[str], name="", meta=None) -> dict:
         typ, reason = "string", "No nonmissing values; type is unknown, string is the storage fallback."
     elif all(v.lower() in {"true", "false"} for v in values):
         typ, reason = "boolean", "All nonmissing values are lexical true/false."
-    elif meta.get("date_format") or (sum(parse_date(v,meta.get("date_format")) is not None for v in values)>=len(values)*(.8 if re.search(r"date|release",name,re.I) else 1)):
-        typ, reason = "temporal", "Local date formats recognized; ambiguous readings and format evidence are retained."
+    elif meta.get("date_format") or (sum(parse_temporal(v,meta.get("date_format")) is not None for v in values)>=len(values)*(.8 if re.search(r"date|release|time|stamp|clock",name,re.I) else 1)):
+        typ, reason = "temporal", "Local temporal formats recognized; ambiguous readings and format evidence are retained."
     elif (all(number(v) is not None for v in values) or (re.search(r"gross|amount|cost|price|revenue|rating|score|count|quantity",name,re.I) and sum(number(v) is not None for v in values)>=.8*len(values))) and not any(re.match(r"^[+-]?0\d", v.strip()) for v in values):
         typ, reason = "numeric", "Finite numeric readings (local currency/thousands syntax allowed); named numeric columns may retain up to 20% incompatible values, counted separately."
     elif len(distinct) <= 20 and len(distinct) < len(values) and len(distinct) / len(values) <= 0.8:
@@ -77,10 +77,13 @@ def summarize(values: list[str], typ: str, meta=None) -> dict:
                  "zeros": sum(n == 0 for n in nums), "negatives": sum(n < 0 for n in nums)}
         return stats
     if typ == "temporal":
-        dates = [d["date"] for v in values if (d := parse_date(v,(meta or {}).get("date_format"))) is not None]
-        stats={"valid": len(dates), "invalid": len(values) - len(dates),
-               "min": min(dates) if dates else None, "max": max(dates) if dates else None}
-        failure=temporal_failure(values,(meta or {}).get('date_format')) if not dates else None
+        parsed=[p for v in values if (p:=parse_temporal(v,(meta or {}).get('date_format'))) is not None]
+        dates=[p['date'] for p in parsed if 'date' in p]
+        clocks=[p['time'] for p in parsed if 'time' in p]
+        stats={'valid':len(parsed),'invalid':len(values)-len(parsed),'min':min(dates) if dates else None,'max':max(dates) if dates else None}
+        if parsed and not dates:
+            stats.update(temporal_kind='time',earliest_clock=min(clocks) if len({p['clock_basis'] for p in parsed})==1 else None,latest_clock=max(clocks) if len({p['clock_basis'] for p in parsed})==1 else None,clock_basis='local wall clock; separate offset bases; no calendar date')
+        failure=temporal_failure(values,(meta or {}).get('date_format')) if not parsed else None
         if failure:stats['parse_failure']=failure
         if (meta or {}).get('date_format')=='YEAR':stats['precision']='year; 1 January anchor, not an observed month/day'
         return stats

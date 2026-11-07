@@ -67,7 +67,7 @@ def test_wholly_failed_temporal_year_declaration_explains_nearest_format(make_pr
     meta={'type':'temporal',**({'date_format':declared} if declared else {})}
     d=make_profile('year,value\n1976,10\n2024,20\n',{'columns':{'year':meta},'target':'value','pair_budget':1}).document
     c=d['columns'][0];f=c['statistics']['parse_failure'];assert c['statistics']['invalid']==2 and f['suggested_formats']==['YEAR']
-    assert f['formats_tried']==(['ISO'] if declared else ['DMY','ISO','ISO_DATETIME','MDY','MON_D_Y'])
+    assert f['formats_tried']==(['ISO'] if declared else ['DATETIME','DMY','ISO','ISO_DATETIME','MDY','MON_D_Y','TIME'])
     finding=next(x for x in d['findings'] if x['id']=='column-0-invalid')
     assert any(e.get('value')==f for e in finding['evidence'])
     text=render_html(ProfilingResult(d));assert 'Formats tried:' in text and 'date_format: YEAR' in text
