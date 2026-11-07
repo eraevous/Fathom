@@ -41,14 +41,17 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="guide", description="Evidenced local table review")
     parser.add_argument("--version", action="version", version=f"guide {__version__}")
     commands = parser.add_subparsers(dest="command", required=True)
-    helps = {"liftoff": "inspect a CSV without config; write a Brief + Configurations HTML page and its profile", "configure": "write configure.html, a self-contained page that builds a YAML config from this table's profile "
+    helps = {"serve": "edit configuration and rerun a startup-fixed CSV on authenticated 127.0.0.1 only", "liftoff": "inspect a CSV without config; write a Brief + Configurations HTML page and its profile", "configure": "write configure.html, a self-contained page that builds a YAML config from this table's profile "
                           "(defaults, observable suggestions, explicit selections), and configure-profile.json, the profile it used"}
-    for command in ("profile", "render", "compare", "validate", "export", "configure", "liftoff", "panel"):
+    for command in ("profile", "render", "compare", "validate", "export", "configure", "liftoff", "panel", "serve"):
         sub = commands.add_parser(command, help=helps.get(command), description=helps.get(command))
         sub.add_argument("input", type=Path)
+        if command == "serve":
+            sub.add_argument("--host", default="127.0.0.1", choices=("127.0.0.1",))
+            sub.add_argument("--idle-timeout", type=float, default=1800, help="idle expiry in seconds (default 1800)")
         if command == "compare":
             sub.add_argument("after", type=Path)
-        if command in {"profile", "validate", "configure", "panel", "render", "export"}:
+        if command in {"profile", "validate", "configure", "panel", "render", "export", "serve"}:
             sub.add_argument("--config", type=Path, required=command == 'panel', help=("presentation options only; saved measurements are unchanged" if command in {"render","export"} else "existing YAML config") + ("; its values start the page as 'existing config'" if command == "configure" else ""))
         if command == 'liftoff':
             sub.add_argument('--yaml', type=Path, help='write exactly the page default selection as YAML; no suggestions applied')
@@ -65,6 +68,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.command=='export' and args.out is None and args.tidy is None:parser.error('export needs --out or --tidy')
     if args.command=='export' and args.formats and args.out is None:parser.error('--formats requires --out')
     try:
+        if args.command == "serve":
+            from .serve import run
+            return run(args.input, args.out, args.config, host=args.host, idle_timeout=args.idle_timeout)
         from .summary_view import report_options
         options=report_options(read_config(args.config) if getattr(args,'config',None) else None)
         if args.command == 'panel':

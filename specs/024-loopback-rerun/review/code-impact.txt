@@ -1,0 +1,86 @@
+# derived 18 change event(s) from the structural diff
+# aec impact
+
+- change: revise code:src.fathom.cli.main (by code, authorized_by None)
+- change: revise code:src.fathom.config.config_from_yaml (by code, authorized_by None)
+- change: revise code:src.fathom.config.read_config (by code, authorized_by None)
+- change: revise code:src.fathom.liftoff.brief_html (by code, authorized_by None)
+- change: revise code:src.fathom.serve.Handler.do_POST (by code, authorized_by None)
+- change: revise code:src.fathom.serve.Handler.parse_request (by code, authorized_by None)
+- change: revise code:src.fathom.serve.Session.check_paths (by code, authorized_by None)
+- change: revise code:src.fathom.serve.Session.rerun (by code, authorized_by None)
+- change: revise code:src.fathom.serve.network_guard (by code, authorized_by None)
+- change: revise code:src.fathom.serve.run (by code, authorized_by None)
+- change: revise code:tests.test_serve.test_every_request_needs_token_and_exact_authority (by code, authorized_by None)
+- change: revise code:tests.test_serve.test_hostile_config_and_clean_decoy (by code, authorized_by None)
+- change: revise code:tests.test_serve.test_idle_timeout_and_unauthenticated_requests_do_not_refresh (by code, authorized_by None)
+- change: revise code:tests.test_serve.test_nonloopback_positive_controls_are_blocked_without_packet (by code, authorized_by None)
+- change: revise code:tests.test_serve.test_output_escape_and_source_collision_refused (by code, authorized_by None)
+- change: revise code:tests.test_serve.test_rerun_is_cli_byte_identical_and_static_report (by code, authorized_by None)
+- change: revise code:tests.test_serve.test_routes_body_bounds_and_output_symlink (by code, authorized_by None)
+- change: revise code:tests.test_serve.test_session_tokens_random_port_zero_and_stop (by code, authorized_by None)
+
+[stale] FT-R1@2: Deliver a CSV/wide data-to-decisions slice: evidenced review actions and unknowns, overridable inferred semantics, bounded target-selected relationships, versioned artifact with standalone reports and human working record, and context-first profile comparison. Scope is specs/001-data-review/spec.md; proposed for Zach to accept.
+    via code:src.fathom.cli.main -> FT-R1@2
+[stale] FT-PO-R1@3: Implement FT-R18 via spec006 disclosed static grid/disclosure, positive-only log coverage, tick/label/formatting and summary-deck readings, proposed for Zach to accept; preserve raw artifact authority and repeat the visual review.
+    via code:src.fathom.cli.main -> FT-PO-R1@3
+[stale] FT-SX-R1@3: Implement spec004 special-type local checks and artifact-derived optional exports using its disclosed syntax, range, font and deterministic packaging readings; proposed for Zach to accept, without accepting new domain semantics.
+    via code:src.fathom.cli.main -> FT-SX-R1@3
+[stale] FT-CU-R1@2: Implement spec009 cold-user fixes: strict ISO date-times (YYYY-MM-DD[ T]HH:MM[:SS]) are inferred temporal and receive the FT-R14 date profile by calendar date; the ISO_DATETIME date_format token works; rejected type/date_format overrides name the accepted values; temporal columns are not excluded from target analysis as identifier-like; export prints a stderr notice per missing optional extra while keeping exit 0; profile and validate echo the resolved question, target, exclusions and row unit deterministically; the inferred description does not call a declared row unit unknown. Proposed for Zach to accept; contrast threshold and zero-share findings are proposals only, not changes.
+    via code:src.fathom.cli.main -> FT-CU-R1@2
+[stale] FT-CFG-R1@3: Implement DEC-067 (owner's words relayed by the lead session; not yet in docs/decisions/) as spec012: `guide configure DATA.csv [--config existing.yaml] --out DIR` runs the existing profile and writes a self-contained configure.html (inline CSS/JS, no external resources, no dates, byte-identical across runs) and configure-profile.json. The page shows a dataset summary; per-column inferred type and observable facts with type override, date_format and exclude_from_target controls; a target selector with observable reasons only; temporal pairs as unticked interval suggestions; histogram bins; pair_budget; sample_rows; optional report sections; question and row unit; each control shows default, suggested (with reason, applied only when ticked), selected or existing-config state. YAML uses only loader keys plus new `bins` (1-50; default sqrt(n) capped at 10, disclosed) and `sections` (samples, missingness_patterns); provenance goes to an advisory config-manifest.json Fathom does not read. Evidentiary thresholds are read-only with record ids; no control suppresses a finding; omitted sections are named in 'What the data cannot tell' as omitted by configuration and stay in the artifact. After main's spec011 (#21) added the `time_series` config key, the page also offers time series unticked, chosen by the report's own undeclared-series rule (a temporal column with >= 30 distinct periods; event counts, or the sum of a numeric column that is not identifier-like), each with the reason, an optional `by` column and granularity checkboxes (auto, hour, day, week, month); `max_lag` and `top_n` are not offered (defaults apply; values from --config are kept); existing `time_series` and `intervals` entries prefill in main's config shape. Whole-column exclusion is not built (narrower reading). Proposed for Zach to accept.
+    via code:src.fathom.cli.main -> FT-CFG-R1@3
+[stale] FT-CFG-C1@4: Spec012 implements FT-CFG-R1@3: the configure page and profile are byte-identical across processes; the embedded control schema drives a Python YAML generator whose output loads through config.load_config and equals the selections, and the embedded JavaScript generator produces identical YAML under node for hostile names; hostile column names are escaped in HTML and the JSON block and do not execute in headless Chrome; an unseen CSV with a DD/MM/YYYY column read as text is configured (type and date_format suggestions ticked, target, bins, samples omitted) and the resulting report profiles the dates, applies the bins and names the omitted section. Time-series suggestions are unticked with observable reasons, absent below 30 periods (decoy), round-trip through the loader and profile, and match under node; existing time_series and intervals prefill and keep max_lag/top_n. Usefulness not independently accepted.
+    via code:src.fathom.cli.main -> FT-CFG-C1@4
+[stale] FT-CU-C1@3: Spec009 implements FT-CU-R1 on authored synthetic tables and on the public seaborn taxis table: pickup/dropoff become temporal with span, calendar counts, gaps and invalid-date counts; overrides, export notice, CLI echo and row-unit description behave as specified. No threshold or zero rule changed; usefulness not independently accepted.
+    via code:src.fathom.cli.main -> FT-CU-C1@3
+[stale] FT-LIFT-R1@2: Implement spec013 liftoff: no-config default profile, static Brief plus opt-in configurator, isolated and labelled provisional interval/event-series analyses, bounded evidenced zero-by-category observation/question, no applied suggestion, existing stage-two semantics, deterministic core and optional degradation. Threshold/cap/provisional readings are for Zach to accept.
+    via code:src.fathom.cli.main -> FT-LIFT-R1@2
+[stale] FT-PANEL-R1@2: No data leaves the machine: all current local commands require no sockets, import no network clients in Fathom code, have no telemetry, and emit self-contained HTML. Unused imports inside existing optional serializers are allowed; no network attempt is allowed. A prospective authorized loopback feature would require loopback-only binding and safeguards against web access; none is added. Fresh-process tests deny every socket/Request, even swallowed attempts, and compare bytes for every command/export; wheelhouse offline install documented. Provisional for Zach.
+    via code:src.fathom.cli.main -> FT-PANEL-R1@2
+[stale] FT-DEMO2-R1@2: Proposed for Zach:spec016 adds liftoff --yaml PATH matching default page ticks, no-JS instructions and truthful config/type/budget/other exclusion categories, with no applied suggestion or verdict change.
+    via code:src.fathom.cli.main -> FT-DEMO2-R1@2
+[stale] FT-DEMO2-C1@2: Spec016 emits exact unticked page YAML from the terminal, provides no-JS guidance and truthful categorized target exclusions without changing analysis selection or verdicts.
+    via code:src.fathom.cli.main -> FT-DEMO2-C1@2
+[stale] FT-TIDY20-R1@1: Proposed for Zach:spec020 exports deterministic stdlib columns/findings/relations/samples CSVs from saved artifacts and measures/documents nesting plus a proposal-only schema3 migration; no schema or analytical change.
+    via code:src.fathom.cli.main -> FT-TIDY20-R1@1
+[stale] FT-SERVE24-R1@1: Proposed for Zach under HO-DG-20261106-8RZJ item C: a startup-fixed CSV/output loopback-only guide serve configurator invokes the ordinary profile in process; random per-session token, exact Host/Origin, bounded strict YAML only, no remote paths/uploads/commands/outbound network, 1800s idle expiry and Stop; unchanged standalone deterministic artifacts.
+    via code:src.fathom.cli.main -> FT-SERVE24-R1@1
+[stale] FT-SERVE24-C1@1: Spec024 provides a startup-fixed, token/Host/Origin-guarded 127.0.0.1:port0 configuration rerun. Strict bounded YAML only; ordinary profile invoked in process; fixed destinations checked against symlinks/hardlinks/source collisions; production loopback-only audit guard, idle/Stop and bounded token-free event log. Static reports are unchanged and standalone.
+    via code:src.fathom.cli.main -> FT-SERVE24-C1@1
+[stale] FT-STYLE-R1@1: Proposed for Zach from HO-DG-20261105-WJZQ (relayed DEC-125): shared report typography distinguishes verdict tokens, inferred readings, literal identifiers and evidence links; shared progressive Brief/profile navigation; collapsed technical detail, unchanged artifacts/verdicts/order/palette and deterministic offline output. Spec019 documents narrow readings.
+    via code:src.fathom.liftoff.brief_html -> FT-STYLE-R1@1
+[needs_review] FT-E1@3: Clean core install: 67 passed, 1 SciPy-present decoy skipped. With stats extra: 68 passed. Quickstart profile/render/compare/validate succeeds; fresh-process outputs match byte-for-byte. Dirty fixture has exactly two evidenced review actions; clean decoy has neither.
+    via code:src.fathom.cli.main -> FT-E1@3
+[needs_review] FT-SERVE24-E1@1: Real HTTP regression/clean-decoy tests under an independent fresh-process outbound-denial harness cover token/authority/origin, methods/routes, hostile YAML/content types/body limits, output escapes, per-session random token/port, stop/idle, production network guard and caught-attempt detection. Authenticated reruns reproduce all three ordinary CLI artifact bytes. Full-extras results and 1280/390 light/dark browser evidence are in spec024/review.
+    via code:tests.test_serve.test_every_request_needs_token_and_exact_authority -> FT-SERVE24-E1@1
+[needs_review] FT-C1@3: The implementation conforms to the proposed FT-R1 slice on the tested synthetic scenarios: evidenced review actions and unknowns, inference overrides, bounded target pairs, saved reports, and context-first comparisons. This is not owner acceptance or a claim that the purpose outcome is achieved.
+    via code:src.fathom.cli.main -> FT-R1@2 -> FT-C1@3
+[needs_review] FT-PO-C1@3: Spec006 implements all seven FT-R18 polish items on tested synthetic/public tables: compact scalable disclosures/grid, intermediate ticks, positive-only log coverage, separated box summaries, unclipped reviewed captions, logical rounded statistics/examples, capitalized months and suppressed identifier top-N, default12-slide summary and optional full deck. Repeat FT-R17 gallery and explicit open limits; independent acceptance remains unclaimed.
+    via code:src.fathom.cli.main -> FT-PO-R1@3 -> FT-PO-C1@3
+[needs_review] FT-SX-C1@3: Spec004 conforms on authored synthetic tables: inferred local special-type counts/examples/domain views and review actions; artifact-only optional PDF/PPTX exports with explicit missing extras and fixed metadata. Does not establish liveness, domain validity or independent acceptance.
+    via code:src.fathom.cli.main -> FT-SX-R1@3 -> FT-SX-C1@3
+[needs_review] FT-LIFT-Q1@1: Should liftoff compute isolated provisional interval/event-series numbers as implemented, or show declarations as suggestions without provisional measurements?
+    via code:src.fathom.cli.main -> FT-LIFT-R1@2 -> FT-LIFT-Q1@1
+[needs_review] FT-LIFT-Q2@1: Should a future configured report gain a standalone conditional-zero finding? This slice preserves stage-two semantics and corroborates cash zeros through existing group n/min/max only.
+    via code:src.fathom.cli.main -> FT-LIFT-R1@2 -> FT-LIFT-Q2@1
+[needs_review] FT-LIFT-C1@2: Spec013 implements tested no-config liftoff Brief plus opt-in Configurations, isolated conditional interval/event-series previews and bounded zero observations/questions, schema2 save/render, untouched YAML{}, selection/download roundtrip, deterministic core/optional degradation and shared themes. Taxis five facts shown; stage-two zero evidence is corroborated by existing group n/min/max, not a new zero sentence. Thresholds/readings remain provisional; no owner usefulness acceptance.
+    via code:src.fathom.cli.main -> FT-LIFT-R1@2 -> FT-LIFT-C1@2
+[needs_review] FT-PANEL-C1@1: Spec014 conforms on the tested synthetic scenarios: offline byte-equivalent commands/exports with no socket attempt, declared training-only panel descriptors/five states/conditional count floors, observed volume/boundaries, independent generated views with lineage, exact metric joins and descriptive rank disagreement. No forecast model, domain inference, private data, accepted threshold or independent usefulness acceptance. Narrower readings and intentional regime-age miss are disclosed.
+    via code:src.fathom.cli.main -> FT-PANEL-R1@2 -> FT-PANEL-C1@1
+[needs_review] FT-VIEW20-C1@2: Spec020 corrected after PR34 independent review: paired group/rest and selected-relationship finding trees use saved structured fields only, with source evidence retained in headline selection. One relationship per parent, role-labelled counts/means and source gates; displayed coefficients have three decimals. Unstructured messages/rules remain whole, with no punctuation parser. All existing summary/tidy/palette scope remains; artifact measurements, verdicts, finding order and precision are unchanged.
+    via code:src.fathom.cli.main -> FT-TIDY20-R1@1 -> FT-VIEW20-C1@2
+[needs_review] FT-STYLE-C1@1: Spec019 derives shared short verdict emphasis, inferred-reading italics, literal identifiers and progressive Brief/profile navigation from unchanged artifacts; finding evidence remains collapsed. Top navigation preserves plotting width, no-script keeps a static list and print hides it. Existing palette, analysis and finding order remain unchanged.
+    via code:src.fathom.liftoff.brief_html -> FT-STYLE-R1@1 -> FT-STYLE-C1@1
+[finding] structural: code:src.fathom.cli.main reaches changed code:src.fathom.config.read_config (calls, depth 1); no status change; candidate for attention: FT-CFG-C1@1, FT-CFG-C1@2, FT-CFG-C1@3, FT-CFG-R1@2, FT-CU-C1@1, FT-CU-C1@2, FT-DEMO2-C1@1, FT-E1@1, FT-E1@2, FT-PO-R1@2, FT-SX-R1@2
+[finding] structural: code:src.fathom.liftoff.render_liftoff reaches changed code:src.fathom.liftoff.brief_html (calls, depth 1); no status change; candidate for attention: FT-LIFT-E2@1, FT-LIFT-E2@2, FT-LIFT-E2@3
+[finding] structural: code:tests.test_terminal.test_terminal_yaml_matches_page_defaults_and_runs_second_stage reaches changed code:src.fathom.cli.main (calls, depth 1); no status change; candidate for attention: FT-DEMO2-E1@1, FT-DEMO2-E1@2
+[finding] structural: FT-CFG-V1@4 references superseded FT-CFG-C1@3; FT-CFG-C1@4 changed (stale); no status change; candidate for attention: FT-CFG-V1@4
+[finding] structural: FT-CU-V1@3 references superseded FT-CU-C1@2; FT-CU-C1@3 changed (stale); no status change; candidate for attention: FT-CU-V1@3
+[finding] structural: FT-LIFT-V1@3 references superseded FT-LIFT-C1@1; FT-LIFT-C1@2 changed (needs_review); no status change; candidate for attention: FT-LIFT-V1@3
+[finding] structural: FT-PO-V1@3 references superseded FT-PO-C1@2; FT-PO-C1@3 changed (needs_review); no status change; candidate for attention: FT-PO-V1@3
+[finding] structural: FT-SX-V1@3 references superseded FT-SX-C1@2; FT-SX-C1@3 changed (needs_review); no status change; candidate for attention: FT-SX-V1@3
+[finding] structural: FT-V1@3 references superseded FT-E1@2; FT-E1@3 changed (needs_review); no status change; candidate for attention: FT-V1@3
+[finding] structural: FT-V1@3 references superseded FT-C1@2; FT-C1@3 changed (needs_review); no status change; candidate for attention: FT-V1@3
+
+26 affected, 112 conclusions with no status change (10 pointer(s) above: candidates for attention)

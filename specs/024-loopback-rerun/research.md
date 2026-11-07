@@ -1,0 +1,2 @@
+# Research
+Python's HTTPServer normally resolves its bound hostname; override server_bind using TCPServer to avoid DNS. Use port zero and synchronous requests, exact authority checks before dispatch, no directory handler, no CORS. A production audit hook restricts numeric loopback; a fresh-process test harness independently blocks external access and records swallowed attempts. Refactor the existing strict YAML loader to accept text, preserving timestamp/key semantics. Reuse cli.main(profile) in process rather than introduce a second analysis path. No dependency is needed.
