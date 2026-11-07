@@ -1,0 +1,2 @@
+# Validation
+Run tests/test_identifiers.py, then full extras pytest. Profile authored fixture with row_code/entity_key/sequence roles; inspect Identifiers, exclusions and summary absence. Change a quantity→identifier→quantity in configure and validate YAML. Panel fixture declares entity_key under series; follow real series anchors. Review at1280/390light/dark, compare repeat bytes under socket denial. Run pinned AEC edges/check/impact.

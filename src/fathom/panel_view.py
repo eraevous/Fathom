@@ -1,4 +1,5 @@
 """Script-free panel reports derived only from the saved artifact."""
+from .identifier_view import panel_identifiers_html,panel_identifiers_markdown,IDENTIFIER_CSS
 from html import escape
 import json
 
@@ -53,19 +54,20 @@ def html(result):
     @media(max-width:800px){.cards{grid-template-columns:minmax(0,1fr)}body{padding:16px 12px}th,td{padding:6px}}
     @media print{details{break-inside:auto}.cards{display:block}}'''
     out = ['<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">',
-           '<title>Fathom panel signals</title><style>' + css + STYLE_CSS + '</style><body><h1>Panel signals</h1>',
+           '<title>Fathom panel signals</title><style>' + css + STYLE_CSS + IDENTIFIER_CSS + '</style><body><h1>Panel signals</h1>',
            '<p>Declared series and calendar. Every signal and model parameter uses <strong>training only</strong>. Evaluation contributes volume context only. Missing measurements, absent periods and closures are not zeros.</p>',
            table(['Measure', 'Value'], [['Signal rows', len(d['rows'])], ['Native period', d['configuration'].get('period')], ['Aggregation rule', d.get('lineage', {}).get('rule', 'not applied')]], 'Dataset'),
            '<details><summary>Provenance</summary>'+table(['Measure','Value'],[['Source',d['source'].get('origin')],['Source SHA256',d['source'].get('sha256')]],'Source evidence')+'</details>',
            '<p>Unequal exposure is a separate flag. Comparable-exposure SBC, seasonal and noise estimates are withheld where it occurs. Noise floors are <strong>model-conditional oracle estimates</strong>, not fitted forecasts or a guaranteed bound.</p>']
     out.append('<details><summary>Declared column roles</summary>' + table(['Measure', 'Value'], [[k.replace('_', ' '), d['configuration'].get(k)] for k in ('series', 'time', 'value', 'period', 'exposure', 'observation_state')]) + '</details>')
+    out.append(panel_identifiers_html(d))
     out.append('<p>Rule-generated observations (<code>rule:panel-v1</code>). Open a series/window for its four dimensions and evidence. Rows can repeat the same source periods.</p>')
     for i, r in enumerate(d['rows']):
         label = ' · '.join(str(x) for x in r['series']) + ' / ' + r['model'] + ' / ' + r['window']
         dur, freq = r['duration'], r['frequency'];states = dur['states']
         coverage = (f"{dur['usable_observations']:,}/{dur['calendar_span']:,} usable · {freq['observed_zero_periods']:,} zero · "
                     f"{states.get('missing', 0):,} missing · {states.get('absent', 0):,} absent · {states.get('closed', 0):,} closed")
-        out.append('<details class="series-entry"><summary>' + escape(label) + ' — ' + escape(coverage) + (' · unequal exposure' if dur['unequal_exposure'] else '') + ' · SBC: ' + escape(str(r['sbc'].get('value') or r['sbc']['status'])) + '</summary>')
+        out.append('<details class="series-entry" id="panel-series-'+str(i)+'"><summary>' + escape(label) + ' — ' + escape(coverage) + (' · unequal exposure' if dur['unequal_exposure'] else '') + ' · SBC: ' + escape(str(r['sbc'].get('value') or r['sbc']['status'])) + '</summary>')
         out.append('<p>Training ' + escape(r['train_start']) + ' to ' + escape(r['train_end']) + '; evaluation ' + escape(str(r.get('eval_start') or 'not declared')) + ' to ' + escape(str(r.get('eval_end') or 'not declared')) + '.</p><div class="cards">')
         for dim in ('duration', 'amplitude', 'wavelength', 'frequency'):
             out.append('<section><h2>' + dim.title() + '</h2>' + table(['Measure', 'Value', 'Status', 'Reason / context'], measures(r[dim]), dim.title() + ' — training') + '</section>')
@@ -104,8 +106,9 @@ def html(result):
 def markdown(result):
     from .panel import flatten
     d = json.loads(result.to_json());out = ['# Panel signals', '', 'Training-only descriptors. Conditional noise estimates are not fitted forecasts.', '', 'Repeated model/window/horizon rows are not independent; disagreement is not failure.', '']
-    for r in d['rows']:
-        out += ['## ' + ' / '.join(map(str, r['series'])) + ' / ' + r['model'] + ' / ' + r['window'], '']
+    out.append(panel_identifiers_markdown(d))
+    for i,r in enumerate(d['rows']):
+        out += ['<a id="panel-series-'+str(i)+'"></a>','## ' + ' / '.join(map(str, r['series'])) + ' / ' + r['model'] + ' / ' + r['window'], '']
         for dim in ('duration', 'amplitude', 'wavelength', 'frequency', 'sbc', 'noise', 'volumes', 'thresholds'):
             out += ['### ' + dim.title(), '', '| Measure | Value |', '| --- | --- |']
             value = r[dim] if isinstance(r[dim], dict) else {'declared': r[dim]}

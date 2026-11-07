@@ -134,7 +134,7 @@ def test_thresholds_and_composite_metric_join_with_unmatched_keys(tmp_path):
     from fathom.profiler import profile
     from fathom.panel import csv_text
     path = tmp_path / 'joined.csv';path.write_text(csv_text(d['joined']))
-    actual = profile(CSVConnector(path).load(), {'target': 'score_a', 'columns': {n: {'type': 'categorical', 'exclude_from_target': True} for n in ['id', 'model', 'window', 'horizon']}}).document
+    actual = profile(CSVConnector(path).load(), {'target': 'score_a', 'columns': {n: {'type': 'categorical', 'exclude_from_target': True, 'role':'identifier'} for n in ['id', 'model', 'window', 'horizon']}}).document
     assert [(c['name'], c['missing'], c['distinct']) for c in actual['columns']] == [(c['name'], c['missing'], c['distinct']) for c in d['target_profiles'][0]['artifact']['columns']]
     assert actual['target_analysis'] == d['target_profiles'][0]['artifact']['target_analysis']
 

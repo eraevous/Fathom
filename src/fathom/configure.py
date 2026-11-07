@@ -26,7 +26,7 @@ from .palette import theme_css
 from .temporal_view import TEMPORAL_CSS
 from .renderers import KIND_CSS
 
-CONTROLLED_COLUMN_KEYS = ("type", "date_format", "frame_rate", "exclude_from_target")
+CONTROLLED_COLUMN_KEYS = ("type", "date_format", "frame_rate", "role", "exclude_from_target")
 TEXT_KEYS = ("question", "row_unit")
 INT_KNOBS = {"pair_budget": (5, 0, 20), "sample_rows": (20, 0, 100), "bins": (None, *BINS_RANGE)}
 CONTROLLED_KEYS = (*TEXT_KEYS, "target", *INT_KNOBS, "sections", "intervals", "time_series")
@@ -98,11 +98,16 @@ def build_schema(doc: dict, frame, raw_config: dict | None) -> dict:
                     suggestions.append({"key": "date_format", "value": tied[0], "reason": reason})
                 else:
                     facts.append("date format ambiguous between " + " and ".join(tied) + "; declare one")
+        role=c.get('univariate',{}).get('role')
+        near_unique=typ=='string' and populated>=5 and c['distinct']/populated>=.9 and not any(x['key']=='type' and x['value']=='temporal' for x in suggestions)
+        declared_role=(raw.get('columns',{}).get(c['name']) or {}).get('role')
+        if not declared_role and ((role=='identifier' and not c.get('univariate',{}).get('role_basis','').startswith('human')) or near_unique):
+            suggestions.append({'key':'role','value':'identifier','reason':'Identifier-like role reading (inferred unless declared); '+('at least90% distinct populated strings' if near_unique else c.get('univariate',{}).get('role_basis','unknown'))+'; confirm key meaning'})
         columns.append({"name": c["name"], "inferred_type": c["inference"]["type"], "effective_type": typ,
                         "override": bool(c.get("override")), "facts": facts, "suggestions": suggestions})
         pick=picker_schema(doc,i,(raw.get('columns',{}).get(c['name']) or {}).get('date_format'))
         if pick:columns[-1]['temporal_picker']=pick
-        if typ in {"numeric", "categorical", "boolean"} and populated and not (typ != "numeric" and c["distinct"] == populated):
+        if typ in {"numeric", "categorical", "boolean"} and populated and role!='identifier' and not (typ != "numeric" and c["distinct"] == populated):
             candidates.append({"column": c["name"], "reason": f"{typ}; {pct(populated, rows)} populated; {c['distinct']} distinct"})
         if typ == "temporal":
             iso = sum(parse_datetime(v) is not None for v in values)
@@ -206,6 +211,7 @@ def config_document(schema: dict, sel: dict) -> dict:
         rate=chosen.get('frame_rate')
         validate_declaration(chosen.get('date_format') or None,rate)
         if rate is not None:entry['frame_rate']=rate
+        if chosen.get("role") in {"identifier","quantity"}:entry["role"]=chosen["role"]
         if chosen.get("exclude_from_target") is True: entry["exclude_from_target"] = True
         for k, v in (schema["base_columns"].get(n) or {}).items(): entry[k] = v
         if entry: columns[n] = entry
@@ -338,6 +344,7 @@ function configDocument(schema,sel){
     if(chosen.date_format){entry.date_format=temporalValidate(chosen.date_format);}
     temporalDeclaration(chosen.date_format||null,chosen.frame_rate);
     if(chosen.frame_rate!==undefined&&chosen.frame_rate!==null){entry.frame_rate=chosen.frame_rate;}
+    if(['identifier','quantity'].indexOf(chosen.role)>=0){entry.role=chosen.role;}
     if(chosen.exclude_from_target===true){entry.exclude_from_target=true;}
     Object.keys(extra).forEach(function(k){entry[k]=extra[k];});
     if(Object.keys(entry).length){columns.set(n,entry);}
@@ -515,7 +522,7 @@ input[type=text]{width:100%;box-sizing:border-box}.state{display:inline-block;fo
 .sug{color:var(--sug);font-size:13px}pre{background:var(--card);border:1px solid var(--line);padding:12px;overflow-x:auto;white-space:pre}
 .bar{position:sticky;top:0;background:var(--bg);padding:8px 0;z-index:1}button,a.btn{display:inline-block;margin-bottom:6px;font:inherit;background:var(--tint);color:var(--link);border:0;border-radius:4px;padding:6px 12px;margin-right:8px;text-decoration:none;cursor:pointer}
 .legend span{margin-right:10px}#warnings{color:var(--kind-question)}
-.format-picker{margin-top:16px;min-width:0}.format-picker h3{font-size:1.1rem}.format-picker table{min-width:520px}.format-picker td{overflow-wrap:anywhere}.format-live[hidden]{display:none}@media(max-width:600px){.format-picker table{min-width:0!important;table-layout:fixed}.format-picker td,.format-picker th{padding:7px 4px;overflow-wrap:anywhere}.format-picker th:first-child{width:36px}.format-picker code{overflow-wrap:anywhere;white-space:normal}}.cols select{width:100%}.facts{min-width:150px}.sug small{display:block}.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,360px);gap:24px;align-items:start}@media(max-width:860px){.grid{grid-template-columns:minmax(0,1fr)}}
+.cols [data-field="role"]{min-width:130px}.cols td:first-child{min-width:100px}.format-picker{margin-top:16px;min-width:0}.format-picker h3{font-size:1.1rem}.format-picker table{min-width:520px}.format-picker td{overflow-wrap:anywhere}.format-live[hidden]{display:none}@media(max-width:600px){.format-picker table{min-width:0!important;table-layout:fixed}.format-picker td,.format-picker th{padding:7px 4px;overflow-wrap:anywhere}.format-picker th:first-child{width:36px}.format-picker code{overflow-wrap:anywhere;white-space:normal}}.cols select{width:100%}.facts{min-width:150px}.sug small{display:block}.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,360px);gap:24px;align-items:start}@media(max-width:860px){.grid{grid-template-columns:minmax(0,1fr)}}
 .yaml-pane{position:sticky;top:12px}
 .time-definition table{width:100%;table-layout:fixed}.time-definition .definition-fields th:first-child{width:18%}.time-definition .definition-fields th:nth-child(2){width:40%}.time-definition .definition-values th:first-child{width:45%}.time-definition td,.time-definition th{white-space:normal;overflow-wrap:anywhere}.time-definition select{width:100%;min-width:0}.time-definition .definition-pattern{white-space:pre-wrap;overflow-wrap:anywhere}
 article.finding{background:var(--panel);border-left:3px solid var(--soft-border);padding:8px 14px;margin:10px 0}article p{margin:5px 0}details{margin:10px 0}summary{cursor:pointer;color:var(--link)}a{color:var(--link)}.chart svg{max-width:100%;height:auto}.num{text-align:right;font-variant-numeric:tabular-nums}.table-scroll{overflow-x:auto}.review-table{max-width:100%}#brief{margin-bottom:48px}.axis-captions p{margin:3px 0}svg text{font:13px system-ui,sans-serif}
@@ -596,14 +603,14 @@ def render_page(schema: dict, brief: str | None = None, download_name: str = "fa
         h.append(f'<option value="{i}"' + (' selected' if str(i) == ti else '') + '>' + escape(name) + ' — ' + escape(reason) + '</option>')
     h.append('</select></label></p></div></section>')
     # Columns
-    h.append('<section><h2>Columns</h2><p class="muted">Type and date-format overrides are human declarations; the inference is kept beside them in the report. Removing a column is not offered: it would suppress that column\'s findings.</p><div class="scroll"><table class="cols"><thead><tr><th>Column</th><th>Inferred / observed</th><th>Type override</th><th>Date format</th><th>exclude_from_target</th></tr></thead><tbody>')
+    h.append('<section><h2>Columns</h2><p class="muted">Type and date-format overrides are human declarations; the inference is kept beside them in the report. Removing a column is not offered: it would suppress that column\'s findings.</p><div class="scroll"><table class="cols"><thead><tr><th>Column</th><th>Column role (default restores inference)</th><th>Inferred / observed</th><th>Type override</th><th>Date format</th><th>exclude_from_target</th></tr></thead><tbody>')
     pickers=[]
     for i, c in enumerate(schema["columns"]):
         ic = init["columns"].get(c["name"], {})
         sug = {s["key"]: s for s in c["suggestions"]}
         cells = ['<td><b>' + escape(c["name"]) + '</b></td>',
                  '<td class="facts">inferred ' + escape(c["inferred_type"]) + ('; effective ' + escape(c["effective_type"]) + ' (existing override)' if c["override"] else '') + '<br><small>' + escape("; ".join(c["facts"])) + '</small></td>']
-        for field, options in (("type", schema["types"]), ("date_format", schema["date_formats"])):
+        for field, options in (("type", schema["types"]), ("date_format", schema["date_formats"]), ("role", ["identifier","quantity"])):
             k = f"col:{i}:{field}"
             s = sug.get(field)
             iv = ic.get(field)
@@ -623,7 +630,8 @@ def render_page(schema: dict, brief: str | None = None, download_name: str = "fa
                         + ''.join(f'<option value="{attr(o)}"' + (' selected' if o == iv else '') + f'>{escape(o)}</option>' for o in options) + '</select>' + state(k))
             if s:
                 cell += f'<br><label class="sug"><input type="checkbox" data-accept="{attr(k)}"> suggested: {escape(s["value"])}<small>{escape(s["reason"])}</small></label>'
-            cells.append('<td>' + cell + '</td>')
+            if field=='role':cells.insert(1,'<td>'+cell+'</td>')
+            else:cells.append('<td>' + cell + '</td>')
         k = f"col:{i}:exclude_from_target"
         iv = ic.get("exclude_from_target")
         cells.append(f'<td><input type="checkbox" data-col="{i}" data-field="exclude_from_target"' + (' checked' if iv else '')

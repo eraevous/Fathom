@@ -1,4 +1,5 @@
 """Person-first offline views, derived solely from the saved result."""
+from .identifier_view import identifiers_html,identifiers_markdown,identifier_columns,IDENTIFIER_CSS
 
 from collections import Counter
 import json
@@ -277,8 +278,9 @@ def render_html(result: ProfilingResult,report=None):
         if d.get('time_series',{}).get('series'):items.append(('temporal-structure','Temporal',len(d['time_series']['series'])))
         if d.get('target_analysis'):items.append(('report-target','Target',len(d['target_analysis'].get('ranked',[]))))
         items.extend([('report-exclusions','Exclusions',len(d['selection'].get('excluded',[]))),('report-provenance','Provenance',None)])
-        if d['columns']:items.insert(1,('distribution-summaries','Distributions',len(d['columns'])))
-        out += [navigation(items),headlines_html(d),summary_html(d,report),dictionary_and_provenance_html(d)]
+        if d['columns']:items.insert(1,('distribution-summaries','Distributions',len(d['columns'])-len(identifier_columns(d))))
+        if identifier_columns(d):items.insert(3,('report-identifiers','Identifiers',len(identifier_columns(d))))
+        out += [navigation(items),headlines_html(d),summary_html(d,report),identifiers_html(d),dictionary_and_provenance_html(d)]
         out += ['<section id="report-dataset" class="opening"><h2>Dataset summary</h2><table><thead><tr><th>Measure</th><th>Snapshot</th><th>Evidence</th></tr></thead><tbody>']
         for title,value,refs in summary_rows(d):
             links=' '.join(f'<a href="#{escape(ref,quote=True)}">Finding</a>' for ref in refs) or 'Stored measurement'
@@ -320,7 +322,7 @@ def render_html(result: ProfilingResult,report=None):
     css=theme_css()+KIND_CSS+TEMPORAL_CSS+'''body{font:16px/1.55 system-ui,sans-serif;background:var(--surface);color:var(--ink);max-width:1120px;padding:32px;margin:auto}h1{font-size:44px;margin-bottom:8px}h2{border-bottom:2px solid var(--rule);padding-bottom:7px;margin-top:40px}h3{margin-top:24px}section{margin-bottom:30px}.opening{background:var(--panel);padding:24px;border:1px solid var(--border);border-radius:8px}table{border-collapse:collapse;width:100%;background:var(--panel)}td,th{padding:10px;text-align:left;border-bottom:1px solid var(--border);vertical-align:top}td{overflow-wrap:anywhere}article{background:var(--panel);border-left:3px solid var(--soft-border);padding:8px 16px;margin:10px 0}article>p{margin:7px 0}details{margin:8px 0}summary{cursor:pointer;color:var(--link);font-weight:600}details[open]{padding-bottom:10px}a{color:var(--link)}small{color:var(--muted)}dt{font-weight:600;margin-top:8px}dd{margin-left:20px;overflow-wrap:anywhere}ul{padding-left:24px}.sample-scroll{overflow-x:auto}.sample-scroll td{min-width:90px;max-width:260px;white-space:pre-wrap}svg{width:100%;max-width:800px}svg text{font:13px system-ui,sans-serif}label{cursor:pointer;font-weight:600;margin-left:8px}.summary-view{background:var(--tint);padding:12px;margin-top:12px}.repetitive{display:none}.repetitive:target{display:block}#full-view:checked ~ .summary-view{display:none}#full-view:checked ~ .full-view .summary-view{display:none}#full-view:checked ~ .full-view .repetitive{display:block}@media(max-width:700px){body{padding:12px}td,th{padding:6px;font-size:14px}.opening{padding:12px}}@media print{body{background:var(--panel);padding:0}details{break-inside:avoid}.repetitive{display:block}}'''
     css += '.finding-verdict{max-width:90ch}.quantity-list{margin:8px 0}.quantity-list li{margin:4px 0}.column-entry{box-sizing:border-box;width:100%;border:1px solid var(--border);border-radius:6px;padding:20px;margin:24px 0}.column-entry h3{margin-top:0;overflow-wrap:anywhere}.review-table{table-layout:fixed;margin:12px 0 20px}.review-table td,.review-table th{padding:6px 10px}caption{text-align:left;font-weight:600;padding:8px 0}.num{text-align:right;font-variant-numeric:tabular-nums}.table-scroll{overflow-x:auto;max-width:100%}.chart{margin:20px 0;max-width:100%;overflow-x:auto}.chart svg{width:720px;max-width:none;display:block}.chart svg text{font:15px system-ui,sans-serif}.chart-title{font-weight:600}figcaption{font-size:14px;margin:8px 0;color:var(--muted)}p{overflow-wrap:anywhere}'
     css += '.target-chart .review-table{max-width:none;min-width:680px;table-layout:auto}.target-chart .review-table .num{white-space:nowrap}.target-tables td{white-space:pre-line}.target-tables .review-table{max-width:none;min-width:640px;table-layout:auto}.column-entry{padding:12px 16px;margin:10px 0}.column-entry>summary{display:list-item}.column-entry>summary h3{display:inline;margin:0 16px 0 0;font-size:18px}.column-entry>summary span{font-size:14px;font-weight:400;color:var(--muted)}.column-grid{display:grid;grid-template-columns:minmax(230px,.75fr) minmax(0,1.25fr);gap:24px;align-items:start}.column-statistics{min-width:0;max-width:360px;position:sticky;top:12px;max-height:65vh;overflow-y:auto}.column-plots{min-width:0}.review-table{max-width:420px}.chart{max-width:760px}.chart svg{width:100%;max-width:100%;height:auto}.chart svg text{font:18px system-ui,sans-serif}.chart h4{font-size:16px;margin:8px 0}.axis-captions p{margin:3px 0;font-size:14px;overflow-wrap:anywhere}.box-summary{max-width:320px}.chart{overflow:visible;margin:10px 0 20px}.column-entry .table-scroll{max-width:100%}@media(max-width:800px){.column-grid{grid-template-columns:minmax(0,1fr)}.column-entry{padding:10px}.column-statistics{max-width:100%;position:static;max-height:none;overflow:visible}}@media(max-width:500px){.chart svg text{font-size:22px}}'
-    return style_html('<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Fathom — '+escape(d['kind'])+'</title><style>'+css+STYLE_CSS+SUMMARY_CSS+'</style></head><body>'+'\n'.join(out)+NAV_SCRIPT+TRANSPOSE_SCRIPT+'</body></html>\n', columns=[c['name'] for c in d.get('columns',[])])
+    return style_html('<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Fathom — '+escape(d['kind'])+'</title><style>'+css+STYLE_CSS+SUMMARY_CSS+IDENTIFIER_CSS+'</style></head><body>'+'\n'.join(out)+NAV_SCRIPT+TRANSPOSE_SCRIPT+'</body></html>\n', columns=[c['name'] for c in d.get('columns',[])])
 
 
 def dictionary_and_provenance_markdown(d):
@@ -351,7 +353,7 @@ def render_markdown(result: ProfilingResult,report=None):
     else:
         items=key_findings(d)
         lines += ['## Key findings','']+[(markdown_tree(finding_tree(i.get('finding',{'id':i['ref'],'kind':'observation','message':i['message'],'evidence':[]}),d),columns=[c['name'] for c in d['columns']])+'\n') for i in items]+['']
-        lines += [summary_markdown(d,report)]+dictionary_and_provenance_markdown(d)
+        lines += [summary_markdown(d,report),identifiers_markdown(d)]+dictionary_and_provenance_markdown(d)
         lines += ['## Dataset summary','','| Measure | Snapshot | Evidence |','| --- | --- | --- |']
         for title,value,refs in summary_rows(d):
             links=', '.join('[Finding](#'+ref+')' for ref in refs) or 'Stored measurement'

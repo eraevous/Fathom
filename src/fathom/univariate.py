@@ -296,7 +296,7 @@ def enrich_columns(columns,rows,raw_rows,cfg,emit,findings):
         if typ in {'numeric','latitude','longitude'}:stats,charts=numeric_profile(values,name,meta.get('units') or ('degrees (inferred)' if typ in {'latitude','longitude'} else None),cfg.get('bins'))
         elif typ=='temporal':stats,charts=temporal_profile(values,name,cfg,meta)
         else:stats,charts=text_profile(raw,name,cfg.get('bins'))
-        role=meta.get('role');basis='human' if role else 'inferred from column name'
+        role=meta.get('role');basis='human' if role else 'human (schema key)' if name in cfg['schema'].get('key',[]) else 'inferred from column name'
         if role is None:
             role='identifier' if name in cfg['schema'].get('key',[]) or re.search(r'(^id$|_id$|key|code|title|name)',name,re.I) else 'quantity' if re.search(r'(gross|amount|revenue|cost|price)',name,re.I) else None
         col['univariate']={'statistics':stats,'charts':charts,'role':role,'role_basis':basis if role else 'unknown','units':{'value':meta['units'],'generator':'human'} if meta.get('units') else None}
