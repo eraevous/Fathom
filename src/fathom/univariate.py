@@ -8,7 +8,7 @@ import random
 import re
 import statistics
 
-from .parsing import finite_number, parse_date, MONTH_NAMES
+from .parsing import finite_number, parse_date, parse_temporal, MONTH_NAMES
 
 PERCENTILES=(1,5,25,33,50,66,75,95,99)
 
@@ -195,9 +195,9 @@ def text_profile(raw,name,bins=None):
     return stats,charts
 
 
-def temporal_profile(values,name,cfg,meta):
+def calendar_profile(values,name,cfg,meta,parsed=None):
     year_precision=meta.get('date_format')=='YEAR'
-    parsed=[(v,p) for v in values if (p:=parse_date(v,meta.get('date_format'))) is not None]
+    if parsed is None:parsed=[(v,p) for v in values if (p:=parse_date(v,meta.get('date_format'))) is not None]
     dates=[date.fromisoformat(p['date']) for _,p in parsed];n=len(dates);unique=sorted(set(dates))
     reference=cfg['context'].get('snapshot_date');ref=date.fromisoformat(reference) if reference else None
     periods=Counter(d.strftime('%Y-%m') for d in dates)
@@ -255,6 +255,40 @@ def temporal_profile(values,name,cfg,meta):
     return stats,charts
 
 
+def temporal_profile(values,name,cfg,meta):
+    from .temporal_profiles import intraday_profile
+    parsed=[(v,p) for v in values if (p:=parse_temporal(v,meta.get('date_format'),meta.get('frame_rate'))) is not None]
+    from .temporal_formats import BUILTINS,pattern_parts
+    fmt=meta.get('date_format');custom=fmt is not None and fmt not in BUILTINS
+    tokens={v for k,v in pattern_parts(fmt) if k=='token'} if custom else set()
+    declared_clock=bool(tokens&set('HI')) or fmt in {'TIME','DATETIME','ISO_DATETIME'}
+    declared_date=bool(tokens&set('Yy')) or fmt in {'DATETIME','ISO_DATETIME'}
+    if not any('time' in p for _,p in parsed) and not declared_clock:
+        return calendar_profile(values,name,cfg,meta)
+    dated=[(v,p) for v,p in parsed if 'date' in p]
+    stats,charts=calendar_profile(values,name,cfg,meta,dated)
+    kinds={p['kind'] for _,p in parsed}
+    stats.update(valid=len(parsed),invalid=len(values)-len(parsed),calendar_valid=len(dated),temporal_kind=next(iter(kinds)) if len(kinds)==1 else 'mixed' if kinds else 'time' if declared_clock and not declared_date else 'timestamp' if declared_clock else 'date',
+                 parse_formats=dict(sorted(Counter(p['format'] for _,p in parsed).items())),parse_basis=('human format override' if meta.get('date_format') else 'inferred local formats')+'; written date and local time retained; no timezone conversion',
+                 parsed_examples=[{'raw':v,**p} for v,p in parsed[:10]],invalid_examples=[v for v in values if parse_temporal(v,meta.get('date_format'),meta.get('frame_rate')) is None][:10])
+    intraday,extra=intraday_profile(parsed,name,chart);stats['intraday']=intraday;charts+=extra
+    from .temporal_formats import temporal_fault
+    from .temporal_profiles import subsecond_profile
+    stats['subsecond']=subsecond_profile(parsed)
+    faults={}
+    for value in values:
+        fault=temporal_fault(value,meta.get('date_format'),meta.get('frame_rate'))
+        if fault:
+            bucket=faults.setdefault(fault['code'],{'count':0,'examples':[],'message':fault['message']})
+            bucket['count']+=1
+            if len(bucket['examples'])<10:bucket['examples'].append(value)
+    stats['parse_faults']=faults
+    if not dated:
+        for key in ['earliest','latest','span_days','weekday_counts','month_counts','quarter_counts','year_counts','large_gaps','placeholder_dates','after_reference','beyond_fixed_year_2100']:
+            stats[key]=[] if key=='large_gaps' else {} if key.endswith('_counts') else None
+    return stats,charts
+
+
 def enrich_columns(columns,rows,raw_rows,cfg,emit,findings):
     for i,col in enumerate(columns):
         name=col['name'];meta=cfg['columns'].get(name,{});typ=col['effective_type']
@@ -275,6 +309,13 @@ def enrich_columns(columns,rows,raw_rows,cfg,emit,findings):
                  'Descriptive local rule; meanings and domain expectations require confirmation.','rule:univariate-v1',rule=rule,columns=[name])
             if action:emit(fid+'-review','action',action,[{'finding':fid}], 'Suggested review, not automatic correction.','rule:univariate-v1',rule=rule,columns=[name])
         if typ=='temporal':
+            sub=stats.get('subsecond',{})
+            if sub.get('undeclared_count'):
+                notice('ambiguous_clock_fourth',f"{name}: {sub['undeclared_count']} clock value(s) have an undeclared fourth field: fraction or video frames? Hour, minute and second are profiled; the raw fourth field is excluded from sub-second statistics until declared.",sub,kind='question')
+            frame_faults={k:v for k,v in stats.get('parse_faults',{}).items() if k.startswith('frame_')}
+            if frame_faults:notice('temporal_frame_fault',f'{name}: '+ '; '.join(k+': '+str(v['count'])+' value(s); '+v['message'] for k,v in frame_faults.items()),frame_faults)
+            bases=stats.get('intraday',{}).get('bases',[])
+            if len(bases)>1:notice('temporal_clock_bases',f'{name}: {len(bases)} clock bases are kept separate; no timezone conversion or cross-basis ordering is applied.',{'bases':[b['basis'] for b in bases]},'Confirm the timezone/clock meaning before comparing instants across bases.')
             for rule,key,message in [('two_digit_year','two_digit_years','has two-digit years under a fixed 69 pivot; the century is ambiguous'),('ambiguous_date','ambiguous_dates','has ambiguous numeric month/day readings'),('placeholder_date','placeholder_dates','contains possible placeholder dates'),('future_date','after_reference','contains dates after the declared snapshot'),('far_future_date','beyond_fixed_year_2100','contains dates beyond the fixed year-2100 bound')]:
                 if stats.get(key):notice(rule,f"{name}: {stats[key]} value(s) {message}.",stats,f'Confirm the original dates and format of {name}; no century or date is silently repaired.')
             if stats['large_gaps'] and not any(f.get('rule')=='temporal_gap' and name in f.get('columns',[]) for f in findings):

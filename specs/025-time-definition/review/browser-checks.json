@@ -1,0 +1,178 @@
+[
+  {
+    "errors": [],
+    "frame_fault_and_yaml_checked": true,
+    "keyboard_disclosure": true,
+    "overflow": false,
+    "requests": [],
+    "scripts": true,
+    "theme": "light",
+    "view": "configure",
+    "width": 1280
+  },
+  {
+    "errors": [],
+    "frame_fault_and_yaml_checked": true,
+    "keyboard_disclosure": true,
+    "overflow": false,
+    "requests": [],
+    "scripts": true,
+    "theme": "dark",
+    "view": "configure",
+    "width": 1280
+  },
+  {
+    "errors": [],
+    "frame_fault_and_yaml_checked": true,
+    "keyboard_disclosure": true,
+    "overflow": false,
+    "requests": [],
+    "scripts": true,
+    "theme": "light",
+    "view": "configure",
+    "width": 390
+  },
+  {
+    "errors": [],
+    "frame_fault_and_yaml_checked": true,
+    "keyboard_disclosure": true,
+    "overflow": false,
+    "requests": [],
+    "scripts": true,
+    "theme": "dark",
+    "view": "configure",
+    "width": 390
+  },
+  {
+    "errors": [],
+    "frame_fault_and_yaml_checked": false,
+    "keyboard_disclosure": true,
+    "overflow": null,
+    "requests": [],
+    "scripts": false,
+    "theme": "light",
+    "view": "configure",
+    "width": 1280
+  },
+  {
+    "errors": [],
+    "frame_fault_and_yaml_checked": false,
+    "keyboard_disclosure": true,
+    "overflow": null,
+    "requests": [],
+    "scripts": false,
+    "theme": "dark",
+    "view": "configure",
+    "width": 1280
+  },
+  {
+    "errors": [],
+    "frame_fault_and_yaml_checked": false,
+    "keyboard_disclosure": true,
+    "overflow": null,
+    "requests": [],
+    "scripts": false,
+    "theme": "light",
+    "view": "configure",
+    "width": 390
+  },
+  {
+    "errors": [],
+    "frame_fault_and_yaml_checked": false,
+    "keyboard_disclosure": true,
+    "overflow": null,
+    "requests": [],
+    "scripts": false,
+    "theme": "dark",
+    "view": "configure",
+    "width": 390
+  },
+  {
+    "errors": [],
+    "frame_fault_and_yaml_checked": true,
+    "keyboard_disclosure": true,
+    "overflow": false,
+    "requests": [],
+    "scripts": true,
+    "theme": "light",
+    "view": "liftoff",
+    "width": 1280
+  },
+  {
+    "errors": [],
+    "frame_fault_and_yaml_checked": true,
+    "keyboard_disclosure": true,
+    "overflow": false,
+    "requests": [],
+    "scripts": true,
+    "theme": "dark",
+    "view": "liftoff",
+    "width": 1280
+  },
+  {
+    "errors": [],
+    "frame_fault_and_yaml_checked": true,
+    "keyboard_disclosure": true,
+    "overflow": false,
+    "requests": [],
+    "scripts": true,
+    "theme": "light",
+    "view": "liftoff",
+    "width": 390
+  },
+  {
+    "errors": [],
+    "frame_fault_and_yaml_checked": true,
+    "keyboard_disclosure": true,
+    "overflow": false,
+    "requests": [],
+    "scripts": true,
+    "theme": "dark",
+    "view": "liftoff",
+    "width": 390
+  },
+  {
+    "errors": [],
+    "frame_fault_and_yaml_checked": false,
+    "keyboard_disclosure": true,
+    "overflow": null,
+    "requests": [],
+    "scripts": false,
+    "theme": "light",
+    "view": "liftoff",
+    "width": 1280
+  },
+  {
+    "errors": [],
+    "frame_fault_and_yaml_checked": false,
+    "keyboard_disclosure": true,
+    "overflow": null,
+    "requests": [],
+    "scripts": false,
+    "theme": "dark",
+    "view": "liftoff",
+    "width": 1280
+  },
+  {
+    "errors": [],
+    "frame_fault_and_yaml_checked": false,
+    "keyboard_disclosure": true,
+    "overflow": null,
+    "requests": [],
+    "scripts": false,
+    "theme": "light",
+    "view": "liftoff",
+    "width": 390
+  },
+  {
+    "errors": [],
+    "frame_fault_and_yaml_checked": false,
+    "keyboard_disclosure": true,
+    "overflow": null,
+    "requests": [],
+    "scripts": false,
+    "theme": "dark",
+    "view": "liftoff",
+    "width": 390
+  }
+]

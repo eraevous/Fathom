@@ -1,0 +1,2 @@
+columns:
+  clock: {type: temporal, date_format: "%I:%M:%S:%F %p", frame_rate: 24}

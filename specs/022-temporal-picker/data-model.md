@@ -1,0 +1,2 @@
+# Data model
+Temporal reading:kind(date/time/timestamp), optional date, optional time, canonical local value, clock_basis(naive or offset), precision, format, ambiguity and raw source kept. Intraday profile:per-basis valid count, earliest/latest local clock, hour/minute/second counts, precision counts, weekday-hour for timestamps. No fictitious dates. Picker:samples(source position/raw/truncated), ranked formats(match count), ambiguity and current declared format. New fields optional for legacy artifacts; existing date stats continue.

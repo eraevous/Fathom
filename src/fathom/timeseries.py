@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 import math
 from statistics import NormalDist, median, quantiles
 
-from .parsing import finite_number, parse_date, parse_datetime
+from .parsing import finite_number, parse_date, parse_datetime, parse_temporal
 from .univariate import stored
 
 GRAINS = ("hour", "day", "week", "month", "year")
@@ -313,25 +313,27 @@ def informative(grains):
     return [g for _, g in ranked[:2]]
 
 
-def parse_time(value, fmt):
-    if fmt=='YEAR':
-        d=parse_date(value,fmt)
-        return (datetime.fromisoformat(d['date']),False) if d else None
-    p = parse_datetime(value)
-    if p is not None: return p
-    d = parse_date(value, fmt)
-    return (datetime.fromisoformat(d["date"]), False) if d else None
+def parse_time(value, fmt, frame_rate=None):
+    p=parse_temporal(value,fmt,frame_rate)
+    if p is None or p['kind']=='time' or p.get('fourth_field'):return None
+    return datetime.fromisoformat(p['canonical'] if p['kind']=='timestamp' else p['date']),p['kind']=='timestamp'
 
 
 def analyse(rows, names, cfg, item, deps, group=None, subset=None):
     ti = names.index(item["time"]); vi = names.index(item["value"]) if item.get("value") else None
     fmt = cfg["columns"].get(item["time"], {}).get("date_format")
+    frame_rate=cfg['columns'].get(item['time'],{}).get('frame_rate')
     mode = "values" if vi is not None else "events"
     points, unparsed, missing_time, no_value, with_time_of_day = defaultdict(list), 0, 0, 0, 0
-    for i in (subset if subset is not None else range(len(rows))):
+    indices=list(subset) if subset is not None else list(range(len(rows)))
+    readings=[p for i in indices if (p:=parse_temporal(rows[i][ti],fmt,frame_rate)) is not None]
+    bases=sorted({p['clock_basis'] if p['clock_basis']!='calendar' else 'naive' for p in readings})
+    declined='Frame-based chronology is not converted to wall-clock time; use an explicitly prepared timestamp for calendar series.' if frame_rate is not None else 'Standalone time-of-day has no calendar date; declare a dated timestamp for calendar series.' if any(p['kind']=='time' for p in readings) else 'Mixed naive/UTC-offset clock bases are not ordered together; separate them explicitly before declaring a series.' if len(bases)>1 else None
+
+    for i in ([] if declined else indices):
         r = rows[i]
         if r[ti] is None: missing_time += 1; continue
-        p = parse_time(r[ti], fmt)
+        p = parse_time(r[ti], fmt, frame_rate)
         if p is None: unparsed += 1; continue
         with_time_of_day += p[1]
         value = None
@@ -344,9 +346,11 @@ def analyse(rows, names, cfg, item, deps, group=None, subset=None):
         last_stamp=max(points);resolutions=[]
         for i in (subset if subset is not None else range(len(rows))):
             text=rows[i][ti]
-            parsed_time=parse_time(text,fmt) if text is not None else None
+            parsed_time=parse_time(text,fmt,frame_rate) if text is not None else None
             if parsed_time and parsed_time[0]==last_stamp:
-                resolutions.append((datetime(last_stamp.year+1,1,1)-last_stamp).total_seconds() if fmt=='YEAR' and last_stamp.year<9999 else 1 if text.count(':')>=2 else 60 if ':' in text else 86400)
+                reading=parse_temporal(text,fmt,frame_rate)
+                precision=reading.get('precision')
+                resolutions.append((datetime(last_stamp.year+1,1,1,tzinfo=last_stamp.tzinfo)-last_stamp).total_seconds() if fmt=='YEAR' and last_stamp.year<9999 else 10**(-reading['fractional_digits']) if precision=='subsecond' else {'second':1,'minute':60,'hour':3600}.get(precision,86400))
         last_resolution=min(resolutions) if resolutions else 1
     total = len(subset) if subset is not None else len(rows)
     parsed = sum(len(v) for v in points.values())
@@ -361,6 +365,11 @@ def analyse(rows, names, cfg, item, deps, group=None, subset=None):
                "native_interarrival_seconds": summary(inter)}
     out = {"time": item["time"], "value": item.get("value"), "mode": mode, "group": group, "observation_process": process,
            "granularities": [], "skipped_granularities": []}
+    if declined:
+        process.update(clock_basis=', '.join(bases),rows_with_temporal_reading=len(readings),unsupported_clock_reason=declined,
+                       missing_time=sum(rows[i][ti] is None for i in indices),unparsed_time=sum(rows[i][ti] is not None and parse_temporal(rows[i][ti],fmt,frame_rate) is None for i in indices))
+        out['skipped_granularities']=[{'granularity':g,'reason':declined} for g in item['granularities']]
+    elif bases:process['clock_basis']=bases[0]+'; written local clock, no UTC conversion'
     if not stamps:
         out["signals"] = []; out["charted"] = []
         return out
@@ -428,8 +437,9 @@ def undeclared(rows, columns, cfg):
     for j, c in enumerate(columns):
         if c["effective_type"] != "temporal": continue
         fmt = cfg["columns"].get(c["name"], {}).get("date_format")
-        parsed = [p for r in rows if r[j] is not None and (p := parse_time(r[j], fmt)) is not None]
-        if not parsed: continue
+        rate=cfg['columns'].get(c['name'],{}).get('frame_rate')
+        parsed = [p for r in rows if r[j] is not None and (p := parse_time(r[j], fmt, rate)) is not None]
+        if not parsed or len({p[0].utcoffset() for p in parsed})>1: continue
         grain = "year" if fmt=="YEAR" else "hour" if all(t for _, t in parsed) else "day"
         distinct = len({floor(dt, grain) for dt, _ in parsed})
         if distinct >= MIN_N: found.append({"column": c["name"], "granularity": grain, "distinct_periods": distinct})
@@ -459,6 +469,7 @@ def describe(si, entry, emit):
         for sig in s["signals"]:
             bits = [f"{k} at {', '.join(sig[k])}" for k in ("present", "absent", "undefined", "not estimable", "insufficient evidence") if sig[k]]
             parts.append(sig["signal"].split(" (")[0] + ": " + "; ".join(bits))
+        if p.get('unsupported_clock_reason'):parts=["not analysed: "+p['unsupported_clock_reason'],str(p['rows_with_temporal_reading'])+' recognized local temporal values']
         fid = f"ts-{si}-{gi}"
         emit(fid, "observation", f"Temporal structure of {name}: " + "; ".join(parts) + ".",
              [{"path": f"time_series.series.{si}.groups.{gi}", "value": {"observation_process": p, "signals": s["signals"]}}],

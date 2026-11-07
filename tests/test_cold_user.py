@@ -51,12 +51,13 @@ def test_datetime_column_gets_date_profile_not_identifier_exclusion(tmp_path, ca
     assert col["effective_type"] == "temporal"
     stats = col["univariate"]["statistics"]
     assert (stats["earliest"], stats["latest"], stats["span_days"]) == ("2019-03-01", "2019-03-06", 5)
-    assert stats["parse_formats"] == {"ISO_DATETIME": 6} and "time of day is not analysed" in stats["parse_basis"]
+    assert stats["parse_formats"] == {"ISO_DATETIME": 6} and "written date and local time retained" in stats["parse_basis"]
     md = (tmp_path / "out" / "report.md").read_text()
     html = (tmp_path / "out" / "report.html").read_text()
     note = "analysed by calendar date only; time of day excluded"
-    assert md.count(note) == 2 and html.count(note) == 2  # column line + "What the data cannot tell"
-    assert "Date-time columns \\(pickup\\) are " + note in md
+    assert note not in md and note not in html
+    assert "written local clocks profiled separately" in md
+    assert stats['intraday']['bases'][0]['hour_counts']['08']==1
     reason = {e["column"]: e["reason"] for e in d["target_analysis"]["excluded"]}["pickup"]
     assert "identifier" not in reason and "temporal" in reason
 
@@ -85,8 +86,9 @@ def test_date_format_override_counts_invalid(tmp_path, capsys):
 def test_override_errors_name_accepted_values():
     with pytest.raises(ValueError, match=r"temporal \(dates are temporal\)|dates are temporal"):
         validate_config({"columns": {"x": {"type": "date"}}}, ["x"])
-    with pytest.raises(ValueError, match="ISO_DATETIME.*not strftime"):
-        validate_config({"columns": {"x": {"date_format": "%Y-%m-%d %H:%M:%S"}}}, ["x"])
+    assert validate_config({"columns": {"x": {"date_format": "%Y-%m-%d %H:%M"}}})
+    with pytest.raises(ValueError,match="%Q"):
+        validate_config({"columns":{"x":{"date_format":"%Q"}}})
     assert validate_config({"columns": {"x": {"type": "temporal", "date_format": "ISO_DATETIME"}}}, ["x"])  # decoy
 
 

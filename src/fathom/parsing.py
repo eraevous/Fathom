@@ -7,7 +7,7 @@ import re
 
 MONTH_NAMES = ('january','february','march','april','may','june','july','august','september','october','november','december')
 MONTH_LOOKUP = {name:i+1 for i,name in enumerate(MONTH_NAMES)} | {name[:3]:i+1 for i,name in enumerate(MONTH_NAMES)}
-DATE_FORMATS = {'ISO','ISO_DATETIME','MON_D_Y','MDY','DMY','YEAR'}
+DATE_FORMATS = {'ISO','ISO_DATETIME','MON_D_Y','MDY','DMY','YEAR','TIME','DATETIME'}
 
 
 def finite_number(value):
@@ -80,13 +80,13 @@ def parse_datetime(value):
     except (ValueError,OverflowError): return None
 
 
-def temporal_failure(values, hint=None, supported_formats=None):
+def temporal_failure(values, hint=None, supported_formats=None, frame_rate=None):
     """Diagnose a wholly failed declaration; never apply another parse implicitly."""
     values=[v for v in values if v is not None]
-    if not values or any(parse_date(v,hint) is not None for v in values):return None
+    if not values or any(parse_temporal(v,hint,frame_rate) is not None for v in values):return None
     supported=DATE_FORMATS if supported_formats is None else supported_formats
     tried=[hint] if hint else sorted(supported-{'YEAR'})
-    counts={fmt:sum(parse_date(v,fmt) is not None for v in values) for fmt in sorted(supported)}
+    counts={fmt:sum(parse_temporal(v,fmt) is not None for v in values) for fmt in sorted(supported)}
     best=max(counts.values(),default=0)
     return {'nonmissing':len(values),'formats_tried':tried,'format_matches':counts,
             'suggested_formats':[fmt for fmt,n in counts.items() if n==best and best>0],
@@ -101,3 +101,6 @@ def temporal_failure_message(name, failure, include_advice=True):
         if include_advice:text+=('After confirming meaning, explicitly declare date_format: '+choices[0]+'. ' if len(choices)==1 else 'Choose the intended date_format explicitly. ')
     else:text+='No supported format matches; check the declared type and original values. '
     return text+'No fallback was applied.'
+
+# Rich clock-aware readings are separate from the exact legacy date API.
+from .temporal_formats import parse_temporal

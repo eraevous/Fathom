@@ -2,6 +2,7 @@
 
 from dataclasses import asdict, dataclass
 import json
+import math
 from pathlib import Path
 
 import pandas as pd
@@ -245,6 +246,31 @@ def validate_document(doc: dict) -> None:
                 u=col["univariate"]
                 if not isinstance(u,dict) or not isinstance(u.get("statistics"),dict) or not isinstance(u.get("charts"),list):raise ValueError("invalid univariate profile")
                 if 'top_n_suppression' in u and not isinstance(u['top_n_suppression'],str):raise ValueError('invalid top-N suppression')
+                sub=u['statistics'].get('subsecond')
+                if sub is not None:
+                    if not isinstance(sub,dict) or any(type(sub.get(k)) is not int or sub[k]<0 for k in ('undeclared_count','fraction_count','frame_count')):raise ValueError('invalid subsecond counts')
+                    if any(not isinstance(sub.get(k),str) for k in ('exclusion_reason','frame_basis')) or not isinstance(sub.get('undeclared_examples'),list) or any(not isinstance(v,str) for v in sub['undeclared_examples']):raise ValueError('invalid subsecond evidence')
+                    for k in ('fraction_min_microsecond','fraction_max_microsecond'):
+                        v=sub.get(k)
+                        if (v is None)!=(sub['fraction_count']==0) or (v is not None and (type(v) is not int or not 0<=v<=999999)):raise ValueError('invalid subsecond fraction')
+                    groups=sub.get('frame_groups')
+                    if not isinstance(groups,list):raise ValueError('invalid subsecond frames')
+                    for g in groups:
+                        if not isinstance(g,dict) or any(type(g.get(k)) is not int or g[k]<0 for k in ('count','min','max')) or type(g.get('frame_rate')) not in (int,float) or not math.isfinite(g['frame_rate']) or not 0<=g['min']<=g['max']<g['frame_rate']:raise ValueError('invalid subsecond frame range')
+                    if sum(g['count'] for g in groups)!=sub['frame_count']:raise ValueError('invalid subsecond frame coverage')
+                faults=u['statistics'].get('parse_faults')
+                if faults is not None:
+                    if not isinstance(faults,dict) or any(not isinstance(v,dict) or type(v.get('count')) is not int or v['count']<1 or not isinstance(v.get('message'),str) or not isinstance(v.get('examples'),list) or any(not isinstance(x,str) for x in v['examples']) for v in faults.values()):raise ValueError('invalid temporal parse faults')
+                intraday=u['statistics'].get('intraday')
+                if intraday is not None:
+                    if not isinstance(intraday,dict) or not isinstance(intraday.get('basis'),str) or not isinstance(intraday.get('bases'),list):raise ValueError('invalid intraday profile')
+                    for basis in intraday['bases']:
+                        if not isinstance(basis,dict) or any(not isinstance(basis.get(k),str) for k in ['basis','earliest','latest']) or type(basis.get('count')) is not int or basis['count']<0:raise ValueError('invalid intraday basis')
+                        for key in ['hour_counts','minute_counts','second_counts','precision_counts']:
+                            counts=basis.get(key)
+                            if not isinstance(counts,dict) or any(not isinstance(k,str) or type(v) is not int or v<0 for k,v in counts.items()):raise ValueError('invalid intraday counts')
+                        matrix=basis.get('weekday_hour_counts')
+                        if not isinstance(matrix,dict) or any(not isinstance(row,dict) or any(type(v) is not int or v<0 for v in row.values()) for row in matrix.values()):raise ValueError('invalid weekday/hour counts')
                 for chart in u["charts"]:
                     if not isinstance(chart,dict) or any(not isinstance(chart.get(k),str) or not chart[k] for k in ("kind","title","x_label","y_label")):raise ValueError("invalid chart labels")
                     if chart["kind"] not in {"bar","time","histogram","box","ecdf"}:raise ValueError("unsupported chart kind")
