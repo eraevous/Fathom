@@ -1,0 +1,2 @@
+# HTTP contract
+GET / → live configuration; GET /report → exact saved report; POST /rerun → application/yaml UTF-8 body ≤65536 bytes, returns local report URL; POST /stop → empty body. Every route/method needs the sole query field token. Host must be exactly the bound 127.0.0.1:port; POST needs exact Origin; any supplied Origin must match. No redirects, CORS, filesystem URLs, chunked bodies or multipart. Responses: no-store, nosniff, no-referrer, restrictive same-origin CSP, connection close. Unknown resources fail closed.

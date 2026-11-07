@@ -1,0 +1,43 @@
+{
+  "checks": [
+    {
+      "view": "live",
+      "width": 1280,
+      "theme": "light",
+      "external_requests": [],
+      "errors": [],
+      "overflow": false,
+      "rerun": "Report updated"
+    },
+    {
+      "view": "live",
+      "width": 1280,
+      "theme": "dark",
+      "external_requests": [],
+      "errors": [],
+      "overflow": false,
+      "rerun": "Report updated"
+    },
+    {
+      "view": "live",
+      "width": 390,
+      "theme": "light",
+      "external_requests": [],
+      "errors": [],
+      "overflow": false,
+      "rerun": "Report updated"
+    },
+    {
+      "view": "live",
+      "width": 390,
+      "theme": "dark",
+      "external_requests": [],
+      "errors": [],
+      "overflow": false,
+      "rerun": "Report updated"
+    }
+  ],
+  "stop": "listener closed; process exit 0",
+  "no_js": "static command and fallback visible",
+  "tokens": "not saved in review evidence"
+}

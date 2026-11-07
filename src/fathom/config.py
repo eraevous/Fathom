@@ -165,6 +165,11 @@ def load_config(path: str | Path | None) -> dict:
 
 def read_config(path: str | Path) -> dict | None:
     """The raw YAML mapping (strict loader, unvalidated); `load_config` validates it."""
+    return config_from_yaml(Path(path).read_text(encoding="utf-8"))
+
+
+def config_from_yaml(contents: str) -> dict | None:
+    """Parse config text with exactly the file loader rules; no executable YAML."""
     # BaseLoader keeps dates as strings; SafeLoader is used with its timestamp
     # resolver removed on a private subclass so ISO dates have the same wire type.
     class ConfigLoader(yaml.SafeLoader):
@@ -182,4 +187,4 @@ def read_config(path: str | Path) -> dict | None:
             result[key] = value
         return result
     ConfigLoader.add_constructor(yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, unique_mapping)
-    return yaml.load(Path(path).read_text(encoding="utf-8"), Loader=ConfigLoader)
+    return yaml.load(contents, Loader=ConfigLoader)

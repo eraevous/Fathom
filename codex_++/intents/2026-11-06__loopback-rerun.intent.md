@@ -1,0 +1,5 @@
+# Local configuration reruns — HO-DG-20261106-8RZJ C
+
+Narrow reading: one startup CSV, profile only, one resolved output directory and fixed output names. No server installation, browser launch, upload, panel rerun or network lookup. Explicit host values other than 127.0.0.1 fail; the port is always allocated by the OS. Token-bearing URL is printed to the local terminal but never saved in reports/logs. A same-machine process/user can still read terminal/session resources; this is not multi-user authentication.
+
+The production process installs an irreversible Python audit guard restricting socket addresses to numeric loopback. Ordinary commands never import the server module. Output symlinks/hardlinks and source/output collisions are refused. Runtime config and bounded operational log are additional fixed files under --out, separate from the three deterministic report artifacts. Static pages retain CLI fallback and no server dependency. Windows behavior is reasoned from stdlib interfaces, not claimed tested on Windows.
