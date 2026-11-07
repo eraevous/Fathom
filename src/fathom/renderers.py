@@ -130,7 +130,9 @@ def hourly_columns(d):
 
 def datetime_note(c, d=None):
     """Scope the date-only dictionary summary separately from declared hourly work."""
-    formats=(c.get('univariate') or {}).get('statistics',{}).get('parse_formats') or {}
+    stats=(c.get('univariate') or {}).get('statistics',{})
+    if stats.get('intraday'):return 'written local clocks profiled separately by naive/UTC-offset basis; no date invented or timezone conversion'
+    formats=stats.get('parse_formats') or {}
     if c.get('effective_type')!='temporal' or 'ISO_DATETIME' not in formats:return ''
     hours=hourly_columns(d)
     if c['name'] in hours:return 'univariate summaries use calendar dates; declared hourly series retains time of day'

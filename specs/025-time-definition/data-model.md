@@ -1,0 +1,4 @@
+# Data model
+Temporal reading gains optional fourth_field {raw,kind:undeclared|frame,frame?,frame_rate?}; undeclared has no microsecond value, precision second. Declared frames keep exact raw/index/rate, precision frame. Integer frame indices use JavaScript-safe integer range; out-of-range and frame>=rate have named faults. Rate is a positive finite number, only with %F. Fractions remain decimal1–6digits.
+Intraday subsecond coverage: excluded undeclared count/reason/examples; measured decimal fractions count/min/max microseconds; frame counts grouped by declared rate, not converted. Parsing faults have stable codes plus sample examples.
+Card fields use ordered lexical spans, literal separators and user-selected role. Sample min/max are positional and disclosed as sample-only; literal/ignore is an exact literal. No inferred role is applied.

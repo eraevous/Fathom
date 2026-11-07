@@ -1,0 +1,3 @@
+# Temporal contract
+Built-ins retain old names and add TIME/DATETIME. TIME supports24h H:M with strict two-digit minute, optional seconds/fraction and12h AM/PM; DATETIME accepts ISO date+time, optional Z or numeric offset. Custom token grammar as research.md; complete dates only, no locale timezone names or platform modifiers. Pattern validation precedes data/output. Invalid values remain invalid, never rollover.
+Clock basis is local written wall time with explicit offset; mixed bases listed separately. No UTC conversion. Picker suggestions are unticked and sample ranked; canonical selection is copied verbatim to YAML after validation. No-script shows static formats/samples and config/profile command.
