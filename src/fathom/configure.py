@@ -3,7 +3,7 @@
 The page is built from an ordinary profile (no new analysis). One JSON control schema is
 embedded in the page; the YAML generator exists twice, in JavaScript (in the page) and in
 Python (`config_yaml`), following the same rules so tests can round-trip without a browser.
-The page carries inline JavaScript by design; reports stay script-free.
+The page carries inline JavaScript; reports use progressive display controls.
 """
 
 from collections import Counter
@@ -552,7 +552,7 @@ def state(k: str) -> str:
 
 
 def render_page(schema: dict, brief: str | None = None, download_name: str = "fathom.yaml") -> str:
-    from .report_style import style_html, STYLE_CSS, NAV_SCRIPT
+    from .report_style import style_html, STYLE_CSS, NAV_SCRIPT, PRODUCT_JS, product_header
     from .time_definition import definition_fields
     # Saved spec022 Liftoff configurations have samples but no field-card schema.
     # Derive the additive view on a copy; never mutate a loaded artifact.
@@ -715,9 +715,9 @@ def render_page(schema: dict, brief: str | None = None, download_name: str = "fa
     if brief is not None:
         h[-1] = h[-1].replace('download="fathom.yaml"', 'download="'+attr(download_name)+'"').replace('--config fathom.yaml', '--config '+escape(download_name))
     page = ('<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
-            '<title>'+('Fathom liftoff' if brief is not None else 'Configure Fathom')+'</title><style>' + CSS + STYLE_CSS + '</style></head><body>' + '\n'.join(h)
+            '<title>'+('Fathom liftoff' if brief is not None else 'Configure Fathom')+'</title><style>' + CSS + STYLE_CSS + '</style></head><body>' + product_header() + '\n'.join(h)
             + '\n<script type="application/json" id="fathom-schema">' + json_for_script(schema) + '</script>\n'
-            + '<script id="fathom-yaml">' + YAML_JS + '</script>\n<script>' + UI_JS + '</script>\n'+(NAV_SCRIPT if brief is not None else '')+'</body></html>\n')
+            + '<script id="fathom-yaml">' + YAML_JS + '</script>\n<script>' + UI_JS + (PRODUCT_JS if brief is None else '') + '</script>\n'+(NAV_SCRIPT if brief is not None else '')+'</body></html>\n')
     return style_html(page,columns=[c['name'] for c in schema['columns']])
 
 

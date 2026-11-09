@@ -16,7 +16,7 @@ from pathlib import Path
 from .verdicts import headlines_html, key_findings, skew_text, inline_rule
 from .summary_view import summary_html,summary_markdown,SUMMARY_CSS,TRANSPOSE_SCRIPT
 from .finding_view import finding_tree,html_tree,markdown_tree,evidence_html,evidence_markdown
-from .report_style import style_html, STYLE_CSS, NAV_SCRIPT, navigation, markdown_text
+from .report_style import style_html, STYLE_CSS, NAV_SCRIPT, navigation, markdown_text, product_header, dictionary_controls
 
 KINDS = (("observation", "Observations"), ("interpretation", "Interpretations"),
          ("hypothesis", "Hypotheses"), ("action", "Suggested actions"), ("question", "Open questions"))
@@ -237,6 +237,7 @@ def dictionary_and_provenance_html(d):
         out += ['<details><summary>Exact pattern table — counts and shares</summary>',html_table({'caption':'Exact row masks — share of all rows','headers':['Pattern / missing columns','Count','Share'],'numeric':[1,2],
                             'rows':[['P'+str(i+1)+': '+(', '.join(p['missing']) or 'Complete rows'),formatted(p['count']),formatted(p['share'],True)] for i,p in enumerate(masks['patterns'])]}),'</details>']
     if 'samples' not in omitted(d):out += [samples_html(d)]
+    out.append(dictionary_controls())
     for c in d['columns']:
         meaning=c['meaning']['value']+' (human)' if c['meaning'] else 'Unknown meaning'
         basis='human override; inferred '+c['inference']['type'] if c['override'] else 'inferred, not a domain fact'
@@ -268,7 +269,7 @@ def render_html(result: ProfilingResult,report=None):
     d=json.loads(canonical_json(result.document))
     identity=d.get('dataset',{})
     title=identity.get('title',{}).get('text',Path(d.get('source',{}).get('origin','Fathom')).stem)
-    out=['<h1'+(' class="inferred-reading"' if identity.get('title',{}).get('status')=='inferred' else '')+'>'+escape(title)+'</h1>']
+    out=[product_header(),'<h1'+(' class="inferred-reading"' if identity.get('title',{}).get('status')=='inferred' else '')+'>'+escape(title)+'</h1>']
     if identity:out += ['<p'+(' class="inferred-reading"' if identity['description']['status']=='inferred' else '')+'>'+escape(identity['description']['text'])+'</p><p><small>Title: '+escape(identity['title']['status'])+' · description: '+escape(identity['description']['status'])+'</small></p>']
     if d['kind']=='comparison':
         for title,value in [('Contexts',d['contexts']),('Context differences',d['context_differences']),('Measured deltas',d['deltas']),('Limitations',d['limitations'])]:
