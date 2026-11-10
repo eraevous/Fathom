@@ -18,31 +18,30 @@ def count_ticks(maximum):
     return sorted(set(round(value) for value in linear_ticks(0,maximum)))
 
 
-def heat_table_svg(chart):
-    """Counts as text; an opaque bar per cell shows that cell's share of its row (no opacity, no scripts)."""
+def heat_table_html(chart):
+    """Contingency counts as an HTML table: text keeps the page's size at any width, and a solid bar in each
+    cell shows that cell's share of its row (no SVG scaling, no scripts)."""
     def e(v):return escape(str(v))
-    rows,cols,counts=chart['row_labels'],chart['column_labels'],chart['counts']
-    left,cell_h=150,40;width=560;cell_w=(width-left-10)/max(1,len(cols))
-    rotate=any(len(c)*9>cell_w for c in cols);top=120 if rotate else 46;height=top+cell_h*len(rows)+10
-    out=[f'<svg role="img" data-kind="heat_table" aria-label="{escape(chart["title"],quote=True)}" viewBox="0 0 {width} {height}"><title>{e(chart["title"])}</title>']
-    for j,c in enumerate(cols):
-        x=left+cell_w*(j+.5);label=c[:14]+('…' if len(c)>14 else '')
-        out.append(f'<text x="{x:.1f}" y="{top-10}" text-anchor="end" transform="rotate(45 {x:.1f} {top-10})" style="font-size:15px">{e(label)}</text>' if rotate else f'<text x="{x:.1f}" y="{top-14}" text-anchor="middle" style="font-size:15px">{e(label)}</text>')
-    for i,(r,values) in enumerate(zip(rows,counts)):
-        y=top+i*cell_h;total=sum(values)
-        out.append(f'<text x="{left-8}" y="{y+cell_h/2+5:.1f}" text-anchor="end" style="font-size:15px">{e(r[:18]+("…" if len(r)>18 else ""))}</text>')
-        for j,v in enumerate(values):
-            x=left+j*cell_w;share=v/total if total else 0
-            out.append(f'<rect x="{x:.1f}" y="{y}" width="{cell_w-2:.1f}" height="{cell_h-2}" fill="none" stroke="{C["accent_faint"]}"/>')
-            out.append(f'<rect x="{x+2:.1f}" y="{y+cell_h-9}" width="{max(0,(cell_w-6)*share):.1f}" height="5" fill="{C["accent"]}"><title>{e(r)} / {e(cols[j])}: {v} ({share:.0%} of row)</title></rect>')
-            out.append(f'<text x="{x+cell_w/2:.1f}" y="{y+cell_h/2:.1f}" text-anchor="middle" style="font-size:15px">{v}</text>')
-    out.append('</svg>')
-    table=html_table({'caption':'Counts (rows: '+chart['y_label']+'; columns: '+chart['x_label']+')','headers':[chart['y_label']]+list(cols),'rows':[[r]+[formatted(v) for v in values] for r,values in zip(rows,counts)],'numeric':list(range(1,len(cols)+1))})
-    return '<figure class="chart target-chart"><p class="chart-title">'+e(chart['title'])+'</p>'+''.join(out)+'<div class="axis-captions"><p>Rows: '+e(chart['y_label'])+'</p><p>Columns: '+e(chart['x_label'])+'</p></div><figcaption>'+e(chart['note']+f" {chart['n']:,} complete of {chart['total_rows']:,} rows.")+'</figcaption><details><summary>Chart values</summary>'+table+'</details></figure>'
+    head=''.join('<th scope="col" class="num">'+e(c)+'</th>' for c in chart['column_labels'])
+    body=''
+    for r,values in zip(chart['row_labels'],chart['counts']):
+        total=sum(values);cells=''
+        for c,v in zip(chart['column_labels'],values):
+            share=v/total if total else 0
+            cells+=f'<td class="num" title="{e(r)} / {e(c)}: {v} ({share:.0%} of row)">{formatted(v)}<span class="heat-bar" style="width:{share*100:.1f}%"></span></td>'
+        body+='<tr><th scope="row">'+e(r)+'</th>'+cells+'</tr>'
+    return ('<figure class="chart heat-table"><p class="chart-title">'+e(chart['title'])+'</p><div class="table-scroll"><table class="review-table heat" data-kind="heat_table" aria-label="'+escape(chart['title'],quote=True)+'">'
+            '<caption>Counts: '+e(chart['y_label'])+' (rows) by '+e(chart['x_label'])+' (columns)</caption><thead><tr><th scope="col">'+e(chart['y_label'])+'</th>'+head+'</tr></thead><tbody>'+body+'</tbody></table></div>'
+            '<figcaption>'+e(chart['note']+f" {chart['n']:,} complete of {chart['total_rows']:,} rows.")+'</figcaption></figure>')
+
+
+def heat_table_svg(chart):
+    """Former name of heat_table_html; kept so append-only provenance records (FT-BIV27-R1@2, -E2@1) still resolve."""
+    return heat_table_html(chart)
 
 
 def svg_chart(chart):
-    if chart['kind']=='heat_table':return heat_table_svg(chart)
+    if chart['kind']=='heat_table':return heat_table_html(chart)
     if chart['kind'] in {'scatter','group_box','rates'}:
         from .target_marks import plot_marks,coverage_note,chart_values
         w,h,marks=plot_marks(chart);out=[]

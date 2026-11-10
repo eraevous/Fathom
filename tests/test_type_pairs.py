@@ -396,3 +396,30 @@ def test_two_by_two_any_empty_margin_is_not_estimable(cells):
     from fathom.type_pairs import two_by_two
     m = two_by_two(*cells)
     assert m['odds_ratio'] is None and m['risk_difference'] is None and m['phi'] is None
+
+
+# ---------------------------------------------------------------- reviewer-2 visual pass (FT-R17)
+
+def test_type_pair_views_use_display_formatting(make_profile):
+    import re
+    from fathom.presentation import formatted
+    from fathom.renderers import type_pair_html
+    from fathom.type_pairs import tables
+    u = lcg(11)
+    rows = [['yes' if i % 3 == 0 else 'no', 'abc'[i % 3], 'hit' if next(u) < 0.4 else 'miss', round(next(u) * 50.0 + 0.01 * i, 5)] for i in range(300)]
+    d = make_profile(csv_text(['exposed', 'tier', 'outcome', 'score'], rows), {'target': 'outcome', 'pair_budget': 20}).document
+    for pair in d['bivariate']:
+        html = re.sub(r'<[^>]+>', ' ', type_pair_html(pair))  # visible text only, not SVG coordinates
+        assert not re.search(r'\d\.\d{7,}', html), (pair['left'], re.findall(r'\d+\.\d{7,}', html)[:3])
+    tier = pair_for(d, 'tier')
+    measure_rows = dict(tables(tier)[0]['rows'][:2])
+    assert measure_rows["Cramer's V"] == formatted(tier['type_pair']['measures']['cramers_v'])
+
+
+def test_heat_table_is_an_html_table_with_fixed_size_text_and_scroll_cue(make_profile):
+    from fathom.renderers import type_pair_html
+    rows = [['yes' if i % 3 == 0 else 'no', 'hit' if i % 4 == 0 else 'miss'] for i in range(60)]
+    d = make_profile(csv_text(['exposed', 'outcome'], rows), {'target': 'outcome'}).document
+    html = type_pair_html(d['bivariate'][0])
+    assert '<table' in html and 'data-kind="heat_table"' in html and '<svg' not in html
+    assert 'scroll sideways' in html

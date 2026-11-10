@@ -213,7 +213,7 @@ def box_chart(pair, groups, n, total_rows, group_name, value_name):
             for level, values in groups]
     return {'kind': 'group_box', 'title': 'Type pair: ' + value_name + ' by ' + group_name, 'x_label': value_name,
             'y_label': group_name, 'x_scale': 'linear', 'data': data, 'n': n, 'total_rows': total_rows, 'plotted': n,
-            'omitted_nonpositive': 0, 'note': WARNING}
+            'omitted_nonpositive': 0, 'note': WARNING, 'values_format': 'display'}
 
 
 def describe(pair, rows, columns):
@@ -313,7 +313,7 @@ def q(value):
 
 
 def f3(value):
-    return 'undefined' if value is None else format(value, '.3f')
+    return 'undefined' if value is None else formatted(value)
 
 
 def message(pair, tp):
@@ -387,7 +387,7 @@ def measure_lines(tp):
     for key, name in MEASURE_LABELS:
         if key in m:
             value = m[key]
-            lines.append(name + ': ' + (m.get(key + '_status', 'not estimable') if value is None else label(value) if isinstance(value, int) or key in ('kruskal_wallis_h', 'odds_ratio', 'median_difference', 'mean_difference') else format(value, '.3f')))
+            lines.append(name + ': ' + (m.get(key + '_status', 'not estimable') if value is None else label(value)))
     if 'index_level' in m:
         lines.append('index level: ' + q(m['index_level']) + '; reference level: ' + q(m['reference_level']))
     if 'index_levels' in m:
