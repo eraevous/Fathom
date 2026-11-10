@@ -43,7 +43,7 @@
     "articles": 3,
     "page_overflow": false,
     "requests": [],
-    "svg_overflow": 1,
+    "svg_overflow": 0,
     "table_overflow": 2,
     "target_charts": 3
   },
@@ -59,7 +59,7 @@
     "articles": 3,
     "page_overflow": false,
     "requests": [],
-    "svg_overflow": 1,
+    "svg_overflow": 0,
     "table_overflow": 2,
     "target_charts": 3
   },

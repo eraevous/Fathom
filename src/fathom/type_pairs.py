@@ -400,20 +400,25 @@ def measure_lines(tp):
             value = m[key]
             lines.append(name + ': ' + (m.get(key + '_status', 'not estimable') if value is None else label(value)))
     if 'index_level' in m:
-        lines.append('index level: ' + q(m['index_level']) + '; reference level: ' + q(m['reference_level']))
+        lines += ['index level: ' + q(m['index_level']), 'reference level: ' + q(m['reference_level'])]
     if 'index_levels' in m:
-        lines.append('index levels: ' + ', '.join(q(v) for v in m['index_levels']) + '; reference levels: ' + ', '.join(q(v) for v in m['reference_levels']))
+        lines += ['index levels: ' + ', '.join(q(v) for v in m['index_levels']),
+                  'reference levels: ' + ', '.join(q(v) for v in m['reference_levels'])]
     if m.get('odds_ratio_correction', 'none') != 'none':
         lines.append('odds ratio correction: ' + m['odds_ratio_correction'])
     if m.get('disagreement'):
-        lines.append('rank and linear measures: disagree (see the disagreement rule)')
+        lines.append('rank and linear measures: disagree (' + RULE_LINK_TEXT + ')')
     return lines
+
+
+RULE_LINK_TEXT = 'see the disagreement rule below'
 
 
 def headline_text(tp):
     w = tp['wording']
     if w['magnitude'] is None:
-        return 'headline magnitude not estimable (' + w.get('magnitude_status', 'no reason stored') + ')'
+        reason = w.get('magnitude_status', 'no reason stored')
+        return 'headline magnitude not estimable: ' + (reason[len('not estimable: '):] if reason.startswith('not estimable: ') else reason)
     return 'headline magnitude ' + formatted(w['magnitude'])
 
 
@@ -446,6 +451,8 @@ def notes(pair):
     Counts are not repeated here: the heat table's chart values carry them."""
     tp = pair['type_pair']
     out = ['Wording rule: ' + tp['wording']['rule']]
+    if tp['measures'].get('disagreement'):
+        out.append('Disagreement rule: ' + tp['measures']['disagreement_rule'])
     t = tp.get('table')
     if t and (t['other_row_levels'] or t['other_column_levels']):
         out.append('Capped table: ' + t['basis'])

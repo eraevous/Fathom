@@ -422,7 +422,8 @@ def test_heat_table_is_an_html_table_with_fixed_size_text_and_scroll_cue(make_pr
     d = make_profile(csv_text(['exposed', 'outcome'], rows), {'target': 'outcome'}).document
     html = type_pair_html(d['bivariate'][0])
     assert '<table' in html and 'data-kind="heat_table"' in html and '<svg' not in html
-    assert 'scroll sideways' in html
+    # Recheck 5837820574: a 2x2 cannot overflow, so it carries no scroll note.
+    assert 'scroll sideways' not in html
 
 
 # ---------------------------------------------------------------- reviewer-3 visual pass (5837638868)
@@ -472,3 +473,44 @@ def test_box_chart_values_match_per_group_table(make_profile):
     for g in pair['type_pair']['groups']:
         from fathom.presentation import formatted
         assert html.count('>' + formatted(g['q3']) + '<') >= 2, g
+
+
+# ---------------------------------------------------------------- reviewer-3 recheck (5837820574)
+
+def test_scroll_note_only_beside_wide_tables(numeric_target):
+    import re
+    from fathom.renderers import type_pair_html
+    d = numeric_target.document
+    plain_block = type_pair_html(pair_for(d, 'x'), d['target_analysis']['charts'])
+    assert 'scroll-note' not in plain_block and 'scrolls sideways' not in plain_block
+    grouped = type_pair_html(pair_for(d, 'region'), d['target_analysis']['charts'])
+    # The note sits directly after the wide per-group table, not at the top of the block.
+    assert re.search(r'Per-group summary.*?</table></div><p class="scroll-note[^"]*">', grouped, re.S)
+    assert grouped.index('scroll-note') > grouped.index('Per-group summary')
+
+
+def test_type_pair_box_chart_fits_viewport_css(numeric_target):
+    text = render_html(numeric_target).split('</style>')[0]
+    assert 'min-width:560px' not in text
+    assert '.type-pair .chart svg{width:100%' in text
+
+
+def test_disagreement_rule_is_linked_and_shown(make_profile):
+    import re
+    from fathom.renderers import type_pair_html
+    rows = [[i, round(math.exp(i / 3), 6)] for i in range(1, 41)]
+    d = make_profile(csv_text(['x', 'y'], rows), {'target': 'y'}).document
+    html = type_pair_html(d['bivariate'][0], d['target_analysis']['charts'])
+    link = re.search(r'<a href="#(rule-[0-9a-f]+)">', html)
+    assert link and f'id="{link.group(1)}"' in html and 'Disagreement rule:' in html
+
+
+def test_null_headline_says_not_estimable_once_and_levels_split(make_profile):
+    from fathom.type_pairs import tables
+    d = make_profile('g,t\na,x\nb,y\nc,z\n', {'target': 't', 'columns': {'g': {'type': 'categorical'}, 't': {'type': 'categorical'}}}).document
+    text = str(tables(d['bivariate'][0]))
+    assert text.count('not estimable') == text.count('bias-corrected dimensions'), text
+    rows = [['yes' if i % 3 == 0 else 'no', 'hit' if i % 4 == 0 else 'miss'] for i in range(60)]
+    bb = make_profile(csv_text(['exposed', 'outcome'], rows), {'target': 'outcome'}).document['bivariate'][0]
+    labels = [r[0] for r in tables(bb)[0]['rows']]
+    assert 'index levels' in labels and 'reference levels' in labels

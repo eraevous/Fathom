@@ -89,3 +89,16 @@ Classification: **fixed by 1802bb0** / **fixed now** (this PR's code, after 1802
 Test flake: the builder's one-off failure was the stale showcase (fixed in 1802bb0). Reviewer 3's
 suspected candidate, `test_serve.py::test_idle_timeout_and_unauthenticated_requests_do_not_refresh`
 (0.6 s timeout, 0.12 s sleeps), is recorded as a note only; it was not observed failing here.
+
+## Reviewer 3 recheck (review 5837820574 at de828de) — disposition
+| Item | Disposition |
+| --- | --- |
+| New 1: type-pair box SVG had `min-width:560px` (a third of the plot visible at 390, scrollbar far below) | **Fixed** (our regression from 1802bb0). The SVG fits the width like the existing target charts (`width:100%; max-width:560px`), so the whole plot shows at 390 and text keeps its native size at 1280. Test `test_type_pair_box_chart_fits_viewport_css`; captures report no SVG past the viewport. |
+| New 2: scroll note on every block | **Fixed** (our regression). No block-level note; a note follows each table that can overflow: 5–8 columns shown on screens up to 700 px (CSS only), 9+ columns always. Byte-deterministic, no script. Tests `test_scroll_note_only_beside_wide_tables`; a 2×2 has no note. |
+| "see the disagreement rule" not shown or linked | **Fixed.** The rule is a note under the table with an id; the table cell links to it. Test `test_disagreement_rule_is_linked_and_shown`. |
+| "not estimable" said twice in the null headline | **Fixed**: "headline magnitude not estimable: <reason>". |
+| "index level" row also holding the reference level | **Fixed**: separate index and reference rows. |
+| `formatted()` drops trailing zeros (0.681 next to 0.92) | **Left as is.** `formatted()` is the repo's shared display formatter (pre-existing); type-pair tables adopted it in 1802bb0 to match the Relationship statistics table (reviewer 2, item 1). |
+| 11-column table still overflowing at 1280 with long names; row header wrapping | Accepted: it scrolls inside its frame and now always carries the note (9+ columns). |
+| Left-aligned measure values; captions wrapping mid-identifier at 390 | Unchanged (mixed numbers and reasons; global wrapping rule is pre-existing). |
+| Test-design note: the showcase test repairs the file it checks | Recorded for Zach/Kate; test unchanged in this PR (pre-existing test). |
