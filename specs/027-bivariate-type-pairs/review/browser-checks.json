@@ -1,0 +1,402 @@
+{
+ "checks": [
+  {
+   "image": "part-y-x-light-1280.png",
+   "what": "numeric×numeric, target chart note",
+   "report_target": "y",
+   "pair_left": "x",
+   "width": 1280,
+   "theme": "light",
+   "external_requests": [],
+   "script_errors": [],
+   "page_overflow": false,
+   "scrolling_regions_in_block": [],
+   "charts": []
+  },
+  {
+   "image": "part-y-region-light-1280.png",
+   "what": "category×numeric, target chart note",
+   "report_target": "y",
+   "pair_left": "region",
+   "width": 1280,
+   "theme": "light",
+   "external_requests": [],
+   "script_errors": [],
+   "page_overflow": false,
+   "scrolling_regions_in_block": [],
+   "charts": []
+  },
+  {
+   "image": "part-y-arm-light-1280.png",
+   "what": "binary×numeric, target chart note",
+   "report_target": "y",
+   "pair_left": "arm",
+   "width": 1280,
+   "theme": "light",
+   "external_requests": [],
+   "script_errors": [],
+   "page_overflow": false,
+   "scrolling_regions_in_block": [],
+   "charts": []
+  },
+  {
+   "image": "part-outcome-x-light-1280.png",
+   "what": "binary×numeric, group box",
+   "report_target": "outcome",
+   "pair_left": "x",
+   "width": 1280,
+   "theme": "light",
+   "external_requests": [],
+   "script_errors": [],
+   "page_overflow": false,
+   "scrolling_regions_in_block": [
+    "DIV:826>760"
+   ],
+   "charts": [
+    [
+     "group_box",
+     760
+    ]
+   ]
+  },
+  {
+   "image": "part-outcome-exposed-light-1280.png",
+   "what": "binary×binary, heat table",
+   "report_target": "outcome",
+   "pair_left": "exposed",
+   "width": 1280,
+   "theme": "light",
+   "external_requests": [],
+   "script_errors": [],
+   "page_overflow": false,
+   "scrolling_regions_in_block": [],
+   "charts": [
+    [
+     "heat_table",
+     760
+    ]
+   ]
+  },
+  {
+   "image": "part-outcome-tier-light-1280.png",
+   "what": "category×category, heat table",
+   "report_target": "outcome",
+   "pair_left": "tier",
+   "width": 1280,
+   "theme": "light",
+   "external_requests": [],
+   "script_errors": [],
+   "page_overflow": false,
+   "scrolling_regions_in_block": [],
+   "charts": [
+    [
+     "heat_table",
+     760
+    ]
+   ]
+  },
+  {
+   "image": "part-y-x-dark-1280.png",
+   "what": "numeric×numeric, target chart note",
+   "report_target": "y",
+   "pair_left": "x",
+   "width": 1280,
+   "theme": "dark",
+   "external_requests": [],
+   "script_errors": [],
+   "page_overflow": false,
+   "scrolling_regions_in_block": [],
+   "charts": []
+  },
+  {
+   "image": "part-y-region-dark-1280.png",
+   "what": "category×numeric, target chart note",
+   "report_target": "y",
+   "pair_left": "region",
+   "width": 1280,
+   "theme": "dark",
+   "external_requests": [],
+   "script_errors": [],
+   "page_overflow": false,
+   "scrolling_regions_in_block": [],
+   "charts": []
+  },
+  {
+   "image": "part-y-arm-dark-1280.png",
+   "what": "binary×numeric, target chart note",
+   "report_target": "y",
+   "pair_left": "arm",
+   "width": 1280,
+   "theme": "dark",
+   "external_requests": [],
+   "script_errors": [],
+   "page_overflow": false,
+   "scrolling_regions_in_block": [],
+   "charts": []
+  },
+  {
+   "image": "part-outcome-x-dark-1280.png",
+   "what": "binary×numeric, group box",
+   "report_target": "outcome",
+   "pair_left": "x",
+   "width": 1280,
+   "theme": "dark",
+   "external_requests": [],
+   "script_errors": [],
+   "page_overflow": false,
+   "scrolling_regions_in_block": [
+    "DIV:826>760"
+   ],
+   "charts": [
+    [
+     "group_box",
+     760
+    ]
+   ]
+  },
+  {
+   "image": "part-outcome-exposed-dark-1280.png",
+   "what": "binary×binary, heat table",
+   "report_target": "outcome",
+   "pair_left": "exposed",
+   "width": 1280,
+   "theme": "dark",
+   "external_requests": [],
+   "script_errors": [],
+   "page_overflow": false,
+   "scrolling_regions_in_block": [],
+   "charts": [
+    [
+     "heat_table",
+     760
+    ]
+   ]
+  },
+  {
+   "image": "part-outcome-tier-dark-1280.png",
+   "what": "category×category, heat table",
+   "report_target": "outcome",
+   "pair_left": "tier",
+   "width": 1280,
+   "theme": "dark",
+   "external_requests": [],
+   "script_errors": [],
+   "page_overflow": false,
+   "scrolling_regions_in_block": [],
+   "charts": [
+    [
+     "heat_table",
+     760
+    ]
+   ]
+  },
+  {
+   "image": "part-y-x-light-390.png",
+   "what": "numeric×numeric, target chart note",
+   "report_target": "y",
+   "pair_left": "x",
+   "width": 390,
+   "theme": "light",
+   "external_requests": [],
+   "script_errors": [],
+   "page_overflow": false,
+   "scrolling_regions_in_block": [],
+   "charts": []
+  },
+  {
+   "image": "part-y-region-light-390.png",
+   "what": "category×numeric, target chart note",
+   "report_target": "y",
+   "pair_left": "region",
+   "width": 390,
+   "theme": "light",
+   "external_requests": [],
+   "script_errors": [],
+   "page_overflow": false,
+   "scrolling_regions_in_block": [
+    "DIV:414>331"
+   ],
+   "charts": []
+  },
+  {
+   "image": "part-y-arm-light-390.png",
+   "what": "binary×numeric, target chart note",
+   "report_target": "y",
+   "pair_left": "arm",
+   "width": 390,
+   "theme": "light",
+   "external_requests": [],
+   "script_errors": [],
+   "page_overflow": false,
+   "scrolling_regions_in_block": [
+    "DIV:423>331"
+   ],
+   "charts": []
+  },
+  {
+   "image": "part-outcome-x-light-390.png",
+   "what": "binary×numeric, group box",
+   "report_target": "outcome",
+   "pair_left": "x",
+   "width": 390,
+   "theme": "light",
+   "external_requests": [],
+   "script_errors": [],
+   "page_overflow": false,
+   "scrolling_regions_in_block": [
+    "DIV:423>331",
+    "DIV:743>331"
+   ],
+   "charts": [
+    [
+     "group_box",
+     331
+    ]
+   ]
+  },
+  {
+   "image": "part-outcome-exposed-light-390.png",
+   "what": "binary×binary, heat table",
+   "report_target": "outcome",
+   "pair_left": "exposed",
+   "width": 390,
+   "theme": "light",
+   "external_requests": [],
+   "script_errors": [],
+   "page_overflow": false,
+   "scrolling_regions_in_block": [
+    "DIV:680>331"
+   ],
+   "charts": [
+    [
+     "heat_table",
+     331
+    ]
+   ]
+  },
+  {
+   "image": "part-outcome-tier-light-390.png",
+   "what": "category×category, heat table",
+   "report_target": "outcome",
+   "pair_left": "tier",
+   "width": 390,
+   "theme": "light",
+   "external_requests": [],
+   "script_errors": [],
+   "page_overflow": false,
+   "scrolling_regions_in_block": [
+    "DIV:680>331"
+   ],
+   "charts": [
+    [
+     "heat_table",
+     331
+    ]
+   ]
+  },
+  {
+   "image": "part-y-x-dark-390.png",
+   "what": "numeric×numeric, target chart note",
+   "report_target": "y",
+   "pair_left": "x",
+   "width": 390,
+   "theme": "dark",
+   "external_requests": [],
+   "script_errors": [],
+   "page_overflow": false,
+   "scrolling_regions_in_block": [],
+   "charts": []
+  },
+  {
+   "image": "part-y-region-dark-390.png",
+   "what": "category×numeric, target chart note",
+   "report_target": "y",
+   "pair_left": "region",
+   "width": 390,
+   "theme": "dark",
+   "external_requests": [],
+   "script_errors": [],
+   "page_overflow": false,
+   "scrolling_regions_in_block": [
+    "DIV:414>331"
+   ],
+   "charts": []
+  },
+  {
+   "image": "part-y-arm-dark-390.png",
+   "what": "binary×numeric, target chart note",
+   "report_target": "y",
+   "pair_left": "arm",
+   "width": 390,
+   "theme": "dark",
+   "external_requests": [],
+   "script_errors": [],
+   "page_overflow": false,
+   "scrolling_regions_in_block": [
+    "DIV:423>331"
+   ],
+   "charts": []
+  },
+  {
+   "image": "part-outcome-x-dark-390.png",
+   "what": "binary×numeric, group box",
+   "report_target": "outcome",
+   "pair_left": "x",
+   "width": 390,
+   "theme": "dark",
+   "external_requests": [],
+   "script_errors": [],
+   "page_overflow": false,
+   "scrolling_regions_in_block": [
+    "DIV:423>331",
+    "DIV:743>331"
+   ],
+   "charts": [
+    [
+     "group_box",
+     331
+    ]
+   ]
+  },
+  {
+   "image": "part-outcome-exposed-dark-390.png",
+   "what": "binary×binary, heat table",
+   "report_target": "outcome",
+   "pair_left": "exposed",
+   "width": 390,
+   "theme": "dark",
+   "external_requests": [],
+   "script_errors": [],
+   "page_overflow": false,
+   "scrolling_regions_in_block": [
+    "DIV:680>331"
+   ],
+   "charts": [
+    [
+     "heat_table",
+     331
+    ]
+   ]
+  },
+  {
+   "image": "part-outcome-tier-dark-390.png",
+   "what": "category×category, heat table",
+   "report_target": "outcome",
+   "pair_left": "tier",
+   "width": 390,
+   "theme": "dark",
+   "external_requests": [],
+   "script_errors": [],
+   "page_overflow": false,
+   "scrolling_regions_in_block": [
+    "DIV:680>331"
+   ],
+   "charts": [
+    [
+     "heat_table",
+     331
+    ]
+   ]
+  }
+ ]
+}

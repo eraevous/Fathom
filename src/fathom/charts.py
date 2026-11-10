@@ -22,18 +22,22 @@ def heat_table_svg(chart):
     """Counts as text; an opaque bar per cell shows that cell's share of its row (no opacity, no scripts)."""
     def e(v):return escape(str(v))
     rows,cols,counts=chart['row_labels'],chart['column_labels'],chart['counts']
-    left,top,cell_h=150,46,40;width=560;cell_w=(width-left-10)/max(1,len(cols));height=top+cell_h*len(rows)+10
+    # FT-R17 pass on PR #41: a fixed 13px label in a 560-unit viewBox drew ~7px text at 390px wide. Small tables
+    # (the usual 2x2 / few levels) get larger type; the 11-column capped table keeps 13 so labels still fit.
+    fs=20 if len(cols)<=3 else 16 if len(cols)<=6 else 13
+    left,top,cell_h=150,30+fs,max(40,2*fs+14);width=560;cell_w=(width-left-10)/max(1,len(cols));height=top+cell_h*len(rows)+10
+    chars=max(8,int(cell_w/(fs*.6)))
     out=[f'<svg role="img" data-kind="heat_table" aria-label="{escape(chart["title"],quote=True)}" viewBox="0 0 {width} {height}"><title>{e(chart["title"])}</title>']
     for j,c in enumerate(cols):
-        out.append(f'<text x="{left+cell_w*(j+.5):.1f}" y="{top-14}" text-anchor="middle" style="font-size:13px">{e(c[:8]+("…" if len(c)>8 else ""))}</text>')
+        out.append(f'<text x="{left+cell_w*(j+.5):.1f}" y="{top-14}" text-anchor="middle" style="font-size:{fs}px">{e(c[:chars]+("…" if len(c)>chars else ""))}</text>')
     for i,(r,values) in enumerate(zip(rows,counts)):
         y=top+i*cell_h;total=sum(values)
-        out.append(f'<text x="{left-8}" y="{y+cell_h/2+5:.1f}" text-anchor="end" style="font-size:13px">{e(r[:18]+("…" if len(r)>18 else ""))}</text>')
+        out.append(f'<text x="{left-8}" y="{y+cell_h/2+5:.1f}" text-anchor="end" style="font-size:{fs}px">{e(r[:int(140/(fs*.6))]+("…" if len(r)>int(140/(fs*.6)) else ""))}</text>')
         for j,v in enumerate(values):
             x=left+j*cell_w;share=v/total if total else 0
             out.append(f'<rect x="{x:.1f}" y="{y}" width="{cell_w-2:.1f}" height="{cell_h-2}" fill="none" stroke="{C["accent_faint"]}"/>')
             out.append(f'<rect x="{x+2:.1f}" y="{y+cell_h-9}" width="{max(0,(cell_w-6)*share):.1f}" height="5" fill="{C["accent"]}"><title>{e(r)} / {e(cols[j])}: {v} ({share:.0%} of row)</title></rect>')
-            out.append(f'<text x="{x+cell_w/2:.1f}" y="{y+cell_h/2:.1f}" text-anchor="middle" style="font-size:13px">{v}</text>')
+            out.append(f'<text x="{x+cell_w/2:.1f}" y="{y+cell_h/2:.1f}" text-anchor="middle" style="font-size:{fs}px">{v}</text>')
     out.append('</svg>')
     table=html_table({'caption':'Counts (rows: '+chart['y_label']+'; columns: '+chart['x_label']+')','headers':[chart['y_label']]+list(cols),'rows':[[r]+[formatted(v) for v in values] for r,values in zip(rows,counts)],'numeric':list(range(1,len(cols)+1))})
     return '<figure class="chart target-chart"><p class="chart-title">'+e(chart['title'])+'</p>'+''.join(out)+'<div class="axis-captions"><p>Rows: '+e(chart['y_label'])+'</p><p>Columns: '+e(chart['x_label'])+'</p></div><figcaption>'+e(chart['note']+f" {chart['n']:,} complete of {chart['total_rows']:,} rows.")+'</figcaption><details><summary>Chart values</summary>'+table+'</details></figure>'

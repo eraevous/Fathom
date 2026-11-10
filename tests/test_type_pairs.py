@@ -320,3 +320,186 @@ def test_spearman_needs_three_cases_and_wording_stays_neutral():
     tp = describe(pair, [['1', '3'], ['2', '4']], _cols(('x', 'numeric'), ('y', 'numeric')))
     assert tp['pair_type'] == 'binary×binary' and 'spearman_rho' not in tp['measures']
     assert 'tends' not in message(pair, tp)
+
+
+# ---------------------------------------------------------------- Kate's review at 9240035 (PR #41)
+
+def _five_type_tables():
+    """Synthetic table whose numeric target (y) and binary target (outcome) between them give all five type pairs."""
+    u = lcg(5)
+    rows = []
+    for i in range(240):
+        x = next(u) * 100
+        arm, region = ('ctl' if i % 2 else 'trt'), 'ABCD'[(i // 2) % 4]
+        exposed = 'yes' if i % 3 == 0 else 'no'
+        outcome = 'hit' if (exposed == 'yes' and next(u) < 0.7) or (exposed == 'no' and next(u) < 0.2) else 'miss'
+        tier = 'abc'[(i + (outcome == 'hit')) % 3]
+        y = round(2 * x + (30 if arm == 'trt' else 0) + {'A': 0, 'B': 40, 'C': 80, 'D': 120}[region] + next(u) * 10, 3)
+        rows.append([round(x, 3), arm, region, y, exposed, outcome, tier])
+    return csv_text(['x', 'arm', 'region', 'y', 'exposed', 'outcome', 'tier'], rows)
+
+
+@pytest.fixture
+def five(make_profile):
+    text = _five_type_tables()
+    return {'y': make_profile(text, {'target': 'y', 'pair_budget': 20}),
+            'outcome': make_profile(text, {'target': 'outcome', 'pair_budget': 20})}
+
+
+def _blocks(five):
+    out = {}
+    for result in five.values():
+        for p in result.document['bivariate']:
+            tp = p.get('type_pair')
+            if tp:
+                out.setdefault((tp['pair_type'], (tp.get('chart') or {}).get('kind')), (result, p))
+    return out
+
+
+def test_fixture_covers_all_five_type_pairs_and_three_chart_kinds(five):
+    keys = set(_blocks(five))
+    assert {k for k, _ in keys} == set(PAIR_TYPES_ALL)
+    assert {c for _, c in keys} == {'target_chart', 'group_box', 'heat_table'}
+
+
+PAIR_TYPES_ALL = ('numeric×numeric', 'category×numeric', 'binary×numeric', 'category×category', 'binary×binary')
+
+
+def _drop(key):
+    def f(tp):
+        del tp[key]
+    return f
+
+
+def _set(path, value):
+    def f(tp):
+        obj = tp
+        for k in path[:-1]:
+            obj = obj[k]
+        obj[path[-1]] = value
+    return f
+
+
+def _del(path):
+    def f(tp):
+        obj = tp
+        for k in path[:-1]:
+            obj = obj[k]
+        del obj[path[-1]]
+    return f
+
+
+# (pair type, chart kind) to corrupt, mutation, whether the unvalidated payload crashes a renderer.
+MALFORMED = [
+    ('bare group_box chart', ('binary×numeric', 'group_box'), _set(['chart'], {'kind': 'group_box'}), True),
+    ('target_chart without note', ('numeric×numeric', 'target_chart'), _set(['chart'], {'kind': 'target_chart', 'title': 't'}), True),
+    ('heat_table without counts', ('binary×binary', 'heat_table'), _del(['chart', 'counts']), True),
+    ('heat_table ragged counts', ('category×category', 'heat_table'), _set(['chart', 'counts'], [[1]]), False),
+    ('chart kind wrong for pair type', ('category×category', 'heat_table'), _set(['chart', 'kind'], 'group_box'), True),
+    ('group_box unordered box', ('binary×numeric', 'group_box'), _set(['chart', 'data', 0, 'box', 'min'], 1e9), False),
+    ('group without median', ('category×numeric', 'target_chart'), _del(['groups', 0, 'median']), True),
+    ('group without q1', ('binary×numeric', 'group_box'), _del(['groups', 1, 'q1']), True),
+    ('group with text mean', ('category×numeric', 'target_chart'), _set(['groups', 0, 'mean'], 'high'), False),
+    ('grouped pair without groups', ('category×numeric', 'target_chart'), _drop('groups'), True),
+    ('table without basis', ('binary×binary', 'heat_table'), _del(['table', 'basis']), True),
+    ('tabular pair without table', ('category×category', 'heat_table'), _drop('table'), False),
+    ('pair_type disagrees with roles', ('numeric×numeric', 'target_chart'), _set(['pair_type'], 'category×numeric'), True),
+    ('binary role without levels', ('binary×binary', 'heat_table'), _del(['roles', 0, 'levels']), False),
+    ('required measure missing', ('numeric×numeric', 'target_chart'), _del(['measures', 'spearman_rho']), True),
+    ('text where a number belongs', ('numeric×numeric', 'target_chart'), _set(['measures', 'pearson_r'], '0.5'), True),
+    ('null measure without status', ('binary×binary', 'heat_table'), _set(['measures', 'phi'], None), False),
+    ('index level not a group', ('binary×numeric', 'group_box'), _set(['measures', 'index_level'], 'other'), True),
+    ('groups_k disagrees with groups', ('category×numeric', 'target_chart'), _set(['measures', 'groups_k'], 9), False),
+    ('wording magnitude text', ('binary×binary', 'heat_table'), _set(['wording', 'magnitude'], 'big'), False),
+]
+
+
+@pytest.mark.parametrize('name,key,mutate,crashes', MALFORMED, ids=[m[0] for m in MALFORMED])
+def test_malformed_type_pair_is_rejected_before_any_renderer(five, tmp_path, name, key, mutate, crashes):
+    import copy
+    from fathom.renderers import type_pair_html, type_pair_markdown
+    from fathom.type_pairs import message, tree, validate_type_pair
+    result, pair = _blocks(five)[key]
+    doc = json.loads(result.to_json())
+    index = [p['left'] for p in doc['bivariate']].index(pair['left'])
+    bad_pair = copy.deepcopy(doc['bivariate'][index])
+    mutate(bad_pair['type_pair'])
+    if crashes:
+        # The payload is one the renderers cannot consume: without validation it would crash at render time.
+        with pytest.raises(Exception):
+            type_pair_html(bad_pair)
+            type_pair_markdown(bad_pair)
+            message(bad_pair, bad_pair['type_pair'])
+            tree({'columns': [bad_pair['left'], bad_pair['right']]}, bad_pair['type_pair'])
+    with pytest.raises(ValueError):
+        validate_type_pair(bad_pair['type_pair'])
+    doc['bivariate'][index] = bad_pair
+    path = tmp_path / 'bad.json'
+    path.write_text(canonical_json(doc), encoding='utf-8')
+    with pytest.raises(ValueError):
+        ProfilingResult.load(path)
+
+
+def test_every_generated_block_validates_and_renders(five):
+    from fathom.renderers import type_pair_html, type_pair_markdown
+    from fathom.type_pairs import validate_type_pair
+    for result in five.values():
+        assert render_html(result) and render_markdown(result)
+        for p in result.document['bivariate']:
+            if 'type_pair' in p:
+                validate_type_pair(p['type_pair'])
+                assert type_pair_html(p) and type_pair_markdown(p)
+
+
+def test_every_null_measure_carries_a_status_reason_and_renders_it():
+    from fathom.type_pairs import describe, measure_lines, validate_type_pair, NUMBER_MEASURES
+    grouped = {'left': 'g', 'right': 'v', 'method': 'grouped_numeric', 'statistics': {}, 'association': {}}
+    cases = {
+        # All values tied: eta undefined (constant numeric side), Kruskal-Wallis H undefined, so rank eta-squared too.
+        'tied': describe(grouped, [['A', '5'], ['B', '5'], ['C', '5'], ['A', '5']], _cols(('g', 'categorical'), ('v', 'numeric'))),
+        # n = k = 3 groups: H defined, rank eta-squared (H-k+1)/(n-k) not estimable.
+        'n_le_k': describe(grouped, [['A', '1'], ['B', '2'], ['C', '3']], _cols(('g', 'categorical'), ('v', 'numeric'))),
+        # Two cases in a 2x3 table: bias-corrected V not estimable.
+        'small_v': describe({'left': 'a', 'right': 'b', 'method': 'association', 'statistics': {}, 'association': {}},
+                            [['p', 'x'], ['q', 'y'], ['q', 'z']], _cols(('a', 'categorical'), ('b', 'categorical'))),
+    }
+    tied, nk, small = (cases[k]['measures'] for k in ('tied', 'n_le_k', 'small_v'))
+    assert tied['eta'] is None and 'constant' in tied['eta_status']
+    assert tied['kruskal_wallis_h'] is None and 'tied' in tied['kruskal_wallis_h_status']
+    assert tied['eta_squared_h'] is None and 'Kruskal-Wallis H is undefined' in tied['eta_squared_h_status']
+    assert nk['kruskal_wallis_h'] is not None and nk['eta_squared_h'] is None and 'n ≤ k' in nk['eta_squared_h_status']
+    assert small['cramers_v_bias_corrected'] is None and 'bias correction' in small['cramers_v_bias_corrected_status']
+    for tp in cases.values():
+        validate_type_pair(tp)
+        m = tp['measures']
+        for key in NUMBER_MEASURES:
+            if key in m and m[key] is None:
+                assert m[key + '_status']
+        lines = measure_lines(tp)
+        assert not any(line.endswith(': undefined') for line in lines)
+        for key in NUMBER_MEASURES:
+            if key in m and m[key] is None:
+                assert any(m[key + '_status'] in line for line in lines)
+
+
+def test_binary_binary_empty_margins_render_reasons(make_profile):
+    from fathom.type_pairs import describe, measure_lines, validate_type_pair
+    pair = {'left': 'f', 'right': 'e', 'method': 'association', 'statistics': {}, 'association': {}}
+    # Valid complete-case binary pairs always have both levels on each side, so build the block and empty a margin.
+    tp = describe(pair, [['0', '0'], ['0', '1'], ['1', '0'], ['1', '1']], _cols(('f', 'categorical'), ('e', 'categorical')))
+    from fathom.type_pairs import two_by_two
+    tp['measures'].update(two_by_two(0, 3, 0, 4))
+    validate_type_pair(tp)
+    rows = dict(line.split(': ', 1) for line in measure_lines(tp) if ': ' in line)
+    for name in ('odds ratio', 'risk difference', 'phi'):
+        assert rows[name].startswith('not estimable: a row or column')
+
+
+@pytest.mark.parametrize('cells', [(0, 3, 0, 4), (3, 0, 4, 0), (0, 0, 3, 4), (3, 4, 0, 0)],
+                         ids=['empty column 2', 'empty column 1', 'empty row 2', 'empty row 1'])
+def test_two_by_two_any_empty_margin_makes_all_three_not_estimable(cells):
+    from fathom.type_pairs import two_by_two
+    m = two_by_two(*cells)
+    for key in ('odds_ratio', 'risk_difference', 'phi'):
+        assert m[key] is None and m[key + '_status'].startswith('not estimable: a row or column')
+    assert m['odds_ratio_correction'] == 'none'

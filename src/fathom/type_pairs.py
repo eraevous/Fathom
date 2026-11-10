@@ -26,6 +26,12 @@ WORDING_RULE = ('Wording only, not a test or strength band: a headline magnitude
                 "bias-corrected Cramer's V; |phi|. Independent columns can exceed 0.1 in small samples; no action is selected from it.")
 DISAGREEMENT_RULE = ('Rank and linear measures disagree when |Spearman rho| and |Pearson r| differ by at least 0.2, or have '
                      'opposite signs while both are at least 0.1 in absolute value (wording cut, not a test).')
+FEW_CASES = 'not estimable: fewer than two complete cases'
+UNDEFINED_SCREEN = ('undefined: needs two complete cases and more than one distinct value on each side '
+                    '(the numeric side of eta must not be constant)')
+NUMBER_MEASURES = ('pearson_r', 'spearman_rho', 'rank_linear_gap', 'eta', 'kruskal_wallis_h', 'eta_squared_h', 'rank_biserial',
+                   'median_difference', 'mean_difference', 'cramers_v', 'cramers_v_bias_corrected', 'odds_ratio',
+                   'risk_difference', 'phi')
 BASIS = ('Descriptive complete-case summaries of one snapshot; not causal; no p-values. Selection and ranking are unchanged: '
          'these measures describe pairs the screening measure already selected.')
 
@@ -100,18 +106,24 @@ def cramers_v_corrected(table):
     return min(1.0, math.sqrt(phi2 / denominator)) if denominator > 0 else None
 
 
+EMPTY_MARGIN = 'not estimable: a row or column of the 2x2 table is empty'
+
+
 def two_by_two(a, b, c, d):
-    """a=(row2,col2) b=(row2,col1) c=(row1,col2) d=(row1,col1); Haldane-Anscombe +0.5 for the odds ratio only."""
-    zero = 0 in (a, b, c, d)
-    oa, ob, oc, od = (x + 0.5 for x in (a, b, c, d)) if zero else (a, b, c, d)
+    """a=(row2,col2) b=(row2,col1) c=(row1,col2) d=(row1,col1); Haldane-Anscombe +0.5 for the odds ratio only.
+
+    Spec027 edge rule: an empty row or column margin makes the odds ratio, the risk difference and phi all
+    not estimable (null with a status). Reviewer check: an empty column such as (0,3,0,4) still has both row
+    margins, so the risk difference would compute as 0 without this guard."""
     margins = (a + b) * (c + d) * (a + c) * (b + d)
     if not margins:
-        return {'odds_ratio': None, 'odds_ratio_status': 'not estimable: a row or column of the 2x2 table is empty',
-                'odds_ratio_correction': 'none', 'risk_difference': a / (a + b) - c / (c + d) if a + b and c + d else None, 'phi': None}
+        return {'odds_ratio': None, 'odds_ratio_status': EMPTY_MARGIN, 'odds_ratio_correction': 'none',
+                'risk_difference': None, 'risk_difference_status': EMPTY_MARGIN, 'phi': None, 'phi_status': EMPTY_MARGIN}
+    zero = 0 in (a, b, c, d)
+    oa, ob, oc, od = (x + 0.5 for x in (a, b, c, d)) if zero else (a, b, c, d)
     return {'odds_ratio': oa * od / (ob * oc),
             'odds_ratio_correction': 'Haldane-Anscombe: 0.5 added to every cell because a cell is zero' if zero else 'none',
-            'risk_difference': a / (a + b) - c / (c + d) if a + b and c + d else None,
-            'phi': (a * d - b * c) / math.sqrt(margins) if margins else None}
+            'risk_difference': a / (a + b) - c / (c + d), 'phi': (a * d - b * c) / math.sqrt(margins)}
 
 
 # ------------------------------------------------------------------ classification and enrichment
@@ -216,6 +228,10 @@ def describe(pair, rows, columns):
             m['spearman_rho_status'] = ('not estimable: fewer than three complete cases' if n < 3
                                         else 'undefined: one side has a single distinct rank')
         gap = coefficient(abs(rho) - abs(r)) if rho is not None and r is not None else None
+        if r is None:
+            m['pearson_r_status'] = 'undefined: Pearson r needs two complete cases and two distinct values on each side'
+        if gap is None:
+            m['rank_linear_gap_status'] = 'undefined: needs both Pearson r and Spearman rho'
         m.update(rank_linear_gap=gap, disagreement=bool(gap is not None and (abs(gap) >= GAP or (rho * r < 0 and min(abs(rho), abs(r)) >= NEAR_ZERO))),
                  disagreement_rule=DISAGREEMENT_RULE)
         magnitude = max(abs(v) for v in (r, rho) if v is not None) if n >= 3 and (r, rho) != (None, None) else None
@@ -236,6 +252,14 @@ def describe(pair, rows, columns):
             e2 = max(0.0, e2) if e2 is not None else None
             m.update(eta=eta, kruskal_wallis_h=safe(h), eta_squared_h=coefficient(e2), groups_k=len(groups),
                      eta_squared_h_basis='(H - k + 1)/(n - k), clipped at 0: negative values (below chance expectation) are stored as 0.')
+            if eta is None:
+                m['eta_status'] = UNDEFINED_SCREEN
+            if h is None:
+                m['kruskal_wallis_h_status'] = (FEW_CASES if n < 2 else
+                                                'undefined: every complete-case value of the numeric column is tied (tie correction is zero)')
+            if e2 is None:
+                m['eta_squared_h_status'] = ('undefined: Kruskal-Wallis H is undefined' if h is None
+                                             else 'not estimable: complete cases do not exceed the number of groups (n ≤ k)')
             magnitude = math.sqrt(e2) if e2 is not None else None
         else:
             (ref, first), (idx, second) = groups
@@ -263,8 +287,17 @@ def describe(pair, rows, columns):
             v = screening.get('value') if screening.get('measure') == "Cramer's V" else (association('categorical', 'categorical', cases) or {}).get('value')
             vc = cramers_v_corrected(table)
             m.update(cramers_v=v, cramers_v_bias_corrected=coefficient(vc), rows_k=len(table), columns_k=len(table[0]))
+            if v is None:
+                m['cramers_v_status'] = UNDEFINED_SCREEN
+            if vc is None:
+                m['cramers_v_bias_corrected_status'] = (FEW_CASES if n < 2 else 'not estimable: after the bias correction one side '
+                                                        'has fewer than two effective levels (n is small for the table size)')
             magnitude = vc
         out['chart'] = heat_chart(pair, out['table'], n, len(rows))
+    for key in NUMBER_MEASURES:
+        # Contract (data-model.md): every null measure carries <name>_status; this catches non-finite results.
+        if key in m and m[key] is None and key + '_status' not in m:
+            m[key + '_status'] = 'undefined: the computed value is not a finite number'
     out['wording'] = {'magnitude': coefficient(magnitude) if magnitude is not None else None,
                       'near_zero': bool(magnitude is not None and magnitude < NEAR_ZERO), 'rule': WORDING_RULE}
     return out
@@ -354,11 +387,14 @@ def measure_lines(tp):
     for key, name in MEASURE_LABELS:
         if key in m:
             value = m[key]
-            lines.append(name + ': ' + ('undefined' if value is None else label(value) if isinstance(value, int) or key in ('kruskal_wallis_h', 'odds_ratio', 'median_difference', 'mean_difference') else format(value, '.3f')))
+            # A null measure shows its stored reason (e.g. "not estimable: a row or column ... is empty"), never a bare word.
+            lines.append(name + ': ' + (m.get(key + '_status', 'undefined') if value is None else label(value) if isinstance(value, int) or key in ('kruskal_wallis_h', 'odds_ratio', 'median_difference', 'mean_difference') else format(value, '.3f')))
+    # One row each (FT-R17 pass on PR #41: a combined row put "reference levels" inside the index-level cell).
     if 'index_level' in m:
-        lines.append('index level: ' + q(m['index_level']) + '; reference level: ' + q(m['reference_level']))
+        lines += ['index level: ' + q(m['index_level']), 'reference level: ' + q(m['reference_level'])]
     if 'index_levels' in m:
-        lines.append('index levels: ' + ', '.join(q(v) for v in m['index_levels']) + '; reference levels: ' + ', '.join(q(v) for v in m['reference_levels']))
+        lines += ['index levels: ' + ', '.join(q(v) for v in m['index_levels']),
+                  'reference levels: ' + ', '.join(q(v) for v in m['reference_levels'])]
     if m.get('odds_ratio_correction', 'none') != 'none':
         lines.append('odds ratio correction: ' + m['odds_ratio_correction'])
     if m.get('disagreement'):
@@ -399,29 +435,134 @@ def tables(pair):
 
 # ------------------------------------------------------------------ validation
 
+REQUIRED_MEASURES = {
+    'numeric×numeric': ('pearson_r', 'spearman_rho', 'rank_linear_gap', 'disagreement', 'disagreement_rule'),
+    'category×numeric': ('eta', 'kruskal_wallis_h', 'eta_squared_h', 'groups_k'),
+    'binary×numeric': ('rank_biserial', 'index_level', 'reference_level', 'median_difference', 'mean_difference'),
+    'category×category': ('cramers_v', 'cramers_v_bias_corrected', 'rows_k', 'columns_k'),
+    'binary×binary': ('odds_ratio', 'odds_ratio_correction', 'risk_difference', 'phi', 'index_levels', 'reference_levels'),
+}
+GROUPED = ('category×numeric', 'binary×numeric')
+TABULAR = ('category×category', 'binary×binary')
+CHART_KINDS = {'numeric×numeric': {'target_chart'}, 'category×numeric': {'target_chart', 'group_box'},
+               'binary×numeric': {'target_chart', 'group_box'}, 'category×category': {'heat_table'}, 'binary×binary': {'heat_table'}}
+
+
 def validate_type_pair(tp):
+    """Reject any type_pair block the renderers could not consume (PR #41 review, finding 1).
+
+    The saved artifact is the interface: everything type_pair_html/markdown, tables(), measure_lines(),
+    message(), svg_chart() and chart_values() read is checked here, so a block that validates renders.
+    Reviewer check: each branch below names the renderer access it protects."""
+    def bad(what):
+        raise ValueError('invalid type pair ' + what)
+
     def count(v): return type(v) is int and v >= 0
-    def scalar(v): return v is None or type(v) in (int, float, str, bool)
-    if (not isinstance(tp, dict) or tp.get('pair_type') not in PAIR_TYPES or not count(tp.get('n'))
-            or not isinstance(tp.get('measures'), dict) or any(not scalar(v) and not isinstance(v, list) for v in tp['measures'].values())):
-        raise ValueError('invalid type pair')
+    def number(v): return type(v) in (int, float) and math.isfinite(v)
+    def maybe(v): return v is None or number(v)
+    def text(v): return isinstance(v, str)
+    def level(v): return type(v) in (int, float, str, bool) and (type(v) is not float or math.isfinite(v))
+    def texts(d, keys): return all(text(d.get(k)) for k in keys)
+
+    if not isinstance(tp, dict) or tp.get('pair_type') not in PAIR_TYPES or not count(tp.get('n')) or not texts(tp, ('basis', 'binary_rule')):
+        bad('')
+    kind = tp['pair_type']
+    # Roles: the stored pair_type must be what the roles classify to (pair_type()); binary roles carry two levels.
     roles = tp.get('roles')
     if (not isinstance(roles, list) or len(roles) != 2
-            or any(not isinstance(r, dict) or r.get('role') not in {'numeric', 'category', 'binary'} or not isinstance(r.get('column'), str) for r in roles)):
-        raise ValueError('invalid type pair roles')
+            or any(not isinstance(r, dict) or r.get('role') not in {'numeric', 'category', 'binary'} or not text(r.get('column')) for r in roles)):
+        bad('roles')
+    for r in roles:
+        if r['role'] == 'binary' and (not isinstance(r.get('levels'), list) or len(r['levels']) != 2 or not all(level(v) for v in r['levels'])):
+            bad('binary levels')
+        if r['role'] != 'binary' and 'levels' in r:
+            bad('roles')
+    if pair_type(*roles) != kind:
+        bad('pair_type: does not match the roles')
+    # Measures: required keys per pair type; numbers are finite or null, and every null carries <name>_status.
+    m = tp.get('measures')
+    if not isinstance(m, dict) or any(k not in m for k in REQUIRED_MEASURES[kind]):
+        bad('measures: missing a required measure for ' + kind)
+    for key in NUMBER_MEASURES:
+        if key in m:
+            if not maybe(m[key]):
+                bad('measure ' + key)
+            if m[key] is None and not text(m.get(key + '_status')):
+                bad('measure ' + key + ': null without a status reason')
+    for key, value in m.items():
+        if key.endswith(('_status', '_rule', '_basis', '_correction')) and not text(value):
+            bad('measure ' + key)
+    for key in ('groups_k', 'rows_k', 'columns_k'):
+        if key in m and (not count(m[key]) or m[key] < 1):
+            bad('measure ' + key)
+    if 'disagreement' in m and type(m['disagreement']) is not bool:
+        bad('measure disagreement')
     w = tp.get('wording')
-    if not isinstance(w, dict) or type(w.get('near_zero')) is not bool or not isinstance(w.get('rule'), str):
-        raise ValueError('invalid type pair wording')
-    if 'groups' in tp and (not isinstance(tp['groups'], list) or len(tp['groups']) > 20
-                           or any(not isinstance(g, dict) or not count(g.get('n')) for g in tp['groups'])):
-        raise ValueError('invalid type pair groups')
-    if 'table' in tp:
+    if not isinstance(w, dict) or type(w.get('near_zero')) is not bool or not text(w.get('rule')) or not maybe(w.get('magnitude')):
+        bad('wording')
+    # Groups (tables() and message() read value, n, median, q1, q3, iqr, mean).
+    if (kind in GROUPED) != ('groups' in tp):
+        bad('groups: required exactly for grouped pair types')
+    if kind in GROUPED:
+        groups = tp['groups']
+        if (not isinstance(groups, list) or not 1 <= len(groups) <= 20
+                or any(not isinstance(g, dict) or not level(g.get('value')) or not count(g.get('n'))
+                       or any(k not in g or not maybe(g[k]) for k in ('median', 'q1', 'q3', 'iqr', 'mean')) for g in groups)):
+            bad('groups')
+        values = [g['value'] for g in groups]
+        if len(set(map(repr, values))) != len(values):
+            bad('groups: repeated value')
+        if kind == 'category×numeric' and m['groups_k'] != len(groups):
+            bad('groups: groups_k does not match')
+        if kind == 'binary×numeric':
+            binary = next(r for r in roles if r['role'] == 'binary')
+            if ([m['reference_level'], m['index_level']] != binary['levels'] or len(groups) != 2
+                    or sorted(map(repr, values)) != sorted(map(repr, binary['levels']))):
+                bad('groups: index/reference levels do not match the binary role')
+    # Contingency table (tables() reads every key below).
+    if (kind in TABULAR) != ('table' in tp):
+        bad('table: required exactly for category and binary pairs')
+    if kind in TABULAR:
         t = tp['table']
-        if not isinstance(t, dict) or not isinstance(t.get('counts'), list) or any(not isinstance(t.get(k), list) or len(t[k]) > CAP for k in ('row_levels', 'column_levels')):
-            raise ValueError('invalid type pair table')
-        width = len(t['column_levels']) + bool(t.get('other_column_levels'))
-        if len(t['counts']) != len(t['row_levels']) + bool(t.get('other_row_levels')) or any(not isinstance(r, list) or len(r) != width or not all(count(v) for v in r) for r in t['counts']):
-            raise ValueError('invalid type pair table counts')
+        if (not isinstance(t, dict) or not texts(t, ('row_column', 'column_column', 'basis')) or not isinstance(t.get('counts'), list)
+                or any(not isinstance(t.get(k), list) or not 1 <= len(t[k]) <= CAP or not all(level(v) for v in t[k]) for k in ('row_levels', 'column_levels'))
+                or not count(t.get('other_row_levels')) or not count(t.get('other_column_levels')) or not count(t.get('shown_cap'))):
+            bad('table')
+        width = len(t['column_levels']) + bool(t['other_column_levels'])
+        if len(t['counts']) != len(t['row_levels']) + bool(t['other_row_levels']) or any(not isinstance(r, list) or len(r) != width or not all(count(v) for v in r) for r in t['counts']):
+            bad('table counts')
+        if kind == 'binary×binary' and (m['index_levels'] != [r['levels'][1] for r in roles] or m['reference_levels'] != [r['levels'][0] for r in roles]):
+            bad('table: index/reference levels do not match the binary roles')
+    # Chart: kind must suit the pair type, and carry every field its renderer reads.
     chart = tp.get('chart')
-    if chart is not None and (not isinstance(chart, dict) or chart.get('kind') not in {'target_chart', 'group_box', 'heat_table'}):
-        raise ValueError('invalid type pair chart')
+    if chart is None:
+        return
+    if not isinstance(chart, dict) or chart.get('kind') not in CHART_KINDS[kind] or not texts(chart, ('title', 'note')):
+        bad('chart')
+    if chart['kind'] == 'target_chart':
+        return
+    if not texts(chart, ('x_label', 'y_label')) or not count(chart.get('n')) or not count(chart.get('total_rows')) or chart['n'] > chart['total_rows']:
+        bad('chart coverage')
+    if chart['kind'] == 'heat_table':
+        rows, cols, counts = chart.get('row_labels'), chart.get('column_labels'), chart.get('counts')
+        if (not isinstance(rows, list) or not isinstance(cols, list) or not 1 <= len(rows) <= CAP + 1 or not 1 <= len(cols) <= CAP + 1
+                or not all(text(v) for v in rows + cols) or not isinstance(counts, list) or len(counts) != len(rows)
+                or any(not isinstance(r, list) or len(r) != len(cols) or not all(count(v) for v in r) for r in counts)):
+            bad('heat table chart')
+        return
+    # group_box: plot_marks(), coverage_note() and chart_values() read these.
+    data = chart.get('data')
+    if chart.get('x_scale') not in {'linear', 'log10'} or not isinstance(data, list) or not 1 <= len(data) <= 20:
+        bad('group box chart')
+    for key in ('plotted', 'omitted_nonpositive'):
+        if key in chart and (not count(chart[key]) or chart[key] > chart['n']):
+            bad('group box chart count')
+    order = ('min', 'q1', 'median', 'q3', 'max')
+    for row in data:
+        if not isinstance(row, dict) or not text(row.get('label')) or not count(row.get('n')) or ('excluded_nonpositive' in row and not count(row['excluded_nonpositive'])):
+            bad('group box row')
+        box = row.get('box')
+        if box is not None and (not isinstance(box, dict) or not all(number(box.get(k)) for k in order)
+                                or [box[k] for k in order] != sorted(box[k] for k in order)
+                                or (chart['x_scale'] == 'log10' and box['min'] <= 0)):
+            bad('group box values')
