@@ -514,3 +514,21 @@ def test_null_headline_says_not_estimable_once_and_levels_split(make_profile):
     bb = make_profile(csv_text(['exposed', 'outcome'], rows), {'target': 'outcome'}).document['bivariate'][0]
     labels = [r[0] for r in tables(bb)[0]['rows']]
     assert 'index levels' in labels and 'reference levels' in labels
+
+
+# ---------------------------------------------------------------- Kate re-review (5838167239)
+
+def test_binary_level_mapping_is_validated(table_target, tmp_path):
+    ok = _saved(table_target, tmp_path, lambda d: None)
+    ProfilingResult.load(ok)  # the valid sort-order mapping loads
+    for mutate in (lambda m: m.update(index_levels=list(reversed(m['index_levels']))),
+                   lambda m: m.update(reference_levels=[m['reference_levels'][0], 'other'])):
+        path = _saved(table_target, tmp_path, lambda d: mutate(_first(d, 'binary×binary')['measures']))
+        with pytest.raises(ValueError):
+            ProfilingResult.load(path)
+
+
+def test_groups_k_must_match_groups(numeric_target, tmp_path):
+    path = _saved(numeric_target, tmp_path, lambda d: _first(d, 'category×numeric')['measures'].update(groups_k=99))
+    with pytest.raises(ValueError):
+        ProfilingResult.load(path)

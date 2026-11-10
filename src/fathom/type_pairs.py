@@ -546,6 +546,9 @@ def validate_type_pair(tp):
             _fail('measure ' + key)
     if kind == 'binary×numeric' and (not level(m.get('index_level')) or not level(m.get('reference_level'))):
         _fail('binary levels')
+    if kind == 'binary×binary' and (m['index_levels'] != [r['levels'][1] for r in roles]
+                                    or m['reference_levels'] != [r['levels'][0] for r in roles]):
+        _fail('binary levels do not follow the roles\' sort order (index = second level, reference = first)')
     w = tp.get('wording')
     if (not isinstance(w, dict) or type(w.get('near_zero')) is not bool or not isinstance(w.get('rule'), str)
             or not (w.get('magnitude') is None or num(w['magnitude']))
@@ -554,6 +557,8 @@ def validate_type_pair(tp):
     grouped = kind in ('category×numeric', 'binary×numeric')
     if grouped != ('groups' in tp):
         _fail('groups presence')
+    if kind == 'category×numeric' and isinstance(tp.get('groups'), list) and m['groups_k'] != len(tp['groups']):
+        _fail('groups_k does not match the stored groups')
     if grouped and (not isinstance(tp['groups'], list) or not 1 <= len(tp['groups']) <= 20
                     or any(not isinstance(g, dict) or not level(g.get('value')) or not count(g.get('n'))
                            or any(not num(g.get(k)) for k in ('median', 'q1', 'q3', 'iqr', 'mean')) for g in tp['groups'])):
