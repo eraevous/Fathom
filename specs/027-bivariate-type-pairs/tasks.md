@@ -8,6 +8,7 @@
 - [x] T006 [US3] Validation of optional `type_pair`; heat-table chart; grouped box for category targets; HTML/Markdown sections; relations.csv/findings.csv carry fields (docs/tidy-export.md note).
 - [x] T007 Full suite, AEC edges/check, claim and evidence records, intent note, draft PR.
 - [x] T007a Review fixes (PR #41): complete-case roles, OR not estimable on an empty 2×2 margin, rank eta-squared clipped at 0, undefined H wording, Spearman n<3 guard; tests first.
-- [ ] T008 Visual review of the new charts at 1280/390 light/dark (FT-R17) — not done in this slice.
-- [ ] T009 PDF/PowerPoint exports of the new type-pair tables/charts — exports show the existing pair statistics only; not extended here.
+- [x] T007b Kate review (5837301347): full per-kind validation of the type-pair block (chart, target-chart note, groups, table, roles/kind agreement, required measures); every null measure carries a `_status` reason, shown in reports; any empty 2×2 margin makes OR, RD and phi not estimable. Tests first.
+- [x] T008 Visual review of the type-pair views at 1280/390 light/dark (FT-R17): builder pass with 40 screenshots, checks and findings in review/; four layout problems fixed. The independent pass is pending.
+- [ ] T009 PDF/PowerPoint exports of the new type-pair tables/charts — exports show only the existing pair statistics. This is a follow-up that needs Zach's acceptance; no cross-format parity is claimed.
 - [ ] T010 Zach decisions: near-zero 0.1 wording cut, Spearman/Pearson 0.2 disagreement cut, binary rule, schema-version policy.

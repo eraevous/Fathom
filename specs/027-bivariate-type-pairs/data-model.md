@@ -8,11 +8,11 @@
 | roles | list[{column, role, levels?}] | role numeric/category/binary; binary carries its two levels in sort order |
 | binary_rule | str | R1 wording |
 | n | int | complete cases |
-| measures | dict | per pair type, see below; null value + `<name>_status` reason when undefined |
+| measures | dict | per pair type, see below; every numeric measure that is null has a `<name>_status` reason (validated) |
 | groups | list | grouped pairs: {value, n, median, q1, q3, iqr, mean} |
 | table | dict | category/binary pairs: {row_column, column_column, row_levels, column_levels, counts, other_row_levels, other_column_levels, shown_cap} |
 | wording | dict | {measure, magnitude, near_zero, rule} |
-| chart | dict or null | kind scatter_ref / group_box / heat_table |
+| chart | dict | target_chart (title, note) / group_box (title, labels, scale, data rows with five-number box) / heat_table (labels, counts matching labels); kind must suit the pair type (validated) |
 | basis | str | descriptive-only disclosure |
 
 measures by pair type:

@@ -320,3 +320,79 @@ def test_spearman_needs_three_cases_and_wording_stays_neutral():
     tp = describe(pair, [['1', '3'], ['2', '4']], _cols(('x', 'numeric'), ('y', 'numeric')))
     assert tp['pair_type'] == 'binary×binary' and 'spearman_rho' not in tp['measures']
     assert 'tends' not in message(pair, tp)
+
+
+# ---------------------------------------------------------------- Kate review (PR #41, review 5837301347)
+
+def _saved(result, tmp_path, mutate):
+    doc = json.loads(result.to_json())
+    mutate(doc)
+    path = tmp_path / 'bad.json'
+    path.write_text(canonical_json(doc), encoding='utf-8')
+    return path
+
+
+def _first(doc, kind):
+    return next(p['type_pair'] for p in doc['bivariate'] if p.get('type_pair', {}).get('pair_type') == kind)
+
+
+@pytest.mark.parametrize('kind,mutate', [
+    ('binary×numeric', lambda tp: tp.update(chart={'kind': 'group_box'})),
+    ('category×numeric', lambda tp: tp.update(chart={'kind': 'target_chart', 'title': 'Target: region × target'})),
+    ('numeric×numeric', lambda tp: tp.update(chart={'kind': 'heat_table'})),
+    ('category×numeric', lambda tp: [g.pop(k) for g in tp['groups'] for k in ('median', 'q1', 'q3', 'iqr', 'mean')]),
+    ('category×numeric', lambda tp: tp.pop('groups')),
+    ('binary×numeric', lambda tp: tp.update(pair_type='numeric×numeric')),
+    ('binary×numeric', lambda tp: tp['measures'].pop('rank_biserial')),
+    ('numeric×numeric', lambda tp: tp['measures'].update(spearman_rho=None)),
+    ('binary×numeric', lambda tp: tp['roles'][0].pop('levels', None) or tp['roles'][1].pop('levels', None)),
+])
+def test_malformed_type_pair_payloads_rejected_before_rendering(numeric_target, tmp_path, kind, mutate):
+    path = _saved(numeric_target, tmp_path, lambda d: mutate(_first(d, kind)))
+    with pytest.raises(ValueError):
+        ProfilingResult.load(path)
+
+
+@pytest.fixture
+def table_target(make_profile):
+    rows = [['yes' if i % 3 == 0 else 'no', 'abc'[i % 3], 'hit' if i % 4 == 0 else 'miss'] for i in range(60)]
+    return make_profile(csv_text(['exposed', 'tier', 'outcome'], rows), {'target': 'outcome', 'pair_budget': 5})
+
+
+@pytest.mark.parametrize('kind,mutate', [
+    ('binary×binary', lambda tp: tp.pop('table')),
+    ('binary×binary', lambda tp: tp['table'].pop('row_column')),
+    ('binary×binary', lambda tp: tp['chart'].pop('row_labels')),
+    ('binary×binary', lambda tp: tp['chart'].update(counts=[[1, 2, 3]])),
+    ('category×category', lambda tp: tp['chart'].update(kind='group_box')),
+    ('category×category', lambda tp: tp['measures'].update(cramers_v_bias_corrected=None)),
+])
+def test_malformed_table_payloads_rejected(table_target, tmp_path, kind, mutate):
+    path = _saved(table_target, tmp_path, lambda d: mutate(_first(d, kind)))
+    with pytest.raises(ValueError):
+        ProfilingResult.load(path)
+
+
+def test_every_null_measure_carries_a_status_and_reports_show_it():
+    from fathom.type_pairs import cramers_v_corrected_status, kruskal_wallis_status, two_by_two, describe, tables
+    value, reason = cramers_v_corrected_status([[1, 0], [0, 1]])
+    assert value is None and 'not estimable' in reason
+    h, e2, reasons = kruskal_wallis_status([[5, 5], [5]])
+    assert h is None and e2 is None and reasons['kruskal_wallis_h'] and reasons['eta_squared_h']
+    m = two_by_two(0, 3, 0, 4)
+    assert all(m[k] is None and 'not estimable' in m[k + '_status'] for k in ('odds_ratio', 'risk_difference', 'phi'))
+    rows = [['A', '5'], ['B', '5'], ['C', '5'], ['A', '5']]
+    pair = {'left': 'g', 'right': 'v', 'method': 'grouped_numeric', 'statistics': {}, 'association': {}}
+    tp = describe(pair, rows, _cols(('g', 'categorical'), ('v', 'numeric')))
+    for key, value in tp['measures'].items():
+        if value is None:
+            assert isinstance(tp['measures'].get(key + '_status'), str), key
+    text = str(tables({'type_pair': tp}))
+    assert 'all values tie' in text and "'undefined'" not in text
+
+
+@pytest.mark.parametrize('cells', [(0, 3, 0, 4), (3, 0, 4, 0), (0, 0, 3, 4), (3, 4, 0, 0)])
+def test_two_by_two_any_empty_margin_is_not_estimable(cells):
+    from fathom.type_pairs import two_by_two
+    m = two_by_two(*cells)
+    assert m['odds_ratio'] is None and m['risk_difference'] is None and m['phi'] is None
