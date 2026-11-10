@@ -3,9 +3,10 @@
 Reports come from synthetic generators shared with `tests/test_type_pairs.py`:
 `python3 build.py OUT && python3 capture.py OUT` (offline Chromium via Playwright; uses
 `$CHROME`, `chromium` or `google-chrome`; all Relations disclosures opened; scrollbars shown,
-because Playwright's default `--hide-scrollbars` removes the scroll cue). 80 screenshots
+because Playwright's default `--hide-scrollbars` removes the scroll cue). 104 screenshots
 (page screenshots clipped to each element): every type-pair article (numeric target: 6;
-categorical/binary target: 3; capped 15×13 table: 1) and every target chart the layer
+categorical/binary target: 3; capped 15×13 table: 1; edge cases: 3, with a 56-character
+numeric target, a monotone pair and a two-complete-case pair) and every target chart the layer
 references (scatter for numeric×numeric, grouped box for category×numeric, rates), at 1280
 and 390, light and dark. `checks.json`: 12 page states, no network requests, no page
 horizontal overflow; `table_overflow` counts type-pair frames that scroll sideways.
@@ -66,3 +67,25 @@ with main's code; they are not changed here so the PR does not widen.
 
 Reviewer 2's 4 suite runs at b689989 passed; the builder's single earlier unexplained failure
 was not identified (the run printed only a count) and has not recurred.
+
+## Reviewer 3 (claude:visual-review, review 5837638868 at b689989) — re-checked at 1802bb0
+Classification: **fixed by 1802bb0** / **fixed now** (this PR's code, after 1802bb0) / **pre-existing**
+(verified on main f600888 with the same synthetic reports).
+
+| # | Finding | Disposition |
+| --- | --- | --- |
+| 1 | Bare "undefined" for a null headline (Wording row, tree, report.md) | **Fixed now.** `wording.magnitude_status` stores the headline measure's reason (validated); tables and tree say "headline magnitude not estimable (reason)". Test `test_null_headline_shows_its_reason_not_undefined`. |
+| 2 | Disagreement note missing from the HTML measure table | **Fixed now.** The line is "rank and linear measures: disagree (see the disagreement rule)". Test `test_disagreement_note_appears_in_measure_table`. |
+| 3 | Heat-table text ~9 px phone / ~20 px desktop | **Fixed by 1802bb0** (heat table is an HTML table). |
+| 4 | Hidden columns at 390 with no scroll cue | **Fixed by 1802bb0**: visible scrollbar (screenshots show it; Playwright hid scrollbars before) and a "scroll sideways" note. Columns still scroll by design. |
+| 5 | Chart-values table capped at 760 px, cramped at 1280 | **Fixed by 1802bb0** for type-pair charts (full article width). **Pre-existing** for target charts (`.chart{max-width:760px}` on main). |
+| 6 | Box ticks unrounded, log notes on linear boxes; Q3 40.2 vs 40.195 | Ticks and log notes **pre-existing** (shared target-chart code, same on main). Q3 mismatch **fixed by 1802bb0** (display formatting); guarded by `test_box_chart_values_match_per_group_table` (green before and after). |
+| 7 | "Existing target chart" note without a link | **Fixed now.** Target charts get in-page anchors (`target-chart-N`, HTML and Markdown); the type-pair note links to its chart. Test `test_target_chart_reference_links_to_the_chart`. |
+| — | Two-complete-case pair read as "binary (-0.009, 0.048)", phi -1 | Rule unchanged (Zach's binary-rule decision; open question in the PR). Level labels are now shown unrounded (`-0.0093456, 0.0481234`). Test `test_binary_level_labels_are_not_rounded`. |
+| nit | "Cramers v" vs "Cramer's V" | **Pre-existing**: "Cramers v" is the generic label for the stored `cramers_v` key in the Relationship statistics table. |
+| nit | "not estimable : the" | Not a markup defect: HTML is `<strong>not estimable</strong>: the` (no space); text extraction around the bold tag adds it. |
+| nit | Alignment differs from Relationship statistics; captions wrap mid-identifier | Type-pair values mix numbers and reasons, so they stay left-aligned; identifier wrapping is the report's global `overflow-wrap:anywhere` (pre-existing). |
+
+Test flake: the builder's one-off failure was the stale showcase (fixed in 1802bb0). Reviewer 3's
+suspected candidate, `test_serve.py::test_idle_timeout_and_unauthenticated_requests_do_not_refresh`
+(0.6 s timeout, 0.12 s sleeps), is recorded as a note only; it was not observed failing here.

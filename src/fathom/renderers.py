@@ -308,11 +308,11 @@ def render_html(result: ProfilingResult,report=None):
         ta=d.get('target_analysis')
         out += ['<p>'+escape(ta['reason']+' '+ta['grouping_policy']+' '+ta['warning'] if ta else 'Target detail unavailable in legacy artifact; rerun profiling to compute it.')+'</p>']
         out += ['<div id="report-target" class="target-tables"><h3>Target</h3><p>Wide target tables scroll horizontally on narrow screens.</p>']+[html_table(t) for t in target_tables(d)]+['</div>']
-        if ta:out += [svg_chart(ch) for ch in ta['charts']]
+        if ta:out += ['<div id="target-chart-'+str(i)+'">'+svg_chart(ch)+'</div>' for i,ch in enumerate(ta['charts'])]
         if ta:out += ['<details><summary>Selected pair statistics and method details</summary>']
         for pair in d['bivariate']:
             out += ['<article><h3>'+escape(pair['left'])+' × '+escape(pair['right'])+'</h3><p>'+escape(pair['method'])+' · '+escape(pair['semantics'])+'</p>',
-                    ''.join(html_table(t) for t in structured_tables('Relationship statistics',pair['statistics'])),type_pair_html(pair),'<p>'+escape(pair['uncertainty'])+'</p></article>']
+                    ''.join(html_table(t) for t in structured_tables('Relationship statistics',pair['statistics'])),type_pair_html(pair,ta['charts'] if ta else None),'<p>'+escape(pair['uncertainty'])+'</p></article>']
         if ta:out += ['</details>']
         out += ['<details id="report-exclusions"><summary>Ranking and exclusions</summary>',readable_html(d['selection']),'</details>']
         if 'quality' in d:
@@ -341,19 +341,35 @@ def dictionary_and_provenance_markdown(d):
     return lines
 
 
-def type_pair_html(pair):
+def target_chart_link(chart,charts):
+    """In-page link to the existing target chart a type-pair block refers to (matched by stored title)."""
+    index=next((i for i,ch in enumerate(charts or []) if ch.get('title')==chart.get('title')),None)
+    return chart['note']+(' See: '+chart['title']+'.' if index is None else ''),index
+
+
+def type_pair_html(pair,charts=None):
     """Spec027 type-pair measures and chart; absent in legacy artifacts."""
     if 'type_pair' not in pair:return ''
     from .type_pairs import tables,notes
     chart=pair['type_pair'].get('chart')
-    return '<div class="type-pair"><h4>Type-pair measures</h4><p class="type-pair-note">Wide tables and charts scroll sideways inside their frame.</p>'+''.join(html_table(t) for t in tables(pair))+''.join('<p class="type-pair-note">'+escape(n)+'</p>' for n in notes(pair))+(svg_chart(chart) if chart and chart['kind']!='target_chart' else '<p>'+escape(chart['note'])+'</p>' if chart else '')+'</div>'
+    return '<div class="type-pair"><h4>Type-pair measures</h4><p class="type-pair-note">Wide tables and charts scroll sideways inside their frame.</p>'+''.join(html_table(t) for t in tables(pair))+''.join('<p class="type-pair-note">'+escape(n)+'</p>' for n in notes(pair))+(svg_chart(chart) if chart and chart['kind']!='target_chart' else type_pair_reference_html(chart,charts) if chart else '')+'</div>'
 
 
-def type_pair_markdown(pair):
+def type_pair_reference_html(chart,charts):
+    note,index=target_chart_link(chart,charts)
+    return '<p>'+escape(note)+('' if index is None else ' <a href="#target-chart-'+str(index)+'">Go to '+escape(chart['title'])+'</a>.')+'</p>'
+
+
+def type_pair_markdown(pair,charts=None):
     if 'type_pair' not in pair:return ''
     from .type_pairs import tables,notes
     chart=pair['type_pair'].get('chart')
-    return '\n#### Type-pair measures\n\n'+'\n'.join(markdown_table(t) for t in tables(pair))+'\n'+''.join(md_text(n)+'\n\n' for n in notes(pair))+(svg_chart(chart) if chart and chart['kind']!='target_chart' else md_text(chart['note']) if chart else '')+'\n'
+    return '\n#### Type-pair measures\n\n'+'\n'.join(markdown_table(t) for t in tables(pair))+'\n'+''.join(md_text(n)+'\n\n' for n in notes(pair))+(svg_chart(chart) if chart and chart['kind']!='target_chart' else type_pair_reference_markdown(chart,charts) if chart else '')+'\n'
+
+
+def type_pair_reference_markdown(chart,charts):
+    note,index=target_chart_link(chart,charts)
+    return md_text(note)+('' if index is None else ' [Go to '+md_text(chart['title'])+'](#target-chart-'+str(index)+').')
 
 
 def render_markdown(result: ProfilingResult,report=None):
@@ -398,9 +414,9 @@ def render_markdown(result: ProfilingResult,report=None):
         ta=d.get('target_analysis')
         lines += [md_text(ta['reason']+' '+ta['grouping_policy']+' '+ta['warning'] if ta else 'Target detail unavailable in legacy artifact.'),'']
         lines += [markdown_table(t) for t in target_tables(d)]
-        if ta:lines += [svg_chart(ch) for ch in ta['charts']]
+        if ta:lines += ['<a id="target-chart-'+str(i)+'"></a>\n'+svg_chart(ch) for i,ch in enumerate(ta['charts'])]
         for pair in d['bivariate']:
-            lines += ['### '+md_text(pair['left'])+' × '+md_text(pair['right']),'',md_text(pair['method']+' · '+pair['semantics']),'','\n'.join(markdown_table(t) for t in structured_tables('Relationship statistics',pair['statistics'])),type_pair_markdown(pair),md_text(pair['uncertainty']),'']
+            lines += ['### '+md_text(pair['left'])+' × '+md_text(pair['right']),'',md_text(pair['method']+' · '+pair['semantics']),'','\n'.join(markdown_table(t) for t in structured_tables('Relationship statistics',pair['statistics'])),type_pair_markdown(pair,ta['charts'] if ta else None),md_text(pair['uncertainty']),'']
         lines += ['<details id="report-exclusions"><summary>Ranking and exclusions</summary>','',readable_md(d['selection']),'</details>','']
         if 'quality' in d:
             lines += ['<details><summary>Quality rules and screening coverage</summary>','',readable_md(d['quality']),'</details>','']

@@ -423,3 +423,52 @@ def test_heat_table_is_an_html_table_with_fixed_size_text_and_scroll_cue(make_pr
     html = type_pair_html(d['bivariate'][0])
     assert '<table' in html and 'data-kind="heat_table"' in html and '<svg' not in html
     assert 'scroll sideways' in html
+
+
+# ---------------------------------------------------------------- reviewer-3 visual pass (5837638868)
+
+def test_null_headline_shows_its_reason_not_undefined(make_profile):
+    from fathom.finding_view import finding_tree
+    from fathom.type_pairs import tables
+    d = make_profile('g,t\na,x\nb,y\nc,z\n', {'target': 't', 'columns': {'g': {'type': 'categorical'}, 't': {'type': 'categorical'}}}).document
+    pair = d['bivariate'][0]
+    assert pair['type_pair']['wording']['magnitude'] is None
+    assert 'bias-corrected' in pair['type_pair']['wording']['magnitude_status']
+    f = next(f for f in d['findings'] if f.get('rule') == 'type_pair_association')
+    text = str(tables(pair)) + str(finding_tree(f, d)) + render_markdown(ProfilingResult(d))
+    assert 'undefined' not in text.replace('Undefined', '')
+    assert 'headline magnitude not estimable' in text
+
+
+def test_disagreement_note_appears_in_measure_table(make_profile):
+    from fathom.type_pairs import tables
+    rows = [[i, round(math.exp(i / 3), 6)] for i in range(1, 41)]
+    pair = make_profile(csv_text(['x', 'y'], rows), {'target': 'y'}).document['bivariate'][0]
+    assert any('rank and linear' in r[0] for r in tables(pair)[0]['rows'])
+
+
+def test_target_chart_reference_links_to_the_chart(numeric_target):
+    import re
+    html = render_html(numeric_target)
+    links = set(re.findall(r'<a href="#(target-chart-\d+)"', html))
+    assert links and all(f'id="{a}"' in html for a in links)
+
+
+def test_binary_level_labels_are_not_rounded(make_profile):
+    from fathom.type_pairs import tables
+    rows = [['-0.0093456', '1'], ['0.0481234', '0'], ['-0.0093456', '0'], ['0.0481234', '1']]
+    pair = make_profile(csv_text(['v', 'flag'], rows), {'target': 'flag'}).document['bivariate'][0]
+    text = str(tables(pair))
+    assert '-0.0093456' in text and '0.0481234' in text
+
+
+def test_box_chart_values_match_per_group_table(make_profile):
+    import re
+    from fathom.renderers import type_pair_html
+    u = lcg(5)
+    rows = [['hit' if i % 3 else 'miss', round(next(u) * 80.0 + 0.0037 * i, 4)] for i in range(90)]
+    pair = pair_for(make_profile(csv_text(['outcome', 'score'], rows), {'target': 'outcome'}).document, 'score')
+    html = type_pair_html(pair)
+    for g in pair['type_pair']['groups']:
+        from fathom.presentation import formatted
+        assert html.count('>' + formatted(g['q3']) + '<') >= 2, g

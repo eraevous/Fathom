@@ -14,7 +14,7 @@ def shot(page, element, path):
 
 with sync_playwright() as p:
     browser = p.chromium.launch(executable_path=os.environ.get('CHROME') or shutil.which('chromium') or shutil.which('google-chrome'), args=['--no-sandbox'], ignore_default_args=['--hide-scrollbars'])  # show scrollbars as real browsers do
-    for report in ['numeric', 'categorical', 'capped']:
+    for report in ['numeric', 'categorical', 'capped', 'edge']:
         for theme in ['light', 'dark']:
             for width in [1280, 390]:
                 page = browser.new_page(viewport={'width': width, 'height': 900}, color_scheme=theme)
@@ -29,7 +29,7 @@ with sync_playwright() as p:
                     a = articles.nth(i); title = a.locator('h3').inner_text().replace(' × ', '-x-').replace(' ', '_')
                     shot(page, a, str(out / f'{report}-{title}-{theme}-{width}.png'))
                 # Target charts the type-pair layer references (scatter for numeric×numeric, grouped box for category×numeric).
-                figures = page.locator('#report-relations > figure.target-chart')
+                figures = page.locator('#report-relations > div[id^="target-chart-"] > figure.target-chart')
                 checks[key]['target_charts'] = figures.count()
                 for i in range(figures.count()):
                     fig = figures.nth(i); title = fig.locator('.chart-title').inner_text().replace('Target: ', '').replace(' × ', '-x-').replace(' ', '_')

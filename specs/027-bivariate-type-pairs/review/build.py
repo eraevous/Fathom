@@ -1,5 +1,5 @@
 """Build the synthetic type-pair reports reviewed here (same generators as tests/test_type_pairs.py)."""
-import sys, tempfile
+import math, sys, tempfile
 from pathlib import Path
 root = Path(__file__).resolve().parents[3]
 sys.path[:0] = [str(root / 'src'), str(root / 'tests')]
@@ -32,9 +32,18 @@ def capped():
     return csv_text(['many', 'target'], rows), {'target': 'target', 'pair_budget': 5}
 
 
+def edge():
+    """Reviewer-3 cases: 56-character numeric target, monotone pair, category pair, few-case pairs."""
+    long = 'quarterly_net_revenue_after_returns_and_regional_rebates'
+    rows = []
+    for i in range(1, 41):
+        rows.append([i, round(math.exp(i / 3), 6), 'abc'[i % 3], ('-0.0093456' if i % 2 else '0.0481234') if i <= 2 else ''])
+    return csv_text(['step', long, 'tier', 'sparse_flag'], rows), {'target': long, 'pair_budget': 20}
+
+
 def build(out):
     out.mkdir(parents=True, exist_ok=True)
-    for name, make in [('numeric', numeric), ('categorical', categorical), ('capped', capped)]:
+    for name, make in [('numeric', numeric), ('categorical', categorical), ('capped', capped), ('edge', edge)]:
         text, cfg = make()
         src = Path(tempfile.mkdtemp()) / (name + '.csv'); src.write_text(text, encoding='utf-8')
         (out / (name + '.html')).write_text(render_html(profile(CSVConnector(src).load(), cfg)), encoding='utf-8')

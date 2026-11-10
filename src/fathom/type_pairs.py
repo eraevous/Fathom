@@ -147,6 +147,11 @@ def label(value):
     return formatted(value) if isinstance(value, (int, float)) and not isinstance(value, bool) else str(value)
 
 
+def level_text(value):
+    """Level labels are identities, not measurements: never rounded (two values 0.0093 apart must stay distinct)."""
+    return str(plain(value)) if isinstance(value, float) else str(value)
+
+
 def role_of(column, values):
     levels = sorted(set(values))
     if len(levels) == 2:
@@ -200,15 +205,15 @@ def full_table(cases, rl=None, cl=None):
 
 
 def heat_chart(pair, table, n, total_rows):
-    rows = [label(v) for v in table['row_levels']] + ([f"other {table['other_row_levels']} levels"] if table['other_row_levels'] else [])
-    cols = [label(v) for v in table['column_levels']] + ([f"other {table['other_column_levels']} levels"] if table['other_column_levels'] else [])
+    rows = [level_text(v) for v in table['row_levels']] + ([f"other {table['other_row_levels']} levels"] if table['other_row_levels'] else [])
+    cols = [level_text(v) for v in table['column_levels']] + ([f"other {table['other_column_levels']} levels"] if table['other_column_levels'] else [])
     return {'kind': 'heat_table', 'title': 'Type pair: ' + pair['left'] + ' × ' + pair['right'], 'x_label': pair['right'],
             'y_label': pair['left'], 'row_labels': rows, 'column_labels': cols, 'counts': table['counts'], 'n': n,
             'total_rows': total_rows, 'note': 'Counts of complete cases; the bar in each cell is that cell’s share of its row. Descriptive, not causal.'}
 
 
 def box_chart(pair, groups, n, total_rows, group_name, value_name):
-    data = [{'label': label(level), 'n': len(values), 'excluded_nonpositive': 0,
+    data = [{'label': level_text(level), 'n': len(values), 'excluded_nonpositive': 0,
              'box': {k: geometry_percentile(values, p) for k, p in [('min', 0), ('q1', 25), ('median', 50), ('q3', 75), ('max', 100)]}}
             for level, values in groups]
     return {'kind': 'group_box', 'title': 'Type pair: ' + value_name + ' by ' + group_name, 'x_label': value_name,
@@ -296,6 +301,10 @@ def describe(pair, rows, columns):
             m[key + '_status'] = STATUS_FALLBACK.get(key, 'not estimable from these complete cases')
     out['wording'] = {'magnitude': coefficient(magnitude) if magnitude is not None else None,
                       'near_zero': bool(magnitude is not None and magnitude < NEAR_ZERO), 'rule': WORDING_RULE}
+    if magnitude is None:
+        reasons = [m.get(k + '_status') for k in HEADLINE_KEYS[kind] if m.get(k + '_status')]
+        out['wording']['magnitude_status'] = ('not estimable: fewer than three complete cases' if kind == 'numeric×numeric' and n < 3
+                                              else reasons[0] if reasons else 'not estimable from these complete cases')
     return out
 
 
@@ -309,7 +318,7 @@ def enrich_pairs(rows, columns, pairs):
 # ------------------------------------------------------------------ wording
 
 def q(value):
-    return "'" + label(value) + "'"
+    return "'" + level_text(value) + "'"
 
 
 def f3(value):
@@ -369,6 +378,8 @@ def message(pair, tp):
     return text + ' Descriptive, not causal.'
 
 
+HEADLINE_KEYS = {'numeric×numeric': ('spearman_rho', 'pearson_r'), 'category×numeric': ('eta_squared_h',),
+                 'binary×numeric': ('rank_biserial',), 'category×category': ('cramers_v_bias_corrected',), 'binary×binary': ('phi',)}
 STATUS_FALLBACK = {'rank_linear_gap': 'not estimable: Spearman rho or Pearson r is undefined',
                    'pearson_r': 'undefined: the screening Pearson r is not available',
                    'eta': 'undefined: the correlation ratio is not available (constant values)',
@@ -395,15 +406,22 @@ def measure_lines(tp):
     if m.get('odds_ratio_correction', 'none') != 'none':
         lines.append('odds ratio correction: ' + m['odds_ratio_correction'])
     if m.get('disagreement'):
-        lines.append('rank and linear measures disagree')
+        lines.append('rank and linear measures: disagree (see the disagreement rule)')
     return lines
+
+
+def headline_text(tp):
+    w = tp['wording']
+    if w['magnitude'] is None:
+        return 'headline magnitude not estimable (' + w.get('magnitude_status', 'no reason stored') + ')'
+    return 'headline magnitude ' + formatted(w['magnitude'])
 
 
 def tree(f, tp):
     names = f.get('columns', [])
     children = measure_lines(tp) + ['group ' + q(g['value']) + ': n ' + formatted(g['n']) + ', median ' + label(g['median'])
                                     for g in tp.get('groups', [])] + ['complete cases: ' + formatted(tp['n'])]
-    children.append('magnitude near zero: no notable association (wording rule)' if tp['wording']['near_zero'] else 'headline magnitude: ' + f3(tp['wording']['magnitude']))
+    children.append('magnitude near zero: no notable association (wording rule)' if tp['wording']['near_zero'] else headline_text(tp))
     children.append('descriptive, not causal')
     return {'text': tp['pair_type'] + ': ' + ' × '.join(names), 'children': children}
 
@@ -413,12 +431,12 @@ def tables(pair):
     tp = pair['type_pair']
     out = [{'caption': 'Type pair: ' + tp['pair_type'] + ' — descriptive, complete n ' + formatted(tp['n']),
             'headers': ['Measure', 'Value'], 'rows': [line.split(': ', 1) for line in measure_lines(tp) if ': ' in line]
-            + [['Roles', '; '.join(r['column'] + ': ' + r['role'] + (' (' + ', '.join(label(v) for v in r['levels']) + ')' if 'levels' in r else '') for r in tp['roles'])],
-               ['Wording', 'near zero (no notable association)' if tp['wording']['near_zero'] else 'headline magnitude ' + f3(tp['wording']['magnitude'])]],
+            + [['Roles', '; '.join(r['column'] + ': ' + r['role'] + (' (' + ', '.join(level_text(v) for v in r['levels']) + ')' if 'levels' in r else '') for r in tp['roles'])],
+               ['Wording', 'near zero (no notable association)' if tp['wording']['near_zero'] else headline_text(tp)]],
             'numeric': []}]
     if 'groups' in tp:
         out.append({'caption': 'Per-group summary (complete cases)', 'headers': ['Group', 'n', 'Median', 'Q1', 'Q3', 'IQR', 'Mean'],
-                    'rows': [[label(g['value'])] + [formatted(g[k]) for k in ('n', 'median', 'q1', 'q3', 'iqr', 'mean')] for g in tp['groups']],
+                    'rows': [[level_text(g['value'])] + [formatted(g[k]) for k in ('n', 'median', 'q1', 'q3', 'iqr', 'mean')] for g in tp['groups']],
                     'numeric': [1, 2, 3, 4, 5, 6]})
     return out
 
@@ -523,7 +541,8 @@ def validate_type_pair(tp):
         _fail('binary levels')
     w = tp.get('wording')
     if (not isinstance(w, dict) or type(w.get('near_zero')) is not bool or not isinstance(w.get('rule'), str)
-            or not (w.get('magnitude') is None or num(w['magnitude']))):
+            or not (w.get('magnitude') is None or num(w['magnitude']))
+            or (w.get('magnitude') is None and not isinstance(w.get('magnitude_status'), str))):
         _fail('wording')
     grouped = kind in ('category×numeric', 'binary×numeric')
     if grouped != ('groups' in tp):

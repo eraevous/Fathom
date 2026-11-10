@@ -63,6 +63,38 @@
     "table_overflow": 2,
     "target_charts": 3
   },
+  "edge-dark-1280": {
+    "articles": 3,
+    "page_overflow": false,
+    "requests": [],
+    "svg_overflow": 0,
+    "table_overflow": 0,
+    "target_charts": 3
+  },
+  "edge-dark-390": {
+    "articles": 3,
+    "page_overflow": false,
+    "requests": [],
+    "svg_overflow": 0,
+    "table_overflow": 1,
+    "target_charts": 3
+  },
+  "edge-light-1280": {
+    "articles": 3,
+    "page_overflow": false,
+    "requests": [],
+    "svg_overflow": 0,
+    "table_overflow": 0,
+    "target_charts": 3
+  },
+  "edge-light-390": {
+    "articles": 3,
+    "page_overflow": false,
+    "requests": [],
+    "svg_overflow": 0,
+    "table_overflow": 1,
+    "target_charts": 3
+  },
   "numeric-dark-1280": {
     "articles": 6,
     "page_overflow": false,
