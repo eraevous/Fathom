@@ -532,3 +532,119 @@ def test_groups_k_must_match_groups(numeric_target, tmp_path):
     path = _saved(numeric_target, tmp_path, lambda d: _first(d, 'category×numeric')['measures'].update(groups_k=99))
     with pytest.raises(ValueError):
         ProfilingResult.load(path)
+
+
+# ---------------------------------------------------------------- execution review codex:rev-2 (5838328411)
+
+def _mutated_load(result, tmp_path, mutate):
+    return _saved(result, tmp_path, mutate)
+
+
+def test_missing_magnitude_key_rejected_but_explicit_null_with_reason_renders(numeric_target, tmp_path):
+    def drop(d):
+        w = _first(d, 'numeric×numeric')['wording']
+        del w['magnitude']
+        w.update(near_zero=False, magnitude_status='not estimable: synthetic missing value')
+    with pytest.raises(ValueError):
+        ProfilingResult.load(_saved(numeric_target, tmp_path, drop))
+
+    def null(d):
+        for tp in [_first(d, 'numeric×numeric')] + [f['evidence'][0]['value'] for f in d['findings']
+                                                    if f.get('rule') == 'type_pair_association' and f['evidence'][0]['value']['pair_type'] == 'numeric×numeric']:
+            tp['wording'].update(magnitude=None, near_zero=False, magnitude_status='not estimable: synthetic explicit null')
+    loaded = ProfilingResult.load(_saved(numeric_target, tmp_path, null))
+    assert 'synthetic explicit null' in render_html(loaded) and 'synthetic explicit null' in render_markdown(loaded)
+
+
+@pytest.mark.parametrize('mutate', [
+    lambda c: c.update(x_scale='log10', data=[{**c['data'][0], 'box': {'min': -2, 'q1': -1, 'median': 0, 'q3': 1, 'max': 2}}]),
+    lambda c: c.update(plotted='oops'),
+    lambda c: c.update(omitted_points=-1),
+    lambda c: c.update(x_domain=[0, 1]),
+    lambda c: c.update(values_format='raw-ish'),
+    lambda c: c['data'][0].update(extra='?'),
+])
+def test_grouped_box_renderer_fields_validated(table_target, make_profile, tmp_path, mutate):
+    u = lcg(5)
+    rows = [['hit' if i % 3 else 'miss', round(next(u) * 80.0 + 1, 4)] for i in range(60)]
+    p = make_profile(csv_text(['outcome', 'score'], rows), {'target': 'outcome'})
+    with pytest.raises(ValueError):
+        ProfilingResult.load(_saved(p, tmp_path, lambda d: mutate(pair_for(d, 'score')['type_pair']['chart'])))
+
+
+def _small_profiles(make_profile):
+    u = lcg(9)
+    num = [[round(next(u) * 10, 3), 'ab'[i % 2], 'pqr'[i % 3], round(next(u) * 10 + (i % 3), 3)] for i in range(30)]
+    cat = [['yes' if i % 3 == 0 else 'no', 'abc'[i % 3], 'hit' if (i * 7) % 5 < 2 else 'miss', round(next(u) * 5, 3)] for i in range(30)]
+    return [make_profile(csv_text(['x', 'arm', 'grp', 'y'], num), {'target': 'y', 'pair_budget': 20}),
+            make_profile(csv_text(['exposed', 'tier', 'outcome', 'score'], cat), {'target': 'outcome', 'pair_budget': 20})]
+
+
+def _paths(value, prefix=()):
+    """Every container key and the first list element: enough to touch each field the renderers read."""
+    yield prefix
+    if isinstance(value, dict):
+        for k in value:
+            yield from _paths(value[k], prefix + (k,))
+    elif isinstance(value, list) and value:
+        yield from _paths(value[0], prefix + (0,))
+
+
+MUTATIONS = [('delete', None), ('null', None), ('text', 'oops'), ('negative', -1), ('float', 2.5),
+             ('bool', True), ('list', []), ('dict', {})]
+
+
+def test_fuzz_type_pair_fields_load_rejects_or_both_renderers_succeed(make_profile):
+    import copy
+    from fathom.finding_view import finding_tree, html_tree, markdown_tree
+    from fathom.renderers import type_pair_html, type_pair_markdown
+    from fathom.models import validate_document
+    checked = accepted = 0
+    for result in _small_profiles(make_profile):
+        base = json.loads(result.to_json())
+        targets = [('bivariate', i, 'type_pair') for i, p in enumerate(base['bivariate']) if 'type_pair' in p]
+        targets += [('findings', i, 'evidence', 0, 'value') for i, f in enumerate(base['findings']) if f.get('rule') == 'type_pair_association']
+        for root in targets:
+            node = base
+            for k in root:
+                node = node[k]
+            for path in _paths(node):
+                if not path:
+                    continue
+                for name, value in MUTATIONS:
+                    if name == 'delete' and isinstance(path[-1], int):
+                        continue
+                    doc = copy.deepcopy(base)
+                    parent = doc
+                    for k in root + path[:-1]:
+                        parent = parent[k]
+                    if name == 'delete':
+                        del parent[path[-1]]
+                    else:
+                        parent[path[-1]] = copy.deepcopy(value)
+                    checked += 1
+                    try:
+                        validate_document(json.loads(canonical_json(doc)))
+                    except ValueError:
+                        continue
+                    accepted += 1
+                    try:
+                        # Every path that reads a type-pair block, for every accepted mutation ...
+                        charts = doc['target_analysis']['charts']
+                        for pair in doc['bivariate']:
+                            if 'type_pair' in pair:
+                                type_pair_html(pair, charts)
+                                type_pair_markdown(pair, charts)
+                        for f in doc['findings']:
+                            if f.get('rule') == 'type_pair_association':
+                                tree = finding_tree(f, doc)
+                                html_tree(tree, f['columns'])
+                                markdown_tree(tree, f['columns'])
+                        # ... and both full reports for a deterministic sample (full renders cost ~0.2 s each).
+                        if accepted % 10 == 1:
+                            r = ProfilingResult(doc)
+                            render_html(r)
+                            render_markdown(r)
+                    except Exception as error:  # noqa: BLE001 - any crash after a successful load is the defect
+                        raise AssertionError(f'{root + path} {name}: loaded but render failed: {error!r}')
+    assert checked > 1000 and accepted

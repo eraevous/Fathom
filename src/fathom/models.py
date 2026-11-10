@@ -198,6 +198,12 @@ def validate_document(doc: dict) -> None:
             if isinstance(pair,dict) and 'type_pair' in pair:
                 from .type_pairs import validate_type_pair
                 validate_type_pair(pair['type_pair'])
+        for finding in doc['findings']:
+            if finding.get('rule')=='type_pair_association':
+                # The finding tree renders this evidence copy, so it meets the same contract (without the chart).
+                from .type_pairs import validate_type_pair
+                value=finding['evidence'][0].get('value') if finding['evidence'] and isinstance(finding['evidence'][0],dict) else None
+                validate_type_pair(value,evidence=True)
         if 'target_analysis' in doc:
             ta=doc['target_analysis']
             if not isinstance(ta,dict) or not isinstance(ta.get('status'),str) or ta.get('status') not in {'active','skipped'} or any(not isinstance(ta.get(k),str) for k in ('reason','warning','grouping_policy')):raise ValueError('invalid target status')

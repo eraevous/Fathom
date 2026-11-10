@@ -484,97 +484,151 @@ def _fail(what):
     raise ValueError('invalid type pair ' + what)
 
 
+# Closed field sets: every field the type-pair tables, notes, finding tree, heat table and shared grouped-box
+# renderer read is listed here with its type; anything else is rejected, so a validating artifact always renders.
+TOP_KEYS = {'pair_type', 'roles', 'binary_rule', 'n', 'basis', 'measures', 'wording', 'chart', 'groups', 'table'}
+ROLE_KEYS = {'column', 'role', 'levels'}
+WORDING_KEYS = {'magnitude', 'near_zero', 'rule', 'magnitude_status'}
+GROUP_KEYS = {'value', 'n', 'median', 'q1', 'q3', 'iqr', 'mean'}
+TABLE_KEYS = {'row_column', 'column_column', 'row_levels', 'column_levels', 'counts', 'other_row_levels',
+              'other_column_levels', 'shown_cap', 'basis'}
+BOX_KEYS = ('min', 'q1', 'median', 'q3', 'max')
+CHART_KEYS = {'target_chart': ({'kind', 'title', 'note'}, set()),
+              'group_box': ({'kind', 'title', 'x_label', 'y_label', 'x_scale', 'data', 'n', 'total_rows', 'note'},
+                            {'plotted', 'omitted_nonpositive', 'omitted_points', 'values_format'}),
+              'heat_table': ({'kind', 'title', 'x_label', 'y_label', 'row_labels', 'column_labels', 'counts', 'n', 'total_rows', 'note'}, set())}
+EXTRA_MEASURES = {'binary×numeric': {'index_level', 'reference_level'}}
+
+
+def _count(v): return type(v) is int and v >= 0
+def _num(v): return type(v) in (int, float) and math.isfinite(v)
+def _level(v): return type(v) in (int, float, str) and (type(v) is not float or math.isfinite(v))
+def _text(v): return isinstance(v, str)
+
+
+def _keys(value, required, optional=frozenset(), what='fields'):
+    if not isinstance(value, dict) or not required <= value.keys() or not value.keys() <= required | optional:
+        _fail(what)
+
+
 def _check_chart(chart, kind):
-    def text(*keys): return all(isinstance(chart.get(k), str) for k in keys)
-    def count(v): return type(v) is int and v >= 0
-    def num(v): return type(v) in (int, float) and math.isfinite(v)
-    if not isinstance(chart, dict) or chart.get('kind') not in CHART_KINDS[kind]:
+    if not isinstance(chart, dict) or not isinstance(chart.get('kind'), str) or chart['kind'] not in CHART_KINDS[kind]:
         _fail('chart kind')
+    required, optional = CHART_KEYS[chart['kind']]
+    _keys(chart, required, optional, 'chart fields')
+    if not all(_text(chart[k]) for k in required & {'title', 'note', 'x_label', 'y_label'}):
+        _fail('chart text')
     if chart['kind'] == 'target_chart':
-        if not text('title', 'note'):
-            _fail('target chart reference')
         return
-    if not text('title', 'x_label', 'y_label', 'note') or not count(chart.get('n')) or not count(chart.get('total_rows')) or chart['n'] > chart['total_rows']:
-        _fail('chart fields')
+    if not _count(chart['n']) or not _count(chart['total_rows']) or chart['n'] > chart['total_rows']:
+        _fail('chart counts')
     if chart['kind'] == 'group_box':
-        data = chart.get('data')
-        if chart.get('x_scale') not in {'linear', 'log10'} or not isinstance(data, list) or not 1 <= len(data) <= 20:
+        if chart['x_scale'] not in ('linear', 'log10') or not isinstance(chart['data'], list) or not 1 <= len(chart['data']) <= 20:
             _fail('grouped box')
-        for row in data:
-            box = row.get('box') if isinstance(row, dict) else None
-            if (not isinstance(row, dict) or not isinstance(row.get('label'), str) or not count(row.get('n')) or not count(row.get('excluded_nonpositive'))
-                    or not isinstance(box, dict) or any(not num(box.get(k)) for k in ('min', 'q1', 'median', 'q3', 'max'))
-                    or [box[k] for k in ('min', 'q1', 'median', 'q3', 'max')] != sorted(box[k] for k in ('min', 'q1', 'median', 'q3', 'max'))):
+        if any(k in chart and (not _count(chart[k]) or chart[k] > chart['n']) for k in ('plotted', 'omitted_nonpositive', 'omitted_points')):
+            _fail('grouped box coverage counts')
+        if 'values_format' in chart and chart['values_format'] != 'display':
+            _fail('grouped box values format')
+        for row in chart['data']:
+            _keys(row, {'label', 'n', 'excluded_nonpositive', 'box'}, what='grouped box row')
+            box = row['box']
+            if not _text(row['label']) or not _count(row['n']) or not _count(row['excluded_nonpositive']):
                 _fail('grouped box row')
+            _keys(box, set(BOX_KEYS), what='grouped box five-number summary')
+            values = [box[k] for k in BOX_KEYS]
+            if not all(_num(v) for v in values) or values != sorted(values):
+                _fail('grouped box five-number summary')
+            if chart['x_scale'] == 'log10' and values[0] <= 0:
+                _fail('grouped box log scale with nonpositive values')
         return
-    rows, cols, counts = chart.get('row_labels'), chart.get('column_labels'), chart.get('counts')
-    if (not isinstance(rows, list) or not isinstance(cols, list) or not all(isinstance(v, str) for v in rows + cols)
+    rows, cols, counts = chart['row_labels'], chart['column_labels'], chart['counts']
+    if (not isinstance(rows, list) or not isinstance(cols, list) or not all(_text(v) for v in rows + cols)
             or not 1 <= len(rows) <= CAP + 1 or not 1 <= len(cols) <= CAP + 1 or not isinstance(counts, list) or len(counts) != len(rows)
-            or any(not isinstance(r, list) or len(r) != len(cols) or not all(count(v) for v in r) for r in counts)):
+            or any(not isinstance(r, list) or len(r) != len(cols) or not all(_count(v) for v in r) for r in counts)):
         _fail('heat table')
 
 
+def validate_type_pair(tp, evidence=False):
+    """Full closed shape, so a saved artifact that validates can always be rendered. `evidence` checks the copy
+    stored in a type_pair_association finding (the same block without its chart)."""
+    try:
+        _validate(tp, evidence)
+    except ValueError:
+        raise
+    except (TypeError, KeyError, IndexError, AttributeError) as error:
+        raise ValueError('invalid type pair shape: ' + type(error).__name__) from None
 
-def validate_type_pair(tp):
-    """Full per-kind shape, so a saved artifact that validates can always be rendered."""
-    def count(v): return type(v) is int and v >= 0
-    def num(v): return type(v) in (int, float) and math.isfinite(v)
-    def level(v): return type(v) in (int, float, str)
-    if not isinstance(tp, dict) or tp.get('pair_type') not in PAIR_TYPES or not count(tp.get('n')):
-        _fail('kind or n')
+
+def _validate(tp, evidence):
+    if not isinstance(tp, dict) or not isinstance(tp.get('pair_type'), str) or tp['pair_type'] not in PAIR_TYPES:
+        _fail('kind')
     kind = tp['pair_type']
-    if any(not isinstance(tp.get(k), str) for k in ('binary_rule', 'basis')):
-        _fail('disclosures')
-    roles = tp.get('roles')
-    if (not isinstance(roles, list) or len(roles) != 2
-            or any(not isinstance(r, dict) or r.get('role') not in {'numeric', 'category', 'binary'} or not isinstance(r.get('column'), str) for r in roles)
-            or any((r['role'] == 'binary') != ('levels' in r) for r in roles)
-            or any(r['role'] == 'binary' and (not isinstance(r['levels'], list) or len(r['levels']) != 2 or not all(level(v) for v in r['levels'])) for r in roles)):
+    grouped, tabled = kind in ('category×numeric', 'binary×numeric'), kind in ('category×category', 'binary×binary')
+    required = {'pair_type', 'roles', 'binary_rule', 'n', 'basis', 'measures', 'wording'} | ({'groups'} if grouped else set()) \
+        | ({'table'} if tabled else set()) | (set() if evidence else {'chart'})
+    _keys(tp, required, what='top-level fields')
+    if not _count(tp['n']) or not _text(tp['binary_rule']) or not _text(tp['basis']):
+        _fail('n or disclosures')
+    roles = tp['roles']
+    if not isinstance(roles, list) or len(roles) != 2:
         _fail('roles')
+    for r in roles:
+        _keys(r, {'column', 'role'}, {'levels'}, 'role fields')
+        if not _text(r['column']) or r['role'] not in ('numeric', 'category', 'binary') or (r['role'] == 'binary') != ('levels' in r):
+            _fail('roles')
+        if 'levels' in r and (not isinstance(r['levels'], list) or len(r['levels']) != 2 or not all(_level(v) for v in r['levels'])):
+            _fail('binary role levels')
     if pair_type(*roles) != kind:
         _fail('kind does not match roles')
-    m = tp.get('measures')
-    if not isinstance(m, dict):
-        _fail('measures')
-    for key in NUMBER_MEASURES[kind]:
-        if key not in m or not (m[key] is None or num(m[key])):
+    m = tp['measures']
+    numbers, others = NUMBER_MEASURES[kind], OTHER_MEASURES[kind]
+    allowed = set(numbers) | {k + '_status' for k in numbers} | set(others) | EXTRA_MEASURES.get(kind, set())
+    _keys(m, set(numbers) | set(others) | EXTRA_MEASURES.get(kind, set()), allowed - set(numbers) - set(others), 'measure fields')
+    for key in numbers:
+        # Presence is required above; null is allowed only with a stated reason.
+        if not (m[key] is None or _num(m[key])):
             _fail('measure ' + key)
-        if m[key] is None and not isinstance(m.get(key + '_status'), str):
+        if key + '_status' in m and not _text(m[key + '_status']):
+            _fail('measure ' + key + ' status')
+        if m[key] is None and key + '_status' not in m:
             _fail('measure ' + key + ' is null without a status reason')
-    for key, typ in OTHER_MEASURES[kind].items():
-        if type(m.get(key)) is not typ:
+    for key, typ in others.items():
+        if type(m[key]) is not typ:
             _fail('measure ' + key)
-    if kind == 'binary×numeric' and (not level(m.get('index_level')) or not level(m.get('reference_level'))):
-        _fail('binary levels')
+    for key in ('groups_k', 'rows_k', 'columns_k'):
+        if key in m and m[key] < 1:
+            _fail('measure ' + key)
+    binary = [r for r in roles if r['role'] == 'binary']
+    if kind == 'binary×numeric' and (m['index_level'] != binary[0]['levels'][1] or m['reference_level'] != binary[0]['levels'][0]):
+        _fail('binary levels do not follow the role\'s sort order (index = second level, reference = first)')
     if kind == 'binary×binary' and (m['index_levels'] != [r['levels'][1] for r in roles]
                                     or m['reference_levels'] != [r['levels'][0] for r in roles]):
         _fail('binary levels do not follow the roles\' sort order (index = second level, reference = first)')
-    w = tp.get('wording')
-    if (not isinstance(w, dict) or type(w.get('near_zero')) is not bool or not isinstance(w.get('rule'), str)
-            or not (w.get('magnitude') is None or num(w['magnitude']))
-            or (w.get('magnitude') is None and not isinstance(w.get('magnitude_status'), str))):
+    w = tp['wording']
+    _keys(w, {'magnitude', 'near_zero', 'rule'}, {'magnitude_status'}, 'wording fields')
+    if (type(w['near_zero']) is not bool or not _text(w['rule']) or not (w['magnitude'] is None or _num(w['magnitude']))
+            or ('magnitude_status' in w and not _text(w['magnitude_status']))
+            or (w['magnitude'] is None and 'magnitude_status' not in w)):
         _fail('wording')
-    grouped = kind in ('category×numeric', 'binary×numeric')
-    if grouped != ('groups' in tp):
-        _fail('groups presence')
-    if kind == 'category×numeric' and isinstance(tp.get('groups'), list) and m['groups_k'] != len(tp['groups']):
-        _fail('groups_k does not match the stored groups')
-    if grouped and (not isinstance(tp['groups'], list) or not 1 <= len(tp['groups']) <= 20
-                    or any(not isinstance(g, dict) or not level(g.get('value')) or not count(g.get('n'))
-                           or any(not num(g.get(k)) for k in ('median', 'q1', 'q3', 'iqr', 'mean')) for g in tp['groups'])):
-        _fail('groups')
-    tabled = kind in ('category×category', 'binary×binary')
-    if tabled != ('table' in tp):
-        _fail('table presence')
+    if grouped:
+        groups = tp['groups']
+        if not isinstance(groups, list) or not 1 <= len(groups) <= 20:
+            _fail('groups')
+        for g in groups:
+            _keys(g, GROUP_KEYS, what='group fields')
+            if not _level(g['value']) or not _count(g['n']) or any(not _num(g[k]) for k in ('median', 'q1', 'q3', 'iqr', 'mean')):
+                _fail('groups')
+        if kind == 'category×numeric' and m['groups_k'] != len(groups):
+            _fail('groups_k does not match the stored groups')
     if tabled:
         t = tp['table']
-        if (not isinstance(t, dict) or any(not isinstance(t.get(k), str) for k in ('row_column', 'column_column', 'basis'))
-                or any(not isinstance(t.get(k), list) or not 1 <= len(t[k]) <= CAP or not all(level(v) for v in t[k]) for k in ('row_levels', 'column_levels'))
-                or any(not count(t.get(k)) for k in ('other_row_levels', 'other_column_levels', 'shown_cap')) or not isinstance(t.get('counts'), list)):
+        _keys(t, TABLE_KEYS, what='table fields')
+        if (any(not _text(t[k]) for k in ('row_column', 'column_column', 'basis'))
+                or any(not isinstance(t[k], list) or not 1 <= len(t[k]) <= CAP or not all(_level(v) for v in t[k]) for k in ('row_levels', 'column_levels'))
+                or any(not _count(t[k]) for k in ('other_row_levels', 'other_column_levels', 'shown_cap')) or not isinstance(t['counts'], list)):
             _fail('table')
         width = len(t['column_levels']) + bool(t['other_column_levels'])
-        if len(t['counts']) != len(t['row_levels']) + bool(t['other_row_levels']) or any(not isinstance(r, list) or len(r) != width or not all(count(v) for v in r) for r in t['counts']):
+        if len(t['counts']) != len(t['row_levels']) + bool(t['other_row_levels']) or any(not isinstance(r, list) or len(r) != width or not all(_count(v) for v in r) for r in t['counts']):
             _fail('table counts')
-    if 'chart' not in tp:
-        _fail('chart missing')
-    _check_chart(tp['chart'], kind)
+    if not evidence:
+        _check_chart(tp['chart'], kind)
