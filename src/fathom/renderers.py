@@ -312,7 +312,7 @@ def render_html(result: ProfilingResult,report=None):
         if ta:out += ['<details><summary>Selected pair statistics and method details</summary>']
         for pair in d['bivariate']:
             out += ['<article><h3>'+escape(pair['left'])+' × '+escape(pair['right'])+'</h3><p>'+escape(pair['method'])+' · '+escape(pair['semantics'])+'</p>',
-                    ''.join(html_table(t) for t in structured_tables('Relationship statistics',pair['statistics'])),'<p>'+escape(pair['uncertainty'])+'</p></article>']
+                    ''.join(html_table(t) for t in structured_tables('Relationship statistics',pair['statistics'])),type_pair_html(pair),'<p>'+escape(pair['uncertainty'])+'</p></article>']
         if ta:out += ['</details>']
         out += ['<details id="report-exclusions"><summary>Ranking and exclusions</summary>',readable_html(d['selection']),'</details>']
         if 'quality' in d:
@@ -338,6 +338,21 @@ def dictionary_and_provenance_markdown(d):
     lines += ['## Provenance','','Source and context are recorded; technical details are collapsed.','','<details><summary>Provenance internals</summary>','',readable_md({'source':d['source'],'context':d['context'],'schema':d['schema'],'dependencies':d['dependencies'],'identity_basis':d.get('dataset',{}).get('basis',{})}),
               '### Working record (human declarations)','',readable_md(d['working_record']),'</details>','']
     return lines
+
+
+def type_pair_html(pair):
+    """Spec027 type-pair measures and chart; absent in legacy artifacts."""
+    if 'type_pair' not in pair:return ''
+    from .type_pairs import tables
+    chart=pair['type_pair'].get('chart')
+    return '<h4>Type-pair measures</h4>'+''.join(html_table(t) for t in tables(pair))+(svg_chart(chart) if chart and chart['kind']!='target_chart' else '<p>'+escape(chart['note'])+'</p>' if chart else '')
+
+
+def type_pair_markdown(pair):
+    if 'type_pair' not in pair:return ''
+    from .type_pairs import tables
+    chart=pair['type_pair'].get('chart')
+    return '\n#### Type-pair measures\n\n'+'\n'.join(markdown_table(t) for t in tables(pair))+'\n'+(svg_chart(chart) if chart and chart['kind']!='target_chart' else md_text(chart['note']) if chart else '')+'\n'
 
 
 def render_markdown(result: ProfilingResult,report=None):
@@ -384,7 +399,7 @@ def render_markdown(result: ProfilingResult,report=None):
         lines += [markdown_table(t) for t in target_tables(d)]
         if ta:lines += [svg_chart(ch) for ch in ta['charts']]
         for pair in d['bivariate']:
-            lines += ['### '+md_text(pair['left'])+' × '+md_text(pair['right']),'',md_text(pair['method']+' · '+pair['semantics']),'','\n'.join(markdown_table(t) for t in structured_tables('Relationship statistics',pair['statistics'])),md_text(pair['uncertainty']),'']
+            lines += ['### '+md_text(pair['left'])+' × '+md_text(pair['right']),'',md_text(pair['method']+' · '+pair['semantics']),'','\n'.join(markdown_table(t) for t in structured_tables('Relationship statistics',pair['statistics'])),type_pair_markdown(pair),md_text(pair['uncertainty']),'']
         lines += ['<details id="report-exclusions"><summary>Ranking and exclusions</summary>','',readable_md(d['selection']),'</details>','']
         if 'quality' in d:
             lines += ['<details><summary>Quality rules and screening coverage</summary>','',readable_md(d['quality']),'</details>','']

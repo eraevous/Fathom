@@ -22,6 +22,9 @@ def finding_tree(f,document=None):
     evidence=next((e.get('value') for e in f.get('evidence',[]) if isinstance(e.get('value'),dict)),{})
     names=f.get('columns',[])
     if f.get('kind')!='observation':return fallback
+    if f.get('rule')=='type_pair_association' and len(names)==2 and isinstance(evidence.get('measures'),dict) and isinstance(evidence.get('wording'),dict):
+        from .type_pairs import tree
+        return tree(f,evidence)
     if f.get('rule')=='selected_relation' and len(names)==2:
         pair=next((p for p in (document or {}).get('bivariate',[]) if [p['left'],p['right']]==names),{})
         measures=[(label,evidence[key]) for key,label in [('pearson_r','Pearson r'),('eta','Correlation ratio eta'),('cramers_v',"Cramer's V")] if isinstance(evidence.get(key),(int,float))]

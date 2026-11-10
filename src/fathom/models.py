@@ -194,6 +194,10 @@ def validate_document(doc: dict) -> None:
                 or type(selection.get("budget")) is not int or not 0 <= selection["budget"] <= 20):
             raise ValueError("invalid artifact selection")
         if len(doc['bivariate'])>selection['budget'] or len(selection['selected'])>selection['budget']:raise ValueError('pair budget exceeded')
+        for pair in doc['bivariate']:
+            if isinstance(pair,dict) and 'type_pair' in pair:
+                from .type_pairs import validate_type_pair
+                validate_type_pair(pair['type_pair'])
         if 'target_analysis' in doc:
             ta=doc['target_analysis']
             if not isinstance(ta,dict) or not isinstance(ta.get('status'),str) or ta.get('status') not in {'active','skipped'} or any(not isinstance(ta.get(k),str) for k in ('reason','warning','grouping_policy')):raise ValueError('invalid target status')
