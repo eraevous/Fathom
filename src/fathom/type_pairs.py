@@ -170,12 +170,20 @@ def pair_type(left, right):
     return 'category×category'
 
 
+GROUP_STATS = ('median', 'q1', 'q3', 'iqr', 'mean')
+
+
 def group_rows(groups):
     out = []
     for level, values in groups:
         q1, q3 = percentile(values, 25, lambda x: x), percentile(values, 75, lambda x: x)
-        out.append({'value': plain(level), 'n': len(values), 'median': percentile(values, 50), 'q1': safe(q1), 'q3': safe(q3),
-                    'iqr': safe(q3 - q1), 'mean': safe(statistics.mean(values))})
+        row = {'value': plain(level), 'n': len(values), 'median': percentile(values, 50), 'q1': safe(q1), 'q3': safe(q3),
+               'iqr': safe(q3 - q1), 'mean': safe(statistics.mean(values))}
+        for key in GROUP_STATS:
+            if row[key] is None:
+                # Finite inputs can still give an unrepresentable result (e.g. Q3 - Q1 for values near +/-1e308).
+                row[key + '_status'] = 'not representable: the result exceeds the floating-point range'
+        out.append(row)
     return out
 
 
@@ -336,8 +344,10 @@ def message(pair, tp):
         text = f"{left} × {right} ({kind}, complete n {n}): Pearson r {f3(m['pearson_r'])}; Spearman rho {f3(m['spearman_rho'])}."
         if near:
             text += quiet
-        elif m['spearman_rho'] is not None:
+        elif m['spearman_rho'] is not None and abs(m['spearman_rho']) >= NEAR_ZERO:
             text += f" Higher {left} tends to go with {'higher' if m['spearman_rho'] > 0 else 'lower'} {right} (rank order)."
+        else:
+            text += ' The linear measure is not near zero but the rank measure is near zero, so no rank direction is stated.'
         if m['disagreement']:
             text += ' Rank and linear measures disagree: a monotone but non-linear pattern, or a few influential values.'
     elif kind in ('category×numeric', 'binary×numeric'):
@@ -424,7 +434,7 @@ def headline_text(tp):
 
 def tree(f, tp):
     names = f.get('columns', [])
-    children = measure_lines(tp) + ['group ' + q(g['value']) + ': n ' + formatted(g['n']) + ', median ' + label(g['median'])
+    children = measure_lines(tp) + ['group ' + q(g['value']) + ': n ' + formatted(g['n']) + ', median ' + (g['median_status'] if g['median'] is None else label(g['median']))
                                     for g in tp.get('groups', [])] + ['complete cases: ' + formatted(tp['n'])]
     children.append('magnitude near zero: no notable association (wording rule)' if tp['wording']['near_zero'] else headline_text(tp))
     children.append('descriptive, not causal')
@@ -441,7 +451,7 @@ def tables(pair):
             'numeric': []}]
     if 'groups' in tp:
         out.append({'caption': 'Per-group summary (complete cases)', 'headers': ['Group', 'n', 'Median', 'Q1', 'Q3', 'IQR', 'Mean'],
-                    'rows': [[level_text(g['value'])] + [formatted(g[k]) for k in ('n', 'median', 'q1', 'q3', 'iqr', 'mean')] for g in tp['groups']],
+                    'rows': [[level_text(g['value'])] + [formatted(g['n'])] + [g[k + '_status'] if g[k] is None else formatted(g[k]) for k in GROUP_STATS] for g in tp['groups']],
                     'numeric': [1, 2, 3, 4, 5, 6]})
     return out
 
@@ -615,8 +625,10 @@ def _validate(tp, evidence):
         if not isinstance(groups, list) or not 1 <= len(groups) <= 20:
             _fail('groups')
         for g in groups:
-            _keys(g, GROUP_KEYS, what='group fields')
-            if not _level(g['value']) or not _count(g['n']) or any(not _num(g[k]) for k in ('median', 'q1', 'q3', 'iqr', 'mean')):
+            _keys(g, GROUP_KEYS, {k + '_status' for k in GROUP_STATS}, 'group fields')
+            if (not _level(g['value']) or not _count(g['n'])
+                    or any(not (g[k] is None or _num(g[k])) or (g[k] is None and not _text(g.get(k + '_status')))
+                           or (k + '_status' in g and not _text(g[k + '_status'])) for k in GROUP_STATS)):
                 _fail('groups')
         if kind == 'category×numeric' and m['groups_k'] != len(groups):
             _fail('groups_k does not match the stored groups')

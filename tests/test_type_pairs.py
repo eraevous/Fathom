@@ -648,3 +648,34 @@ def test_fuzz_type_pair_fields_load_rejects_or_both_renderers_succeed(make_profi
                     except Exception as error:  # noqa: BLE001 - any crash after a successful load is the defect
                         raise AssertionError(f'{root + path} {name}: loaded but render failed: {error!r}')
     assert checked > 1000 and accepted
+
+
+# ---------------------------------------------------------------- Codex bot review (5843951149)
+
+def test_unrepresentable_group_iqr_is_null_with_reason_and_renders(make_profile, tmp_path):
+    rows = [['A', '-1e308'], ['A', '-1e308'], ['A', '1e308'], ['A', '1e308']] + [['B', str(v)] for v in (1, 2, 3, 4)]
+    p = make_profile(csv_text(['g', 'target'], rows), {'target': 'target', 'columns': {'g': {'type': 'categorical'}}})
+    path = tmp_path / 'p.json'
+    path.write_text(p.to_json(), encoding='utf-8')
+    loaded = ProfilingResult.load(path)
+    tp = pair_for(loaded.document, 'g')['type_pair']
+    a = next(g for g in tp['groups'] if g['value'] == 'A')
+    assert a['iqr'] is None and 'floating-point' in a['iqr_status']
+    assert 'floating-point' in render_html(loaded) and 'floating-point' in render_markdown(loaded)
+    # The key itself is still required.
+    with pytest.raises(ValueError):
+        ProfilingResult.load(_saved(p, tmp_path, lambda d: [g.pop('iqr') for g in pair_for(d, 'g')['type_pair']['groups']]))
+    # A null without its reason is rejected.
+    with pytest.raises(ValueError):
+        ProfilingResult.load(_saved(p, tmp_path, lambda d: [g.pop('iqr_status', None) for g in pair_for(d, 'g')['type_pair']['groups']]))
+
+
+def test_no_rank_direction_when_spearman_is_near_zero(make_profile):
+    from fathom.type_pairs import message
+    rows = [[0, 0], [1, 4], [2, 3], [3, 2], [100, 1]]
+    d = make_profile(csv_text(['x', 'y'], rows), {'target': 'y'}).document
+    pair = d['bivariate'][0]
+    m = pair['type_pair']['measures']
+    assert abs(m['pearson_r']) >= 0.1 and abs(m['spearman_rho']) < 0.1
+    text = message(pair, pair['type_pair'])
+    assert 'tends' not in text and 'rank measure is near zero' in text

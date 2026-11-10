@@ -25,3 +25,12 @@ measures by pair type:
 New finding: `pair-{i}-type`, kind observation, generator rule:type-pairs-v1,
 rule type_pair_association, columns [left,right], evidence path
 `bivariate.{i}.type_pair` (value = the block without chart), gate = wording rule.
+
+## Closed shape (validator contract)
+Every object inside `type_pair` (and the evidence copy in `type_pair_association` findings) is
+validated against a closed field set: unknown keys are rejected on load. Every nullable value
+(measures, `wording.magnitude`, group statistics) must be present; null is accepted only with a
+`<name>_status` reason. Adding a nested field therefore means updating the producer
+(`type_pairs.describe`), the allowlist, the validator and the tests together. This is a validation
+rule within the additive schema 2 block; it does not decide schema 2 versus schema 3 (Zach's
+decision, research R7).
