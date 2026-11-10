@@ -266,3 +266,57 @@ def test_output_is_byte_identical_across_processes(tmp_path):
     outs = [subprocess.run([sys.executable, '-c', code, str(src)], capture_output=True, text=True, check=True,
                            env={'PYTHONPATH': str(root), 'PYTHONHASHSEED': seed}).stdout for seed in ('1', '2')]
     assert outs[0] == outs[1] and '"type_pair"' in outs[0]
+
+
+# ---------------------------------------------------------------- review fixes (PR #41)
+
+def _cols(*spec):
+    return [{'name': n, 'effective_type': t} for n, t in spec]
+
+
+def test_binary_level_only_present_where_partner_missing_does_not_crash():
+    from fathom.type_pairs import describe
+    rows = [['a', '1'], ['a', '2'], ['a', '3'], ['b', None], ['b', None], ['c', '4']]
+    pair = {'left': 'g', 'right': 'v', 'method': 'grouped_numeric', 'statistics': {}, 'association': {}}
+    # Reviewer's case: whole-column binary g, but only 'a' has a numeric partner.
+    lone = describe(pair, [['a', '1'], ['a', '2'], ['a', '3'], ['b', None], ['b', None]], _cols(('g', 'categorical'), ('v', 'numeric')))
+    assert lone['pair_type'] == 'category×numeric' and lone['measures']['groups_k'] == 1
+    tp = describe(pair, rows, _cols(('g', 'categorical'), ('v', 'numeric')))
+    # Roles come from complete cases: g has levels a and c there.
+    assert tp['pair_type'] == 'binary×numeric' and tp['roles'][0]['levels'] == ['a', 'c']
+    assert 'complete cases' in tp['binary_rule']
+
+
+def test_two_by_two_zero_margin_odds_ratio_not_estimable():
+    from fathom.type_pairs import two_by_two
+    m = two_by_two(0, 0, 3, 4)
+    assert m['odds_ratio'] is None and 'not estimable' in m['odds_ratio_status']
+    assert m['risk_difference'] is None and m['phi'] is None
+
+
+def test_rank_eta_squared_stored_clipped_at_zero():
+    from fathom.type_pairs import describe, message
+    rows = [['A', '1'], ['A', '2'], ['A', '3'], ['B', '1'], ['B', '2'], ['B', '3'], ['C', '1'], ['C', '2'], ['C', '3']]
+    pair = {'left': 'g', 'right': 'v', 'method': 'grouped_numeric', 'statistics': {}, 'association': {}}
+    tp = describe(pair, rows, _cols(('g', 'categorical'), ('v', 'numeric')))
+    assert tp['measures']['eta_squared_h'] == 0 and 'clipped' in tp['measures']['eta_squared_h_basis']
+
+
+def test_undefined_kruskal_wallis_h_is_worded_undefined():
+    from fathom.type_pairs import describe, message
+    rows = [['A', '5'], ['B', '5'], ['C', '5'], ['A', '5']]
+    pair = {'left': 'g', 'right': 'v', 'method': 'grouped_numeric', 'statistics': {}, 'association': {}}
+    tp = describe(pair, rows, _cols(('g', 'categorical'), ('v', 'numeric')))
+    text = message(pair, tp)
+    assert 'None' not in text and 'Kruskal-Wallis H undefined' in text
+
+
+def test_spearman_needs_three_cases_and_wording_stays_neutral():
+    from fathom.type_pairs import describe, message, spearman
+    assert spearman([1, 2], [3, 4]) is None
+    pair = {'left': 'x', 'right': 'y', 'method': 'pearson', 'statistics': {'pearson_r': 1.0}, 'association': {}}
+    # With roles from complete cases, two numeric cases are two-valued on both sides, so the
+    # pair is never read as numeric×numeric and no Spearman direction can be worded from n=2.
+    tp = describe(pair, [['1', '3'], ['2', '4']], _cols(('x', 'numeric'), ('y', 'numeric')))
+    assert tp['pair_type'] == 'binary×binary' and 'spearman_rho' not in tp['measures']
+    assert 'tends' not in message(pair, tp)

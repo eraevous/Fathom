@@ -17,8 +17,8 @@ PAIR_TYPES = ('numeric×numeric', 'category×numeric', 'binary×numeric', 'categ
 CAP = 10
 NEAR_ZERO = 0.1
 GAP = 0.2
-BINARY_RULE = ('A column is binary when its non-missing values, parsed for its effective type, have exactly two distinct '
-               'values in the whole column (0/1 and other two-valued numbers, true/false and two-level categories). '
+BINARY_RULE = ('A column is binary when its values in the complete cases of the pair, parsed for its effective type, have '
+               'exactly two distinct values (0/1 and other two-valued numbers, true/false and two-level categories). '
                'Levels are in sort order (numeric order for numbers); the second is the index level. Level order carries '
                'no domain meaning. A binary column paired with a category of three or more levels is read as category×category.')
 WORDING_RULE = ('Wording only, not a test or strength band: a headline magnitude below 0.1 is worded "near zero (no notable '
@@ -50,7 +50,7 @@ def average_ranks(values):
 def spearman(xs, ys):
     """Spearman rho: Pearson correlation of average tied ranks; None when either side has one rank."""
     rx, ry = average_ranks(list(xs)), average_ranks(list(ys))
-    if len(rx) < 2 or len(set(rx)) < 2 or len(set(ry)) < 2:
+    if len(rx) < 3 or len(set(rx)) < 2 or len(set(ry)) < 2:
         return None
     return statistics.correlation(rx, ry)
 
@@ -105,6 +105,9 @@ def two_by_two(a, b, c, d):
     zero = 0 in (a, b, c, d)
     oa, ob, oc, od = (x + 0.5 for x in (a, b, c, d)) if zero else (a, b, c, d)
     margins = (a + b) * (c + d) * (a + c) * (b + d)
+    if not margins:
+        return {'odds_ratio': None, 'odds_ratio_status': 'not estimable: a row or column of the 2x2 table is empty',
+                'odds_ratio_correction': 'none', 'risk_difference': a / (a + b) - c / (c + d) if a + b and c + d else None, 'phi': None}
     return {'odds_ratio': oa * od / (ob * oc),
             'odds_ratio_correction': 'Haldane-Anscombe: 0.5 added to every cell because a cell is zero' if zero else 'none',
             'risk_difference': a / (a + b) - c / (c + d) if a + b and c + d else None,
@@ -196,9 +199,10 @@ def describe(pair, rows, columns):
     lc, rc = columns[li], columns[ri]
     lv = [cell(r[li], lc['effective_type']) for r in rows]
     rv = [cell(r[ri], rc['effective_type']) for r in rows]
-    left, right = role_of(lc, [v for v in lv if v is not None]), role_of(rc, [v for v in rv if v is not None])
-    kind = pair_type(left, right)
     cases = [(x, y) for x, y in zip(lv, rv) if x is not None and y is not None]
+    # Roles use complete cases only, so a level seen only where the partner is missing cannot create an empty group.
+    left, right = role_of(lc, [x for x, _ in cases]), role_of(rc, [y for _, y in cases])
+    kind = pair_type(left, right)
     n = len(cases)
     out = {'pair_type': kind, 'roles': [left, right], 'binary_rule': BINARY_RULE, 'n': n, 'basis': BASIS, 'measures': {}}
     screening = pair.get('association', {})
@@ -209,11 +213,12 @@ def describe(pair, rows, columns):
         rho = coefficient(rho) if rho is not None else None
         m.update(pearson_r=r, spearman_rho=rho)
         if rho is None:
-            m['spearman_rho_status'] = 'undefined: one side has a single distinct rank'
+            m['spearman_rho_status'] = ('not estimable: fewer than three complete cases' if n < 3
+                                        else 'undefined: one side has a single distinct rank')
         gap = coefficient(abs(rho) - abs(r)) if rho is not None and r is not None else None
         m.update(rank_linear_gap=gap, disagreement=bool(gap is not None and (abs(gap) >= GAP or (rho * r < 0 and min(abs(rho), abs(r)) >= NEAR_ZERO))),
                  disagreement_rule=DISAGREEMENT_RULE)
-        magnitude = max(abs(v) for v in (r, rho) if v is not None) if (r, rho) != (None, None) else None
+        magnitude = max(abs(v) for v in (r, rho) if v is not None) if n >= 3 and (r, rho) != (None, None) else None
         out['chart'] = {'kind': 'target_chart', 'title': 'Target: ' + pair['left'] + ' × ' + pair['right'],
                         'note': 'Scatter: the existing target chart for this pair (up to 200 evenly spaced points).'}
     elif kind in ('category×numeric', 'binary×numeric'):
@@ -228,8 +233,10 @@ def describe(pair, rows, columns):
         if kind == 'category×numeric':
             eta = screening.get('value') if screening.get('measure') == 'Correlation ratio eta' else (association('categorical', 'numeric', [(g, v) for g, vs in groups for v in vs]) or {}).get('value')
             h, e2 = kruskal_wallis([vs for _, vs in groups])
-            m.update(eta=eta, kruskal_wallis_h=safe(h), eta_squared_h=coefficient(e2), groups_k=len(groups))
-            magnitude = math.sqrt(max(0.0, e2)) if e2 is not None else None
+            e2 = max(0.0, e2) if e2 is not None else None
+            m.update(eta=eta, kruskal_wallis_h=safe(h), eta_squared_h=coefficient(e2), groups_k=len(groups),
+                     eta_squared_h_basis='(H - k + 1)/(n - k), clipped at 0: negative values (below chance expectation) are stored as 0.')
+            magnitude = math.sqrt(e2) if e2 is not None else None
         else:
             (ref, first), (idx, second) = groups
             rb = rank_biserial(first, second)
@@ -248,7 +255,7 @@ def describe(pair, rows, columns):
         out['table'] = capped_table(cases, pair['left'], pair['right'])
         if kind == 'binary×binary':
             (d, c), (b, a) = table
-            m.update({k: (coefficient(v) if k in ('risk_difference', 'phi') else safe(v) if k == 'odds_ratio' else v)
+            m.update({k: (coefficient(v) if k in ('risk_difference', 'phi') else safe(v) if k == 'odds_ratio' and v is not None else v)
                       for k, v in two_by_two(a, b, c, d).items()})
             m.update(index_levels=[left['levels'][1], right['levels'][1]], reference_levels=[left['levels'][0], right['levels'][0]])
             magnitude = abs(m['phi']) if m['phi'] is not None else None
@@ -284,6 +291,8 @@ def message(pair, tp):
     left, right, m, n = pair['left'], pair['right'], tp['measures'], formatted(tp['n'])
     near = tp['wording']['near_zero']
     quiet = ' Magnitude near zero: no notable association under the disclosed wording rule (not a test of independence).'
+    if tp['wording']['magnitude'] is None:
+        near, quiet = True, ' Headline magnitude not estimable; no direction is stated.'
     kind = tp['pair_type']
     if kind == 'numeric×numeric':
         text = f"{left} × {right} ({kind}, complete n {n}): Pearson r {f3(m['pearson_r'])}; Spearman rho {f3(m['spearman_rho'])}."
@@ -307,7 +316,7 @@ def message(pair, tp):
                 text += f" Values of {vname} tend to be {'higher' if m['rank_biserial'] > 0 else 'lower'} when {gname} is {q(idx['value'])}."
         else:
             text = (f"{vname} across {m['groups_k']} groups of {gname} ({kind}, complete n {n}): eta {f3(m['eta'])}; "
-                    f"Kruskal-Wallis H {label(m['kruskal_wallis_h'])}; rank eta-squared η²H {f3(m['eta_squared_h'])}.")
+                    f"Kruskal-Wallis H {'undefined' if m['kruskal_wallis_h'] is None else label(m['kruskal_wallis_h'])}; rank eta-squared η²H {f3(m['eta_squared_h'])}.")
             if near:
                 text += quiet
             else:
@@ -317,7 +326,7 @@ def message(pair, tp):
     elif kind == 'binary×binary':
         (l1, r1), (l2, r2) = m['reference_levels'], m['index_levels']
         corrected = '' if m['odds_ratio_correction'] == 'none' else ' (Haldane-Anscombe 0.5 correction: a cell is zero)'
-        text = (f"{left} × {right} ({kind}, complete n {n}): odds ratio {label(m['odds_ratio'])}{corrected} for {right} {q(r2)} "
+        text = (f"{left} × {right} ({kind}, complete n {n}): odds ratio {'not estimable' if m['odds_ratio'] is None else label(m['odds_ratio'])}{corrected} for {right} {q(r2)} "
                 f"with {left} {q(l2)} against {q(l1)}; risk difference {f3(m['risk_difference'])} (share of {right} {q(r2)} among "
                 f"{left} {q(l2)} minus among {q(l1)}); phi {f3(m['phi'])}.")
         if near:

@@ -1,8 +1,9 @@
 # Research
 
-R1 Binary rule. Decision: a column is binary in a pair when its non-missing values,
-parsed for its effective type, have exactly two distinct values (whole column, not
-just complete cases, so the role does not change with the partner). Includes 0/1
+R1 Binary rule. Decision: a column is binary in a pair when its values in that pair's
+complete cases, parsed for its effective type, have exactly two distinct values
+(revised after review of PR #41: a whole-column rule let a level seen only where the
+partner is missing create an empty group; the role can now differ by partner). Includes 0/1
 and other two-valued numerics, true/false, two-level categories. Disclosed in each
 `type_pair.binary_rule`. Alternative (only 0/1 numerics) rejected: two-valued codes
 such as 1/2 are the same shape. Risk: a two-valued measurement is read as binary;

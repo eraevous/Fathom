@@ -7,6 +7,7 @@
 - [x] T005 [US2] Observation finding with nested tree, disclosed wording gate; no new action.
 - [x] T006 [US3] Validation of optional `type_pair`; heat-table chart; grouped box for category targets; HTML/Markdown sections; relations.csv/findings.csv carry fields (docs/tidy-export.md note).
 - [x] T007 Full suite, AEC edges/check, claim and evidence records, intent note, draft PR.
+- [x] T007a Review fixes (PR #41): complete-case roles, OR not estimable on an empty 2×2 margin, rank eta-squared clipped at 0, undefined H wording, Spearman n<3 guard; tests first.
 - [ ] T008 Visual review of the new charts at 1280/390 light/dark (FT-R17) — not done in this slice.
 - [ ] T009 PDF/PowerPoint exports of the new type-pair tables/charts — exports show the existing pair statistics only; not extended here.
 - [ ] T010 Zach decisions: near-zero 0.1 wording cut, Spearman/Pearson 0.2 disagreement cut, binary rule, schema-version policy.

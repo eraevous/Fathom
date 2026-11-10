@@ -53,11 +53,12 @@ findings.csv carries the new observation. Old artifacts without `type_pair` stil
 validate and render.
 
 ### Edge cases
-Two-valued numeric columns (0/1 or any two numbers) count as binary; true/false
+Two-valued numeric columns (0/1 or any two numbers, in the pair's complete cases) count as binary; true/false
 booleans and two-level categories too. A binary column paired with a category of
 three or more levels is read as category×category. Groups of one value (IQR 0),
-ties, all-equal ranks (Spearman undefined → null with reason), empty 2×2 margins
-(risk difference undefined → null), high-cardinality categories (more than 20
+ties, all-equal ranks or fewer than three cases (Spearman null with reason), empty 2×2
+margins (odds ratio, risk difference, phi not estimable → null), negative rank
+eta-squared (stored clipped at 0), high-cardinality categories (more than 20
 levels stay excluded by the existing rule; 11–20 levels are capped to 10 shown
 levels plus an "other levels" total), missingness-by-group pairs (not type pairs;
 unchanged), budget 0, no target (no pairs, unchanged).
