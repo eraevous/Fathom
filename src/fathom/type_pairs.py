@@ -182,7 +182,7 @@ def group_rows(groups):
         for key in GROUP_STATS:
             if row[key] is None:
                 # Finite inputs can still give an unrepresentable result (e.g. Q3 - Q1 for values near +/-1e308).
-                row[key + '_status'] = 'not representable: the result exceeds the floating-point range'
+                row[key + '_status'] = OVERFLOW
         out.append(row)
     return out
 
@@ -250,7 +250,7 @@ def describe(pair, rows, columns):
         m.update(pearson_r=r, spearman_rho=rho)
         if rho is None:
             m['spearman_rho_status'] = ('not estimable: fewer than three complete cases' if n < 3
-                                        else 'undefined: one side has a single distinct rank')
+                                        else 'not estimable: one side has a single distinct rank')
         gap = coefficient(abs(rho) - abs(r)) if rho is not None and r is not None else None
         m.update(rank_linear_gap=gap, disagreement=bool(gap is not None and (abs(gap) >= GAP or (rho * r < 0 and min(abs(rho), abs(r)) >= NEAR_ZERO))),
                  disagreement_rule=DISAGREEMENT_RULE)
@@ -280,6 +280,9 @@ def describe(pair, rows, columns):
             m.update(rank_biserial=coefficient(rb), index_level=plain(idx), reference_level=plain(ref),
                      median_difference=safe(percentile(second, 50, lambda x: x) - percentile(first, 50, lambda x: x)),
                      mean_difference=safe(statistics.mean(second) - statistics.mean(first)))
+            for key in ('median_difference', 'mean_difference'):
+                if m[key] is None:
+                    m[key + '_status'] = OVERFLOW
             magnitude = abs(rb)
         # The existing target chart is already a grouped box when the numeric column is the target.
         if gside == 0 and rc['effective_type'] in NUMERIC and lc['effective_type'] in CATEGORY:
@@ -347,8 +350,16 @@ def q(value):
     return "'" + level_text(value) + "'"
 
 
-def f3(value):
-    return 'undefined' if value is None else formatted(value)
+OVERFLOW = 'not representable: the result exceeds the floating-point range'
+
+
+def shown(values, key):
+    """The one null-aware formatter for printed measures and group statistics: a null prints its stored
+    `<key>_status` reason, never 'None' or 'undefined'."""
+    value = values.get(key)
+    if value is None:
+        return values.get(key + '_status') or 'not estimable'
+    return level_text(value) if isinstance(value, str) else label(value)
 
 
 QUIET = 'Magnitude near zero: no notable association under the disclosed wording rule (not a test of independence).'
@@ -403,27 +414,27 @@ def message(pair, tp):
     left, right, m, n = pair['left'], pair['right'], tp['measures'], formatted(tp['n'])
     kind = tp['pair_type']
     if kind == 'numeric×numeric':
-        text = f"{left} × {right} ({kind}, complete n {n}): Pearson r {f3(m['pearson_r'])}; Spearman rho {f3(m['spearman_rho'])}."
+        text = f"{left} × {right} ({kind}, complete n {n}): Pearson r {shown(m, 'pearson_r')}; Spearman rho {shown(m, 'spearman_rho')}."
     elif kind in ('category×numeric', 'binary×numeric'):
         groups = {g['value']: g for g in tp['groups']}
         gname, vname = (left, right) if tp['roles'][0]['role'] != 'numeric' else (right, left)
         if kind == 'binary×numeric':
             idx, ref = groups[m['index_level']], groups[m['reference_level']]
-            text = (f"{vname} by {gname} ({kind}, complete n {n}): {gname} {q(idx['value'])} n {idx['n']}, median {label(idx['median'])}; "
-                    f"{gname} {q(ref['value'])} n {ref['n']}, median {label(ref['median'])}; difference in medians {label(m['median_difference'])}; "
-                    f"difference in means {label(m['mean_difference'])}; rank-biserial {f3(m['rank_biserial'])}.")
+            text = (f"{vname} by {gname} ({kind}, complete n {n}): {gname} {q(idx['value'])} n {idx['n']}, median {shown(idx, 'median')}; "
+                    f"{gname} {q(ref['value'])} n {ref['n']}, median {shown(ref, 'median')}; difference in medians {shown(m, 'median_difference')}; "
+                    f"difference in means {shown(m, 'mean_difference')}; rank-biserial {shown(m, 'rank_biserial')}.")
         else:
-            text = (f"{vname} across {m['groups_k']} groups of {gname} ({kind}, complete n {n}): eta {f3(m['eta'])}; "
-                    f"Kruskal-Wallis H {'undefined' if m['kruskal_wallis_h'] is None else label(m['kruskal_wallis_h'])}; rank eta-squared η²H {f3(m['eta_squared_h'])}.")
+            text = (f"{vname} across {m['groups_k']} groups of {gname} ({kind}, complete n {n}): eta {shown(m, 'eta')}; "
+                    f"Kruskal-Wallis H {shown(m, 'kruskal_wallis_h')}; rank eta-squared η²H {shown(m, 'eta_squared_h')}.")
     elif kind == 'binary×binary':
         (l1, r1), (l2, r2) = m['reference_levels'], m['index_levels']
         corrected = '' if m['odds_ratio_correction'] == 'none' else ' (Haldane-Anscombe 0.5 correction: a cell is zero)'
-        text = (f"{left} × {right} ({kind}, complete n {n}): odds ratio {'not estimable' if m['odds_ratio'] is None else label(m['odds_ratio'])}{corrected} for {right} {q(r2)} "
-                f"with {left} {q(l2)} against {q(l1)}; risk difference {f3(m['risk_difference'])} (share of {right} {q(r2)} among "
-                f"{left} {q(l2)} minus among {q(l1)}); phi {f3(m['phi'])}.")
+        text = (f"{left} × {right} ({kind}, complete n {n}): odds ratio {shown(m, 'odds_ratio')}{corrected} for {right} {q(r2)} "
+                f"with {left} {q(l2)} against {q(l1)}; risk difference {shown(m, 'risk_difference')} (share of {right} {q(r2)} among "
+                f"{left} {q(l2)} minus among {q(l1)}); phi {shown(m, 'phi')}.")
     else:
-        text = (f"{left} × {right} ({kind}, complete n {n}, {m['rows_k']} by {m['columns_k']} levels): Cramer's V {f3(m['cramers_v'])}; "
-                f"bias-corrected V {f3(m['cramers_v_bias_corrected'])}.")
+        text = (f"{left} × {right} ({kind}, complete n {n}, {m['rows_k']} by {m['columns_k']} levels): Cramer's V {shown(m, 'cramers_v')}; "
+                f"bias-corrected V {shown(m, 'cramers_v_bias_corrected')}.")
     sentence = reading(tp)
     return text + (' ' + sentence if sentence else '') + ' Descriptive, not causal.'
 
@@ -431,9 +442,9 @@ def message(pair, tp):
 HEADLINE_KEYS = {'numeric×numeric': ('spearman_rho', 'pearson_r'), 'category×numeric': ('eta_squared_h',),
                  'binary×numeric': ('rank_biserial',), 'category×category': ('cramers_v_bias_corrected',), 'binary×binary': ('phi',)}
 STATUS_FALLBACK = {'rank_linear_gap': 'not estimable: Spearman rho or Pearson r is undefined',
-                   'pearson_r': 'undefined: the screening Pearson r is not available',
-                   'eta': 'undefined: the correlation ratio is not available (constant values)',
-                   'cramers_v': "undefined: Cramer's V is not available (one level on a side)"}
+                   'pearson_r': 'not estimable: the screening Pearson r is not available',
+                   'eta': 'not estimable: the correlation ratio is not available (constant values)',
+                   'cramers_v': "not estimable: Cramer's V is not available (one level on a side)"}
 MEASURE_LABELS = [('pearson_r', 'Pearson r'), ('spearman_rho', 'Spearman rho'), ('rank_linear_gap', '|rho| minus |r|'),
                   ('eta', 'eta (correlation ratio)'), ('kruskal_wallis_h', 'Kruskal-Wallis H (descriptive)'),
                   ('eta_squared_h', 'rank eta-squared η²H'), ('groups_k', 'groups'), ('rank_biserial', 'rank-biserial r'),
@@ -448,7 +459,7 @@ def measure_lines(tp):
     for key, name in MEASURE_LABELS:
         if key in m:
             value = m[key]
-            lines.append(name + ': ' + (m.get(key + '_status', 'not estimable') if value is None else label(value)))
+            lines.append(name + ': ' + shown(m, key))
     if 'index_level' in m:
         lines += ['index level: ' + q(m['index_level']), 'reference level: ' + q(m['reference_level'])]
     if 'index_levels' in m:
@@ -474,7 +485,7 @@ def headline_text(tp):
 
 def tree(f, tp):
     names = f.get('columns', [])
-    children = measure_lines(tp) + ['group ' + q(g['value']) + ': n ' + formatted(g['n']) + ', median ' + (g['median_status'] if g['median'] is None else label(g['median']))
+    children = measure_lines(tp) + ['group ' + q(g['value']) + ': n ' + formatted(g['n']) + ', median ' + shown(g, 'median')
                                     for g in tp.get('groups', [])] + ['complete cases: ' + formatted(tp['n'])]
     children.append('magnitude near zero: no notable association (wording rule)' if tp['wording']['near_zero'] else headline_text(tp))
     sentence = reading(tp)
@@ -494,7 +505,7 @@ def tables(pair):
             'numeric': []}]
     if 'groups' in tp:
         out.append({'caption': 'Per-group summary (complete cases)', 'headers': ['Group', 'n', 'Median', 'Q1', 'Q3', 'IQR', 'Mean'],
-                    'rows': [[level_text(g['value'])] + [formatted(g['n'])] + [g[k + '_status'] if g[k] is None else formatted(g[k]) for k in GROUP_STATS] for g in tp['groups']],
+                    'rows': [[level_text(g['value'])] + [formatted(g['n'])] + [shown(g, k) for k in GROUP_STATS] for g in tp['groups']],
                     'numeric': [1, 2, 3, 4, 5, 6]})
     return out
 

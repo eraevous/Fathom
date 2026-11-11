@@ -303,12 +303,14 @@ def test_rank_eta_squared_stored_clipped_at_zero():
 
 
 def test_undefined_kruskal_wallis_h_is_worded_undefined():
+    """Name kept for append-only record references; since 5866390168 the wording is the stored reason, not 'undefined'."""
     from fathom.type_pairs import describe, message
     rows = [['A', '5'], ['B', '5'], ['C', '5'], ['A', '5']]
     pair = {'left': 'g', 'right': 'v', 'method': 'grouped_numeric', 'statistics': {}, 'association': {}}
     tp = describe(pair, rows, _cols(('g', 'categorical'), ('v', 'numeric')))
     text = message(pair, tp)
-    assert 'None' not in text and 'Kruskal-Wallis H undefined' in text
+    # Since 5866390168 a null measure prints its stored reason, never 'undefined' or 'None'.
+    assert 'None' not in text and 'undefined' not in text and 'Kruskal-Wallis H not estimable: all values tie' in text
 
 
 def test_spearman_needs_three_cases_and_wording_stays_neutral():
@@ -576,6 +578,15 @@ def test_grouped_box_renderer_fields_validated(table_target, make_profile, tmp_p
         ProfilingResult.load(_saved(p, tmp_path, lambda d: mutate(pair_for(d, 'score')['type_pair']['chart'])))
 
 
+import re as _re
+BARE_NULL = _re.compile(r"\bundefined\b|\bNone\b(?! recorded| flagged)")  # existing empty-list wording on main
+
+
+def assert_no_bare_null(text):
+    hit = BARE_NULL.search(text)
+    assert not hit, text[max(0, hit.start() - 80):hit.end() + 40]
+
+
 def _small_profiles(make_profile):
     u = lcg(9)
     num = [[round(next(u) * 10, 3), 'ab'[i % 2], 'pqr'[i % 3], round(next(u) * 10 + (i % 3), 3)] for i in range(30)]
@@ -638,13 +649,11 @@ def test_fuzz_type_pair_fields_load_rejects_or_both_renderers_succeed(make_profi
                         charts = doc['target_analysis']['charts']
                         for pair in doc['bivariate']:
                             if 'type_pair' in pair:
-                                type_pair_html(pair, charts)
-                                type_pair_markdown(pair, charts)
+                                assert_no_bare_null(type_pair_html(pair, charts) + type_pair_markdown(pair, charts))
                         for f in doc['findings']:
                             if f.get('rule') == 'type_pair_association':
                                 tree = finding_tree(f, doc)
-                                html_tree(tree, f['columns'])
-                                markdown_tree(tree, f['columns'])
+                                assert_no_bare_null(html_tree(tree, f['columns']) + markdown_tree(tree, f['columns']))
                         # ... and both full reports for a deterministic sample (full renders cost ~0.2 s each).
                         if accepted % 10 == 1:
                             r = ProfilingResult(doc)
@@ -675,11 +684,10 @@ def test_fuzz_type_pair_fields_load_rejects_or_both_renderers_succeed(make_profi
             charts = doc['target_analysis']['charts']
             for pair in doc['bivariate']:
                 if 'type_pair' in pair:
-                    type_pair_html(pair, charts)
-                    type_pair_markdown(pair, charts)
+                    assert_no_bare_null(type_pair_html(pair, charts) + type_pair_markdown(pair, charts))
             for f in doc['findings']:
                 if f.get('rule') == 'type_pair_association':
-                    finding_tree(f, doc)
+                    assert_no_bare_null(str(finding_tree(f, doc)))
             r = ProfilingResult(doc)
             render_html(r)
             render_markdown(r)
@@ -810,3 +818,51 @@ def test_missing_target_chart_is_reported_unavailable_without_a_dead_link(make_p
     for text in (html, md):
         assert 'not available' in text and 'See: Target' not in text and 'existing target chart' not in text
     assert '#target-chart-' not in html and '#target-chart-' not in md
+
+
+# ---------------------------------------------------------------- Copilot review (5866390168)
+
+def test_overflowing_differences_print_their_reason():
+    from fathom.type_pairs import describe, message, tables, tree
+    rows = [['A', v] for v in ('-1.1e308', '-1e308', '-9e307')] + [['B', v] for v in ('9e307', '1e308', '1.1e308')]
+    pair = {'left': 'g', 'right': 'v', 'method': 'grouped_numeric', 'statistics': {}, 'association': {}}
+    tp = describe(pair, rows, _cols(('g', 'categorical'), ('v', 'numeric')))
+    m = tp['measures']
+    assert m['median_difference'] is None and 'floating-point' in m['median_difference_status']
+    assert m['mean_difference'] is None and 'floating-point' in m['mean_difference_status']
+    f = {'columns': ['g', 'v']}
+    for text in (message(pair, tp), str(tables({'type_pair': tp})), str(tree(f, tp))):
+        assert_no_bare_null(text)
+        assert text.count('not representable: the result exceeds the floating-point range') >= 2
+
+
+def test_no_bare_null_anywhere_in_generated_outputs(numeric_target, table_target, make_profile):
+    from fathom.tidy import tidy_files
+    from fathom.finding_view import finding_tree, html_tree, markdown_tree
+    from fathom.renderers import type_pair_html, type_pair_markdown
+    rows = [['A', v] for v in ('-1.1e308', '-1e308', '-9e307')] + [['B', v] for v in ('9e307', '1e308', '1.1e308')]
+    cases = [numeric_target, table_target, *_small_profiles(make_profile),
+             make_profile('g,t\na,x\nb,y\nc,z\n', {'target': 't', 'columns': {'g': {'type': 'categorical'}, 't': {'type': 'categorical'}}}),
+             make_profile(csv_text(['g', 'v'], rows), {'target': 'v', 'columns': {'g': {'type': 'categorical'}}})]
+    kinds = set()
+    for result in cases:
+        d = result.document
+        kinds |= {p['type_pair']['pair_type'] for p in d['bivariate'] if 'type_pair' in p}
+        for f in d['findings']:
+            if f.get('rule') == 'type_pair_association':
+                assert_no_bare_null(f['message'])
+                assert_no_bare_null(str(finding_tree(f, d)))
+        # Everything type-pair code prints. The generic raw-evidence disclosure (pre-existing on main) prints stored
+        # JSON nulls as 'None' for every finding, so the full page is not swept.
+        charts = d['target_analysis']['charts']
+        for pair in d['bivariate']:
+            if 'type_pair' in pair:
+                assert_no_bare_null(type_pair_html(pair, charts) + type_pair_markdown(pair, charts))
+        for f in d['findings']:
+            if f.get('rule') == 'type_pair_association':
+                tree = finding_tree(f, d)
+                assert_no_bare_null(html_tree(tree, f['columns']) + markdown_tree(tree, f['columns']))
+        render_html(result), render_markdown(result)
+        files = tidy_files(json.loads(result.to_json()))
+        assert_no_bare_null(files['findings.csv'] + files['relations.csv'])
+    assert kinds == set(READING_FRAGMENTS)
