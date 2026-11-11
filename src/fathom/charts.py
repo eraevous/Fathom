@@ -1,6 +1,7 @@
 """Scalable static charts; captions and summaries wrap independently of marks."""
 
 from html import escape
+import math
 import textwrap
 
 from .presentation import formatted, html_table, tick_label, original_tick
@@ -11,6 +12,28 @@ def linear_ticks(lo,hi,count=5):
     if lo==hi:return [lo]
     scale=max(abs(lo),abs(hi),1)
     return [(lo/scale+(hi/scale-lo/scale)*i/(count-1))*scale for i in range(count)]
+
+
+def whole_ticks(lo,hi,count=5):
+    """Whole-number axis ticks inside [lo, hi] for whole-number histograms (spec 028).
+
+    Their geometry runs on half-integers (bars are centred on the values they hold),
+    so plain linear ticks would print values like 2.5 that the data cannot take."""
+    first,last=math.ceil(lo),math.floor(hi)
+    if last-first<count:return list(range(first,last+1))
+    return sorted(set(round(v) for v in linear_ticks(first,last,count)))
+
+
+def axis_ticks(chart,lo,hi):
+    return whole_ticks(lo,hi) if chart.get('whole_number_bins') else linear_ticks(lo,hi)
+
+
+def whole_note(chart):
+    """Plain disclosure of the whole-number bin layout; None for other charts."""
+    rule=chart.get('whole_number_bins')
+    if not rule:return None
+    width=rule['width']
+    return 'Whole-number values: '+('one bar per value.' if width==1 else f'each bar holds {width:,} consecutive whole values; labels are inclusive.')
 
 
 def count_ticks(maximum):
@@ -59,7 +82,7 @@ def svg_chart(chart):
         else:lo,hi=0,max(1,len(data)-1)
         scale=max(abs(lo),abs(hi),1);span=hi/scale-lo/scale
         def px(v):return left+(right-left)*((v/scale-lo/scale)/span if span else .5)
-        ticks=linear_ticks(lo,hi)
+        ticks=axis_ticks(chart,lo,hi)
         if kind=='time':
             indices=sorted(set(round(i*(len(data)-1)/4) for i in range(5)))
             for i in indices:
@@ -88,6 +111,7 @@ def svg_chart(chart):
     out.append('</svg>')
     notes=[]
     if kind=='time' and data:notes.append('Calendar range: '+data[0]['label']+' to '+data[-1]['label']+('. Day ticks omit the year; exact dates remain in chart values.' if chart.get('period')=='day' else '. Exact calendar-period labels and values remain in chart values.'))
+    if whole_note(chart):notes.append(whole_note(chart))
     if 'coverage' in chart:notes.append('Top10 covers '+formatted(chart['coverage'],True)+f" of {chart['denominator']:,} raw values; remainder is shown separately.")
     if chart.get('omitted_periods'):notes.append(f"{chart['omitted_periods']:,} middle calendar bins omitted; full counts remain in profile.")
     if chart.get('omitted_points'):notes.append(f"Approximate ECDF display: {chart['omitted_points']:,} distinct points omitted.")

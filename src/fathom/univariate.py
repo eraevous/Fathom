@@ -116,16 +116,10 @@ def numeric_profile(values,name,units,bins=None):
            'share_denominator':'finite values','formatting':'Local currency/thousands/parenthesis parsing; symbols do not establish units or comparability.'}
     charts=[]
     if nums:
-        lo,hi=min(nums),max(nums);declared=bins;bins=bin_count(n,lo,hi,declared)
-        # Normalized arithmetic avoids overflowing a finite but wide numeric range.
-        scale=max(abs(lo),abs(hi),1);a,b=lo/scale,hi/scale
-        edges=[(a+(b-a)*i/bins)*scale for i in range(bins+1)]
-        cs=[0]*bins
-        for x in nums:
-            i=min(bins-1,int(((x/scale-a)/(b-a))*bins)) if b!=a else 0;cs[i]+=1
-        data=[{'label':f'{edges[i]:.5g} to {edges[i+1]:.5g}','low':geometry(edges[i]),'high':geometry(edges[i+1]),'count':cs[i]} for i in range(bins)]
+        lo,hi=min(nums),max(nums);declared=bins
+        data,whole=histogram_bins(nums,declared)
         axis=f'{name} ({units or "recorded values; units unknown"})'
-        charts=[chart('histogram',f'Distribution of {name}',axis,'Rows (count)',data=data,bin_rule=bin_rule(declared)),
+        charts=[chart('histogram',f'Distribution of {name}',axis,'Rows (count)',data=data,bin_rule=bin_rule(declared),**whole),
                 chart('box',f'Five-number view of {name}',axis,'Column',box={'min':geometry(lo),'q1':raw_percentile(nums,25),'median':raw_percentile(nums,50),'q3':raw_percentile(nums,75),'max':geometry(hi)})]
         cumulative=0;points=[]
         for x,count in sorted(Counter(nums).items()):
@@ -147,11 +141,53 @@ def numeric_profile(values,name,units,bins=None):
 
 
 def histogram(nums,title,x_label,bins=None,**metadata):
-    lo,hi=min(nums),max(nums);n=len(nums);metadata['bin_rule']=bin_rule(bins);bins=bin_count(n,lo,hi,bins)
+    metadata['bin_rule']=bin_rule(bins)
+    # A log10 axis is never a whole-number scale, even when every value is a power of ten.
+    data,whole=histogram_bins(nums,bins,allow_whole=metadata.get('scale')!='log10')
+    return chart('histogram',title,x_label,'Values (count)',data=data,**metadata,**whole)
+
+
+def histogram_bins(nums,bins=None,allow_whole=True):
+    """Histogram bins for one numeric series (spec 028).
+
+    Returns ``(data, extra)``. ``data`` holds one dict per bin: ``label`` (what the
+    hover title, chart-values table and exports show), ``low``/``high`` (axis geometry)
+    and ``count``. ``extra`` is merged into the chart dict.
+
+    Whole-number series (every finite value has no fractional part: counts, mana
+    values, string lengths) get whole-number bins. Each bin holds a contiguous run of
+    integers, labelled inclusively ("3" or "0 to 2"), so a label never names a value
+    the data cannot take ("6 to 7.2"), and integer runs never land in empty
+    fractional bins. Geometry sits on half-integers (2.5 to 5.5 for "3 to 5") so each
+    bar is centred on the values it holds. The bin count follows the same rule as
+    before (declared ``bins:`` or sqrt(n) capped at 10) and is a maximum: the width is
+    the whole number of values that keeps the count at or below it. Membership is
+    exact: value ``v`` lands in bin ``(v - lo) // width``.
+
+    Magnitudes above 2**53 (where every float is integral) and any series with a
+    fractional value keep the original equal-width real-valued
+    bins and ``.5g`` labels unchanged: genuine fractions are never rounded away.
+    Stored values and statistics are untouched either way; only bin layout and
+    labels change.
+    """
+    lo,hi=min(nums),max(nums);n=len(nums)
+    # Above 2**53 every float is "whole", so integrality says nothing about the data there.
+    if allow_whole and max(abs(lo),abs(hi))<=2**53 and all(float(x).is_integer() for x in nums):
+        lo,hi=int(lo),int(hi);span=hi-lo+1
+        width=-(-span//bin_count(n,lo,hi,bins))  # exact integer ceiling division
+        counts=[0]*(-(-span//width))
+        for x in nums:counts[(int(x)-lo)//width]+=1
+        data=[]
+        for i,c in enumerate(counts):
+            first=lo+i*width;last=min(hi,first+width-1)
+            data.append({'label':str(first) if first==last else f'{first} to {last}','low':first-.5,'high':last+.5,'count':c})
+        return data,{'whole_number_bins':{'width':width}}
+    bins=bin_count(n,lo,hi,bins)
+    # Normalized arithmetic avoids overflowing a finite but wide numeric range.
     scale=max(abs(lo),abs(hi),1);a,b=lo/scale,hi/scale
     edges=[(a+(b-a)*i/bins)*scale for i in range(bins+1)];counts=[0]*bins
     for x in nums:counts[min(bins-1,int((x/scale-a)/(b-a)*bins)) if b!=a else 0]+=1
-    return chart('histogram',title,x_label,'Values (count)',data=[{'label':f'{edges[i]:.5g} to {edges[i+1]:.5g}','low':geometry(edges[i]),'high':geometry(edges[i+1]),'count':c} for i,c in enumerate(counts)],**metadata)
+    return [{'label':f'{edges[i]:.5g} to {edges[i+1]:.5g}','low':geometry(edges[i]),'high':geometry(edges[i+1]),'count':c} for i,c in enumerate(counts)],{}
 
 
 def missingness_patterns(columns,rows):

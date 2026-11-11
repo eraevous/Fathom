@@ -146,7 +146,7 @@ def pdf_bytes(d,report=None):
             else:self.height=140 if ch['kind']=='box' else 250 if ch['kind']!='bar' else max(200,110+len(ch.get('data',[]))*12)
         def draw(self):
             c=self.canv;ch=self.ch;c.setFont(font,8);c.setFillColor(colors.HexColor(C['ink']));c.setStrokeColor(colors.HexColor(C['accent']))
-            from .charts import linear_ticks, count_ticks
+            from .charts import axis_ticks, linear_ticks, count_ticks
             from .presentation import tick_label
             def wrapped(value,y):
                 import textwrap
@@ -195,7 +195,7 @@ def pdf_bytes(d,report=None):
                     for value in count_ticks(maximum):c.drawRightString(48,45+135*value/maximum,tick_label(value))
                     if ch['kind']=='histogram':
                         lo,hi=data[0]['low'],data[-1]['high'];scale=max(abs(lo),abs(hi),1);span=hi/scale-lo/scale
-                        for value in linear_ticks(lo,hi):c.drawCentredString(55+390*((value/scale-lo/scale)/span if span else .5),35,original_tick(ch,value))
+                        for value in axis_ticks(ch,lo,hi):c.drawCentredString(55+390*((value/scale-lo/scale)/span if span else .5),35,original_tick(ch,value))
                     else:
                         for i in sorted(set(round(j*(len(data)-1)/4) for j in range(5))):c.drawCentredString(55+390*((i+.5)/len(data)),35,text(data[i]['label']))
             if ch.get('omitted_periods'):c.drawString(30,18,str(ch['omitted_periods'])+' middle periods omitted; see saved profile.')
@@ -467,7 +467,7 @@ def pptx_bytes(d,full=False,report=None):
                     series.add_data_point(10**point['x'] if ch.get('scale')=='log10' else point['x'],point['cumulative']*100);previous=point['cumulative']
                 chart_type=XL_CHART_TYPE.XY_SCATTER_LINES_NO_MARKERS
             else:
-                categories=[original_tick(ch,v['low'])+' – '+original_tick(ch,v['high']) if ch['kind']=='histogram' else str(v['label']) for v in data]
+                categories=[original_tick(ch,v['low'])+' – '+original_tick(ch,v['high']) if ch['kind']=='histogram' and not ch.get('whole_number_bins') else str(v['label']) for v in data]
                 # Native office engines otherwise expand long categories off-slide.
                 shortened=[v if len(v)<=42 else v[:41]+'…' for v in categories]
                 values=CategoryChartData();values.categories=shortened;values.add_series('Values (count)',[v['count'] for v in data])
