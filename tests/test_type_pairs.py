@@ -551,6 +551,10 @@ def test_missing_magnitude_key_rejected_but_explicit_null_with_reason_renders(nu
     def null(d):
         for tp in [_first(d, 'numeric×numeric')] + [f['evidence'][0]['value'] for f in d['findings']
                                                     if f.get('rule') == 'type_pair_association' and f['evidence'][0]['value']['pair_type'] == 'numeric×numeric']:
+            # Since 5864410175 wording must follow the measures, so the headline measures are null too, with reasons.
+            tp['measures'].update(pearson_r=None, pearson_r_status='not estimable: synthetic', spearman_rho=None,
+                                  spearman_rho_status='not estimable: synthetic', rank_linear_gap=None,
+                                  rank_linear_gap_status='not estimable: synthetic', disagreement=False)
             tp['wording'].update(magnitude=None, near_zero=False, magnitude_status='not estimable: synthetic explicit null')
     loaded = ProfilingResult.load(_saved(numeric_target, tmp_path, null))
     assert 'synthetic explicit null' in render_html(loaded) and 'synthetic explicit null' in render_markdown(loaded)
@@ -602,6 +606,7 @@ def test_fuzz_type_pair_fields_load_rejects_or_both_renderers_succeed(make_profi
     checked = accepted = 0
     for result in _small_profiles(make_profile):
         base = json.loads(result.to_json())
+        semantic = []
         targets = [('bivariate', i, 'type_pair') for i, p in enumerate(base['bivariate']) if 'type_pair' in p]
         targets += [('findings', i, 'evidence', 0, 'value') for i, f in enumerate(base['findings']) if f.get('rule') == 'type_pair_association']
         for root in targets:
@@ -647,6 +652,37 @@ def test_fuzz_type_pair_fields_load_rejects_or_both_renderers_succeed(make_profi
                             render_markdown(r)
                     except Exception as error:  # noqa: BLE001 - any crash after a successful load is the defect
                         raise AssertionError(f'{root + path} {name}: loaded but render failed: {error!r}')
+            # Value-level inconsistencies (5864410175): a nulled measure with unchanged wording, flipped near_zero,
+            # a shifted magnitude. Each must be rejected on load or render.
+            for key in list(node['measures']):
+                if key.endswith('_status') or not isinstance(node['measures'][key], (int, float)) or isinstance(node['measures'][key], bool):
+                    continue
+                semantic.append((root, lambda tp, k=key: tp['measures'].update({k: None, k + '_status': 'not estimable: fuzz'})))
+            semantic.append((root, lambda tp: tp['wording'].update(near_zero=not tp['wording']['near_zero'])))
+            semantic.append((root, lambda tp: tp['wording'].update(magnitude=0.42)))
+        for root, mutate in semantic:
+            doc = copy.deepcopy(base)
+            node = doc
+            for k in root:
+                node = node[k]
+            mutate(node)
+            checked += 1
+            try:
+                validate_document(json.loads(canonical_json(doc)))
+            except ValueError:
+                continue
+            accepted += 1
+            charts = doc['target_analysis']['charts']
+            for pair in doc['bivariate']:
+                if 'type_pair' in pair:
+                    type_pair_html(pair, charts)
+                    type_pair_markdown(pair, charts)
+            for f in doc['findings']:
+                if f.get('rule') == 'type_pair_association':
+                    finding_tree(f, doc)
+            r = ProfilingResult(doc)
+            render_html(r)
+            render_markdown(r)
     assert checked > 1000 and accepted
 
 
@@ -734,3 +770,43 @@ def test_finding_tree_carries_the_reading_sentence(numeric_target, table_target,
             seen.add((tp['pair_type'], fragment))
     assert {k for k, _ in seen} == set(READING_FRAGMENTS)
     assert any(f == 'Magnitude near zero' for _, f in seen) and any(f == 'no direction is stated' for _, f in seen)
+
+
+# ---------------------------------------------------------------- Copilot review (5864410175)
+
+def test_wording_must_match_stored_measures(numeric_target, tmp_path):
+    def null_rb(d):
+        tp = _first(d, 'binary×numeric')
+        tp['measures'].update(rank_biserial=None, rank_biserial_status='not estimable: synthetic')
+    with pytest.raises(ValueError):
+        ProfilingResult.load(_saved(numeric_target, tmp_path, null_rb))
+    with pytest.raises(ValueError):
+        ProfilingResult.load(_saved(numeric_target, tmp_path, lambda d: _first(d, 'numeric×numeric')['wording'].update(near_zero=True)))
+    with pytest.raises(ValueError):
+        ProfilingResult.load(_saved(numeric_target, tmp_path, lambda d: _first(d, 'category×numeric')['wording'].update(magnitude=0.5)))
+
+
+def test_reading_is_null_safe_for_every_direction_measure():
+    from fathom.type_pairs import reading
+    base = {'roles': [{'column': 'g', 'role': 'binary', 'levels': ['a', 'b']}, {'column': 'v', 'role': 'numeric'}],
+            'wording': {'magnitude': 0.5, 'near_zero': False}}
+    bn = {**base, 'pair_type': 'binary×numeric', 'measures': {'rank_biserial': None, 'index_level': 'b', 'reference_level': 'a'}}
+    assert 'no direction is stated' in reading(bn)
+    bb = {'pair_type': 'binary×binary', 'roles': [{'column': 'g', 'role': 'binary', 'levels': ['a', 'b']}, {'column': 'h', 'role': 'binary', 'levels': ['x', 'y']}],
+          'wording': {'magnitude': 0.5, 'near_zero': False},
+          'measures': {'risk_difference': None, 'index_levels': ['b', 'y'], 'reference_levels': ['a', 'x']}}
+    assert 'no direction is stated' in reading(bb)
+
+
+def test_missing_target_chart_is_reported_unavailable_without_a_dead_link(make_profile):
+    from fathom.renderers import type_pair_html, type_pair_markdown
+    rows = [['', v] for v in [1, 2, 1, 3, 2, 1, 2, 3, 1, 2] * 3 + [1000]] + [[x, t] for x, t in zip(range(5, 11), [0, -1, -2, 0, -1, -2])]
+    d = make_profile(csv_text(['x', 'target'], rows), {'target': 'target'}).document
+    pair = pair_for(d, 'x')
+    charts = d['target_analysis']['charts']
+    assert pair['type_pair']['chart']['kind'] == 'target_chart'
+    assert not any(c['title'] == pair['type_pair']['chart']['title'] for c in charts)
+    html, md = type_pair_html(pair, charts), type_pair_markdown(pair, charts)
+    for text in (html, md):
+        assert 'not available' in text and 'See: Target' not in text and 'existing target chart' not in text
+    assert '#target-chart-' not in html and '#target-chart-' not in md

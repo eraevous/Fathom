@@ -307,14 +307,31 @@ def describe(pair, rows, columns):
     for key in MEASURE_KEYS:
         if key in m and m[key] is None and key + '_status' not in m:
             m[key + '_status'] = STATUS_FALLBACK.get(key, 'not estimable from these complete cases')
-    # Round once, then store and compare the same value: a stored 0.1 is never worded "near zero".
-    magnitude = coefficient(magnitude) if magnitude is not None else None
+    # Round once, from the stored measures, then store and compare the same value: a stored 0.1 is never "near zero".
+    magnitude = headline_magnitude(kind, m, n)
     out['wording'] = {'magnitude': magnitude, 'near_zero': bool(magnitude is not None and magnitude < NEAR_ZERO), 'rule': WORDING_RULE}
     if magnitude is None:
         reasons = [m.get(k + '_status') for k in HEADLINE_KEYS[kind] if m.get(k + '_status')]
         out['wording']['magnitude_status'] = ('not estimable: fewer than three complete cases' if kind == 'numeric×numeric' and n < 3
                                               else reasons[0] if reasons else 'not estimable from these complete cases')
     return out
+
+
+def headline_magnitude(kind, m, n):
+    """Headline magnitude from the stored (already rounded) measures, rounded once. The producer and the validator
+    both use this, so stored wording can always be recomputed from stored measures."""
+    if kind == 'numeric×numeric':
+        values = [abs(v) for v in (m['pearson_r'], m['spearman_rho']) if v is not None]
+        value = max(values) if values and n >= 3 else None
+    elif kind == 'category×numeric':
+        value = math.sqrt(m['eta_squared_h']) if m['eta_squared_h'] is not None and m['eta_squared_h'] >= 0 else None
+    elif kind == 'binary×numeric':
+        value = abs(m['rank_biserial']) if m['rank_biserial'] is not None else None
+    elif kind == 'category×category':
+        value = m['cramers_v_bias_corrected']
+    else:
+        value = abs(m['phi']) if m['phi'] is not None else None
+    return coefficient(value) if value is not None else None
 
 
 def enrich_pairs(rows, columns, pairs):
@@ -360,7 +377,10 @@ def reading(tp):
     elif kind in ('category×numeric', 'binary×numeric'):
         gname, vname = (left, right) if tp['roles'][0]['role'] != 'numeric' else (right, left)
         if kind == 'binary×numeric':
-            out.append(f"Values of {vname} tend to be {'higher' if m['rank_biserial'] > 0 else 'lower'} when {gname} is {q(m['index_level'])}.")
+            if m['rank_biserial'] is None:
+                out.append('The rank-biserial correlation is not estimable, so no direction is stated.')
+            else:
+                out.append(f"Values of {vname} tend to be {'higher' if m['rank_biserial'] > 0 else 'lower'} when {gname} is {q(m['index_level'])}.")
         else:
             ranked = [g for g in tp['groups'] if g['median'] is not None]
             if ranked:
@@ -368,7 +388,9 @@ def reading(tp):
                 hi = max(ranked, key=lambda g: (g['median'], level_text(g['value'])))
                 out.append(f"Group medians run from {label(lo['median'])} in {q(lo['value'])} to {label(hi['median'])} in {q(hi['value'])}.")
     elif kind == 'binary×binary':
-        if m['risk_difference'] is not None:
+        if m['risk_difference'] is None:
+            out.append('The risk difference is not estimable, so no direction is stated.')
+        else:
             out.append(f"{right} {q(m['index_levels'][1])} is {'more' if m['risk_difference'] > 0 else 'less'} common when {left} is {q(m['index_levels'][0])}.")
     else:
         out.append(f"Shares of {right} levels differ across {left} levels; see the table.")
@@ -641,6 +663,9 @@ def _validate(tp, evidence):
             or ('magnitude_status' in w and not _text(w['magnitude_status']))
             or (w['magnitude'] is None and 'magnitude_status' not in w)):
         _fail('wording')
+    expected = headline_magnitude(kind, m, tp['n'])
+    if w['magnitude'] != expected or w['near_zero'] != (expected is not None and expected < NEAR_ZERO):
+        _fail('wording does not match the stored measures (magnitude and near_zero are recomputed from them)')
     if grouped:
         groups = tp['groups']
         if not isinstance(groups, list) or not 1 <= len(groups) <= 20:

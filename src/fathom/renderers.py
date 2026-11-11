@@ -341,10 +341,13 @@ def dictionary_and_provenance_markdown(d):
     return lines
 
 
+UNAVAILABLE_CHART=('The target chart this pair refers to ({title}) is not available in this report: none of its complete cases '
+                   'could be plotted (for example, none is positive on a log-scale axis). The measures above still apply.')
+
+
 def target_chart_link(chart,charts):
-    """In-page link to the existing target chart a type-pair block refers to (matched by stored title)."""
-    index=next((i for i,ch in enumerate(charts or []) if ch.get('title')==chart.get('title')),None)
-    return chart['note']+(' See: '+chart['title']+'.' if index is None else ''),index
+    """Index of the rendered target chart a type-pair block refers to (matched by stored title), or None."""
+    return next((i for i,ch in enumerate(charts or []) if ch.get('title')==chart.get('title')),None)
 
 
 def scroll_note(columns,what='This table'):
@@ -372,8 +375,9 @@ def type_pair_html(pair,charts=None):
 
 
 def type_pair_reference_html(chart,charts):
-    note,index=target_chart_link(chart,charts)
-    return '<p>'+escape(note)+('' if index is None else ' <a href="#target-chart-'+str(index)+'">Go to '+escape(chart['title'])+'</a>.')+'</p>'
+    index=target_chart_link(chart,charts)
+    if index is None:return '<p>'+escape(UNAVAILABLE_CHART.format(title=chart['title']))+'</p>'
+    return '<p>'+escape(chart['note'])+' <a href="#target-chart-'+str(index)+'">Go to '+escape(chart['title'])+'</a>.</p>'
 
 
 def type_pair_markdown(pair,charts=None):
@@ -384,8 +388,9 @@ def type_pair_markdown(pair,charts=None):
 
 
 def type_pair_reference_markdown(chart,charts):
-    note,index=target_chart_link(chart,charts)
-    return md_text(note)+('' if index is None else ' [Go to '+md_text(chart['title'])+'](#target-chart-'+str(index)+').')
+    index=target_chart_link(chart,charts)
+    if index is None:return md_text(UNAVAILABLE_CHART.format(title=chart['title']))
+    return md_text(chart['note'])+' [Go to '+md_text(chart['title'])+'](#target-chart-'+str(index)+').'
 
 
 def render_markdown(result: ProfilingResult,report=None):
