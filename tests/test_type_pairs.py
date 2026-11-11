@@ -679,3 +679,58 @@ def test_no_rank_direction_when_spearman_is_near_zero(make_profile):
     assert abs(m['pearson_r']) >= 0.1 and abs(m['spearman_rho']) < 0.1
     text = message(pair, pair['type_pair'])
     assert 'tends' not in text and 'rank measure is near zero' in text
+
+
+# ---------------------------------------------------------------- Copilot review (5861282816)
+
+def test_type_pair_box_axis_shows_declared_units(make_profile):
+    from fathom.renderers import type_pair_html, type_pair_markdown
+    u = lcg(4)
+    rows = [['hit' if i % 3 else 'miss', round(next(u) * 80.0 + 1, 3)] for i in range(60)]
+    d = make_profile(csv_text(['outcome', 'score'], rows), {'target': 'outcome', 'columns': {'score': {'units': 'USD'}}}).document
+    pair = pair_for(d, 'score')
+    assert pair['type_pair']['chart']['x_label'] == 'score (USD)'
+    charts = d['target_analysis']['charts']
+    assert 'score (USD)' in type_pair_html(pair, charts) and 'score (USD)' in type_pair_markdown(pair, charts)
+
+
+def test_near_zero_uses_the_stored_rounded_magnitude():
+    from fathom.type_pairs import describe
+    rows = [['A', '2'], ['A', '3'], ['B', '0'], ['B', '1'], ['B', '3'], ['B', '4'], ['B', '5']]
+    pair = {'left': 'g', 'right': 'v', 'method': 'grouped_numeric', 'statistics': {}, 'association': {}}
+    tp = describe(pair, rows, _cols(('g', 'categorical'), ('v', 'numeric')))
+    assert tp['pair_type'] == 'binary×numeric' and tp['measures']['rank_biserial'] == 0.1
+    assert tp['wording']['magnitude'] == 0.1 and tp['wording']['near_zero'] is False
+
+
+READING_FRAGMENTS = {'numeric×numeric': 'tends to go with', 'binary×numeric': 'tend to be',
+                     'category×numeric': 'Group medians run from', 'binary×binary': 'common when',
+                     'category×category': 'Shares of'}
+
+
+def test_finding_tree_carries_the_reading_sentence(numeric_target, table_target, make_profile):
+    from fathom.finding_view import finding_tree
+    seen = set()
+    cases = [numeric_target, table_target,
+             make_profile('g,t\na,x\nb,y\nc,z\n', {'target': 't', 'columns': {'g': {'type': 'categorical'}, 't': {'type': 'categorical'}}})]
+    for result in cases:
+        d = result.document
+        html, md = render_html(result), render_markdown(result)
+        for f in d['findings']:
+            if f.get('rule') != 'type_pair_association':
+                continue
+            tp = f['evidence'][0]['value']
+            lines = finding_tree(f, d)['children']
+            reading = next((line for line in lines if line.startswith('reading: ')), None)
+            assert reading, (tp['pair_type'], lines)
+            if tp['wording']['magnitude'] is None:
+                fragment = 'no direction is stated'
+            elif tp['wording']['near_zero']:
+                fragment = 'Magnitude near zero'
+            else:
+                fragment = READING_FRAGMENTS[tp['pair_type']]
+            assert fragment in reading, (tp['pair_type'], reading)
+            assert fragment in html and fragment in md
+            seen.add((tp['pair_type'], fragment))
+    assert {k for k, _ in seen} == set(READING_FRAGMENTS)
+    assert any(f == 'Magnitude near zero' for _, f in seen) and any(f == 'no direction is stated' for _, f in seen)

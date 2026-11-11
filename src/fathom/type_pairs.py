@@ -10,7 +10,7 @@ import math
 import statistics
 
 from .presentation import formatted
-from .target import CATEGORY, NUMERIC, WARNING, association, cell, geometry_percentile
+from .target import CATEGORY, NUMERIC, WARNING, association, axis_label, cell, geometry_percentile
 from .univariate import coefficient, percentile, safe
 
 PAIR_TYPES = ('numeric×numeric', 'category×numeric', 'binary×numeric', 'category×category', 'binary×binary')
@@ -220,11 +220,11 @@ def heat_chart(pair, table, n, total_rows):
             'total_rows': total_rows, 'note': 'Counts of complete cases; the bar in each cell is that cell’s share of its row. Descriptive, not causal.'}
 
 
-def box_chart(pair, groups, n, total_rows, group_name, value_name):
+def box_chart(pair, groups, n, total_rows, group_name, value_name, value_axis=None):
     data = [{'label': level_text(level), 'n': len(values), 'excluded_nonpositive': 0,
              'box': {k: geometry_percentile(values, p) for k, p in [('min', 0), ('q1', 25), ('median', 50), ('q3', 75), ('max', 100)]}}
             for level, values in groups]
-    return {'kind': 'group_box', 'title': 'Type pair: ' + value_name + ' by ' + group_name, 'x_label': value_name,
+    return {'kind': 'group_box', 'title': 'Type pair: ' + value_name + ' by ' + group_name, 'x_label': value_axis or value_name,
             'y_label': group_name, 'x_scale': 'linear', 'data': data, 'n': n, 'total_rows': total_rows, 'plotted': n,
             'omitted_nonpositive': 0, 'note': WARNING, 'values_format': 'display'}
 
@@ -286,7 +286,7 @@ def describe(pair, rows, columns):
             out['chart'] = {'kind': 'target_chart', 'title': 'Target: ' + pair['left'] + ' × ' + pair['right'],
                             'note': 'Grouped box: the existing target chart for this pair.'}
         else:
-            out['chart'] = box_chart(pair, groups, n, len(rows), gcol['name'], vcol['name'])
+            out['chart'] = box_chart(pair, groups, n, len(rows), gcol['name'], vcol['name'], axis_label(vcol))
     else:
         table = full_table(cases, left.get('levels') if kind == 'binary×binary' else None, right.get('levels') if kind == 'binary×binary' else None)
         out['table'] = capped_table(cases, pair['left'], pair['right'])
@@ -307,8 +307,9 @@ def describe(pair, rows, columns):
     for key in MEASURE_KEYS:
         if key in m and m[key] is None and key + '_status' not in m:
             m[key + '_status'] = STATUS_FALLBACK.get(key, 'not estimable from these complete cases')
-    out['wording'] = {'magnitude': coefficient(magnitude) if magnitude is not None else None,
-                      'near_zero': bool(magnitude is not None and magnitude < NEAR_ZERO), 'rule': WORDING_RULE}
+    # Round once, then store and compare the same value: a stored 0.1 is never worded "near zero".
+    magnitude = coefficient(magnitude) if magnitude is not None else None
+    out['wording'] = {'magnitude': magnitude, 'near_zero': bool(magnitude is not None and magnitude < NEAR_ZERO), 'rule': WORDING_RULE}
     if magnitude is None:
         reasons = [m.get(k + '_status') for k in HEADLINE_KEYS[kind] if m.get(k + '_status')]
         out['wording']['magnitude_status'] = ('not estimable: fewer than three complete cases' if kind == 'numeric×numeric' and n < 3
@@ -333,23 +334,54 @@ def f3(value):
     return 'undefined' if value is None else formatted(value)
 
 
+QUIET = 'Magnitude near zero: no notable association under the disclosed wording rule (not a test of independence).'
+UNESTIMABLE = 'Headline magnitude not estimable; no direction is stated.'
+
+
+def reading(tp):
+    """The plain-language reading of a type-pair block, from stored fields only. Shared by the finding message
+    and the finding tree, so the rendered tree and the saved message say the same thing."""
+    m, kind = tp['measures'], tp['pair_type']
+    left, right = tp['roles'][0]['column'], tp['roles'][1]['column']
+    near = tp['wording']['near_zero']
+    out = []
+    if tp['wording']['magnitude'] is None:
+        out.append(UNESTIMABLE)
+    elif near:
+        out.append(QUIET)
+    elif kind == 'numeric×numeric':
+        rho = m['spearman_rho']
+        if rho is None:
+            out.append('The rank measure is not estimable, so no rank direction is stated.')
+        elif abs(rho) >= NEAR_ZERO:
+            out.append(f"Higher {left} tends to go with {'higher' if rho > 0 else 'lower'} {right} (rank order).")
+        else:
+            out.append('The linear measure is not near zero but the rank measure is near zero, so no rank direction is stated.')
+    elif kind in ('category×numeric', 'binary×numeric'):
+        gname, vname = (left, right) if tp['roles'][0]['role'] != 'numeric' else (right, left)
+        if kind == 'binary×numeric':
+            out.append(f"Values of {vname} tend to be {'higher' if m['rank_biserial'] > 0 else 'lower'} when {gname} is {q(m['index_level'])}.")
+        else:
+            ranked = [g for g in tp['groups'] if g['median'] is not None]
+            if ranked:
+                lo = min(ranked, key=lambda g: (g['median'], level_text(g['value'])))
+                hi = max(ranked, key=lambda g: (g['median'], level_text(g['value'])))
+                out.append(f"Group medians run from {label(lo['median'])} in {q(lo['value'])} to {label(hi['median'])} in {q(hi['value'])}.")
+    elif kind == 'binary×binary':
+        if m['risk_difference'] is not None:
+            out.append(f"{right} {q(m['index_levels'][1])} is {'more' if m['risk_difference'] > 0 else 'less'} common when {left} is {q(m['index_levels'][0])}.")
+    else:
+        out.append(f"Shares of {right} levels differ across {left} levels; see the table.")
+    if kind == 'numeric×numeric' and m['disagreement']:
+        out.append('Rank and linear measures disagree: a monotone but non-linear pattern, or a few influential values.')
+    return ' '.join(out)
+
+
 def message(pair, tp):
     left, right, m, n = pair['left'], pair['right'], tp['measures'], formatted(tp['n'])
-    near = tp['wording']['near_zero']
-    quiet = ' Magnitude near zero: no notable association under the disclosed wording rule (not a test of independence).'
-    if tp['wording']['magnitude'] is None:
-        near, quiet = True, ' Headline magnitude not estimable; no direction is stated.'
     kind = tp['pair_type']
     if kind == 'numeric×numeric':
         text = f"{left} × {right} ({kind}, complete n {n}): Pearson r {f3(m['pearson_r'])}; Spearman rho {f3(m['spearman_rho'])}."
-        if near:
-            text += quiet
-        elif m['spearman_rho'] is not None and abs(m['spearman_rho']) >= NEAR_ZERO:
-            text += f" Higher {left} tends to go with {'higher' if m['spearman_rho'] > 0 else 'lower'} {right} (rank order)."
-        else:
-            text += ' The linear measure is not near zero but the rank measure is near zero, so no rank direction is stated.'
-        if m['disagreement']:
-            text += ' Rank and linear measures disagree: a monotone but non-linear pattern, or a few influential values.'
     elif kind in ('category×numeric', 'binary×numeric'):
         groups = {g['value']: g for g in tp['groups']}
         gname, vname = (left, right) if tp['roles'][0]['role'] != 'numeric' else (right, left)
@@ -358,34 +390,20 @@ def message(pair, tp):
             text = (f"{vname} by {gname} ({kind}, complete n {n}): {gname} {q(idx['value'])} n {idx['n']}, median {label(idx['median'])}; "
                     f"{gname} {q(ref['value'])} n {ref['n']}, median {label(ref['median'])}; difference in medians {label(m['median_difference'])}; "
                     f"difference in means {label(m['mean_difference'])}; rank-biserial {f3(m['rank_biserial'])}.")
-            if near:
-                text += quiet
-            else:
-                text += f" Values of {vname} tend to be {'higher' if m['rank_biserial'] > 0 else 'lower'} when {gname} is {q(idx['value'])}."
         else:
             text = (f"{vname} across {m['groups_k']} groups of {gname} ({kind}, complete n {n}): eta {f3(m['eta'])}; "
                     f"Kruskal-Wallis H {'undefined' if m['kruskal_wallis_h'] is None else label(m['kruskal_wallis_h'])}; rank eta-squared η²H {f3(m['eta_squared_h'])}.")
-            if near:
-                text += quiet
-            else:
-                lo = min(tp['groups'], key=lambda g: (g['median'], label(g['value'])))
-                hi = max(tp['groups'], key=lambda g: (g['median'], label(g['value'])))
-                text += f" Group medians run from {label(lo['median'])} in {q(lo['value'])} to {label(hi['median'])} in {q(hi['value'])}."
     elif kind == 'binary×binary':
         (l1, r1), (l2, r2) = m['reference_levels'], m['index_levels']
         corrected = '' if m['odds_ratio_correction'] == 'none' else ' (Haldane-Anscombe 0.5 correction: a cell is zero)'
         text = (f"{left} × {right} ({kind}, complete n {n}): odds ratio {'not estimable' if m['odds_ratio'] is None else label(m['odds_ratio'])}{corrected} for {right} {q(r2)} "
                 f"with {left} {q(l2)} against {q(l1)}; risk difference {f3(m['risk_difference'])} (share of {right} {q(r2)} among "
                 f"{left} {q(l2)} minus among {q(l1)}); phi {f3(m['phi'])}.")
-        if near:
-            text += quiet
-        elif m['risk_difference'] is not None:
-            text += f" {right} {q(r2)} is {'more' if m['risk_difference'] > 0 else 'less'} common when {left} is {q(l2)}."
     else:
         text = (f"{left} × {right} ({kind}, complete n {n}, {m['rows_k']} by {m['columns_k']} levels): Cramer's V {f3(m['cramers_v'])}; "
                 f"bias-corrected V {f3(m['cramers_v_bias_corrected'])}.")
-        text += quiet if near else f" Shares of {right} levels differ across {left} levels; see the table."
-    return text + ' Descriptive, not causal.'
+    sentence = reading(tp)
+    return text + (' ' + sentence if sentence else '') + ' Descriptive, not causal.'
 
 
 HEADLINE_KEYS = {'numeric×numeric': ('spearman_rho', 'pearson_r'), 'category×numeric': ('eta_squared_h',),
@@ -437,6 +455,9 @@ def tree(f, tp):
     children = measure_lines(tp) + ['group ' + q(g['value']) + ': n ' + formatted(g['n']) + ', median ' + (g['median_status'] if g['median'] is None else label(g['median']))
                                     for g in tp.get('groups', [])] + ['complete cases: ' + formatted(tp['n'])]
     children.append('magnitude near zero: no notable association (wording rule)' if tp['wording']['near_zero'] else headline_text(tp))
+    sentence = reading(tp)
+    if sentence:
+        children.append('reading: ' + sentence)
     children.append('descriptive, not causal')
     return {'text': tp['pair_type'] + ': ' + ' × '.join(names), 'children': children}
 
