@@ -37,10 +37,48 @@ def test_violation_integer_column_no_longer_gets_fractional_labels():
     # The reported case: mana values 0..16. Before spec 028 these read "0 to 1.6", "6.4 to 8".
     nums = [0] * 30 + [1] * 40 + [2] * 50 + [3] * 45 + [5] * 20 + [6] * 12 + [7] * 9 + [16]
     data, extra = histogram_bins(nums)
-    assert extra == {"whole_number_bins": {"width": 2}}
-    assert not any(FRACTIONAL_LABEL.search(d["label"]) for d in data)
-    assert data[0]["label"] == "0 to 1" and data[-1]["label"] == "16"
-    assert_exact_partition(nums, data)
+    assert not any(FRACTIONAL_LABEL.search(d["label"]) for d in data + extra["tail"])
+    # 17 values > 16 bars, but one row (0.5%) lies outside 0..15: one bar per value plus a tail callout.
+    assert [d["label"] for d in data] == [str(v) for v in range(16)]
+    assert extra["whole_number_bins"] == {"width": 1, "core": [0, 15], "tail_rows": 1}
+    assert extra["tail"] == [{"label": "16", "low": 15.5, "high": 16.5, "count": 1, "side": "high"}]
+    assert sum(d["count"] for d in data + extra["tail"]) == len(nums)
+
+
+def test_sixteen_values_or_fewer_get_one_bar_per_value():
+    data, extra = histogram_bins(list(range(16)) * 3)
+    assert len(data) == 16 and extra == {"whole_number_bins": {"width": 1}}
+
+
+def test_dense_wide_range_falls_back_to_at_most_sixteen_whole_bars():
+    # Decoy for the tail rule: 0..49 evenly; no 16-value window holds 95% of rows.
+    data, extra = histogram_bins(list(range(50)))
+    assert extra == {"whole_number_bins": {"width": 4}} and len(data) == 13 and "tail" not in extra
+    assert_exact_partition(list(range(50)), data)
+
+
+def test_tail_just_over_five_percent_is_not_a_callout():
+    nums = [1] * 300 + [2] * 50 + list(range(40, 60)) + [200]  # 21 of 371 rows (5.7%) outside 1..16
+    _, extra = histogram_bins(nums)
+    assert "tail" not in extra and extra["whole_number_bins"]["width"] > 1
+
+
+def test_low_and_high_tails_and_ranges():
+    nums = [-40] + [v for v in range(10, 26) for _ in range(20)] + [60, 61, 70, 90, 95, 99, 400]
+    data, extra = histogram_bins(nums)
+    assert extra["whole_number_bins"]["core"] == [10, 25]
+    low = [d for d in extra["tail"] if d["side"] == "low"]
+    high = [d for d in extra["tail"] if d["side"] == "high"]
+    assert low == [{"label": "-40", "low": -40.5, "high": -39.5, "count": 1, "side": "low"}]
+    # Seven distinct high values > 6: at most 4 non-empty inclusive ranges.
+    assert 1 <= len(high) <= 4 and sum(d["count"] for d in high) == 7
+    assert sum(d["count"] for d in data + extra["tail"]) == len(nums)
+
+
+def test_declared_bins_are_a_maximum_without_tail_logic():
+    nums = [0] * 30 + [1] * 40 + [16]
+    data, extra = histogram_bins(nums, bins=10)
+    assert "tail" not in extra and len(data) <= 10 and extra["whole_number_bins"]["width"] == 2
 
 
 def test_clean_decoy_genuine_fractions_keep_real_valued_bins():
@@ -115,7 +153,10 @@ def test_svg_hover_titles_ticks_and_disclosure():
 def test_whole_ticks():
     assert whole_ticks(-0.5, 3.5) == [0, 1, 2, 3]
     assert whole_ticks(4.5, 4.5 + 1) == [5]
-    assert whole_ticks(-0.5, 100.5) == [0, 25, 50, 75, 100]
+    assert whole_ticks(-0.5, 100.5) == [0, 20, 40, 60, 80, 100]
+    # Even 1/2/5 x 10^k steps, never 0, 4, 8, 11, 15.
+    assert whole_ticks(-0.5, 15.5) == [0, 5, 10, 15]
+    assert whole_ticks(-40.5, 99.5) == [-40, -20, 0, 20, 40, 60, 80]
 
 
 def test_beyond_exact_float_integers_keeps_real_valued_bins():
@@ -124,3 +165,29 @@ def test_beyond_exact_float_integers_keeps_real_valued_bins():
     assert extra == {} and sum(d["count"] for d in data) == 3
     data, extra = histogram_bins([0, 2**53])
     assert extra["whole_number_bins"]["width"] > 1 and sum(d["count"] for d in data) == 2
+
+
+def test_tail_callout_inset_table_and_note():
+    nums = [str(v) for v in [0] * 30 + [1] * 40 + [2] * 50 + [3] * 45 + [5] * 20 + [16]]
+    _, charts = numeric_profile(nums, "mana", None)
+    hist = next(c for c in charts if c["kind"] == "histogram")
+    svg = svg_chart(hist)
+    assert 'class="tail-callout"' in svg and "<title>16: 1 (tail)</title>" in svg
+    assert "Tail outside 0 to 15" in svg
+    assert "16 (tail callout)" in svg  # chart-values table row
+    assert "1 row outside that range is shown in the tail callout: 16 (1 row)" in svg
+    assert hist["bin_rule"].startswith("whole-number columns: one bar per value up to 16")
+
+
+def test_inset_moves_below_the_axis_when_both_corners_are_crowded():
+    nums = [str(v) for v in [v for v in range(16) for _ in range(40)] + [99]]
+    _, charts = numeric_profile(nums, "flat", None)
+    svg = svg_chart(next(c for c in charts if c["kind"] == "histogram"))
+    assert 'viewBox="0 0 560 270"' not in svg and 'y="282"' in svg
+
+
+def test_report_level_rule_discloses_both_layouts():
+    from fathom.univariate import report_bin_rule
+    rule = report_bin_rule()
+    assert rule.startswith("sqrt(n) rounded up, capped at 10") and "whole-number columns" in rule
+    assert "at most 6 whole-value bins" in report_bin_rule(6)

@@ -209,6 +209,9 @@ def pdf_bytes(d,report=None):
         if 'coverage' in ch:story.append(p('Top10 coverage: '+formatted(ch['coverage'],True)+'; other is the remainder.'))
         if ch.get('coverage_counts'):
             s=ch['coverage_counts'];story.append(p(f"Positive log view: {s['positive']:,} positives; zeros excluded: {s['zeros']:,}; negatives excluded: {s['negatives']:,}; invalid excluded: {s['invalid']:,}."))
+        if ch.get('whole_number_bins'):
+            from .charts import whole_note
+            story.append(p(whole_note(ch)))
         if ch['kind']=='bar' and any(len(str(x['label']))>29 for x in ch.get('data',[])):story.append(p('Long chart labels shortened with …; exact labels remain in the core report/artifact.'))
     if d['kind']=='profile':
         heading('Dictionary')
@@ -470,6 +473,11 @@ def pptx_bytes(d,full=False,report=None):
                 categories=[original_tick(ch,v['low'])+' – '+original_tick(ch,v['high']) if ch['kind']=='histogram' and not ch.get('whole_number_bins') else str(v['label']) for v in data]
                 # Native office engines otherwise expand long categories off-slide.
                 shortened=[v if len(v)<=42 else v[:41]+'…' for v in categories]
+                if ch.get('tail'):
+                    # Sparse whole-number tail (spec 028): native charts have no inset, so tail values sit at
+                    # the matching end of the category axis, labelled; counts stay exact.
+                    low=[v for v in ch['tail'] if v['side']=='low'];high=[v for v in ch['tail'] if v['side']=='high']
+                    shortened=[v['label']+' (tail)' for v in low]+shortened+[v['label']+' (tail)' for v in high];data=low+list(data)+high
                 values=CategoryChartData();values.categories=shortened;values.add_series('Values (count)',[v['count'] for v in data])
                 chart_type=XL_CHART_TYPE.BAR_CLUSTERED if ch['kind']=='bar' else XL_CHART_TYPE.COLUMN_CLUSTERED
             chart=s.shapes.add_chart(chart_type,Inches(.7),Inches(1.6),Inches(12),Inches(4.8),values).chart

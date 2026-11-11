@@ -19,7 +19,7 @@ from .models import TYPES
 from .parsing import DATE_FORMATS, parse_date, parse_datetime, parse_temporal
 from .rows import RULES as ROW_RULES
 from .timeseries import DEFAULT_LAG, GRAINS, MIN_N, TOP_N, undeclared
-from .univariate import BIN_RULE
+from .univariate import report_bin_rule
 from .temporal_formats import validate_format,validate_declaration
 from .temporal_picker import picker_schema,render_picker,PARSER_JS,UI_JS as PICKER_UI_JS
 from .palette import theme_css
@@ -138,7 +138,7 @@ def build_schema(doc: dict, frame, raw_config: dict | None) -> dict:
             "columns": columns, "target_candidates": candidates, "interval_suggestions": intervals,
             "series_suggestions": series, "by_options": by_options, "ts_granularities": TS_GRANULARITIES,
             "knobs": {k: {"default": d, "min": lo, "max": hi} for k, (d, lo, hi) in INT_KNOBS.items()},
-            "bin_rule_default": BIN_RULE,
+            "bin_rule_default": report_bin_rule(),
             "sections": [{"key": k, "title": OPTIONAL_SECTIONS[k], "default": True} for k in sorted(OPTIONAL_SECTIONS)],
             "fixed_rules": FIXED_RULES,
             "extension_points": EXTENSION_POINTS,

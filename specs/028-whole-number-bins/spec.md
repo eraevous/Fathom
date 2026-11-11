@@ -11,8 +11,14 @@ When every finite value of a linear-scale histogram series is a whole number, an
 - each bin holds a contiguous run of whole values;
 - the label is inclusive (`3`, or `0 to 2`); it is used by the SVG hover title, the chart-values table, Markdown, PDF and PowerPoint categories;
 - membership is exact (`(v − min) // width`): no overlap, no gap, counts sum to the series total;
-- the bin count follows the existing rule (declared `bins:` or √n capped at 10) as a maximum. The width is the smallest whole number that keeps the count at or below it, so short ranges give one bar per value;
-- geometry sits on half-integers so each bar is centred on its values; axis ticks are whole numbers;
+- bar count (owner, 2026-11-11: "Closest power of 2 under 32 is usually a reasonable option. Values that are in a tail can have a 'callout' inset"):
+  - a declared `bins:` is a maximum, as before;
+  - otherwise the cap is **16 bars**: a range of at most 16 values gets one bar per value;
+  - wider ranges where the best 16-value window holds all but a **sparse tail** (≤ 5% of rows) show that window one bar per value; the values outside it go to a **tail callout inset** with its own count scale (up to 6 values per side listed individually, else at most 4 ranges);
+  - otherwise up to 16 equal whole-value bars cover the whole range;
+- geometry sits on half-integers so each bar is centred on its values; axis ticks are whole numbers at even 1/2/5 × 10^k steps;
+- the inset sits in the top corner whose bars it doesn't cover, else in a band below the axis; the chart-values table, Markdown, PDF note and PowerPoint categories carry the tail rows, labelled;
+- the chart's `bin_rule` states the whole-number rule; the report-level rule states both;
 - the chart carries `whole_number_bins: {width}` (additive, schema 2), and the figure states the layout in one line.
 
 Applies to value histograms and string-length histograms. Never to the log10 view.
@@ -23,7 +29,7 @@ Series with any fractional value keep equal-width real-valued bins and `.5g` lab
 
 ## Out of scope (separate design question)
 
-Approximate display of fractional values ("about 5" for 4.93) is left open by Zach and recorded as a separate issue. Changing the √n/10 default bin count for whole-number data is a possible follow-up, not done here.
+Approximate display of fractional values ("about 5" for 4.93) is left open by Zach and recorded as issue #44. The log10 view keeps real-valued bins (its ranges are in original units, e.g. "6.96 – 9.19").
 
 ## Acceptance
 

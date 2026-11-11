@@ -105,7 +105,8 @@ def test_normal_and_offset_decoys_do_not_change(name):
         for ch_now, ch_main in pairs:
             if ch_now.pop("whole_number_bins", None):
                 assert ch_main["kind"] == ch_now["kind"] == "histogram"
-                assert sum(d["count"] for d in ch_now.pop("data")) == sum(d["count"] for d in ch_main.pop("data"))
+                now_total = sum(d["count"] for d in ch_now.pop("data") + ch_now.pop("tail", []))
+                assert now_total == sum(d["count"] for d in ch_main.pop("data"))
     assert now == main  # equal artifacts imply equal chart geometry, so normal-scale SVGs are unchanged
 
 
