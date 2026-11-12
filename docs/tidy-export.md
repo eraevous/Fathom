@@ -26,6 +26,12 @@ Finding rows retain source wording and order. `collection` separates ordinary
 findings from Liftoff automatic and conditional-preview findings. Evidence becomes
 columns such as `evidence.0.value.statistics.mean`, not a JSON object in one cell.
 Relations contain the selected stored pairs; excluded/capped pairs are not recomputed.
+Since spec027 a selected relationship may also carry `type_pair.*` fields: the pair
+type (for example `type_pair.pair_type`), roles, `type_pair.measures.*` (Spearman rho,
+rank-biserial, Kruskal-Wallis H, rank eta-squared, bias-corrected Cramér's V, odds
+ratio, risk difference, phi), per-group summaries, the capped contingency counts and
+the chart data. Missingness-by-group rows and older artifacts leave these blank.
+The matching `type_pair_association` observation appears in findings.csv.
 Samples preserve the saved first/last/random roles and any saved truncation; they
 are not a full-data export or a new random sample. Repeated positions across sample
 roles are intentional. Empty relations/findings still have their fixed headers.

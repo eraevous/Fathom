@@ -308,11 +308,11 @@ def render_html(result: ProfilingResult,report=None):
         ta=d.get('target_analysis')
         out += ['<p>'+escape(ta['reason']+' '+ta['grouping_policy']+' '+ta['warning'] if ta else 'Target detail unavailable in legacy artifact; rerun profiling to compute it.')+'</p>']
         out += ['<div id="report-target" class="target-tables"><h3>Target</h3><p>Wide target tables scroll horizontally on narrow screens.</p>']+[html_table(t) for t in target_tables(d)]+['</div>']
-        if ta:out += [svg_chart(ch) for ch in ta['charts']]
+        if ta:out += ['<div id="target-chart-'+str(i)+'">'+svg_chart(ch)+'</div>' for i,ch in enumerate(ta['charts'])]
         if ta:out += ['<details><summary>Selected pair statistics and method details</summary>']
         for pair in d['bivariate']:
             out += ['<article><h3>'+escape(pair['left'])+' × '+escape(pair['right'])+'</h3><p>'+escape(pair['method'])+' · '+escape(pair['semantics'])+'</p>',
-                    ''.join(html_table(t) for t in structured_tables('Relationship statistics',pair['statistics'])),'<p>'+escape(pair['uncertainty'])+'</p></article>']
+                    ''.join(html_table(t) for t in structured_tables('Relationship statistics',pair['statistics'])),type_pair_html(pair,ta['charts'] if ta else None),'<p>'+escape(pair['uncertainty'])+'</p></article>']
         if ta:out += ['</details>']
         out += ['<details id="report-exclusions"><summary>Ranking and exclusions</summary>',readable_html(d['selection']),'</details>']
         if 'quality' in d:
@@ -322,6 +322,7 @@ def render_html(result: ProfilingResult,report=None):
         out += ['<section><h2>Labelled annotations</h2>',readable_html(d['annotations']),'</section>']
     css=theme_css()+KIND_CSS+TEMPORAL_CSS+'''body{font:16px/1.55 system-ui,sans-serif;background:var(--surface);color:var(--ink);max-width:1120px;padding:32px;margin:auto}h1{font-size:44px;margin-bottom:8px}h2{border-bottom:2px solid var(--rule);padding-bottom:7px;margin-top:40px}h3{margin-top:24px}section{margin-bottom:30px}.opening{background:var(--panel);padding:24px;border:1px solid var(--border);border-radius:8px}table{border-collapse:collapse;width:100%;background:var(--panel)}td,th{padding:10px;text-align:left;border-bottom:1px solid var(--border);vertical-align:top}td{overflow-wrap:anywhere}article{background:var(--panel);border-left:3px solid var(--soft-border);padding:8px 16px;margin:10px 0}article>p{margin:7px 0}details{margin:8px 0}summary{cursor:pointer;color:var(--link);font-weight:600}details[open]{padding-bottom:10px}a{color:var(--link)}small{color:var(--muted)}dt{font-weight:600;margin-top:8px}dd{margin-left:20px;overflow-wrap:anywhere}ul{padding-left:24px}.sample-scroll{overflow-x:auto}.sample-scroll td{min-width:90px;max-width:260px;white-space:pre-wrap}svg{width:100%;max-width:800px}svg text{font:13px system-ui,sans-serif}label{cursor:pointer;font-weight:600;margin-left:8px}.summary-view{background:var(--tint);padding:12px;margin-top:12px}.repetitive{display:none}.repetitive:target{display:block}#full-view:checked ~ .summary-view{display:none}#full-view:checked ~ .full-view .summary-view{display:none}#full-view:checked ~ .full-view .repetitive{display:block}@media(max-width:700px){body{padding:12px}td,th{padding:6px;font-size:14px}.opening{padding:12px}}@media print{body{background:var(--panel);padding:0}details{break-inside:avoid}.repetitive{display:block}}'''
     css += '.finding-verdict{max-width:90ch}.quantity-list{margin:8px 0}.quantity-list li{margin:4px 0}.column-entry{box-sizing:border-box;width:100%;border:1px solid var(--border);border-radius:6px;padding:20px;margin:24px 0}.column-entry h3{margin-top:0;overflow-wrap:anywhere}.review-table{table-layout:fixed;margin:12px 0 20px}.review-table td,.review-table th{padding:6px 10px}caption{text-align:left;font-weight:600;padding:8px 0}.num{text-align:right;font-variant-numeric:tabular-nums}.table-scroll{overflow-x:auto;max-width:100%}.chart{margin:20px 0;max-width:100%;overflow-x:auto}.chart svg{width:720px;max-width:none;display:block}.chart svg text{font:15px system-ui,sans-serif}.chart-title{font-weight:600}figcaption{font-size:14px;margin:8px 0;color:var(--muted)}p{overflow-wrap:anywhere}'
+    css += '.type-pair .review-table{table-layout:auto;width:auto;max-width:none;min-width:0}.type-pair td,.type-pair th{overflow-wrap:normal;word-break:normal}.type-pair .num{white-space:nowrap}.type-pair .target-chart .review-table{min-width:0}.type-pair-note{font-size:14px;color:var(--muted);max-width:90ch}.type-pair .table-scroll caption{position:sticky;left:0;max-width:calc(100vw - 64px)}.type-pair .chart{max-width:100%}.type-pair .chart svg{width:100%;max-width:560px;height:auto}.scroll-note{font-size:14px;color:var(--muted);margin:2px 0 12px;display:none}.scroll-note.always{display:block}@media(max-width:700px){.scroll-note{display:block}}.type-pair .table-scroll{overflow-x:auto;padding-bottom:4px}.type-pair .table-scroll::-webkit-scrollbar{height:10px;background:var(--tint)}.type-pair .table-scroll::-webkit-scrollbar-thumb{background:var(--muted);border-radius:5px}.heat td,.heat th{padding:6px 8px}.heat td{min-width:4.5em}.heat-bar{display:block;height:5px;margin-top:4px;background:var(--accent);min-width:0}.heat th[scope=row]{white-space:nowrap}'
     css += '.target-chart .review-table{max-width:none;min-width:680px;table-layout:auto}.target-chart .review-table .num{white-space:nowrap}.target-tables td{white-space:pre-line}.target-tables .review-table{max-width:none;min-width:640px;table-layout:auto}.column-entry{padding:12px 16px;margin:10px 0}.column-entry>summary{display:list-item}.column-entry>summary h3{display:inline;margin:0 16px 0 0;font-size:18px}.column-entry>summary span{font-size:14px;font-weight:400;color:var(--muted)}.column-grid{display:grid;grid-template-columns:minmax(230px,.75fr) minmax(0,1.25fr);gap:24px;align-items:start}.column-statistics{min-width:0;max-width:360px;position:sticky;top:12px;max-height:65vh;overflow-y:auto}.column-plots{min-width:0}.review-table{max-width:420px}.chart{max-width:760px}.chart svg{width:100%;max-width:100%;height:auto}.chart svg text{font:18px system-ui,sans-serif}.chart h4{font-size:16px;margin:8px 0}.axis-captions p{margin:3px 0;font-size:14px;overflow-wrap:anywhere}.box-summary{max-width:320px}.chart{overflow:visible;margin:10px 0 20px}.column-entry .table-scroll{max-width:100%}@media(max-width:800px){.column-grid{grid-template-columns:minmax(0,1fr)}.column-entry{padding:10px}.column-statistics{max-width:100%;position:static;max-height:none;overflow:visible}}@media(max-width:500px){.chart svg text{font-size:22px}}'
     return style_html('<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Fathom — '+escape(d['kind'])+'</title><style>'+css+STYLE_CSS+SUMMARY_CSS+IDENTIFIER_CSS+'</style></head><body>'+'\n'.join(out)+NAV_SCRIPT+TRANSPOSE_SCRIPT+'</body></html>\n', columns=[c['name'] for c in d.get('columns',[])])
 
@@ -338,6 +339,58 @@ def dictionary_and_provenance_markdown(d):
     lines += ['## Provenance','','Source and context are recorded; technical details are collapsed.','','<details><summary>Provenance internals</summary>','',readable_md({'source':d['source'],'context':d['context'],'schema':d['schema'],'dependencies':d['dependencies'],'identity_basis':d.get('dataset',{}).get('basis',{})}),
               '### Working record (human declarations)','',readable_md(d['working_record']),'</details>','']
     return lines
+
+
+UNAVAILABLE_CHART=('The target chart this pair refers to ({title}) is not available in this report: none of its complete cases '
+                   'could be plotted (for example, none is positive on a log-scale axis). The measures above still apply.')
+
+
+def target_chart_link(chart,charts):
+    """Index of the rendered target chart a type-pair block refers to (matched by stored title), or None."""
+    return next((i for i,ch in enumerate(charts or []) if ch.get('title')==chart.get('title')),None)
+
+
+def scroll_note(columns,what='This table'):
+    """Deterministic scroll cue beside a table that can overflow: phones only from 5 columns, always from 9."""
+    if columns<5:return ''
+    return '<p class="scroll-note'+(' always' if columns>=9 else '')+'">'+what+' scrolls sideways when it is wider than the screen.</p>'
+
+
+def type_pair_html(pair,charts=None):
+    """Spec027 type-pair measures and chart; absent in legacy artifacts."""
+    if 'type_pair' not in pair:return ''
+    import hashlib
+    from .type_pairs import tables,notes,RULE_LINK_TEXT
+    tp=pair['type_pair'];chart=tp.get('chart')
+    rule_id='rule-'+hashlib.sha1((pair['left']+'\0'+pair['right']).encode('utf-8')).hexdigest()[:10]
+    parts=[]
+    for t in tables(pair):
+        parts.append(html_table(t).replace(RULE_LINK_TEXT,'<a href="#'+rule_id+'">'+RULE_LINK_TEXT+'</a>',1)+scroll_note(len(t['headers'])))
+    for n in notes(pair):
+        parts.append('<p class="type-pair-note"'+(' id="'+rule_id+'"' if n.startswith('Disagreement rule:') else '')+'>'+escape(n)+'</p>')
+    if chart and chart['kind']=='group_box':parts.append(svg_chart(chart)+scroll_note(8,'The chart values table above'))
+    elif chart and chart['kind']!='target_chart':parts.append(svg_chart(chart))
+    elif chart:parts.append(type_pair_reference_html(chart,charts))
+    return '<div class="type-pair"><h4>Type-pair measures</h4>'+''.join(parts)+'</div>'
+
+
+def type_pair_reference_html(chart,charts):
+    index=target_chart_link(chart,charts)
+    if index is None:return '<p>'+escape(UNAVAILABLE_CHART.format(title=chart['title']))+'</p>'
+    return '<p>'+escape(chart['note'])+' <a href="#target-chart-'+str(index)+'">Go to '+escape(chart['title'])+'</a>.</p>'
+
+
+def type_pair_markdown(pair,charts=None):
+    if 'type_pair' not in pair:return ''
+    from .type_pairs import tables,notes
+    chart=pair['type_pair'].get('chart')
+    return '\n#### Type-pair measures\n\n'+'\n'.join(markdown_table(t) for t in tables(pair))+'\n'+''.join(md_text(n)+'\n\n' for n in notes(pair))+(svg_chart(chart) if chart and chart['kind']!='target_chart' else type_pair_reference_markdown(chart,charts) if chart else '')+'\n'
+
+
+def type_pair_reference_markdown(chart,charts):
+    index=target_chart_link(chart,charts)
+    if index is None:return md_text(UNAVAILABLE_CHART.format(title=chart['title']))
+    return md_text(chart['note'])+' [Go to '+md_text(chart['title'])+'](#target-chart-'+str(index)+').'
 
 
 def render_markdown(result: ProfilingResult,report=None):
@@ -382,9 +435,9 @@ def render_markdown(result: ProfilingResult,report=None):
         ta=d.get('target_analysis')
         lines += [md_text(ta['reason']+' '+ta['grouping_policy']+' '+ta['warning'] if ta else 'Target detail unavailable in legacy artifact.'),'']
         lines += [markdown_table(t) for t in target_tables(d)]
-        if ta:lines += [svg_chart(ch) for ch in ta['charts']]
+        if ta:lines += ['<a id="target-chart-'+str(i)+'"></a>\n'+svg_chart(ch) for i,ch in enumerate(ta['charts'])]
         for pair in d['bivariate']:
-            lines += ['### '+md_text(pair['left'])+' × '+md_text(pair['right']),'',md_text(pair['method']+' · '+pair['semantics']),'','\n'.join(markdown_table(t) for t in structured_tables('Relationship statistics',pair['statistics'])),md_text(pair['uncertainty']),'']
+            lines += ['### '+md_text(pair['left'])+' × '+md_text(pair['right']),'',md_text(pair['method']+' · '+pair['semantics']),'','\n'.join(markdown_table(t) for t in structured_tables('Relationship statistics',pair['statistics'])),type_pair_markdown(pair,ta['charts'] if ta else None),md_text(pair['uncertainty']),'']
         lines += ['<details id="report-exclusions"><summary>Ranking and exclusions</summary>','',readable_md(d['selection']),'</details>','']
         if 'quality' in d:
             lines += ['<details><summary>Quality rules and screening coverage</summary>','',readable_md(d['quality']),'</details>','']
