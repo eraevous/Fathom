@@ -1,6 +1,7 @@
 """Scalable static charts; captions and summaries wrap independently of marks."""
 
 from html import escape
+import math
 import textwrap
 
 from .presentation import formatted, html_table, tick_label, original_tick
@@ -11,6 +12,120 @@ def linear_ticks(lo,hi,count=5):
     if lo==hi:return [lo]
     scale=max(abs(lo),abs(hi),1)
     return [(lo/scale+(hi/scale-lo/scale)*i/(count-1))*scale for i in range(count)]
+
+
+def whole_ticks(lo,hi,count=5):
+    """Whole-number axis ticks inside [lo, hi] for whole-number histograms (spec 028).
+
+    Their geometry runs on half-integers (bars are centred on the values they hold), so
+    plain linear ticks would print values like 2.5 that the data cannot take. Steps are
+    1, 2 or 5 times a power of ten, so spacing is even (0, 5, 10, 15 rather than 0, 4, 8, 11, 15)."""
+    first,last=math.ceil(lo),math.floor(hi)
+    if last-first<count:return list(range(first,last+1))
+    step=1
+    while (last-first)/step>count+2:
+        for factor in (2,2.5,2):  # 1 -> 2 -> 5 -> 10 -> 20 -> 50 ...
+            step=round(step*factor)
+            if (last-first)/step<=count+2:break
+    start=-(-first//step)*step
+    return list(range(start,last+1,step))
+
+def axis_ticks(chart,lo,hi):
+    return whole_ticks(lo,hi) if chart.get('whole_number_bins') else linear_ticks(lo,hi)
+
+
+def whole_note(chart):
+    """Plain disclosure of the whole-number bin layout; None for other charts."""
+    rule=chart.get('whole_number_bins')
+    if not rule:return None
+    width=rule['width']
+    note='Whole-number values: '+('one bar per value' if width==1 else f'each bar holds {width:,} consecutive whole values; labels are inclusive')
+    if rule.get('core'):
+        a,b=rule['core'];k=rule['tail_rows']
+        note+=f' from {a} to {b}. {k:,} row'+('s' if k!=1 else '')+' outside that range '+('are' if k!=1 else 'is')+' shown in the tail callout: '+tail_text(chart)
+    return note+'.'
+
+
+def tail_text(chart):
+    """The tail callout as text: '16 (1 row)' items joined, low side first."""
+    return '; '.join(f"{d['label']} ({d['count']:,} row{'s' if d['count']!=1 else ''})" for d in chart.get('tail',[]))
+
+
+def tail_inset(chart,data,px,left,right,top,bottom,maximum):
+    """Callout inset for a sparse whole-number tail (spec 028).
+
+    One row per tail item (label, a bar on the inset's own count scale, the count), so a
+    single outlying row stays visible without squashing the main bars. Placed in the top
+    corner of the plot whose bars it would not cover; otherwise in a band below the axis.
+    Returns (svg parts, extra height used below the chart)."""
+    items=chart['tail'];core=chart['whole_number_bins']['core']
+    # The inset never exceeds the plot width (#45 review: a core near 10**15 gave a 661-unit inset in a
+    # 560-unit SVG). Labels and the title are truncated to fit; the full text stays in hover titles and the
+    # figure note below the chart.
+    limit=right-left;budget=max(4,(limit-170-18)//13)
+    def short(label,size=min(14,budget)):return label if len(label)<=size else label[:size-1]+'…'
+    label_w=13*max(len(short(d['label'])) for d in items)+18
+    title=f'Tail outside {core[0]} to {core[1]}'
+    fit=(limit-24)//13
+    lines=[title] if len(title)<=fit else [short('Tail outside',fit),short(f'{core[0]} to {core[1]}',fit)]
+    w=min(limit,max(label_w+170,13*max(map(len,lines))+24));row=28;h=40+20*(len(lines)-1)+row*len(items)
+    def clear(x0):
+        # No main bar whose top rises into the inset footprint.
+        return all(not (px(d['high'])>x0 and px(d['low'])<x0+w) or bottom-d['count']/maximum*(bottom-top)>top+4+h for d in data)
+    extra=0
+    if h<=bottom-top-40 and clear(right-w-4):x0,y0=right-w-4,top+4
+    elif h<=bottom-top-40 and clear(left+4):x0,y0=left+4,top+4
+    else:x0,y0,extra=left,282,h+14
+    tmax=max(d['count'] for d in items) or 1
+    out=[f'<g class="tail-callout"><rect x="{x0}" y="{y0}" width="{w}" height="{h}" fill="{C["panel"]}" stroke="{C["accent_faint"]}" rx="4"/>',
+         f'<title>{escape(title)}</title>']
+    out+=[f'<text x="{x0+8}" y="{y0+24+20*i}" class="tick-label">{escape(line)}</text>' for i,line in enumerate(lines)]
+    y=y0+40+20*(len(lines)-1)
+    for d in items:
+        bw=max(2,d['count']/tmax*90)
+        out.append(f'<text x="{x0+8}" y="{y+16}" class="tick-label">{escape(short(d["label"]))}</text>')
+        out.append(f'<rect x="{x0+label_w}" y="{y+2}" width="{bw}" height="18" fill="{C["accent"]}"><title>{escape(d["label"])}: {d["count"]} (tail)</title></rect>')
+        out.append(f'<text x="{x0+label_w+bw+8}" y="{y+16}" class="tick-label">{escape(tick_label(d["count"]))}</text>')
+        y+=row
+    out.append('</g>')
+    return out,extra
+
+def axis_position(lo,hi,x0,width):
+    """Map v in [lo, hi] to x0..x0+width. Subtract first, then scale: with a large common offset (2.3e15) dividing
+    each value by the magnitude before subtracting loses most of the difference and distorts widths (#45 review).
+    Only when hi - lo itself overflows does it fall back to the scaled form. A zero span maps to the middle."""
+    total=hi-lo
+    if math.isfinite(total) and total>0:return lambda v:x0+width*((v-lo)/total)
+    scale=max(abs(lo),abs(hi),1);span=hi/scale-lo/scale
+    if math.isfinite(span) and span>0:return lambda v:x0+width*((v/scale-lo/scale)/span)
+    return lambda v:x0+width*.5
+
+
+EQUAL_WIDTH_NOTE=('Bars are drawn at equal widths: the bin boundaries are too close together to place on this axis '
+                  '(constant or near-constant values); labels and counts are exact.')
+
+
+def bar_layout(data,x0,width):
+    """(spans, note) for histogram bars inside the plot box x0..x0+width.
+
+    Bars sit at their own bin boundaries, so a narrower last whole-number bin is drawn narrower (#45 review).
+    When boundaries cannot be placed (a zero-span bin from constant values, or edges that collapse when chart
+    geometry is rounded), every bar gets an equal share of the plot instead, as before the repair, and the
+    note says so. Every returned width is finite and positive and every span stays inside the plot box."""
+    if not data:return [],None
+    lo,hi=data[0]['low'],data[-1]['high']
+    if hi>lo:
+        at=axis_position(lo,hi,x0,width)
+        spans=[(at(d['low']),at(d['high'])-at(d['low'])) for d in data]
+        if all(math.isfinite(x) and math.isfinite(w) and w>0 and x>=x0-1e-9 and x+w<=x0+width+1e-9 for x,w in spans):
+            return spans,None
+    share=width/len(data)
+    return [(x0+i*share,share) for i in range(len(data))],EQUAL_WIDTH_NOTE
+
+
+def bar_spans(data,x0,width):
+    """Bar (x, width) pairs shared by the SVG and PDF renderers; see bar_layout."""
+    return bar_layout(data,x0,width)[0]
 
 
 def count_ticks(maximum):
@@ -85,9 +200,8 @@ def svg_chart(chart):
         elif kind=='ecdf':lo,hi=chart['points'][0]['x'],chart['points'][-1]['x']
         elif kind=='histogram':lo,hi=data[0]['low'],data[-1]['high']
         else:lo,hi=0,max(1,len(data)-1)
-        scale=max(abs(lo),abs(hi),1);span=hi/scale-lo/scale
-        def px(v):return left+(right-left)*((v/scale-lo/scale)/span if span else .5)
-        ticks=linear_ticks(lo,hi)
+        px=axis_position(lo,hi,left,right-left)
+        ticks=axis_ticks(chart,lo,hi)
         if kind=='time':
             indices=sorted(set(round(i*(len(data)-1)/4) for i in range(5)))
             for i in indices:
@@ -110,12 +224,18 @@ def svg_chart(chart):
                 out.append(f'<path d="{path}" fill="none" stroke="{C["accent"]}" stroke-width="2"/>')
             else:
                 barwidth=(right-left)/len(data)
-                for i,d in enumerate(data):
+                spans,_=bar_layout(data,left,right-left) if kind=='histogram' else ([(left+i*barwidth,barwidth) for i in range(len(data))],None)
+                for (x,bw),d in zip(spans,data):
                     h=d['count']/maximum*(bottom-top)
-                    out.append(f'<rect x="{left+i*barwidth}" y="{bottom-h}" width="{max(.5,barwidth-2)}" height="{h}" fill="{C["accent"]}"><title>{e(d["label"])}: {d["count"]}</title></rect>')
+                    out.append(f'<rect x="{x}" y="{bottom-h}" width="{max(.5,bw-2)}" height="{h}" fill="{C["accent"]}"><title>{e(d["label"])}: {d["count"]}</title></rect>')
+                if chart.get('tail'):
+                    parts,extra=tail_inset(chart,data,px,left,right,top,bottom,maximum);out+=parts
+                    if extra:out[0]=out[0].replace(f'viewBox="0 0 {width} {height}"',f'viewBox="0 0 {width} {height+extra}"')
     out.append('</svg>')
     notes=[]
+    if kind=='histogram' and data and bar_layout(data,0,1)[1]:notes.append(EQUAL_WIDTH_NOTE)
     if kind=='time' and data:notes.append('Calendar range: '+data[0]['label']+' to '+data[-1]['label']+('. Day ticks omit the year; exact dates remain in chart values.' if chart.get('period')=='day' else '. Exact calendar-period labels and values remain in chart values.'))
+    if whole_note(chart):notes.append(whole_note(chart))
     if 'coverage' in chart:notes.append('Top10 covers '+formatted(chart['coverage'],True)+f" of {chart['denominator']:,} raw values; remainder is shown separately.")
     if chart.get('omitted_periods'):notes.append(f"{chart['omitted_periods']:,} middle calendar bins omitted; full counts remain in profile.")
     if chart.get('omitted_points'):notes.append(f"Approximate ECDF display: {chart['omitted_points']:,} distinct points omitted.")
@@ -123,6 +243,8 @@ def svg_chart(chart):
         counts=chart.get('coverage_counts')
         notes.append((f"Positive values: {counts['positive']:,}. Zeros excluded: {counts['zeros']:,}. Negatives excluded: {counts['negatives']:,}. Invalid excluded: {counts['invalid']:,}." if counts else 'Legacy log coverage counts unavailable.')+' Positive-only denominator; original-unit ticks on log scale; linear view retained.')
     rows=[[d['label'],formatted(d['count'])] for d in data]
+    if chart.get('tail'):
+        tail=chart['tail'];rows=[[d['label']+' (tail callout)',formatted(d['count'])] for d in tail if d['side']=='low']+rows+[[d['label']+' (tail callout)',formatted(d['count'])] for d in tail if d['side']=='high']
     if kind=='ecdf':rows=[[original_tick(chart,p['x']),formatted(p['cumulative'],True)] for p in chart['points']]
     if kind=='box':rows=[[k.upper() if k in {'q1','q3'} else k.capitalize(),formatted(chart['box'][k])] for k in ('min','q1','median','q3','max')]
     table=html_table({'caption':'Five-number summary' if kind=='box' else 'Plotted values','headers':['Value','Cumulative share' if kind=='ecdf' else 'Measurement' if kind=='box' else 'Count'],'rows':rows,'numeric':[1]})

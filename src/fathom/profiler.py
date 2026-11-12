@@ -227,9 +227,9 @@ def profile(data: GuideDataFrame, config: dict | None = None) -> ProfilingResult
 def report_settings(cfg: dict) -> dict:
     """Human rendering choices (spec012). Omitted sections stay computed in this artifact."""
     from .config import OPTIONAL_SECTIONS
-    from .univariate import bin_rule
+    from .univariate import report_bin_rule
     return {"generator": "human" if cfg.get("bins") or not all(cfg["sections"].values()) else "system default",
-            "bins": cfg.get("bins"), "bin_rule": bin_rule(cfg.get("bins")),
+            "bins": cfg.get("bins"), "bin_rule": report_bin_rule(cfg.get("bins")),
             "omitted_sections": [{"key": k, "title": OPTIONAL_SECTIONS[k]} for k, on in cfg["sections"].items() if not on]}
 
 
