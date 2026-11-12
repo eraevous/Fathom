@@ -146,7 +146,7 @@ def pdf_bytes(d,report=None):
             else:self.height=140 if ch['kind']=='box' else 250 if ch['kind']!='bar' else max(200,110+len(ch.get('data',[]))*12)
         def draw(self):
             c=self.canv;ch=self.ch;c.setFont(font,8);c.setFillColor(colors.HexColor(C['ink']));c.setStrokeColor(colors.HexColor(C['accent']))
-            from .charts import linear_ticks, count_ticks
+            from .charts import axis_ticks, linear_ticks, count_ticks
             from .presentation import tick_label
             def wrapped(value,y):
                 import textwrap
@@ -172,8 +172,8 @@ def pdf_bytes(d,report=None):
                 for i,k in enumerate(('min','q1','median','q3','max')):c.drawString(40,65-i*8,text(k+': '+formatted(b[k])))
                 for value in linear_ticks(b['min'],b['max']):c.drawCentredString(x(value),120,tick_label(value))
             elif ch['kind']=='ecdf':
-                points=ch['points'];lo,hi=points[0]['x'],points[-1]['x'];scale=max(abs(lo),abs(hi),1);span=hi/scale-lo/scale
-                def x(v):return 55+390*((v/scale-lo/scale)/span if span else .5)
+                from .charts import axis_position
+                points=ch['points'];lo,hi=points[0]['x'],points[-1]['x'];x=axis_position(lo,hi,55,390)
                 path=c.beginPath();path.moveTo(x(lo),45)
                 previous=0
                 for point in points:
@@ -190,12 +190,18 @@ def pdf_bytes(d,report=None):
                         c.drawRightString(180,y,label);end=190+230*item['count']/maximum;c.rect(190,y-2,end-190,8,fill=1,stroke=0);c.drawString(end+5,y,formatted(item['count']))
                 else:
                     width=390/len(data)
-                    for i,item in enumerate(data):c.rect(55+i*width,45,max(.5,width-2),135*item['count']/maximum,fill=1,stroke=0)
+                    if ch['kind']=='histogram':
+                        # Bars at their own bin boundaries (a truncated last whole-number bin is narrower; #45 review).
+                        from .charts import bar_spans
+                        for (bx,bw),item in zip(bar_spans(data,55,390),data):c.rect(bx,45,max(.5,bw-2),135*item['count']/maximum,fill=1,stroke=0)
+                    else:
+                        for i,item in enumerate(data):c.rect(55+i*width,45,max(.5,width-2),135*item['count']/maximum,fill=1,stroke=0)
                     first=formatted(data[0]['low']) if ch['kind']=='histogram' else data[0]['label'];last=formatted(data[-1]['high']) if ch['kind']=='histogram' else data[-1]['label']
                     for value in count_ticks(maximum):c.drawRightString(48,45+135*value/maximum,tick_label(value))
                     if ch['kind']=='histogram':
-                        lo,hi=data[0]['low'],data[-1]['high'];scale=max(abs(lo),abs(hi),1);span=hi/scale-lo/scale
-                        for value in linear_ticks(lo,hi):c.drawCentredString(55+390*((value/scale-lo/scale)/span if span else .5),35,original_tick(ch,value))
+                        from .charts import axis_position
+                        lo,hi=data[0]['low'],data[-1]['high'];at=axis_position(lo,hi,55,390)
+                        for value in axis_ticks(ch,lo,hi):c.drawCentredString(at(value),35,original_tick(ch,value))
                     else:
                         for i in sorted(set(round(j*(len(data)-1)/4) for j in range(5))):c.drawCentredString(55+390*((i+.5)/len(data)),35,text(data[i]['label']))
             if ch.get('omitted_periods'):c.drawString(30,18,str(ch['omitted_periods'])+' middle periods omitted; see saved profile.')
@@ -209,6 +215,13 @@ def pdf_bytes(d,report=None):
         if 'coverage' in ch:story.append(p('Top10 coverage: '+formatted(ch['coverage'],True)+'; other is the remainder.'))
         if ch.get('coverage_counts'):
             s=ch['coverage_counts'];story.append(p(f"Positive log view: {s['positive']:,} positives; zeros excluded: {s['zeros']:,}; negatives excluded: {s['negatives']:,}; invalid excluded: {s['invalid']:,}."))
+        if ch.get('whole_number_bins'):
+            from .charts import whole_note
+            story.append(p(whole_note(ch)))
+        if ch['kind']=='histogram' and ch.get('data'):
+            from .charts import bar_layout
+            note=bar_layout(ch['data'],55,390)[1]
+            if note:story.append(p(note))
         if ch['kind']=='bar' and any(len(str(x['label']))>29 for x in ch.get('data',[])):story.append(p('Long chart labels shortened with …; exact labels remain in the core report/artifact.'))
     if d['kind']=='profile':
         heading('Dictionary')
@@ -467,9 +480,14 @@ def pptx_bytes(d,full=False,report=None):
                     series.add_data_point(10**point['x'] if ch.get('scale')=='log10' else point['x'],point['cumulative']*100);previous=point['cumulative']
                 chart_type=XL_CHART_TYPE.XY_SCATTER_LINES_NO_MARKERS
             else:
-                categories=[original_tick(ch,v['low'])+' – '+original_tick(ch,v['high']) if ch['kind']=='histogram' else str(v['label']) for v in data]
+                categories=[original_tick(ch,v['low'])+' – '+original_tick(ch,v['high']) if ch['kind']=='histogram' and not ch.get('whole_number_bins') else str(v['label']) for v in data]
                 # Native office engines otherwise expand long categories off-slide.
                 shortened=[v if len(v)<=42 else v[:41]+'…' for v in categories]
+                if ch.get('tail'):
+                    # Sparse whole-number tail (spec 028): native charts have no inset, so tail values sit at
+                    # the matching end of the category axis, labelled; counts stay exact.
+                    low=[v for v in ch['tail'] if v['side']=='low'];high=[v for v in ch['tail'] if v['side']=='high']
+                    shortened=[v['label']+' (tail)' for v in low]+shortened+[v['label']+' (tail)' for v in high];data=low+list(data)+high
                 values=CategoryChartData();values.categories=shortened;values.add_series('Values (count)',[v['count'] for v in data])
                 chart_type=XL_CHART_TYPE.BAR_CLUSTERED if ch['kind']=='bar' else XL_CHART_TYPE.COLUMN_CLUSTERED
             chart=s.shapes.add_chart(chart_type,Inches(.7),Inches(1.6),Inches(12),Inches(4.8),values).chart
