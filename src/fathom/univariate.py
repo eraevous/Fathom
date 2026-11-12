@@ -165,7 +165,8 @@ TAIL_ITEMS=6       # tail values listed one by one up to this many per side; bey
 
 def whole_runs(values,width,first=None,last=None):
     """Group whole ``values`` (a Counter) into inclusive runs of ``width`` from ``first`` to ``last``
-    (default: the smallest and largest value present). Empty runs are kept."""
+    (default: the smallest and largest value present). Empty runs are kept. The last run may be narrower;
+    renderers place every bar at its own ``low``/``high`` (#45 review), so bars always match labels."""
     first=min(values) if first is None else first;last=max(values) if last is None else last
     out=[]
     for start in range(first,last+1,width):
@@ -208,14 +209,16 @@ def histogram_bins(nums,bins=None,allow_whole=True):
        values outside it go to ``tail`` (drawn as a callout inset with its own scale);
     3. otherwise up to 16 equal whole-value bars cover the whole range.
 
-    ``data`` plus ``tail`` always account for every value. Magnitudes above 2**53 (where
-    every float is integral) and any series with a fractional value keep the original
+    ``data`` plus ``tail`` always account for every value. Magnitudes at or above 2**52
+    (where half-integer edges stop being exactly representable) and any series with a fractional value keep the original
     equal-width real-valued bins and ``.5g`` labels: genuine fractions are never
     rounded away. Stored values and statistics are untouched either way.
     """
     lo,hi=min(nums),max(nums);n=len(nums)
-    # Above 2**53 every float is "whole", so integrality says nothing about the data there.
-    if allow_whole and max(abs(lo),abs(hi))<=2**53 and all(float(x).is_integer() for x in nums):
+    # Whole-number geometry sits on half-integers (v - 0.5, v + 0.5), which floats represent exactly only below
+    # 2**52 (#45 review: at 2**52 the last bin collapsed). At and above 2**52 the real-valued bins are kept; above
+    # 2**53 every float is "whole" anyway, so integrality would say nothing about the data there.
+    if allow_whole and max(abs(lo),abs(hi))<2**52 and all(float(x).is_integer() for x in nums):
         values=Counter(int(x) for x in nums);lo,hi=min(values),max(values);span=hi-lo+1
         cap=bins or WHOLE_BARS
         if span<=cap:

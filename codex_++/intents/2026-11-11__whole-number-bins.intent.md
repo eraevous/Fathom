@@ -14,3 +14,5 @@
 
 1. Approximate display ("about 5" for 4.93): whether, where (hover, tables, prose) and how. Recorded separately; not started.
 2. Answered by Zach (16 bars, tail callout); the 5% tail threshold is the open part.
+
+**2026-11-12 (repairs, claude:fathom):** Zach on #45: "I agree with the tail threshold. Approximate display is fine for now." The 5% tail threshold stands and approximate display stays out of scope. Repairs after merging main (#41): histogram bars are placed at their own bin boundaries in the SVG and PDF (one shared `bar_spans`), so a narrower last whole-number bin no longer disagrees with its label and ticks; the spec's exact, non-overrunning partition is kept rather than padding the last bin. Whole-number geometry now requires |x| < 2^52 (half-integer edges exact), revised from ≤ 2^53. The tail inset is capped at the plot width, with a two-line title and truncated labels (full text in the hover title and the figure note).

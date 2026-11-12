@@ -190,7 +190,12 @@ def pdf_bytes(d,report=None):
                         c.drawRightString(180,y,label);end=190+230*item['count']/maximum;c.rect(190,y-2,end-190,8,fill=1,stroke=0);c.drawString(end+5,y,formatted(item['count']))
                 else:
                     width=390/len(data)
-                    for i,item in enumerate(data):c.rect(55+i*width,45,max(.5,width-2),135*item['count']/maximum,fill=1,stroke=0)
+                    if ch['kind']=='histogram':
+                        # Bars at their own bin boundaries (a truncated last whole-number bin is narrower; #45 review).
+                        from .charts import bar_spans
+                        for (bx,bw),item in zip(bar_spans(data,55,390),data):c.rect(bx,45,max(.5,bw-2),135*item['count']/maximum,fill=1,stroke=0)
+                    else:
+                        for i,item in enumerate(data):c.rect(55+i*width,45,max(.5,width-2),135*item['count']/maximum,fill=1,stroke=0)
                     first=formatted(data[0]['low']) if ch['kind']=='histogram' else data[0]['label'];last=formatted(data[-1]['high']) if ch['kind']=='histogram' else data[-1]['label']
                     for value in count_ticks(maximum):c.drawRightString(48,45+135*value/maximum,tick_label(value))
                     if ch['kind']=='histogram':

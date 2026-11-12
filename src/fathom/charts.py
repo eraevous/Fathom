@@ -59,10 +59,16 @@ def tail_inset(chart,data,px,left,right,top,bottom,maximum):
     corner of the plot whose bars it would not cover; otherwise in a band below the axis.
     Returns (svg parts, extra height used below the chart)."""
     items=chart['tail'];core=chart['whole_number_bins']['core']
-    def short(label):return label if len(label)<=14 else label[:13]+'…'
+    # The inset never exceeds the plot width (#45 review: a core near 10**15 gave a 661-unit inset in a
+    # 560-unit SVG). Labels and the title are truncated to fit; the full text stays in hover titles and the
+    # figure note below the chart.
+    limit=right-left;budget=max(4,(limit-170-18)//13)
+    def short(label,size=min(14,budget)):return label if len(label)<=size else label[:size-1]+'…'
     label_w=13*max(len(short(d['label'])) for d in items)+18
     title=f'Tail outside {core[0]} to {core[1]}'
-    w=max(label_w+170,13*len(title)+24);row=28;h=40+row*len(items)
+    fit=(limit-24)//13
+    lines=[title] if len(title)<=fit else [short('Tail outside',fit),short(f'{core[0]} to {core[1]}',fit)]
+    w=min(limit,max(label_w+170,13*max(map(len,lines))+24));row=28;h=40+20*(len(lines)-1)+row*len(items)
     def clear(x0):
         # No main bar whose top rises into the inset footprint.
         return all(not (px(d['high'])>x0 and px(d['low'])<x0+w) or bottom-d['count']/maximum*(bottom-top)>top+4+h for d in data)
@@ -72,8 +78,9 @@ def tail_inset(chart,data,px,left,right,top,bottom,maximum):
     else:x0,y0,extra=left,282,h+14
     tmax=max(d['count'] for d in items) or 1
     out=[f'<g class="tail-callout"><rect x="{x0}" y="{y0}" width="{w}" height="{h}" fill="{C["panel"]}" stroke="{C["accent_faint"]}" rx="4"/>',
-         f'<text x="{x0+8}" y="{y0+24}" class="tick-label">{escape(title)}</text>']
-    y=y0+40
+         f'<title>{escape(title)}</title>']
+    out+=[f'<text x="{x0+8}" y="{y0+24+20*i}" class="tick-label">{escape(line)}</text>' for i,line in enumerate(lines)]
+    y=y0+40+20*(len(lines)-1)
     for d in items:
         bw=max(2,d['count']/tmax*90)
         out.append(f'<text x="{x0+8}" y="{y+16}" class="tick-label">{escape(short(d["label"]))}</text>')
@@ -82,6 +89,14 @@ def tail_inset(chart,data,px,left,right,top,bottom,maximum):
         y+=row
     out.append('</g>')
     return out,extra
+
+def bar_spans(data,x0,width):
+    """(x, width) of each histogram bar at its own bin boundaries, shared by the SVG and PDF renderers, so a
+    narrower last whole-number bin is drawn narrower and bars always agree with labels and ticks (#45 review)."""
+    lo,hi=data[0]['low'],data[-1]['high'];scale=max(abs(lo),abs(hi),1);span=hi/scale-lo/scale
+    def at(v):return x0+width*((v/scale-lo/scale)/span if span else .5)
+    return [(at(d['low']),at(d['high'])-at(d['low'])) for d in data]
+
 
 def count_ticks(maximum):
     """Count axes use distinct whole-number tick positions."""
@@ -180,9 +195,10 @@ def svg_chart(chart):
                 out.append(f'<path d="{path}" fill="none" stroke="{C["accent"]}" stroke-width="2"/>')
             else:
                 barwidth=(right-left)/len(data)
-                for i,d in enumerate(data):
+                spans=bar_spans(data,left,right-left) if kind=='histogram' else [(left+i*barwidth,barwidth) for i in range(len(data))]
+                for (x,bw),d in zip(spans,data):
                     h=d['count']/maximum*(bottom-top)
-                    out.append(f'<rect x="{left+i*barwidth}" y="{bottom-h}" width="{max(.5,barwidth-2)}" height="{h}" fill="{C["accent"]}"><title>{e(d["label"])}: {d["count"]}</title></rect>')
+                    out.append(f'<rect x="{x}" y="{bottom-h}" width="{max(.5,bw-2)}" height="{h}" fill="{C["accent"]}"><title>{e(d["label"])}: {d["count"]}</title></rect>')
                 if chart.get('tail'):
                     parts,extra=tail_inset(chart,data,px,left,right,top,bottom,maximum);out+=parts
                     if extra:out[0]=out[0].replace(f'viewBox="0 0 {width} {height}"',f'viewBox="0 0 {width} {height+extra}"')

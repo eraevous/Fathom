@@ -6,7 +6,7 @@ Proposed for Zach. Serves: P0@2, DG-RB@1, DG-RE@1, DG-RF@1, FT-R17@2.
 
 ## US1: Whole-number series get whole-number bins (P1)
 
-When every finite value of a linear-scale histogram series is a whole number, and magnitudes are within the exactly representable float range (|x| ≤ 2^53):
+When every finite value of a linear-scale histogram series is a whole number, and magnitudes keep half-integer bin edges exactly representable (|x| < 2^52; revised from ≤ 2^53 after review, 2026-11-12):
 
 - each bin holds a contiguous run of whole values;
 - the label is inclusive (`3`, or `0 to 2`); it is used by the SVG hover title, the chart-values table, Markdown, PDF and PowerPoint categories;
@@ -33,4 +33,4 @@ Approximate display of fractional values ("about 5" for 4.93) is left open by Za
 
 ## Acceptance
 
-Violating fixture (0–16 whole values, previously `0 to 1.6`) and clean decoys (a genuine 2.5; powers of ten on the log view; magnitudes above 2^53). Negative, constant, float-typed whole, boundary and very large values. SVG titles and ticks contain no fractional values for whole-number charts. Salvage decoys reproduce saved artifacts except re-binned whole-number histograms, whose totals must match. Full suite with export extras; byte-identical reruns across hash seeds; screenshots at 1280 and 390 px, light and dark (`review/`).
+Violating fixture (0–16 whole values, previously `0 to 1.6`) and clean decoys (a genuine 2.5; powers of ten on the log view; magnitudes at or above 2^52). Negative, constant, float-typed whole, boundary and very large values. SVG titles and ticks contain no fractional values for whole-number charts. Salvage decoys reproduce saved artifacts except re-binned whole-number histograms, whose totals must match. Full suite with export extras; byte-identical reruns across hash seeds; screenshots at 1280 and 390 px, light and dark (`review/`).

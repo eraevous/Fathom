@@ -7,6 +7,8 @@ keeps the original real-valued bins. Violating fixtures sit beside clean decoys.
 """
 import re
 
+import pytest
+
 from fathom.charts import svg_chart, whole_ticks
 from fathom.univariate import histogram, histogram_bins, numeric_profile
 
@@ -163,8 +165,11 @@ def test_beyond_exact_float_integers_keeps_real_valued_bins():
     # Above 2**53 every float is integral, so integrality says nothing about the data.
     data, extra = histogram_bins([1e300, 2e300, 5e300])
     assert extra == {} and sum(d["count"] for d in data) == 3
-    data, extra = histogram_bins([0, 2**53])
+    # Revised boundary (#45 review): half-integer edges are exact only below 2**52.
+    data, extra = histogram_bins([0, 2**52 - 1])
     assert extra["whole_number_bins"]["width"] > 1 and sum(d["count"] for d in data) == 2
+    data, extra = histogram_bins([0, 2**53])
+    assert extra == {} and sum(d["count"] for d in data) == 2
 
 
 def test_tail_callout_inset_table_and_note():
@@ -191,3 +196,74 @@ def test_report_level_rule_discloses_both_layouts():
     rule = report_bin_rule()
     assert rule.startswith("sqrt(n) rounded up, capped at 10") and "whole-number columns" in rule
     assert "at most 6 whole-value bins" in report_bin_rule(6)
+
+
+# ---------------------------------------------------------------- repairs 2026-11-12 (bot findings on #45)
+
+def test_bars_are_drawn_at_their_bin_boundaries():
+    """Codex 4544048070 / Copilot 4544920908: a truncated last bin made bars (drawn by index) disagree with labels."""
+    import re
+    from fathom.charts import svg_chart
+    from fathom.univariate import histogram
+    chart = histogram(list(range(7)), 't', 'x', bins=3)
+    # Bins keep the spec's exact, non-overrunning partition; the narrower last bin is drawn narrower.
+    assert [d['label'] for d in chart['data']] == ['0 to 2', '3 to 5', '6']
+    assert [d['high'] - d['low'] for d in chart['data']] == [3, 3, 1]
+    # In the SVG each bar spans exactly its bin's interval on the axis.
+    svg = svg_chart(chart)
+    bars = [(float(x), float(w)) for x, w in re.findall(r'<rect x="([\d.]+)" y="[^"]+" width="([\d.]+)" height="[^"]+" fill="[^"]+"><title>', svg)]
+    assert len(bars) == 3
+    left, right = 65, 515
+    lo, hi = chart['data'][0]['low'], chart['data'][-1]['high']
+    for (x, w), d in zip(bars, chart['data']):
+        assert x == pytest.approx(left + (right - left) * (d['low'] - lo) / (hi - lo))
+        assert x + w + 2 == pytest.approx(left + (right - left) * (d['high'] - lo) / (hi - lo))
+
+
+def test_half_integer_geometry_stays_representable_near_2_52():
+    """Copilot 4544920927: at 2**52 a half-integer edge rounds, collapsing the last bin."""
+    from fathom.univariate import histogram
+    big = histogram([2 ** 52, 2 ** 52 + 1, 2 ** 52 + 2], 't', 'x')
+    assert 'whole_number_bins' not in big
+    assert all(d['low'] < d['high'] for d in big['data'])
+    below = histogram([2 ** 52 - 3, 2 ** 52 - 2, 2 ** 52 - 1], 't', 'x')
+    assert 'whole_number_bins' in below
+    assert all(d['low'] < d['high'] for d in below['data'])
+    assert [d['high'] - d['low'] for d in below['data']] == [1, 1, 1]
+
+
+def test_tail_inset_fits_inside_the_svg():
+    """Copilot 4544920864: a 16-value core near 10**15 produced a 661-unit inset inside a 560-unit SVG."""
+    import re
+    from fathom.charts import svg_chart
+    from fathom.univariate import histogram
+    base = 10 ** 15
+    nums = [base + v for v in range(16) for _ in range(3)] + [base + 100000]
+    chart = histogram(nums, 'Big counts', 'x')
+    assert chart.get('tail')
+    svg = svg_chart(chart)
+    width = float(re.search(r'viewBox="0 0 ([\d.]+) ', svg).group(1))
+    inset = re.search(r'<g class="tail-callout"><rect x="([\d.]+)" y="[\d.]+" width="([\d.]+)"', svg)
+    x0, w = float(inset.group(1)), float(inset.group(2))
+    assert 0 <= x0 and x0 + w <= width, (x0, w, width)
+    group = svg[svg.index('<g class="tail-callout">'):svg.index('</g>', svg.index('<g class="tail-callout">'))]
+    for text in re.findall(r'<text x="[\d.]+" y="[\d.]+" class="tick-label">([^<]*)</text>', group):
+        assert 13 * len(text) <= w, text
+    assert str(base) in svg  # the full core range stays available (title tooltip / note)
+
+
+def test_pdf_histogram_uses_boundary_bar_spans(make_profile, monkeypatch):
+    """The PDF renderer places histogram bars with the same boundary geometry as the SVG (#45 review)."""
+    pytest.importorskip('reportlab')
+    import fathom.charts as charts
+    from fathom.exports import export_bundle
+    from fathom.univariate import histogram
+    calls = []
+    real = charts.bar_spans
+    monkeypatch.setattr(charts, 'bar_spans', lambda data, x0, width: calls.append((x0, width, [d['label'] for d in data])) or real(data, x0, width))
+    p = make_profile('v\n' + '\n'.join(str(i) for i in range(7)) + '\n', {'bins': 3})
+    files, _ = export_bundle(p, ['pdf'])
+    assert files['report.pdf'].startswith(b'%PDF-')
+    assert (55, 390, ['0 to 2', '3 to 5', '6']) in calls
+    spans = real(histogram(list(range(7)), 't', 'x', bins=3)['data'], 55, 390)
+    assert [round(w / spans[0][1], 6) for _, w in spans] == [1, 1, round(1 / 3, 6)]
