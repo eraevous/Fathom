@@ -172,8 +172,8 @@ def pdf_bytes(d,report=None):
                 for i,k in enumerate(('min','q1','median','q3','max')):c.drawString(40,65-i*8,text(k+': '+formatted(b[k])))
                 for value in linear_ticks(b['min'],b['max']):c.drawCentredString(x(value),120,tick_label(value))
             elif ch['kind']=='ecdf':
-                points=ch['points'];lo,hi=points[0]['x'],points[-1]['x'];scale=max(abs(lo),abs(hi),1);span=hi/scale-lo/scale
-                def x(v):return 55+390*((v/scale-lo/scale)/span if span else .5)
+                from .charts import axis_position
+                points=ch['points'];lo,hi=points[0]['x'],points[-1]['x'];x=axis_position(lo,hi,55,390)
                 path=c.beginPath();path.moveTo(x(lo),45)
                 previous=0
                 for point in points:
@@ -199,8 +199,9 @@ def pdf_bytes(d,report=None):
                     first=formatted(data[0]['low']) if ch['kind']=='histogram' else data[0]['label'];last=formatted(data[-1]['high']) if ch['kind']=='histogram' else data[-1]['label']
                     for value in count_ticks(maximum):c.drawRightString(48,45+135*value/maximum,tick_label(value))
                     if ch['kind']=='histogram':
-                        lo,hi=data[0]['low'],data[-1]['high'];scale=max(abs(lo),abs(hi),1);span=hi/scale-lo/scale
-                        for value in axis_ticks(ch,lo,hi):c.drawCentredString(55+390*((value/scale-lo/scale)/span if span else .5),35,original_tick(ch,value))
+                        from .charts import axis_position
+                        lo,hi=data[0]['low'],data[-1]['high'];at=axis_position(lo,hi,55,390)
+                        for value in axis_ticks(ch,lo,hi):c.drawCentredString(at(value),35,original_tick(ch,value))
                     else:
                         for i in sorted(set(round(j*(len(data)-1)/4) for j in range(5))):c.drawCentredString(55+390*((i+.5)/len(data)),35,text(data[i]['label']))
             if ch.get('omitted_periods'):c.drawString(30,18,str(ch['omitted_periods'])+' middle periods omitted; see saved profile.')

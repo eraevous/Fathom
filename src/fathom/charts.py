@@ -90,6 +90,17 @@ def tail_inset(chart,data,px,left,right,top,bottom,maximum):
     out.append('</g>')
     return out,extra
 
+def axis_position(lo,hi,x0,width):
+    """Map v in [lo, hi] to x0..x0+width. Subtract first, then scale: with a large common offset (2.3e15) dividing
+    each value by the magnitude before subtracting loses most of the difference and distorts widths (#45 review).
+    Only when hi - lo itself overflows does it fall back to the scaled form. A zero span maps to the middle."""
+    total=hi-lo
+    if math.isfinite(total) and total>0:return lambda v:x0+width*((v-lo)/total)
+    scale=max(abs(lo),abs(hi),1);span=hi/scale-lo/scale
+    if math.isfinite(span) and span>0:return lambda v:x0+width*((v/scale-lo/scale)/span)
+    return lambda v:x0+width*.5
+
+
 EQUAL_WIDTH_NOTE=('Bars are drawn at equal widths: the bin boundaries are too close together to place on this axis '
                   '(constant or near-constant values); labels and counts are exact.')
 
@@ -102,9 +113,9 @@ def bar_layout(data,x0,width):
     geometry is rounded), every bar gets an equal share of the plot instead, as before the repair, and the
     note says so. Every returned width is finite and positive and every span stays inside the plot box."""
     if not data:return [],None
-    lo,hi=data[0]['low'],data[-1]['high'];scale=max(abs(lo),abs(hi),1);span=hi/scale-lo/scale
-    if span>0 and math.isfinite(span):
-        def at(v):return x0+width*((v/scale-lo/scale)/span)
+    lo,hi=data[0]['low'],data[-1]['high']
+    if hi>lo:
+        at=axis_position(lo,hi,x0,width)
         spans=[(at(d['low']),at(d['high'])-at(d['low'])) for d in data]
         if all(math.isfinite(x) and math.isfinite(w) and w>0 and x>=x0-1e-9 and x+w<=x0+width+1e-9 for x,w in spans):
             return spans,None
@@ -189,8 +200,7 @@ def svg_chart(chart):
         elif kind=='ecdf':lo,hi=chart['points'][0]['x'],chart['points'][-1]['x']
         elif kind=='histogram':lo,hi=data[0]['low'],data[-1]['high']
         else:lo,hi=0,max(1,len(data)-1)
-        scale=max(abs(lo),abs(hi),1);span=hi/scale-lo/scale
-        def px(v):return left+(right-left)*((v/scale-lo/scale)/span if span else .5)
+        px=axis_position(lo,hi,left,right-left)
         ticks=axis_ticks(chart,lo,hi)
         if kind=='time':
             indices=sorted(set(round(i*(len(data)-1)/4) for i in range(5)))

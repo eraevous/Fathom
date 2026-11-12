@@ -327,3 +327,46 @@ def test_degenerate_histograms_export_smoke(make_profile, name, nums, bins):
     render_html(p), render_markdown(p)
     files, _ = export_bundle(p, ['pdf', 'pptx'])
     assert files['report.pdf'].startswith(b'%PDF-') and files['report.pptx'][:2] == b'PK'
+
+
+# ---------------------------------------------------------------- large-offset geometry property (Codex 4551932908)
+
+OFFSET_SWEEP = SWEEP + [
+    ('large offset whole near 2.3e15', list(range(2345678901234567, 2345678901234583)), None),
+    ('large offset whole near -2.3e15', list(range(-2345678901234583, -2345678901234567)), None),
+    ('large offset, non-divisible span', list(range(2345678901234567, 2345678901234590)), None),
+    ('large offset fractional 1e15+0.5 steps', [1e15 + 0.5 * k for k in range(9)], None),
+    ('overflowing range +-1e308', [-1e308, 0.5, 1e308], None),
+]
+
+
+@pytest.mark.parametrize('name,nums,bins', OFFSET_SWEEP, ids=[s[0] for s in OFFSET_SWEEP])
+def test_bar_geometry_is_proportional_to_bin_widths(name, nums, bins):
+    """Property: bins of equal numeric width render with equal widths; contiguous bins render contiguous and in order.
+    The equal-width fallback appears only when boundaries cannot be placed, and is then disclosed."""
+    from fathom.charts import bar_layout
+    data = histogram(nums, 't', 'x', bins=bins)['data']
+    for x0, width in ((65, 450), (55, 390)):  # SVG and PDF plot boxes
+        spans, note = bar_layout(data, x0, width)
+        widths = [d['high'] - d['low'] for d in data]
+        placeable = all(w > 0 for w in widths) and data[-1]['high'] > data[0]['low']
+        assert (note is None) == placeable, (name, note, widths[:3])
+        for i in range(len(data)):
+            for j in range(i + 1, len(data)):
+                if widths[i] == widths[j]:
+                    assert spans[i][1] == pytest.approx(spans[j][1], abs=1e-6), (name, i, j, spans[i], spans[j])
+        for i in range(len(data) - 1):
+            assert spans[i][0] < spans[i + 1][0], (name, i)
+            if data[i]['high'] == data[i + 1]['low']:
+                assert spans[i][0] + spans[i][1] == pytest.approx(spans[i + 1][0], abs=1e-6), (name, i)
+        if placeable:
+            # Subtract first (exact for nearby floats); normalize only if the full range overflows (+-1e308).
+            import math
+            lo, hi = data[0]['low'], data[-1]['high']
+            scale = max(abs(lo), abs(hi), 1)
+            for (x, w), d in zip(spans, data):
+                if math.isfinite(hi - lo):
+                    expected = (d['high'] - d['low']) / (hi - lo) * width
+                else:
+                    expected = (d['high'] / scale - d['low'] / scale) / (hi / scale - lo / scale) * width
+                assert w == pytest.approx(expected, abs=1e-6), (name, d)
