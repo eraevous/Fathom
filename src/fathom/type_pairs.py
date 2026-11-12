@@ -24,8 +24,11 @@ BINARY_RULE = ('A column is binary when its values in the complete cases of the 
 WORDING_RULE = ('Wording only, not a test or strength band: a headline magnitude below 0.1 is worded "near zero (no notable '
                 'association)". Headline: max(|Pearson r|, |Spearman rho|); square root of rank eta-squared; |rank-biserial|; '
                 "bias-corrected Cramer's V; |phi|. Independent columns can exceed 0.1 in small samples; no action is selected from it.")
+DISAGREEMENT_REASONS = ('Possible reasons, not established from these coefficients, so inspect the scatter: a monotone '
+                        'non-linear pattern, a non-monotonic shape, or a few influential values.')
 DISAGREEMENT_RULE = ('Rank and linear measures disagree when |Spearman rho| and |Pearson r| differ by at least 0.2, or have '
-                     'opposite signs while both are at least 0.1 in absolute value (wording cut, not a test).')
+                     'opposite signs while both are at least 0.1 in absolute value (wording cut, not a test). The rule only '
+                     'compares two coefficients. ' + DISAGREEMENT_REASONS)
 BASIS = ('Descriptive complete-case summaries of one snapshot; not causal; no p-values. Selection and ranking are unchanged: '
          'these measures describe pairs the screening measure already selected.')
 
@@ -411,7 +414,7 @@ def reading(tp):
     else:
         out.append(f"Shares of {right} levels differ across {left} levels; see the table.")
     if kind == 'numeric×numeric' and m['disagreement']:
-        out.append('Rank and linear measures disagree: a monotone but non-linear pattern, or a few influential values.')
+        out.append('Rank and linear measures disagree. ' + DISAGREEMENT_REASONS)
     return ' '.join(out)
 
 

@@ -11,7 +11,9 @@ the screening measure (Pearson) is kept alongside, so nothing is lost.
 
 R2 Spearman rho: Pearson correlation of average tied ranks (textbook definition with
 ties). Disagreement note when |rho| and |r| differ by at least 0.2, or have opposite
-signs while both are at least 0.1 in absolute value: wording that points at monotone non-linear shape or influential values.
+signs while both are at least 0.1 in absolute value. The rule only compares two coefficients, so the wording
+names possible reasons as unconfirmed (a monotone non-linear pattern, a non-monotonic shape, or a few
+influential values) and asks the reader to inspect the scatter (revised after review 5869266714).
 The 0.2 is a disclosed wording cut, not a test. Open question for Zach.
 
 R3 category×numeric: eta stays (mean-based, sensitive to outliers). Added the

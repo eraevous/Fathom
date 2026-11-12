@@ -983,3 +983,29 @@ def test_box_chart_is_derived_from_stored_group_statistics(make_profile):
     tp = pair_for(make_profile(csv_text(['outcome', 'score'], rows), {'target': 'outcome'}).document, 'score')['type_pair']
     for g, row in zip(tp['groups'], tp['chart']['data']):
         assert row['box'] == {k: g[k] for k in ('min', 'q1', 'median', 'q3', 'max')} and row['n'] == g['n']
+
+
+# ---------------------------------------------------------------- Codex review (5869266714)
+
+def test_disagreement_explanations_are_hedged_possibilities(make_profile):
+    from fathom.finding_view import finding_tree
+    from fathom.renderers import type_pair_html
+    rows = []
+    for i in range(1000):
+        x = -2 + 3 * i / 999
+        rows.append([round(x, 6), round(x ** 3 - x, 6)])
+    result = make_profile(csv_text(['x', 'y'], rows), {'target': 'y'})
+    d = result.document
+    pair = d['bivariate'][0]
+    m = pair['type_pair']['measures']
+    assert m['pearson_r'] == pytest.approx(0.646, abs=0.01) and m['spearman_rho'] == pytest.approx(0.391, abs=0.01)
+    assert m['disagreement']
+    f = next(f for f in d['findings'] if f.get('rule') == 'type_pair_association')
+    hedge = 'Possible reasons, not established from these coefficients, so inspect the scatter'
+    texts = [f['message'], str(finding_tree(f, d)), render_markdown(result), type_pair_html(pair, d['target_analysis']['charts']),
+             m['disagreement_rule']]
+    for text in texts:
+        assert 'disagree: a monotone but non-linear pattern' not in text
+    for text in texts[:3] + [m['disagreement_rule']]:
+        assert hedge in text and 'non-monotonic shape' in text, text[:200]
+    assert f['kind'] == 'observation'
