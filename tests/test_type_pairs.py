@@ -670,6 +670,17 @@ def test_fuzz_type_pair_fields_load_rejects_or_both_renderers_succeed(make_profi
                 for bad in (1.5, -1.5, 1e9):  # out-of-range values (5867367630)
                     semantic.append((root, lambda tp, k=key, v=bad: tp['measures'].update({k: v})))
             semantic.append((root, lambda tp: tp['wording'].update(near_zero=not tp['wording']['near_zero'])))
+            chart = node.get('chart')
+            if chart and chart['kind'] == 'heat_table':  # chart-only value mutations (5869178797)
+                semantic.append((root, lambda tp: tp['chart'].update(counts=[list(reversed(r)) for r in tp['chart']['counts']])))
+                semantic.append((root, lambda tp: tp['chart']['row_labels'].reverse()))
+                semantic.append((root, lambda tp: tp['chart'].update(n=tp['chart']['n'] - 1)))
+            if chart and chart['kind'] == 'group_box':
+                semantic.append((root, lambda tp: tp['chart']['data'][0]['box'].update(max=tp['chart']['data'][0]['box']['max'] + 1)))
+                semantic.append((root, lambda tp: tp['chart']['data'][0].update(label=tp['chart']['data'][0]['label'] + 'x')))
+                semantic.append((root, lambda tp: tp['chart'].update(plotted=0)))
+            if chart and chart['kind'] == 'target_chart':
+                semantic.append((root, lambda tp: tp['chart'].update(title='Target: other × other')))
             semantic.append((root, lambda tp: tp['wording'].update(magnitude=0.42)))
         for root, mutate in semantic:
             doc = copy.deepcopy(base)
@@ -937,3 +948,38 @@ def test_boundary_values_load(make_profile, tmp_path):
     assert m['phi'] == 1 and m['risk_difference'] == 1 and m['odds_ratio'] > 0
     path.write_text(p.to_json(), encoding='utf-8')
     ProfilingResult.load(path)
+
+
+# ---------------------------------------------------------------- Copilot review (5869178797)
+
+def test_heat_chart_counts_must_match_the_stored_table(table_target, tmp_path):
+    def swap(d):
+        chart = _first(d, 'binary×binary')['chart']
+        chart['counts'] = [list(reversed(row)) for row in chart['counts']]
+    with pytest.raises(ValueError, match='chart does not match'):
+        ProfilingResult.load(_saved(table_target, tmp_path, swap))
+    with pytest.raises(ValueError, match='chart does not match'):
+        ProfilingResult.load(_saved(table_target, tmp_path, lambda d: _first(d, 'category×category')['chart']['row_labels'].reverse()))
+
+
+@pytest.mark.parametrize('mutate', [
+    lambda c: c['data'][0]['box'].update(median=c['data'][0]['box']['q1']),
+    lambda c: c['data'][0].update(n=c['data'][0]['n'] + 1),
+    lambda c: c['data'].reverse(),
+    lambda c: c.update(n=c['n'] - 1, plotted=c['n'] - 1),
+    lambda c: c.update(title='Type pair: something else'),
+])
+def test_group_box_chart_must_match_the_stored_groups(make_profile, tmp_path, mutate):
+    u = lcg(5)
+    rows = [['hit' if i % 3 else 'miss', round(next(u) * 80.0 + 1, 4)] for i in range(60)]
+    p = make_profile(csv_text(['outcome', 'score'], rows), {'target': 'outcome'})
+    with pytest.raises(ValueError, match='chart does not match|out of order|chart'):
+        ProfilingResult.load(_saved(p, tmp_path, lambda d: mutate(pair_for(d, 'score')['type_pair']['chart'])))
+
+
+def test_box_chart_is_derived_from_stored_group_statistics(make_profile):
+    u = lcg(5)
+    rows = [['hit' if i % 3 else 'miss', round(next(u) * 80.0 + 1, 4)] for i in range(60)]
+    tp = pair_for(make_profile(csv_text(['outcome', 'score'], rows), {'target': 'outcome'}).document, 'score')['type_pair']
+    for g, row in zip(tp['groups'], tp['chart']['data']):
+        assert row['box'] == {k: g[k] for k in ('min', 'q1', 'median', 'q3', 'max')} and row['n'] == g['n']

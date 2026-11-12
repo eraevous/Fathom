@@ -171,14 +171,15 @@ def pair_type(left, right):
 
 
 GROUP_STATS = ('median', 'q1', 'q3', 'iqr', 'mean')
+BOX_FROM_GROUP = ('min', 'q1', 'median', 'q3', 'max')
 
 
 def group_rows(groups):
     out = []
     for level, values in groups:
         q1, q3 = percentile(values, 25, lambda x: x), percentile(values, 75, lambda x: x)
-        row = {'value': plain(level), 'n': len(values), 'median': percentile(values, 50), 'q1': safe(q1), 'q3': safe(q3),
-               'iqr': safe(q3 - q1), 'mean': safe(statistics.mean(values))}
+        row = {'value': plain(level), 'n': len(values), 'min': safe(min(values)), 'median': percentile(values, 50), 'q1': safe(q1),
+               'q3': safe(q3), 'max': safe(max(values)), 'iqr': safe(q3 - q1), 'mean': safe(statistics.mean(values))}
         for key in GROUP_STATS:
             if row[key] is None:
                 # Finite inputs can still give an unrepresentable result (e.g. Q3 - Q1 for values near +/-1e308).
@@ -212,6 +213,10 @@ def full_table(cases, rl=None, cl=None):
     return [[counts[x, y] for y in cl] for x in rl]
 
 
+TARGET_NOTES = {'numeric×numeric': 'Scatter: the existing target chart for this pair (up to 200 evenly spaced points).',
+                'grouped': 'Grouped box: the existing target chart for this pair.'}
+
+
 def heat_chart(pair, table, n, total_rows):
     rows = [level_text(v) for v in table['row_levels']] + ([f"other {table['other_row_levels']} levels"] if table['other_row_levels'] else [])
     cols = [level_text(v) for v in table['column_levels']] + ([f"other {table['other_column_levels']} levels"] if table['other_column_levels'] else [])
@@ -220,10 +225,10 @@ def heat_chart(pair, table, n, total_rows):
             'total_rows': total_rows, 'note': 'Counts of complete cases; the bar in each cell is that cell’s share of its row. Descriptive, not causal.'}
 
 
-def box_chart(pair, groups, n, total_rows, group_name, value_name, value_axis=None):
-    data = [{'label': level_text(level), 'n': len(values), 'excluded_nonpositive': 0,
-             'box': {k: geometry_percentile(values, p) for k, p in [('min', 0), ('q1', 25), ('median', 50), ('q3', 75), ('max', 100)]}}
-            for level, values in groups]
+def box_chart(groups, n, total_rows, group_name, value_name, value_axis=None):
+    """Grouped box built only from the stored group rows, so the validator can recompute it exactly."""
+    data = [{'label': level_text(g['value']), 'n': g['n'], 'excluded_nonpositive': 0, 'box': {k: g[k] for k in BOX_FROM_GROUP}}
+            for g in groups]
     return {'kind': 'group_box', 'title': 'Type pair: ' + value_name + ' by ' + group_name, 'x_label': value_axis or value_name,
             'y_label': group_name, 'x_scale': 'linear', 'data': data, 'n': n, 'total_rows': total_rows, 'plotted': n,
             'omitted_nonpositive': 0, 'note': WARNING, 'values_format': 'display'}
@@ -256,7 +261,7 @@ def describe(pair, rows, columns):
                  disagreement_rule=DISAGREEMENT_RULE)
         magnitude = max(abs(v) for v in (r, rho) if v is not None) if n >= 3 and (r, rho) != (None, None) else None
         out['chart'] = {'kind': 'target_chart', 'title': 'Target: ' + pair['left'] + ' × ' + pair['right'],
-                        'note': 'Scatter: the existing target chart for this pair (up to 200 evenly spaced points).'}
+                        'note': TARGET_NOTES['numeric×numeric']}
     elif kind in ('category×numeric', 'binary×numeric'):
         gside = 0 if left['role'] != 'numeric' else 1
         gcol, vcol = (lc, rc) if gside == 0 else (rc, lc)
@@ -287,9 +292,9 @@ def describe(pair, rows, columns):
         # The existing target chart is already a grouped box when the numeric column is the target.
         if gside == 0 and rc['effective_type'] in NUMERIC and lc['effective_type'] in CATEGORY:
             out['chart'] = {'kind': 'target_chart', 'title': 'Target: ' + pair['left'] + ' × ' + pair['right'],
-                            'note': 'Grouped box: the existing target chart for this pair.'}
+                            'note': TARGET_NOTES['grouped']}
         else:
-            out['chart'] = box_chart(pair, groups, n, len(rows), gcol['name'], vcol['name'], axis_label(vcol))
+            out['chart'] = box_chart(out['groups'], n, len(rows), gcol['name'], vcol['name'], axis_label(vcol))
     else:
         table = full_table(cases, left.get('levels') if kind == 'binary×binary' else None, right.get('levels') if kind == 'binary×binary' else None)
         out['table'] = capped_table(cases, pair['left'], pair['right'])
@@ -553,7 +558,7 @@ def _fail(what):
 TOP_KEYS = {'pair_type', 'roles', 'binary_rule', 'n', 'basis', 'measures', 'wording', 'chart', 'groups', 'table'}
 ROLE_KEYS = {'column', 'role', 'levels'}
 WORDING_KEYS = {'magnitude', 'near_zero', 'rule', 'magnitude_status'}
-GROUP_KEYS = {'value', 'n', 'median', 'q1', 'q3', 'iqr', 'mean'}
+GROUP_KEYS = {'value', 'n', 'min', 'median', 'q1', 'q3', 'max', 'iqr', 'mean'}
 TABLE_KEYS = {'row_column', 'column_column', 'row_levels', 'column_levels', 'counts', 'other_row_levels',
               'other_column_levels', 'shown_cap', 'basis'}
 BOX_KEYS = ('min', 'q1', 'median', 'q3', 'max')
@@ -615,6 +620,30 @@ def _check_table_derived(tp, kind, t, m):
         _fail('2x2 measures do not match the stored table')
 
 
+def _check_chart_derived(tp, kind, total_rows):
+    """Every stored chart must equal what the producer derives from the other stored fields. Only the grouped-box
+    x-axis label is not recomputable here (its units come from column metadata outside this block); it must start
+    with the value column's name."""
+    chart, roles = tp['chart'], tp['roles']
+    left, right = roles[0]['column'], roles[1]['column']
+    rows = chart.get('total_rows') if total_rows is None else total_rows
+    if chart['kind'] == 'target_chart':
+        notes = {TARGET_NOTES['numeric×numeric']} if kind == 'numeric×numeric' else {TARGET_NOTES['grouped']}
+        expected = {'kind': 'target_chart', 'title': 'Target: ' + left + ' × ' + right}
+        if chart['title'] != expected['title'] or chart['note'] not in notes:
+            _fail('chart does not match the pair (target chart reference)')
+        return
+    if chart['kind'] == 'heat_table':
+        expected = heat_chart({'left': left, 'right': right}, tp['table'], tp['n'], rows)
+    else:
+        gname, vname = (left, right) if roles[0]['role'] != 'numeric' else (right, left)
+        expected = box_chart(tp['groups'], tp['n'], rows, gname, vname, chart['x_label'])
+        if chart['x_label'] != vname and not chart['x_label'].startswith(vname + ' ('):
+            _fail('chart does not match the stored groups (x-axis label)')
+    if chart != expected:
+        _fail('chart does not match the stored ' + ('table' if chart['kind'] == 'heat_table' else 'groups'))
+
+
 def _check_chart(chart, kind):
     if not isinstance(chart, dict) or not isinstance(chart.get('kind'), str) or chart['kind'] not in CHART_KINDS[kind]:
         _fail('chart kind')
@@ -652,18 +681,18 @@ def _check_chart(chart, kind):
         _fail('heat table')
 
 
-def validate_type_pair(tp, evidence=False):
+def validate_type_pair(tp, evidence=False, total_rows=None):
     """Full closed shape, so a saved artifact that validates can always be rendered. `evidence` checks the copy
     stored in a type_pair_association finding (the same block without its chart)."""
     try:
-        _validate(tp, evidence)
+        _validate(tp, evidence, total_rows)
     except ValueError:
         raise
     except (TypeError, KeyError, IndexError, AttributeError) as error:
         raise ValueError('invalid type pair shape: ' + type(error).__name__) from None
 
 
-def _validate(tp, evidence):
+def _validate(tp, evidence, total_rows=None):
     if not isinstance(tp, dict) or not isinstance(tp.get('pair_type'), str) or tp['pair_type'] not in PAIR_TYPES:
         _fail('kind')
     kind = tp['pair_type']
@@ -733,7 +762,7 @@ def _validate(tp, evidence):
             _fail('groups')
         for g in groups:
             _keys(g, GROUP_KEYS, {k + '_status' for k in GROUP_STATS}, 'group fields')
-            if (not _level(g['value']) or not _count(g['n'])
+            if (not _level(g['value']) or not _count(g['n']) or not _num(g['min']) or not _num(g['max'])
                     or any(not (g[k] is None or _num(g[k])) or (g[k] is None and not _text(g.get(k + '_status')))
                            or (k + '_status' in g and not _text(g[k + '_status'])) for k in GROUP_STATS)):
                 _fail('groups')
@@ -754,3 +783,4 @@ def _validate(tp, evidence):
         _check_table_derived(tp, kind, t, m)
     if not evidence:
         _check_chart(tp['chart'], kind)
+        _check_chart_derived(tp, kind, total_rows)

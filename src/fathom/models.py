@@ -197,7 +197,7 @@ def validate_document(doc: dict) -> None:
         for pair in doc['bivariate']:
             if isinstance(pair,dict) and 'type_pair' in pair:
                 from .type_pairs import validate_type_pair
-                validate_type_pair(pair['type_pair'])
+                validate_type_pair(pair['type_pair'],total_rows=doc['overview']['rows'])
         for finding in doc['findings']:
             if finding.get('rule')=='type_pair_association':
                 # The finding tree renders this evidence copy, so it meets the same contract (without the chart).
