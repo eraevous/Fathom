@@ -90,12 +90,31 @@ def tail_inset(chart,data,px,left,right,top,bottom,maximum):
     out.append('</g>')
     return out,extra
 
-def bar_spans(data,x0,width):
-    """(x, width) of each histogram bar at its own bin boundaries, shared by the SVG and PDF renderers, so a
-    narrower last whole-number bin is drawn narrower and bars always agree with labels and ticks (#45 review)."""
+EQUAL_WIDTH_NOTE=('Bars are drawn at equal widths: the bin boundaries are too close together to place on this axis '
+                  '(constant or near-constant values); labels and counts are exact.')
+
+
+def bar_layout(data,x0,width):
+    """(spans, note) for histogram bars inside the plot box x0..x0+width.
+
+    Bars sit at their own bin boundaries, so a narrower last whole-number bin is drawn narrower (#45 review).
+    When boundaries cannot be placed (a zero-span bin from constant values, or edges that collapse when chart
+    geometry is rounded), every bar gets an equal share of the plot instead, as before the repair, and the
+    note says so. Every returned width is finite and positive and every span stays inside the plot box."""
+    if not data:return [],None
     lo,hi=data[0]['low'],data[-1]['high'];scale=max(abs(lo),abs(hi),1);span=hi/scale-lo/scale
-    def at(v):return x0+width*((v/scale-lo/scale)/span if span else .5)
-    return [(at(d['low']),at(d['high'])-at(d['low'])) for d in data]
+    if span>0 and math.isfinite(span):
+        def at(v):return x0+width*((v/scale-lo/scale)/span)
+        spans=[(at(d['low']),at(d['high'])-at(d['low'])) for d in data]
+        if all(math.isfinite(x) and math.isfinite(w) and w>0 and x>=x0-1e-9 and x+w<=x0+width+1e-9 for x,w in spans):
+            return spans,None
+    share=width/len(data)
+    return [(x0+i*share,share) for i in range(len(data))],EQUAL_WIDTH_NOTE
+
+
+def bar_spans(data,x0,width):
+    """Bar (x, width) pairs shared by the SVG and PDF renderers; see bar_layout."""
+    return bar_layout(data,x0,width)[0]
 
 
 def count_ticks(maximum):
@@ -195,7 +214,7 @@ def svg_chart(chart):
                 out.append(f'<path d="{path}" fill="none" stroke="{C["accent"]}" stroke-width="2"/>')
             else:
                 barwidth=(right-left)/len(data)
-                spans=bar_spans(data,left,right-left) if kind=='histogram' else [(left+i*barwidth,barwidth) for i in range(len(data))]
+                spans,_=bar_layout(data,left,right-left) if kind=='histogram' else ([(left+i*barwidth,barwidth) for i in range(len(data))],None)
                 for (x,bw),d in zip(spans,data):
                     h=d['count']/maximum*(bottom-top)
                     out.append(f'<rect x="{x}" y="{bottom-h}" width="{max(.5,bw-2)}" height="{h}" fill="{C["accent"]}"><title>{e(d["label"])}: {d["count"]}</title></rect>')
@@ -204,6 +223,7 @@ def svg_chart(chart):
                     if extra:out[0]=out[0].replace(f'viewBox="0 0 {width} {height}"',f'viewBox="0 0 {width} {height+extra}"')
     out.append('</svg>')
     notes=[]
+    if kind=='histogram' and data and bar_layout(data,0,1)[1]:notes.append(EQUAL_WIDTH_NOTE)
     if kind=='time' and data:notes.append('Calendar range: '+data[0]['label']+' to '+data[-1]['label']+('. Day ticks omit the year; exact dates remain in chart values.' if chart.get('period')=='day' else '. Exact calendar-period labels and values remain in chart values.'))
     if whole_note(chart):notes.append(whole_note(chart))
     if 'coverage' in chart:notes.append('Top10 covers '+formatted(chart['coverage'],True)+f" of {chart['denominator']:,} raw values; remainder is shown separately.")

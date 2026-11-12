@@ -217,6 +217,10 @@ def pdf_bytes(d,report=None):
         if ch.get('whole_number_bins'):
             from .charts import whole_note
             story.append(p(whole_note(ch)))
+        if ch['kind']=='histogram' and ch.get('data'):
+            from .charts import bar_layout
+            note=bar_layout(ch['data'],55,390)[1]
+            if note:story.append(p(note))
         if ch['kind']=='bar' and any(len(str(x['label']))>29 for x in ch.get('data',[])):story.append(p('Long chart labels shortened with …; exact labels remain in the core report/artifact.'))
     if d['kind']=='profile':
         heading('Dictionary')

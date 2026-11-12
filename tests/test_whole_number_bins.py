@@ -267,3 +267,63 @@ def test_pdf_histogram_uses_boundary_bar_spans(make_profile, monkeypatch):
     assert (55, 390, ['0 to 2', '3 to 5', '6']) in calls
     spans = real(histogram(list(range(7)), 't', 'x', bins=3)['data'], 55, 390)
     assert [round(w / spans[0][1], 6) for _, w in spans] == [1, 1, round(1 / 3, 6)]
+
+
+# ---------------------------------------------------------------- degenerate-geometry sweep (Codex 4551700095)
+
+SWEEP = [
+    ('constant fractional', [2.5] * 10, None),
+    ('constant whole', [3] * 10, None),
+    ('single value', [7], None),
+    ('two distinct', [1, 2], None),
+    ('negative only', [-5, -3, -1, -2], None),
+    ('mixed sign spanning 0', [-3, -1, 0, 2, 5], None),
+    ('tiny range 1e-12', [1 + i * 1e-13 for i in range(10)], None),
+    ('whole just below 2^52', [2 ** 52 - 5, 2 ** 52 - 3, 2 ** 52 - 1], None),
+    ('at/above 2^52', [2 ** 52, 2 ** 52 + 1, 2 ** 52 + 3], None),
+    ('non-divisible span, bins=3', list(range(7)), 3),
+    ('non-divisible span, default cap', list(range(23)), None),
+    ('huge outlier, tail inset', [v for v in range(16) for _ in range(3)] + [10 ** 6], None),
+    ('declared bins=1', [1, 2, 3, 4], 1),
+    ('bins > distinct (whole)', [1, 2, 3], 10),
+    ('bins > distinct (fractional)', [0.5, 1.5], 10),
+]
+
+
+@pytest.mark.parametrize('name,nums,bins', SWEEP, ids=[s[0] for s in SWEEP])
+def test_degenerate_histograms_draw_valid_bars_in_svg_and_pdf(name, nums, bins):
+    import math
+    from fathom.charts import bar_layout
+    chart = histogram(nums, 't', 'x', bins=bins)
+    data, tail = chart['data'], chart.get('tail', [])
+    assert sum(d['count'] for d in data) + sum(d['count'] for d in tail) == len(nums)
+    svg = svg_chart(chart)
+    bars = re.findall(r'<rect x="([^"]+)" y="[^"]+" width="([^"]+)" height="[^"]+" fill="[^"]+"><title>([^<]*): (\d+)</title></rect>', svg)
+    assert len(bars) == len(data), (name, len(bars), len(data))
+    for (x, w, label, count), d in zip(bars, data):
+        x, w = float(x), float(w)
+        assert math.isfinite(x) and math.isfinite(w) and w > 0.5, (name, x, w)
+        assert 65 - 1e-9 <= x and x + w <= 515 + 1e-9, (name, x, w)
+        assert label == d['label'].replace('&', '&amp;') and int(count) == d['count']
+    # PDF uses the same layout over its 55..445 plot box; a fallback is always disclosed in the figure note.
+    spans, note = bar_layout(data, 55, 390)
+    assert (note is None) == (name not in {'constant fractional', 'tiny range 1e-12'}), (name, note)
+    if note:
+        assert note in svg
+    assert len(spans) == len(data)
+    for x, w in spans:
+        assert math.isfinite(x) and math.isfinite(w) and w > 0 and 55 - 1e-9 <= x and x + w <= 445 + 1e-9, (name, x, w)
+
+
+@pytest.mark.parametrize('name,nums,bins', SWEEP + [('all missing', [], None)], ids=[s[0] for s in SWEEP] + ['all missing'])
+def test_degenerate_histograms_export_smoke(make_profile, name, nums, bins):
+    pytest.importorskip('reportlab')
+    pytest.importorskip('pptx')
+    from fathom.exports import export_bundle
+    from fathom.renderers import render_html, render_markdown
+    rows = nums or [None, None, None]  # all missing: v is blank beside a second column
+    text = 'v,w\n' + ''.join(('' if v is None else repr(v) if isinstance(v, float) else str(v)) + f',{i}\n' for i, v in enumerate(rows))
+    p = make_profile(text, {'bins': bins} if bins else None)
+    render_html(p), render_markdown(p)
+    files, _ = export_bundle(p, ['pdf', 'pptx'])
+    assert files['report.pdf'].startswith(b'%PDF-') and files['report.pptx'][:2] == b'PK'
