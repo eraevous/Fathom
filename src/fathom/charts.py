@@ -88,7 +88,35 @@ def count_ticks(maximum):
     return sorted(set(round(value) for value in linear_ticks(0,maximum)))
 
 
+def scroll_note_for(columns):
+    from .renderers import scroll_note
+    return scroll_note(columns)
+
+
+def heat_table_html(chart):
+    """Contingency counts as an HTML table: text keeps the page's size at any width, and a solid bar in each
+    cell shows that cell's share of its row (no SVG scaling, no scripts)."""
+    def e(v):return escape(str(v))
+    head=''.join('<th scope="col" class="num">'+e(c)+'</th>' for c in chart['column_labels'])
+    body=''
+    for r,values in zip(chart['row_labels'],chart['counts']):
+        total=sum(values);cells=''
+        for c,v in zip(chart['column_labels'],values):
+            share=v/total if total else 0
+            cells+=f'<td class="num" title="{e(r)} / {e(c)}: {v} ({share:.0%} of row)">{formatted(v)}<span class="heat-bar" style="width:{share*100:.1f}%"></span></td>'
+        body+='<tr><th scope="row">'+e(r)+'</th>'+cells+'</tr>'
+    return ('<figure class="chart heat-table"><p class="chart-title">'+e(chart['title'])+'</p><div class="table-scroll"><table class="review-table heat" data-kind="heat_table" aria-label="'+escape(chart['title'],quote=True)+'">'
+            '<caption>Counts: '+e(chart['y_label'])+' (rows) by '+e(chart['x_label'])+' (columns)</caption><thead><tr><th scope="col">'+e(chart['y_label'])+'</th>'+head+'</tr></thead><tbody>'+body+'</tbody></table></div>'
+            +scroll_note_for(len(chart['column_labels'])+1)+'<figcaption>'+e(chart['note']+f" {chart['n']:,} complete of {chart['total_rows']:,} rows.")+'</figcaption></figure>')
+
+
+def heat_table_svg(chart):
+    """Former name of heat_table_html; kept so append-only provenance records (FT-BIV27-R1@2, -E2@1) still resolve."""
+    return heat_table_html(chart)
+
+
 def svg_chart(chart):
+    if chart['kind']=='heat_table':return heat_table_html(chart)
     if chart['kind'] in {'scatter','group_box','rates'}:
         from .target_marks import plot_marks,coverage_note,chart_values
         w,h,marks=plot_marks(chart);out=[]

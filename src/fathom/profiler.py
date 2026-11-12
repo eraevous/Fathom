@@ -177,6 +177,8 @@ def profile(data: GuideDataFrame, config: dict | None = None) -> ProfilingResult
     enrich_identifiers(columns,rows,finding)
     dataset,samples=identity_and_samples(data,cfg,columns)
     selection, pairs, dependencies = select_pairs(rows, columns, cfg, quality, quality_pairs)
+    from .type_pairs import enrich_pairs, message as type_pair_message, WORDING_RULE
+    enrich_pairs(rows, columns, pairs)
     from .target import build_target_analysis
     target_analysis=build_target_analysis(rows,columns,cfg,selection,pairs,finding)
     quality["coverage"]["reported_missingness_candidates"] = sum(p["method"] == "missingness_by_group" for p in pairs)
@@ -194,12 +196,18 @@ def profile(data: GuideDataFrame, config: dict | None = None) -> ProfilingResult
             finding(f"pair-{index}-review", "action", f"Investigate collection differences across {pair['right']} before choosing a missing-value treatment for {pair['left']}.",
                     [{"finding": f"pair-{index}"}], "A descriptive contrast does not establish the missingness mechanism.", "rule:quality-v1",
                     rule="conditional_missingness", columns=[pair["left"],pair["right"]])
+        if "type_pair" in pair:
+            tp = pair["type_pair"]
+            finding(f"pair-{index}-type", "observation", type_pair_message(pair, tp),
+                    [{"path": f"bivariate.{index}.type_pair", "value": {k: v for k, v in tp.items() if k != "chart"}}],
+                    pair["uncertainty"], "rule:type-pairs-v1", rule="type_pair_association", columns=[pair["left"], pair["right"]])
     for f in findings:
         rule=f.get('rule')
         gate=quality.get('rules',{}).get(rule) or structure.get('rules',{}).get(rule)
         if rule=='univariate_skew':gate='absolute skew >=2 (tail asymmetry only); strong-skew verdict additionally requires n>=8 and displacement>=half IQR'
         if rule=='implausible_zero':gate='n>=5; 0<zero share<=20%; median positive>=100; >=80% of nonzero values>=100'
         if rule=='univariate_gap':gate='observed date gap >3 times median observed gap'
+        if rule=='type_pair_association':gate=WORDING_RULE
         if rule=='temporal_structure':gate=temporal_structure['rules']['signal']+'; '+temporal_structure['rules']['reliability']
         if gate and f['kind']=='observation':f['gate']=gate
     return ProfilingResult({"schema_version": SCHEMA_VERSION, "kind": "profile", "source": data.source,

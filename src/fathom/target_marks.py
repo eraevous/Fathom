@@ -2,7 +2,7 @@
 
 import math
 from .charts import linear_ticks
-from .presentation import tick_label
+from .presentation import formatted, tick_label
 from .palette import CATEGORICAL, LIGHT as C
 
 PALETTE=CATEGORICAL
@@ -75,6 +75,6 @@ def chart_values(ch):
                 'rows':[[str(p['x']),str(p['y'])] for p in ch['points']],'numeric':[0,1]}
     if kind=='group_box':
         return {'caption':'Plotted five-number summaries — original units','headers':['Group','Plotted n','Excluded nonpositive','Min','Q1','Median','Q3','Max'],
-                'rows':[[r['label'],str(r['n']) if 'excluded_nonpositive' in r else f"Unavailable (legacy recorded n={r['n']})",str(r.get('excluded_nonpositive','Unavailable in legacy artifact')),*[str(r['box'][k]) if r.get('box') else 'Unavailable' for k in ('min','q1','median','q3','max')]] for r in ch['data']],'numeric':list(range(1,8))}
+                'rows':[[r['label'],str(r['n']) if 'excluded_nonpositive' in r else f"Unavailable (legacy recorded n={r['n']})",str(r.get('excluded_nonpositive','Unavailable in legacy artifact')),*[(formatted if ch.get('values_format')=='display' else str)(r['box'][k]) if r.get('box') else 'Unavailable' for k in ('min','q1','median','q3','max')]] for r in ch['data']],'numeric':list(range(1,8))}
     return {'caption':'Plotted target category rates by predictor group/bin','headers':['Predictor group/bin','Complete n','Target category','Rate (fraction)'],
             'rows':[[row['label'],str(row['n']),level,str(row['rates'][level])] for row in ch['data'] for level in ch['levels']],'numeric':[1,3]}

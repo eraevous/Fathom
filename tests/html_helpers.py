@@ -48,6 +48,13 @@ def assert_finding_preserved(finding,page):
         for key in ['pearson_r','eta','cramers_v']:
             if key in stats:assert format(stats[key],'.3f') in actual
         assert 'descriptive, not causal' in actual
+    elif finding.get('rule')=='type_pair_association' and finding['kind']=='observation':
+        # Spec027: the structured tree must keep every number and level the message states.
+        tp=finding['evidence'][0]['value'];assert tp['pair_type'] in actual and 'descriptive, not causal' in actual
+        assert all(name in actual for name in finding['columns'])
+        numbers=lambda s:set(re.findall(r'-?\d[\d,]*(?:\.\d+)?',s))
+        assert numbers(finding['message'].replace(tp['pair_type'],''))-{'0.1'}<=numbers(actual),(finding['id'],numbers(finding['message'])-numbers(actual))
+        assert set(re.findall(r"'[^']*'",finding['message']))<=set(re.findall(r"'[^']*'",actual))
     else:
         tokens=lambda s:[t.casefold() for t in re.findall(r'\w+(?:[.−-]\w+)*|[≥<>=%]',s) if t.casefold()!='and']
         available=iter(tokens(actual))
