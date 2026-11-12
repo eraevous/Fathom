@@ -667,6 +667,8 @@ def test_fuzz_type_pair_fields_load_rejects_or_both_renderers_succeed(make_profi
                 if key.endswith('_status') or not isinstance(node['measures'][key], (int, float)) or isinstance(node['measures'][key], bool):
                     continue
                 semantic.append((root, lambda tp, k=key: tp['measures'].update({k: None, k + '_status': 'not estimable: fuzz'})))
+                for bad in (1.5, -1.5, 1e9):  # out-of-range values (5867367630)
+                    semantic.append((root, lambda tp, k=key, v=bad: tp['measures'].update({k: v})))
             semantic.append((root, lambda tp: tp['wording'].update(near_zero=not tp['wording']['near_zero'])))
             semantic.append((root, lambda tp: tp['wording'].update(magnitude=0.42)))
         for root, mutate in semantic:
@@ -681,6 +683,11 @@ def test_fuzz_type_pair_fields_load_rejects_or_both_renderers_succeed(make_profi
             except ValueError:
                 continue
             accepted += 1
+            from fathom.type_pairs import RANGES
+            for pair in doc['bivariate']:
+                for k, v in pair.get('type_pair', {}).get('measures', {}).items():
+                    if k in RANGES and v is not None:
+                        assert RANGES[k][0] <= v <= RANGES[k][1], (k, v)
             charts = doc['target_analysis']['charts']
             for pair in doc['bivariate']:
                 if 'type_pair' in pair:
@@ -866,3 +873,67 @@ def test_no_bare_null_anywhere_in_generated_outputs(numeric_target, table_target
         files = tidy_files(json.loads(result.to_json()))
         assert_no_bare_null(files['findings.csv'] + files['relations.csv'])
     assert kinds == set(READING_FRAGMENTS)
+
+
+# ---------------------------------------------------------------- Copilot review (5867367630)
+
+def _consistent_nxn(tp, r, rho, gap, disagreement):
+    tp['measures'].update(pearson_r=r, spearman_rho=rho, rank_linear_gap=gap, disagreement=disagreement)
+    tp['wording'].update(magnitude=max(abs(r), abs(rho)), near_zero=max(abs(r), abs(rho)) < 0.1)
+
+
+def test_rank_linear_gap_and_disagreement_must_be_recomputable(numeric_target, tmp_path):
+    with pytest.raises(ValueError, match='out of range|does not match'):  # Copilot's example: 2.5 is outside [-1, 1]
+        ProfilingResult.load(_saved(numeric_target, tmp_path, lambda d: _consistent_nxn(_first(d, 'numeric×numeric'), 0.5, 0.6, 2.5, True)))
+    with pytest.raises(ValueError, match='does not match'):
+        ProfilingResult.load(_saved(numeric_target, tmp_path, lambda d: _consistent_nxn(_first(d, 'numeric×numeric'), 0.5, 0.6, 0.1, True)))
+    # Valid: gap is |rho| - |r| (signed, range [-1, 1]); disagreement follows the disclosed 0.2 cut.
+    ProfilingResult.load(_saved(numeric_target, tmp_path, lambda d: _consistent_nxn(_first(d, 'numeric×numeric'), 0.5, 0.6, 0.1, False)))
+    ProfilingResult.load(_saved(numeric_target, tmp_path, lambda d: _consistent_nxn(_first(d, 'numeric×numeric'), 0.3, 0.5, 0.2, True)))
+
+
+@pytest.mark.parametrize('kind,key,value', [
+    ('numeric×numeric', 'pearson_r', 1.5), ('numeric×numeric', 'spearman_rho', -1.2),
+    ('binary×numeric', 'rank_biserial', 1.01), ('category×numeric', 'eta', 1.2), ('category×numeric', 'eta', -0.1),
+    ('category×numeric', 'eta_squared_h', -0.5), ('category×numeric', 'eta_squared_h', 1.5),
+    ('category×numeric', 'kruskal_wallis_h', -3),
+])
+def test_measure_bounds_numeric_target(numeric_target, tmp_path, kind, key, value):
+    with pytest.raises(ValueError, match='out of range'):
+        ProfilingResult.load(_saved(numeric_target, tmp_path, lambda d: _first(d, kind)['measures'].update({key: value})))
+
+
+@pytest.mark.parametrize('kind,key,value', [
+    ('binary×binary', 'phi', 1.5), ('binary×binary', 'risk_difference', -1.5), ('binary×binary', 'odds_ratio', 0),
+    ('binary×binary', 'odds_ratio', -2), ('category×category', 'cramers_v', 1.5), ('category×category', 'cramers_v_bias_corrected', -0.2),
+])
+def test_measure_bounds_table_target(table_target, tmp_path, kind, key, value):
+    with pytest.raises(ValueError, match='out of range'):
+        ProfilingResult.load(_saved(table_target, tmp_path, lambda d: _first(d, kind)['measures'].update({key: value})))
+
+
+def test_two_by_two_measures_must_match_the_stored_table(table_target, tmp_path):
+    def shift(d):
+        tp = _first(d, 'binary×binary')
+        tp['table']['counts'][0][0] += 1
+        tp['n'] += 1
+    with pytest.raises(ValueError, match='not match'):
+        ProfilingResult.load(_saved(table_target, tmp_path, shift))
+    with pytest.raises(ValueError, match='does not match'):
+        ProfilingResult.load(_saved(table_target, tmp_path, lambda d: _first(d, 'category×category')['measures'].update(rows_k=7)))
+
+
+def test_boundary_values_load(make_profile, tmp_path):
+    rows = [[i, 2 * i + 1] for i in range(1, 11)]
+    p = make_profile(csv_text(['x', 'y'], rows), {'target': 'y'})
+    m = p.document['bivariate'][0]['type_pair']['measures']
+    assert m['pearson_r'] == 1 and m['spearman_rho'] == 1 and m['rank_linear_gap'] == 0
+    path = tmp_path / 'b.json'
+    path.write_text(p.to_json(), encoding='utf-8')
+    ProfilingResult.load(path)
+    rows = [['a', 'x']] * 4 + [['b', 'y']] * 4
+    p = make_profile(csv_text(['flag', 'event'], rows), {'target': 'event'})
+    m = p.document['bivariate'][0]['type_pair']['measures']
+    assert m['phi'] == 1 and m['risk_difference'] == 1 and m['odds_ratio'] > 0
+    path.write_text(p.to_json(), encoding='utf-8')
+    ProfilingResult.load(path)

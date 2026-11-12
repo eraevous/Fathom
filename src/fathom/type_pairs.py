@@ -252,7 +252,7 @@ def describe(pair, rows, columns):
             m['spearman_rho_status'] = ('not estimable: fewer than three complete cases' if n < 3
                                         else 'not estimable: one side has a single distinct rank')
         gap = coefficient(abs(rho) - abs(r)) if rho is not None and r is not None else None
-        m.update(rank_linear_gap=gap, disagreement=bool(gap is not None and (abs(gap) >= GAP or (rho * r < 0 and min(abs(rho), abs(r)) >= NEAR_ZERO))),
+        m.update(rank_linear_gap=gap, disagreement=disagrees(r, rho, gap),
                  disagreement_rule=DISAGREEMENT_RULE)
         magnitude = max(abs(v) for v in (r, rho) if v is not None) if n >= 3 and (r, rho) != (None, None) else None
         out['chart'] = {'kind': 'target_chart', 'title': 'Target: ' + pair['left'] + ' × ' + pair['right'],
@@ -575,6 +575,46 @@ def _keys(value, required, optional=frozenset(), what='fields'):
         _fail(what)
 
 
+# Value ranges for stored measures: (low, high, low bound excluded). median/mean differences are any finite value.
+RANGES = {**{k: (-1, 1, False) for k in ('pearson_r', 'spearman_rho', 'rank_biserial', 'phi', 'risk_difference', 'rank_linear_gap')},
+          **{k: (0, 1, False) for k in ('eta', 'cramers_v', 'cramers_v_bias_corrected', 'eta_squared_h')},
+          'kruskal_wallis_h': (0, math.inf, False), 'odds_ratio': (0, math.inf, True)}
+
+
+def disagrees(r, rho, gap):
+    """The disclosed disagreement rule, shared by producer and validator."""
+    return bool(gap is not None and (abs(gap) >= GAP or (rho * r < 0 and min(abs(rho), abs(r)) >= NEAR_ZERO)))
+
+
+def _check_table_derived(tp, kind, t, m):
+    """Fields that can be recomputed from the stored table must equal the recomputation."""
+    counts = t['counts']
+    if sum(map(sum, counts)) != tp['n']:
+        _fail('n does not match the stored table counts')
+    if kind == 'category×category':
+        if m['rows_k'] != len(t['row_levels']) + t['other_row_levels'] or m['columns_k'] != len(t['column_levels']) + t['other_column_levels']:
+            _fail('rows_k or columns_k does not match the stored table')
+        if not t['other_row_levels'] and not t['other_column_levels']:
+            # Uncapped: the bias-corrected V can be recomputed. (Capped tables sum levels, so it cannot; plain
+            # Cramer's V is the screening value and is checked by range only.)
+            value, _ = cramers_v_corrected_status(counts)
+            if m['cramers_v_bias_corrected'] != (coefficient(value) if value is not None else None):
+                _fail("bias-corrected Cramer's V does not match the stored table")
+        return
+    roles = tp['roles']
+    if (t['row_levels'] != roles[0]['levels'] or t['column_levels'] != roles[1]['levels']
+            or t['other_row_levels'] or t['other_column_levels']):
+        _fail('2x2 table levels do not match the binary roles')
+    (d, c), (b, a) = counts
+    expected = two_by_two(a, b, c, d)
+    stored = {'odds_ratio': safe(expected['odds_ratio']) if expected['odds_ratio'] is not None else None,
+              'odds_ratio_correction': expected['odds_ratio_correction'],
+              'risk_difference': coefficient(expected['risk_difference']) if expected['risk_difference'] is not None else None,
+              'phi': coefficient(expected['phi']) if expected['phi'] is not None else None}
+    if any(m[k] != v for k, v in stored.items()):
+        _fail('2x2 measures do not match the stored table')
+
+
 def _check_chart(chart, kind):
     if not isinstance(chart, dict) or not isinstance(chart.get('kind'), str) or chart['kind'] not in CHART_KINDS[kind]:
         _fail('chart kind')
@@ -662,6 +702,16 @@ def _validate(tp, evidence):
     for key in ('groups_k', 'rows_k', 'columns_k'):
         if key in m and m[key] < 1:
             _fail('measure ' + key)
+    for key, value in m.items():
+        if key in RANGES and value is not None:
+            low, high, low_open = RANGES[key]
+            if value < low or value > high or (low_open and value == low):
+                _fail(f'measure {key} out of range: {value} not in ' + ('(' if low_open else '[') + f'{low}, {high}]')
+    if kind == 'numeric×numeric':
+        r, rho = m['pearson_r'], m['spearman_rho']
+        gap = coefficient(abs(rho) - abs(r)) if r is not None and rho is not None else None
+        if m['rank_linear_gap'] != gap or m['disagreement'] != disagrees(r, rho, gap):
+            _fail('rank_linear_gap or disagreement does not match the stored r and rho (gap = |rho| - |r|)')
     binary = [r for r in roles if r['role'] == 'binary']
     if kind == 'binary×numeric' and (m['index_level'] != binary[0]['levels'][1] or m['reference_level'] != binary[0]['levels'][0]):
         _fail('binary levels do not follow the role\'s sort order (index = second level, reference = first)')
@@ -689,6 +739,8 @@ def _validate(tp, evidence):
                 _fail('groups')
         if kind == 'category×numeric' and m['groups_k'] != len(groups):
             _fail('groups_k does not match the stored groups')
+        if sum(g['n'] for g in groups) != tp['n']:
+            _fail('n does not match the stored group sizes')
     if tabled:
         t = tp['table']
         _keys(t, TABLE_KEYS, what='table fields')
@@ -699,5 +751,6 @@ def _validate(tp, evidence):
         width = len(t['column_levels']) + bool(t['other_column_levels'])
         if len(t['counts']) != len(t['row_levels']) + bool(t['other_row_levels']) or any(not isinstance(r, list) or len(r) != width or not all(_count(v) for v in r) for r in t['counts']):
             _fail('table counts')
+        _check_table_derived(tp, kind, t, m)
     if not evidence:
         _check_chart(tp['chart'], kind)
