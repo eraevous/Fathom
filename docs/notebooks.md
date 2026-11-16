@@ -37,7 +37,7 @@ liftoff(df, out="fathom-out", name="data.csv")
 
 ## Text in, text profiled
 
-Fathom profiles what the table says as text. A DataFrame read with `dtype=str, keep_default_na=False` gives the same results as `guide profile` on the file. Typed columns still work: each value is written with `str()` (`1.0`, `2026-01-01 00:00:00`) and missing values (None, NaN, NaT) become empty fields, so the profile describes that text. The index is dropped; call `df.reset_index()` first to keep it. Column names must be unique, nonblank strings.
+Fathom profiles what the table says as text. A DataFrame read with `dtype=str, keep_default_na=False` keeps every cell's text, so the findings match `guide profile` on the file. The recorded source hash can still differ: Fathom hashes the CSV it writes from the DataFrame (comma-separated, `\n` line ends, quotes only where needed, no byte-order mark), so a file with CRLF line ends, extra quoting or a BOM gets a different `source.sha256`. Artifacts are byte-identical to the CLI's when the file has exactly those bytes, apart from the recorded connector and origin. Typed columns still work: each value is written with `str()` (`1.0`, `2026-01-01 00:00:00`) and missing values (None, NaN, NaT) become empty fields, so the profile describes that text. The index is dropped; call `df.reset_index()` first to keep it. Column names must be unique, nonblank strings.
 
 ## Saving to the notebook's storage
 

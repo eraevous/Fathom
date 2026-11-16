@@ -136,3 +136,17 @@ def test_api_runs_with_all_sockets_blocked(tmp_path):
                        env=env, capture_output=True)
     assert r.returncode == 0, r.stderr.decode()
     assert {p.name for p in tmp_path.iterdir()} >= {"report.html", "guide-profile.json", "liftoff.html"}
+
+
+def test_crlf_file_keeps_findings_but_not_hash(tmp_path):
+    """Copilot review 2026-11-16: parity is for the same bytes; CRLF text matches, the hash doesn't."""
+    crlf = tmp_path / "crlf.csv"
+    crlf.write_bytes((FIXTURES / "review.csv").read_bytes().replace(b"\r\n", b"\n").replace(b"\n", b"\r\n"))
+    assert run_cli(tmp_path, "profile", "crlf.csv", "--out", str(tmp_path / "cli")) == 0
+    cli_doc = json.loads((tmp_path / "cli" / "guide-profile.json").read_text())
+    api_doc = json.loads(fathom.profile(pd.read_csv(crlf, dtype=str, keep_default_na=False), name="crlf.csv").to_json())
+    api_hash, cli_hash = api_doc["source"]["sha256"], cli_doc["source"]["sha256"]
+    assert api_hash != cli_hash
+    # Findings carry the source hash in their provenance; everything else is the same.
+    same = lambda d: json.dumps({k: d[k] for k in ("findings", "columns")}, sort_keys=True).replace(api_hash, "HASH").replace(cli_hash, "HASH")
+    assert same(api_doc) == same(cli_doc)

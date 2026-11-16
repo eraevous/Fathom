@@ -8,8 +8,10 @@ Reviewer guide:
   CLI's, except ``source.connector`` ("dataframe") and ``source.origin`` (the ``name`` given).
 - Provenance keeps a content hash: ``source.sha256`` is the SHA-256 of the serialised bytes.
 - Fathom profiles text as written (DG-RB, spec 001). A DataFrame read with ``dtype=str`` and
-  ``keep_default_na=False`` round-trips a CSV exactly; typed columns are written with ``str()``
-  and so are profiled from that text (documented in docs/notebooks.md).
+  ``keep_default_na=False`` keeps every cell's text, but not the file's bytes: CRLF line ends,
+  extra quoting or a BOM are rewritten, so ``source.sha256`` can differ from the CLI's for that
+  file. Parity is for the same serialised bytes. Typed columns are written with ``str()`` and so
+  are profiled from that text (documented in docs/notebooks.md).
 - Nothing here opens a network connection or imports IPython. ``show()`` returns an object that
   Jupyter displays through ``_repr_html_``; outside Jupyter it is a plain string holder.
 """

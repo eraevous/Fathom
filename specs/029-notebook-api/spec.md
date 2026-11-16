@@ -10,7 +10,7 @@ Proposed for Zach. Serves: P0@2, DG-RE@1, DG-RF@1.
 - `config` is None, a dict, or a YAML path. A dict is dumped to YAML and read with the file loader, so a dict and the same file give the same config.
 - The DataFrame is serialised to CSV bytes in memory (header, rows, index dropped, `\n` line ends; missing values as empty fields; other values with `str()`), then parsed by the same function the CLI uses for a file. After that the code path is the CLI's.
 - **Byte-identical:** for the same CSV bytes and config, `report.md`, `report.html`, `guide-profile.json`, `liftoff.html` and `liftoff-profile.json` equal the CLI's except the recorded `source.connector` (`dataframe`) and `source.origin` (`name`).
-- **Provenance:** `source.sha256` is the SHA-256 of the serialised bytes (content hash; the name doesn't change it).
+- **Provenance:** `source.sha256` is the SHA-256 of the serialised bytes (content hash; the name doesn't change it). It equals the CLI's hash only when the file has exactly those bytes: a file with CRLF line ends, extra quoting or a BOM keeps its cell text through `dtype=str` but gets a different hash (Copilot review, 2026-11-16).
 - Column names must be unique, nonblank strings; a clear `ValueError` otherwise.
 - `import fathom` stays light: it imports neither pandas nor the API until `fathom.profile` is used.
 
