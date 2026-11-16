@@ -420,8 +420,10 @@ def time_series(rows, columns, cfg, emit):
     if result["question"]:
         q = result["question"]
         temporal, numeric = [t["column"] for t in q["temporal_columns"]], q["numeric_columns"]
+        # Built outside the f-string: nested same-quote f-strings need Python 3.12 (spec 029 supports 3.11).
+        periods = ", ".join("{} ({:,} distinct {}s)".format(t["column"], t["distinct_periods"], t["granularity"]) for t in q["temporal_columns"])
         emit("ts-undeclared", "question",
-             f"{', '.join(f'{t['column']} ({t['distinct_periods']:,} distinct {t['granularity']}s)' for t in q['temporal_columns'])}: "
+             f"{periods}: "
              "would counts of rows over time (time_series with value: null) be useful"
              + (f", or totals of {', '.join(numeric[:5])}{' …' if len(numeric) > 5 else ''} over time" if numeric else "")
              + "? Declare it under `time_series` to measure temporal structure.",

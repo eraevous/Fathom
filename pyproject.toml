@@ -6,8 +6,10 @@ build-backend = "setuptools.build_meta"
 name = "fathom-guide"
 version = "0.1.0"
 description = "Evidenced tabular data review and repeatable documentation"
-requires-python = ">=3.12"
-dependencies = ["pandas==2.2.3", "PyYAML==6.0.3"]
+requires-python = ">=3.11"
+# Ranges, not pins, so Fathom installs beside a managed notebook image (spec 029).
+# CI tests both ends; requirements/ci-lock.txt keeps the reproducible middle.
+dependencies = ["pandas>=2.0,<3", "PyYAML>=6.0,<7"]
 
 [project.optional-dependencies]
 test = ["pytest==9.2.0"]

@@ -61,6 +61,14 @@ if __name__ == '__main__':
         except RuntimeError:
             pass
         code = 0
+    elif sys.argv[1:2] == ['--api']:
+        # Spec 029: the notebook API under the same socket denial as every command.
+        import pandas as pd
+        import fathom, fathom.api
+        frame = pd.read_csv(sys.argv[2], dtype=str, keep_default_na=False)
+        fathom.profile(frame, out=sys.argv[3]).show()._repr_html_()
+        fathom.api.liftoff(frame, out=sys.argv[3]).show()._repr_html_()
+        code = 0
     else:
         from fathom.cli import main
         code = main(sys.argv[1:])
