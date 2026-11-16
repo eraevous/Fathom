@@ -42,3 +42,33 @@ Fathom profiles what the table says as text. A DataFrame read with `dtype=str, k
 ## Saving to the notebook's storage
 
 `out` is an ordinary local path, so use a folder the notebook service keeps (for example the workspace or home folder it shows in its file browser). Open `report.html` from there for the full report; the cell shows only the collapsed view, because notebook outputs often block scripts.
+
+## Profile a SQL query (opt-in)
+
+Fathom can profile the rows of a query on a connection **you** open. It never opens one itself, never asks for credentials, and imports no database driver.
+
+```python
+import sqlite3          # or any DB-API 2.0 driver your notebook already has
+import fathom
+
+conn = sqlite3.connect("local.db")
+result = fathom.profile_query(conn, "SELECT * FROM orders", limit=50_000, out="fathom-out")
+conn.close()
+result
+```
+
+- `limit` is required: the most rows you expect. More than that is an error, not a silent cut; raise it or narrow the query. Fathom doesn't add a `LIMIT` to your SQL.
+- Provenance records the query text, the driver's name (for example `sqlite3`) and the limit, never the connection or its credentials.
+- The query text is recorded verbatim in every report, so keep secrets and sensitive literals out of it (put filters in a view, or pass nothing you wouldn't share with the report).
+- Values are profiled as their text, as for a DataFrame. Binary columns are refused; select them as text.
+- Fathom runs one read statement only: it must start with `SELECT`, `WITH` or `VALUES`, and anything after the first `;` is refused before it runs. That is a guard, not a guarantee (some databases allow writes inside `WITH`, and a function can have side effects), so connect with a **read-only** account or mode (for SQLite: `sqlite3.connect('file:local.db?mode=ro', uri=True)`).
+
+From a terminal, name a function in your own code that returns an open connection:
+
+```bash
+guide profile --source sql --connect my_connect.py:make_conn --query "SELECT * FROM orders" --limit 50000 --out fathom-out
+```
+
+Fathom calls `make_conn()`, profiles the query and closes the connection. Keep credentials in that function or its environment; if it fails, Fathom prints only the error type, not its message. Whether a given database may be used is your organisation's call, not Fathom's.
+
+Tests use SQLite files only: `python -m pytest tests/test_sql_source.py`.

@@ -30,7 +30,7 @@ from .config import config_from_yaml, read_config, validate_config
 from .connectors import load_csv_bytes
 from .models import GuideDataFrame, ProfilingResult, SchemaContract
 
-__all__ = ["profile", "liftoff", "NotebookResult", "dataframe_csv_bytes"]
+__all__ = ["profile", "profile_query", "liftoff", "NotebookResult", "dataframe_csv_bytes"]
 
 
 def _cell(value) -> str:
@@ -190,11 +190,27 @@ def _strip_anchors(fragment: str) -> str:
 def profile(df, config=None, out=None, *, name: str = "dataframe") -> NotebookResult:
     """Profile a DataFrame like ``guide profile``: writes report.md, report.html and
     guide-profile.json to ``out`` when given. ``config`` is None, a dict, or a YAML path."""
+    raw, cfg = _config(config)
+    return _profile_data(_load(df, SchemaContract(**cfg["schema"]), name), raw, cfg, out)
+
+
+def profile_query(conn, query: str, limit: int, out=None, config=None, *, name: str = "sql query") -> NotebookResult:
+    """Profile the rows of ``query`` on a DB-API 2.0 connection *you* opened (spec 030).
+
+    ``limit`` is required: the declared row cap. More rows than that is an error, not a silent
+    truncation. Fathom opens nothing, imports no driver and records no connection details;
+    provenance keeps the query text, the adapter name and the limit. Same artifacts as
+    ``fathom.profile``; ``source.connector`` is "sql".
+    """
+    from .sql import load_query
+    raw, cfg = _config(config)
+    return _profile_data(load_query(conn, query, limit, SchemaContract(**cfg["schema"]), name), raw, cfg, out)
+
+
+def _profile_data(data: GuideDataFrame, raw, cfg, out) -> NotebookResult:
     from .profiler import profile as run_profile
     from .renderers import render_html, render_markdown
     from .summary_view import report_options
-    raw, cfg = _config(config)
-    data = _load(df, SchemaContract(**cfg["schema"]), name)
     cfg = validate_config(cfg, list(data.frame.columns))
     result = run_profile(data, cfg)
     options = report_options(raw)
