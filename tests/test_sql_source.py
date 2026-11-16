@@ -232,6 +232,8 @@ def test_short_tuple_batches_are_accumulated():
     "/* SELECT */ DROP TABLE review",
     "SELECT 1; DROP TABLE review",
     "SELECT 1 ; DELETE FROM review -- trailing",
+    "SELECTED_ROWS_DELETE",
+    "DELETE* FROM review",
 ])
 def test_write_statements_are_refused_before_execution(tmp_path, statement):
     """Copilot review #53: refused SQL must leave the database unchanged (autocommit connection)."""
@@ -252,6 +254,9 @@ def test_write_statements_are_refused_before_execution(tmp_path, statement):
     "SELECT (SELECT count(*) FROM review) AS n",
     "SELECT 'a;b -- not a comment' AS s, \"odd;name\" FROM (SELECT 1 AS \"odd;name\")",
     "VALUES (1), (2)",
+    "SELECT* FROM review",
+    "select'x'AS s",
+    "SELECT(1)AS one",
 ])
 def test_read_statements_are_accepted(tmp_path, statement):
     db, _ = build_db(tmp_path)

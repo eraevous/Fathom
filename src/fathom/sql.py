@@ -20,6 +20,7 @@ import importlib
 import importlib.util
 import io
 from pathlib import Path
+import re
 import sys
 
 from .connectors import load_csv_bytes
@@ -95,8 +96,8 @@ def check_read_query(query: str) -> None:
     connection, which the docs ask for.
     """
     code = _code_outside_literals(query)
-    words = code.replace("(", " ").split()
-    if not words or words[0].lower() not in READ_KEYWORDS:
+    first_word = re.match(r"[\s(]*([A-Za-z_]+)", code)  # a token boundary, so "SELECT*" reads as SELECT (Codex review)
+    if not first_word or first_word.group(1).lower() not in READ_KEYWORDS:
         raise ValueError("only a read query is run: it must start with SELECT, WITH or VALUES (nothing was executed)")
     first, sep, rest = code.partition(";")
     if sep and rest.strip(" \t\r\n;"):
