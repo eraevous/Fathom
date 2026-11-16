@@ -178,3 +178,48 @@ def test_cli_sql_source_runs_with_all_sockets_blocked(tmp_path):
                        env=env, capture_output=True)
     assert r.returncode == 0, r.stderr.decode()
     assert (tmp_path / "out" / "guide-profile.json").is_file()
+
+
+def test_cli_withholds_a_factory_modules_import_time_error(tmp_path, capsys):
+    """Codex review #53: a module that raises on import must not print its message either."""
+    for exc in ("ValueError", "RuntimeError", "ImportError"):
+        module = tmp_path / f"bad_{exc}.py"
+        module.write_text(f"raise {exc}('login failed: password={SECRET}')\n", encoding="utf-8")
+        code = main(["profile", "--source", "sql", "--connect", f"{module}:make_conn", "--query", QUERY,
+                     "--limit", "5", "--out", str(tmp_path / "out")])
+        err = capsys.readouterr().err
+        assert code == 2 and exc in err and "withheld" in err and SECRET not in err
+
+
+class TupleBatchCursor:
+    """A DB-API cursor that returns tuple batches, short ones first (allowed by PEP 249)."""
+    description = (("a", None, None, None, None, None, None),)
+
+    def __init__(self, rows):
+        self.rows = list(rows)
+
+    def execute(self, query):
+        pass
+
+    def fetchmany(self, size):
+        batch, self.rows = tuple(self.rows[:min(size, 2)]), self.rows[min(size, 2):]
+        return batch
+
+    def close(self):
+        pass
+
+
+class TupleBatchConnection:
+    def __init__(self, rows):
+        self.rows = rows
+
+    def cursor(self):
+        return TupleBatchCursor(self.rows)
+
+
+def test_short_tuple_batches_are_accumulated():
+    """Codex review #53: fetchmany may return tuples, and fewer rows than asked."""
+    rows = [(str(i),) for i in range(5)]
+    assert query_csv_bytes(TupleBatchConnection(rows), "SELECT a", 5) == b"a\n0\n1\n2\n3\n4\n"
+    with pytest.raises(ValueError, match="more than the row limit"):
+        query_csv_bytes(TupleBatchConnection(rows), "SELECT a", 4)

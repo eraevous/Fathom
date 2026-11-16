@@ -67,7 +67,7 @@ def query_csv_bytes(conn, query: str, limit: int) -> bytes:
         if not cursor.description:
             raise ValueError("query returned no result set; use a SELECT")
         columns = [str(d[0]) for d in cursor.description]
-        rows = cursor.fetchmany(limit + 1)
+        rows = list(cursor.fetchmany(limit + 1))  # DB-API allows any sequence (e.g. a tuple)
         # fetchmany may return fewer than asked before the end; keep reading up to limit + 1.
         while len(rows) <= limit:
             more = cursor.fetchmany(limit + 1 - len(rows))
@@ -106,18 +106,24 @@ def load_factory(spec: str):
     target, sep, attr = spec.rpartition(":")
     if not sep or not target or not attr.isidentifier():
         raise ValueError("--connect must be module:function or path/to/file.py:function")
-    if target.endswith(".py"):
-        path = Path(target)
-        if not path.is_file():
-            raise ValueError(f"connection factory file not found: {path}")
-        module_spec = importlib.util.spec_from_file_location("fathom_user_connect", path)
-        module = importlib.util.module_from_spec(module_spec)
-        module_spec.loader.exec_module(module)
-    else:
-        try:
+    if target.endswith(".py") and not Path(target).is_file():
+        raise ValueError(f"connection factory file not found: {target}")
+    try:
+        if target.endswith(".py"):
+            module_spec = importlib.util.spec_from_file_location("fathom_user_connect", target)
+            module = importlib.util.module_from_spec(module_spec)
+            module_spec.loader.exec_module(module)
+        else:
             module = importlib.import_module(target)
-        except ImportError as exc:
-            raise ValueError(f"cannot import connection factory module {target!r}: {exc}") from None
+    except ModuleNotFoundError as exc:
+        if exc.name and target.startswith(exc.name):
+            raise ValueError(f"cannot import connection factory module {target!r}: module not found") from None
+        raise ValueError(f"loading connection factory {target!r} raised ModuleNotFoundError; message withheld so no connection details are printed") from None
+    except BaseException as exc:
+        if isinstance(exc, (KeyboardInterrupt, SystemExit)):
+            raise
+        # The user's module holds connection details; its import-time message may echo them (Codex review, #53).
+        raise ValueError(f"loading connection factory {target!r} raised {type(exc).__name__}; message withheld so no connection details are printed") from None
     factory = getattr(module, attr, None)
     if not callable(factory):
         raise ValueError(f"{spec!r} is not a callable connection factory")
