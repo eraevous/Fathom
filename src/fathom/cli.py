@@ -37,6 +37,26 @@ def summary_line(d: dict) -> str:
             f"row unit: {record.get('row_unit') or 'unknown (not declared)'}")
 
 
+def _load_sql(args, schema: SchemaContract):
+    """Spec 030: call the user's factory, profile --query capped at --limit, close the connection.
+
+    The factory's arguments, environment and code are never read or recorded; provenance holds
+    the adapter name, the query text and the limit.
+    """
+    from .sql import load_factory, load_query
+    factory = load_factory(args.connect)
+    try:
+        conn = factory()
+    except Exception as exc:
+        # The factory holds the user's connection details; its message may echo them, so withhold it.
+        raise ValueError(f"connection factory {args.connect} raised {type(exc).__name__}; message withheld so no connection details are printed") from None
+    try:
+        return load_query(conn, args.query, args.limit, schema, "sql query")
+    finally:
+        close = getattr(conn, "close", None)
+        if callable(close): close()
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="guide", description="Evidenced local table review")
     parser.add_argument("--version", action="version", version=f"guide {__version__}")
@@ -45,7 +65,13 @@ def main(argv: list[str] | None = None) -> int:
                           "(defaults, observable suggestions, explicit selections), and configure-profile.json, the profile it used"}
     for command in ("profile", "render", "compare", "validate", "export", "configure", "liftoff", "panel", "serve"):
         sub = commands.add_parser(command, help=helps.get(command), description=helps.get(command))
-        sub.add_argument("input", type=Path)
+        # profile also takes an opt-in SQL source (spec 030), where the positional CSV is absent.
+        sub.add_argument("input", type=Path, **({"nargs": "?"} if command == "profile" else {}))
+        if command == "profile":
+            sub.add_argument("--source", choices=("csv", "sql"), default="csv", help="csv (default): the input file; sql: rows of --query on a connection your own code opens")
+            sub.add_argument("--connect", help="sql: module:function or path/to/file.py:function returning an open DB-API connection; Fathom never sees credentials")
+            sub.add_argument("--query", help="sql: the SELECT to profile, recorded in provenance")
+            sub.add_argument("--limit", type=int, help="sql: required row cap; more rows is an error, recorded in provenance")
         if command == "serve":
             sub.add_argument("--host", default="127.0.0.1", choices=("127.0.0.1",))
             sub.add_argument("--idle-timeout", type=float, default=1800, help="idle expiry in seconds (default 1800)")
@@ -65,6 +91,16 @@ def main(argv: list[str] | None = None) -> int:
             sub.add_argument("--tidy",type=Path,help="write saved-profile columns/findings/relations/samples CSVs; no Office extra required")
             sub.add_argument("--deck",choices=("summary","full"),default="summary")
     args = parser.parse_args(argv)
+    if args.command == "profile":
+        sql = {"--connect": args.connect, "--query": args.query, "--limit": args.limit}
+        if args.source == "sql":
+            missing = [k for k, v in sql.items() if v is None]
+            if missing: parser.error("--source sql requires " + ", ".join(missing))
+            if args.input is not None: parser.error("--source sql takes no input file")
+        else:
+            if args.input is None: parser.error("profile needs an input CSV (or --source sql)")
+            given = [k for k, v in sql.items() if v is not None]
+            if given: parser.error(", ".join(given) + " need --source sql")
     if args.command=='export' and args.out is None and args.tidy is None:parser.error('export needs --out or --tidy')
     if args.command=='export' and args.formats and args.out is None:parser.error('--formats requires --out')
     try:
@@ -126,7 +162,10 @@ def main(argv: list[str] | None = None) -> int:
             return 0
         if args.command in {"profile", "validate"}:
             cfg = load_config(args.config)
-            data = CSVConnector(args.input, SchemaContract(**cfg["schema"])).load()
+            if getattr(args, "source", "csv") == "sql":
+                data = _load_sql(args, SchemaContract(**cfg["schema"]))
+            else:
+                data = CSVConnector(args.input, SchemaContract(**cfg["schema"])).load()
             cfg = validate_config(cfg, list(data.frame.columns))
             if args.command == "validate":
                 # The resolved schema keys stay at top level (CLI contract); "resolved" echoes
