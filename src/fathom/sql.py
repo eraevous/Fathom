@@ -20,11 +20,12 @@ import importlib
 import importlib.util
 import io
 from pathlib import Path
+import sys
 
 from .connectors import load_csv_bytes
 from .models import GuideDataFrame, SchemaContract
 
-__all__ = ["adapter_name", "query_csv_bytes", "load_query", "load_factory"]
+__all__ = ["adapter_name", "check_read_query", "query_csv_bytes", "load_query", "load_factory"]
 
 
 def adapter_name(conn) -> str:
@@ -49,6 +50,63 @@ def _cell(value, column: str) -> str:
     return str(value)
 
 
+READ_KEYWORDS = ("select", "with", "values")
+
+
+def _code_outside_literals(query: str) -> str:
+    """The query with string literals, quoted identifiers and comments blanked out.
+
+    A small scanner, not a SQL parser: '...' and "..." (doubled quotes escape), -- line comments
+    and /* */ block comments. Enough to find the first keyword and a second statement.
+    """
+    out, i, n = [], 0, len(query)
+    while i < n:
+        c = query[i]
+        if c in "'\"":
+            j = i + 1
+            while j < n:
+                if query[j] == c:
+                    if j + 1 < n and query[j + 1] == c:
+                        j += 2
+                        continue
+                    break
+                j += 1
+            out.append(" ")
+            i = j + 1
+        elif query.startswith("--", i):
+            j = query.find("\n", i)
+            i = n if j < 0 else j
+            out.append(" ")
+        elif query.startswith("/*", i):
+            j = query.find("*/", i + 2)
+            i = n if j < 0 else j + 2
+            out.append(" ")
+        else:
+            out.append(c)
+            i += 1
+    return "".join(out)
+
+
+def check_read_query(query: str) -> None:
+    """Refuse, before anything runs, SQL that is not a single SELECT / WITH / VALUES statement.
+
+    A guard, not a guarantee (Copilot review, #53): a dialect may allow writes inside WITH, and a
+    function called by a SELECT can have side effects. The real protection is a read-only
+    connection, which the docs ask for.
+    """
+    code = _code_outside_literals(query)
+    words = code.replace("(", " ").split()
+    if not words or words[0].lower() not in READ_KEYWORDS:
+        raise ValueError("only a read query is run: it must start with SELECT, WITH or VALUES (nothing was executed)")
+    first, sep, rest = code.partition(";")
+    if sep and rest.strip(" \t\r\n;"):
+        raise ValueError("only one statement is run; remove everything after the first ';' (nothing was executed)")
+
+
+def _driver_error(step: str, exc: Exception) -> ValueError:
+    return ValueError(f"query failed while {step} ({type(exc).__name__}): {exc}")
+
+
 def query_csv_bytes(conn, query: str, limit: int) -> bytes:
     """Run ``query`` on the user's connection; return the rows as UTF-8 CSV bytes.
 
@@ -58,22 +116,27 @@ def query_csv_bytes(conn, query: str, limit: int) -> bytes:
     if not isinstance(query, str) or not query.strip():
         raise ValueError("query must be nonblank SQL text")
     limit = _check_limit(limit)
+    check_read_query(query)
     cursor = conn.cursor()
     try:
+        # DB-API errors are driver classes; every driver call reports them as a usage error.
         try:
             cursor.execute(query)
-        except Exception as exc:  # DB-API errors are driver classes; report them as a usage error.
-            raise ValueError(f"query failed ({type(exc).__name__}): {exc}") from None
+        except Exception as exc:
+            raise _driver_error("executing", exc) from None
         if not cursor.description:
             raise ValueError("query returned no result set; use a SELECT")
         columns = [str(d[0]) for d in cursor.description]
-        rows = list(cursor.fetchmany(limit + 1))  # DB-API allows any sequence (e.g. a tuple)
-        # fetchmany may return fewer than asked before the end; keep reading up to limit + 1.
-        while len(rows) <= limit:
-            more = cursor.fetchmany(limit + 1 - len(rows))
-            if not more:
-                break
-            rows.extend(more)
+        try:
+            rows = list(cursor.fetchmany(limit + 1))  # DB-API allows any sequence (e.g. a tuple)
+            # fetchmany may return fewer than asked before the end; keep reading up to limit + 1.
+            while len(rows) <= limit:
+                more = cursor.fetchmany(limit + 1 - len(rows))
+                if not more:
+                    break
+                rows.extend(more)
+        except Exception as exc:
+            raise _driver_error("fetching rows", exc) from None
     finally:
         cursor.close()
     if len(rows) > limit:
@@ -110,11 +173,24 @@ def load_factory(spec: str):
         raise ValueError(f"connection factory file not found: {target}")
     try:
         if target.endswith(".py"):
-            module_spec = importlib.util.spec_from_file_location("fathom_user_connect", target)
+            # Registered in sys.modules while it runs, as a normal import would be (dataclasses and
+            # similar look the module up there; Copilot review, #53). Removed again on failure.
+            name = "fathom_user_connect"
+            module_spec = importlib.util.spec_from_file_location(name, target)
             module = importlib.util.module_from_spec(module_spec)
-            module_spec.loader.exec_module(module)
+            previous = sys.modules.get(name)
+            sys.modules[name] = module
+            try:
+                module_spec.loader.exec_module(module)
+            except BaseException:
+                if previous is None:
+                    sys.modules.pop(name, None)
+                else:
+                    sys.modules[name] = previous
+                raise
         else:
             module = importlib.import_module(target)
+        factory = getattr(module, attr, None)
     except ModuleNotFoundError as exc:
         if exc.name and target.startswith(exc.name):
             raise ValueError(f"cannot import connection factory module {target!r}: module not found") from None
@@ -124,7 +200,6 @@ def load_factory(spec: str):
             raise
         # The user's module holds connection details; its import-time message may echo them (Codex review, #53).
         raise ValueError(f"loading connection factory {target!r} raised {type(exc).__name__}; message withheld so no connection details are printed") from None
-    factory = getattr(module, attr, None)
     if not callable(factory):
         raise ValueError(f"{spec!r} is not a callable connection factory")
     return factory

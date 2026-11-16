@@ -100,9 +100,9 @@ def test_bad_queries_raise_clear_errors(tmp_path):
     try:
         with pytest.raises(ValueError, match="nonblank"):
             fathom.profile_query(conn, "  ", limit=5)
-        with pytest.raises(ValueError, match=r"query failed \(OperationalError\)"):
+        with pytest.raises(ValueError, match=r"query failed while executing \(OperationalError\)"):
             fathom.profile_query(conn, "SELECT * FROM missing", limit=5)
-        with pytest.raises(ValueError, match="no result set"):
+        with pytest.raises(ValueError, match="must start with SELECT"):
             fathom.profile_query(conn, "CREATE TEMP TABLE t (a)", limit=5)
         with pytest.raises(ValueError, match="binary data"):
             fathom.profile_query(conn, "SELECT X'00ff' AS blob", limit=5)
@@ -223,3 +223,86 @@ def test_short_tuple_batches_are_accumulated():
     assert query_csv_bytes(TupleBatchConnection(rows), "SELECT a", 5) == b"a\n0\n1\n2\n3\n4\n"
     with pytest.raises(ValueError, match="more than the row limit"):
         query_csv_bytes(TupleBatchConnection(rows), "SELECT a", 4)
+
+
+@pytest.mark.parametrize("statement", [
+    "DROP TABLE review",
+    "DELETE FROM review",
+    "  -- a comment first\n UPDATE review SET id = 'x'",
+    "/* SELECT */ DROP TABLE review",
+    "SELECT 1; DROP TABLE review",
+    "SELECT 1 ; DELETE FROM review -- trailing",
+])
+def test_write_statements_are_refused_before_execution(tmp_path, statement):
+    """Copilot review #53: refused SQL must leave the database unchanged (autocommit connection)."""
+    db, frame = build_db(tmp_path)
+    conn = sqlite3.connect(db, isolation_level=None)
+    try:
+        with pytest.raises(ValueError, match="nothing was executed"):
+            fathom.profile_query(conn, statement, limit=100)
+        assert conn.execute("SELECT count(*) FROM review").fetchone()[0] == len(frame)
+    finally:
+        conn.close()
+
+
+@pytest.mark.parametrize("statement", [
+    "select id from review",
+    "-- note\nSELECT id FROM review;",
+    "/* lead */ WITH t AS (SELECT id FROM review) SELECT id FROM t",
+    "SELECT (SELECT count(*) FROM review) AS n",
+    "SELECT 'a;b -- not a comment' AS s, \"odd;name\" FROM (SELECT 1 AS \"odd;name\")",
+    "VALUES (1), (2)",
+])
+def test_read_statements_are_accepted(tmp_path, statement):
+    db, _ = build_db(tmp_path)
+    conn = sqlite3.connect(db)
+    try:
+        assert query_csv_bytes(conn, statement, 100)
+    finally:
+        conn.close()
+
+
+def test_fetch_errors_become_clear_errors(tmp_path):
+    """Copilot review #53: a driver error on a later row is a usage error, not a traceback."""
+    db, _ = build_db(tmp_path)
+    conn = sqlite3.connect(db)
+
+    def fails_on_third(value):
+        if value == "003":
+            raise RuntimeError("boom")
+        return value
+
+    conn.create_function("check_id", 1, fails_on_third)
+    try:
+        with pytest.raises(ValueError, match=r"query failed while fetching rows \(OperationalError\)"):
+            query_csv_bytes(conn, "SELECT check_id(id) FROM review ORDER BY rowid", 100)
+    finally:
+        conn.close()
+
+
+def test_file_factory_is_registered_while_loading(tmp_path, capsys):
+    """Copilot review #53: a factory file using @dataclass with postponed annotations loads."""
+    db, _ = build_db(tmp_path)
+    module = tmp_path / "dc_connect.py"
+    module.write_text("from __future__ import annotations\nimport dataclasses, sqlite3\n"
+                      "@dataclasses.dataclass\nclass Settings:\n    path: str\n"
+                      f"def make_conn():\n    return sqlite3.connect(Settings({db.as_posix()!r}).path)\n", encoding="utf-8")
+    assert main(["profile", "--source", "sql", "--connect", f"{module}:make_conn", "--query", QUERY,
+                 "--limit", "100", "--out", str(tmp_path / "out")]) == 0, capsys.readouterr().err
+    assert "fathom_user_connect" in sys.modules
+    bad = tmp_path / "bad.py"
+    bad.write_text("raise RuntimeError('x')\n", encoding="utf-8")
+    sys.modules.pop("fathom_user_connect", None)
+    assert main(["profile", "--source", "sql", "--connect", f"{bad}:make_conn", "--query", QUERY,
+                 "--limit", "100", "--out", str(tmp_path / "out2")]) == 2
+    assert "fathom_user_connect" not in sys.modules
+
+
+def test_factory_attribute_lookup_errors_are_withheld(tmp_path, capsys):
+    """Copilot review #53: a module __getattr__ that raises must not print its message."""
+    module = tmp_path / "lazy_connect.py"
+    module.write_text(f"def __getattr__(name):\n    raise ValueError('login failed: password={SECRET}')\n", encoding="utf-8")
+    code = main(["profile", "--source", "sql", "--connect", f"{module}:make_conn", "--query", QUERY,
+                 "--limit", "5", "--out", str(tmp_path / "out")])
+    err = capsys.readouterr().err
+    assert code == 2 and "withheld" in err and SECRET not in err

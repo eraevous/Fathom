@@ -19,7 +19,7 @@ Proposed for Zach. Serves: P0@2, DG-RE@1, DG-RF@1.
 - Fathom never asks for, stores, logs or writes credentials. The factory lives in the user's code.
 - `source` records `connector: "sql"`, `adapter` (the driver's top-level module, e.g. `sqlite3`), `query` (as given), `row_limit`, `origin` (`name`) and `sha256` of the serialised rows. Never the connection, the factory spec, its arguments or its environment.
 - The query text is recorded verbatim and appears in the reports; the doc page warns against putting secrets or sensitive literals in it (stress-test, 2026-11-16).
-- A factory that raises is reported by exception type only; its message is withheld, since it may echo connection details. A query error is reported with the driver's message (it concerns the SQL).
+- A factory module that raises while loading, while its factory attribute is looked up, or when the factory is called is reported by exception type only; its message is withheld, since it may echo connection details. A query error is reported with the driver's message (it concerns the SQL).
 
 ## Size
 
@@ -30,9 +30,14 @@ Proposed for Zach. Serves: P0@2, DG-RE@1, DG-RF@1.
 - Fathom opens no connection itself; the CLI form passes the all-sockets-blocked harness. Importing `fathom`, `fathom.api`, `fathom.sql` and `fathom.cli` imports no database driver (not even `sqlite3`).
 - Adapter shipped and tested: SQLite from the standard library, through the generic path. No vendor-specific adapter. DuckDB (an optional extra in the handoff) is not added: it would be a new dependency, and its DB-API connection already works through the generic path; narrower reading, recorded.
 
+## Read-only guard (Copilot review, 2026-11-16)
+
+- Before executing, Fathom refuses a query whose first keyword (after comments) isn't `SELECT`, `WITH` or `VALUES`, or that has a second statement after `;`. A small scanner skips string literals, quoted identifiers and comments. Nothing is executed when the query is refused.
+- This is a guard, not a guarantee. The docs ask for a read-only connection.
+
 ## Errors
 
-Blank query, no result set (not a SELECT), binary columns (select them as text), duplicate or blank column names, and a bad `--connect` spec all raise a clear `ValueError` (CLI exit 2).
+Blank query, a non-read or multi-statement query (refused before running), no result set, driver errors while executing or fetching, binary columns (select them as text), duplicate or blank column names, and a bad `--connect` spec all raise a clear `ValueError` (CLI exit 2).
 
 ## Tests
 

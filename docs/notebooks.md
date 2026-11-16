@@ -61,6 +61,7 @@ result
 - Provenance records the query text, the driver's name (for example `sqlite3`) and the limit, never the connection or its credentials.
 - The query text is recorded verbatim in every report, so keep secrets and sensitive literals out of it (put filters in a view, or pass nothing you wouldn't share with the report).
 - Values are profiled as their text, as for a DataFrame. Binary columns are refused; select them as text.
+- Fathom runs one read statement only: it must start with `SELECT`, `WITH` or `VALUES`, and anything after the first `;` is refused before it runs. That is a guard, not a guarantee (some databases allow writes inside `WITH`, and a function can have side effects), so connect with a **read-only** account or mode (for SQLite: `sqlite3.connect('file:local.db?mode=ro', uri=True)`).
 
 From a terminal, name a function in your own code that returns an open connection:
 
