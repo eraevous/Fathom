@@ -59,6 +59,7 @@ result
 
 - `limit` is required: the most rows you expect. More than that is an error, not a silent cut; raise it or narrow the query. Fathom doesn't add a `LIMIT` to your SQL.
 - Provenance records the query text, the driver's name (for example `sqlite3`) and the limit, never the connection or its credentials.
+- The query text is recorded verbatim in every report, so keep secrets and sensitive literals out of it (put filters in a view, or pass nothing you wouldn't share with the report).
 - Values are profiled as their text, as for a DataFrame. Binary columns are refused; select them as text.
 
 From a terminal, name a function in your own code that returns an open connection:

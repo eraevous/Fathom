@@ -18,6 +18,7 @@ Proposed for Zach. Serves: P0@2, DG-RE@1, DG-RF@1.
 
 - Fathom never asks for, stores, logs or writes credentials. The factory lives in the user's code.
 - `source` records `connector: "sql"`, `adapter` (the driver's top-level module, e.g. `sqlite3`), `query` (as given), `row_limit`, `origin` (`name`) and `sha256` of the serialised rows. Never the connection, the factory spec, its arguments or its environment.
+- The query text is recorded verbatim and appears in the reports; the doc page warns against putting secrets or sensitive literals in it (stress-test, 2026-11-16).
 - A factory that raises is reported by exception type only; its message is withheld, since it may echo connection details. A query error is reported with the driver's message (it concerns the SQL).
 
 ## Size
