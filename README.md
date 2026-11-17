@@ -45,9 +45,10 @@ Use the installed `guide` path above, or activate the virtual environment first.
 | **Temporal structure** | Declared event/value series, sparsity, zero runs, ACF/PACF and optional periodograms. Missing observations, explicit zeros and unrecorded periods stay distinct. |
 | **Long panels** | Explicit series keys, time/value/exposure/state, training/evaluation windows, separate aggregates and metric comparisons through `guide panel`. |
 | **Local configuration** | Liftoff and a browser YAML editor, identifier roles, portable date/clock definitions, plus authenticated local reruns. |
+| **Notebook and opt-in SQL sources** | `fathom.profile(df)` profiles a DataFrame in Jupyter; `fathom.profile_query(conn, sql, limit=…)` or `guide profile --source sql` profiles a read query on a connection your own code opens. Fathom never opens a connection or sees credentials. |
 | **Repeatable handoff** | Context-first before/after comparisons; saved JSON → HTML/Markdown; optional PDF, PowerPoint and tidy CSV exports. |
 
-See the [full guide](docs/guide.md), [identifier documentation](docs/identifiers.md), [temporal formats](docs/temporal-formats.md), [clock fields](docs/time-definition.md) and [tidy export contract](docs/tidy-export.md).
+See the [full guide](docs/guide.md), [identifier documentation](docs/identifiers.md), [temporal formats](docs/temporal-formats.md), [clock fields](docs/time-definition.md), [tidy export contract](docs/tidy-export.md) and [notebook and SQL use](docs/notebooks.md).
 
 ## Pick a command
 
@@ -57,6 +58,7 @@ See the [full guide](docs/guide.md), [identifier documentation](docs/identifiers
 | Edit configuration offline | `guide configure DATA.csv --out configure` |
 | Rerun from a local browser | `guide serve DATA.csv --out working` |
 | Profile a table / check its declared contract | `guide profile DATA.csv --out report` / `guide validate DATA.csv` |
+| Profile a query on your own connection | `guide profile --source sql --connect my_connect.py:make_conn --query "SELECT …" --limit 50000 --out report` |
 | Compare two saved profiles | `guide compare BEFORE.json AFTER.json --out comparison` |
 | Rebuild a report without the CSV | `guide render PROFILE.json --out rendered` |
 | Profile an explicitly declared panel | `guide panel LONG.csv --config panel.yaml --out panel` |
@@ -66,7 +68,7 @@ Install optional serializers with `pip install -e '.[exports]'`, or statistics w
 
 ## Know the boundaries
 
-- Current source intake is one local CSV at a time, with a separate declared long-panel path. No general Excel, JSON, database or knowledge-base connector is included here.
+- Source intake is one local CSV at a time, a pandas DataFrame in a notebook, or (opt-in) the rows of one read query on a DB-API connection you open, capped by a required `--limit`; plus a separate declared long-panel path. Fathom imports no database driver and records the query text verbatim, so keep secrets out of it. No Excel, JSON or knowledge-base connector is included. [Notebooks and SQL →](docs/notebooks.md)
 - Fathom is in-memory and does not clean your data, establish causation, train a model or invent domain meaning. Rules can miss real problems and flag valid values.
 - No telemetry or remote lookup is performed. Ordinary commands and reports work offline. `serve` uses local loopback only, not a multi-user hosted service.
 - Reports and JSON can contain source values in examples, frequencies and evidence. **`sample_rows: 0` is not redaction.** Review outputs before sharing them.

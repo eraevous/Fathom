@@ -315,9 +315,11 @@ numeric predictors. See [spec018](../specs/018-bare-year-dates/spec.md).
 
 ## Scope and limits
 
-This is a local, in-memory, single CSV/wide slice under `DG-D1`'s data-to-decisions
-definition. It does **not** complete the April connector/CLI checklist. Globs,
-Excel/JSON/database connectors, arbitrary long-table contracts, broader EDA,
+This is a local, in-memory, single-table slice under `DG-D1`'s data-to-decisions
+definition: one CSV, a notebook DataFrame, or an opt-in read query on a connection
+you open ([notebooks and SQL](notebooks.md)). It does **not** complete the April
+connector/CLI checklist. Globs, Excel/JSON connectors, Fathom-managed database
+connections, arbitrary long-table contracts, broader EDA,
 dashboards and narrative generation are deferred. The separate `guide panel` command
 accepts explicitly declared long panels, and `guide serve` offers local configuration
 reruns. No source data is changed. Ordinary commands work offline; `serve` exchanges
