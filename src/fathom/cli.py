@@ -90,7 +90,13 @@ def main(argv: list[str] | None = None) -> int:
             sub.add_argument("--formats", nargs="+", choices=("pdf", "pptx"), default=None)
             sub.add_argument("--tidy",type=Path,help="write saved-profile columns/findings/relations/samples CSVs; no Office extra required")
             sub.add_argument("--deck",choices=("summary","full"),default="summary")
+    app = commands.add_parser("app", help="open the desktop window (choose a CSV, quick look, profile, configure in the browser)",
+                              description="open the desktop window (spec 031); needs tkinter")
+    app.add_argument("--check", action="store_true", help="only report whether the window can open here")
     args = parser.parse_args(argv)
+    if args.command == "app":
+        from .app import main as app_main
+        return app_main(check_only=args.check)
     if args.command == "profile":
         sql = {"--connect": args.connect, "--query": args.query, "--limit": args.limit}
         if args.source == "sql":

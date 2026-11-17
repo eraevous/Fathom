@@ -34,3 +34,41 @@ jobs:
       - run: pip install -e '.[test]' ${{ matrix.deps }}
       - run: python -c "import pandas, yaml, sys; print(sys.version.split()[0], 'pandas', pandas.__version__, 'PyYAML', yaml.__version__)"
       - run: python -m pytest -q
+  # Spec 031: the per-user installer and the desktop window on all three systems.
+  install:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    name: install (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run: {shell: bash}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: pip install -e '.[test]'
+      - name: launcher and installer tests (window under a display)
+        run: |
+          if [ "$RUNNER_OS" = Linux ]; then xvfb-run -a python -m pytest -q tests/test_launcher.py tests/test_installer.py
+          else python -m pytest -q tests/test_launcher.py tests/test_installer.py; fi
+      - name: build an offline bundle
+        run: python install/make_bundle.py --out dist
+      - name: install from the bundle with no package index, use it, uninstall
+        run: |
+          cd dist/Fathom-*/
+          python fathom_install.py --dry-run
+          python fathom_install.py
+          guide=$(python -c "import fathom_install as i, os, pathlib; print(i.make_plan(i.system_name(), pathlib.Path.home(), dict(os.environ)).guide)")
+          "$guide" --version
+          "$guide" app --check
+          "$guide" profile ../../tests/fixtures/review.csv --out "$RUNNER_TEMP/installed-profile"
+          test -f "$RUNNER_TEMP/installed-profile/report.html"
+          cat "$(python -c "import fathom_install as i, os, pathlib; print(i.make_plan(i.system_name(), pathlib.Path.home(), dict(os.environ)).data)")/install-manifest.json"
+          python fathom_install.py --uninstall
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fathom-offline-bundle-${{ matrix.os }}-py312
+          path: dist/*.zip
+          retention-days: 14
