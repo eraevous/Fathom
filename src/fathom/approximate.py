@@ -33,7 +33,8 @@ def approximate(value, figures=2):
     if last in (1, 9):
         r = r.quantize(Decimal(1).scaleb(exp + 1), rounding=ROUND_HALF_UP)
     elif (head == 4 and last > 7) or (head == 5 and last < 3):
-        r = Decimal(5).scaleb(exp + 1)
+        pair = Decimal(1).scaleb(exp + 2)  # keep the figures before the final pair: 148 -> 150, not 50
+        r = (r // pair) * pair + Decimal(5).scaleb(exp + 1)
     return _out(sign * r, value)
 
 

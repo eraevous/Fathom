@@ -17,6 +17,11 @@ class ApproximateReading(unittest.TestCase):
             with self.subTest(value=value):
                 self.assertEqual(approximate(value), shown)
 
+    def test_higher_precision_keeps_leading_figures(self):
+        for value, shown in {148: 150, 152: 150, 1.48: 1.5, 1.52: 1.5, 149: 150, 147: 147}.items():
+            with self.subTest(value=value):
+                self.assertEqual(approximate(value, figures=3), shown)
+
     def test_non_numbers_and_edges_pass_through(self):
         for v in (None, True, 'x', 0, float('nan'), float('inf')):
             self.assertIs(approximate(v), v)
