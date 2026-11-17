@@ -148,8 +148,13 @@ class ServeSession:
     def running(self) -> bool:
         return self.thread.is_alive()
 
-    def stop(self, wait: float = 5) -> None:
+    def request_stop(self) -> None:
+        """Ask the loop to stop; it finishes any rerun in progress first. Non-blocking."""
         self.server.session.stopped = True
+
+    def stop(self, wait: float | None = None) -> None:
+        """Stop and wait for the loop (and any rerun) to finish; `None` waits as long as it takes."""
+        self.request_stop()
         if self.thread.is_alive():
             self.thread.join(wait)
 

@@ -24,6 +24,8 @@ class LauncherWindow:
         self.events: queue.Queue = queue.Queue()
         self.session: app.ServeSession | None = None
         self.busy = False
+        self.closing = False
+        self.stopping = False
         self.csv = tk.StringVar()
         self.config = tk.StringVar()
         self.out = tk.StringVar()
@@ -31,7 +33,7 @@ class LauncherWindow:
         self._build()
         self.refresh_recent()
         self.root.protocol("WM_DELETE_WINDOW", self.close)
-        self.root.after(100, self._drain)
+        self._after = self.root.after(100, self._drain)
 
     # ---- layout -------------------------------------------------------
     def _build(self):
@@ -108,6 +110,12 @@ class LauncherWindow:
         if config is not None and not config.is_file():
             messagebox.showerror("Fathom", "The config file doesn't exist. Clear it or choose another.")
             return None
+        # Typed or pasted paths get the same check as chosen ones (Copilot review, #56).
+        if (app.synced_location(out) or app.synced_location(csv)) and not messagebox.askokcancel(
+                "Fathom", "This looks like a cloud-synced folder:\n" + str(out if app.synced_location(out) else csv) +
+                "\n\nReports can contain values from the table, so they may be copied off this computer. Continue?"):
+            self.status.set("Not started. Choose a local output folder, or continue if syncing is fine.")
+            return None
         return csv, out, config
 
     def _work(self, label, job):
@@ -122,7 +130,8 @@ class LauncherWindow:
                 self.events.put(("done", job()))
             except Exception as error:  # shown, never swallowed
                 self.events.put(("error", f"{type(error).__name__}: {error}"))
-        threading.Thread(target=worker, daemon=True).start()
+        # Not a daemon: the process can't exit halfway through writing a report.
+        threading.Thread(target=worker, name="fathom-work").start()
 
     def quick_look(self):
         inputs = self._inputs()
@@ -147,12 +156,13 @@ class LauncherWindow:
         self._work("Starting the local browser session", job)
 
     def stop_serve(self):
-        if self.session is not None:
-            self.session.stop()
-            self.session = None
-            self.status.set("Browser session stopped. Saved reports stay in the output folder.")
+        # Ask, don't wait: a rerun in progress finishes first, and `_drain` clears the
+        # session only once its thread has ended (Copilot review, #56).
+        if self.session is not None and not self.stopping:
+            self.session.request_stop()
+            self.stopping = True
+            self.status.set("Stopping the browser session (finishing any rerun first)…")
             self._set_state()
-            self.refresh_recent()
 
     def open_folder(self):
         out = Path(self.out.get().strip() or app.workspace(self.home))
@@ -178,15 +188,21 @@ class LauncherWindow:
         serving = self.session is not None
         for name, button in self.buttons.items():
             if name == "stop":
-                button.state(["!disabled"] if serving else ["disabled"])
+                button.state(["!disabled"] if serving and not self.stopping and not self.closing else ["disabled"])
             elif name in {"look", "profile", "serve"}:
-                button.state(["disabled"] if self.busy or (serving and name == "serve") else ["!disabled"])
+                blocked = self.busy or self.closing or (serving and name == "serve")
+                button.state(["disabled"] if blocked else ["!disabled"])
 
     def _drain(self):
         try:
             while True:
                 kind, value = self.events.get_nowait()
                 self.busy = False
+                if self.closing:
+                    if isinstance(value, app.ServeSession):
+                        self.session = value
+                        value.request_stop()
+                    continue
                 if kind == "error":
                     self.status.set("Failed: " + value)
                     messagebox.showerror("Fathom", value)
@@ -201,10 +217,16 @@ class LauncherWindow:
             pass
         if self.session is not None and not self.session.running:
             self.session = None
-            self.status.set("Browser session ended (stopped or idle). Saved reports stay in the output folder.")
-            self._set_state()
-            self.refresh_recent()
-        self.root.after(200, self._drain)
+            self.stopping = False
+            if not self.closing:
+                self.status.set("Browser session ended (stopped or idle). Saved reports stay in the output folder.")
+                self._set_state()
+                self.refresh_recent()
+        if self.closing and not self.busy and self.session is None:
+            self._after = None
+            self.root.destroy()
+            return
+        self._after = self.root.after(200, self._drain)
 
     def _finish(self, outcome: app.Outcome):
         last = [line for line in outcome.messages.splitlines() if line.strip()]
@@ -218,8 +240,23 @@ class LauncherWindow:
         self.refresh_recent()
 
     def close(self):
+        """Close once work in progress has finished, so no report is left half-written."""
+        if self.closing:
+            return
+        self.closing = True
         if self.session is not None:
-            self.session.stop()
+            self.session.request_stop()
+        if self.busy or self.session is not None:
+            self.status.set("Finishing the current run before closing…")
+        self._set_state()
+        if not self.busy and self.session is None:
+            self._destroy()
+        # Otherwise the running `_drain` loop destroys the window once work has finished.
+
+    def _destroy(self):
+        if self._after is not None:
+            self.root.after_cancel(self._after)
+            self._after = None
         self.root.destroy()
 
     def run(self):

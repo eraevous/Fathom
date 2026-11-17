@@ -149,6 +149,56 @@ def test_window_starts_and_stops_the_browser_session(tmp_path, monkeypatch):
         session = window.session
         assert session is not None and session.running
         window.stop_serve()
+        assert window.session is session and window.stopping  # asked, not yet cleared
+        deadline = time.monotonic() + 30
+        while window.session is not None and time.monotonic() < deadline:
+            root.update()
+            time.sleep(0.05)
         assert window.session is None and not session.running
     finally:
         window.close()
+
+
+def _pump_until_closed(root, timeout=60):
+    import tkinter as tk
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        try:
+            root.update()
+            if not root.winfo_exists():
+                return True
+        except tk.TclError:  # destroyed
+            return True
+        time.sleep(0.05)
+    return False
+
+
+def test_closing_waits_for_running_work(tmp_path, monkeypatch):
+    root = _tk_root()
+    from fathom import app_window
+    monkeypatch.setattr(app, "open_page", lambda page: pytest.fail("no page opens while closing"))
+    window = app_window.LauncherWindow(home=tmp_path, root=root)
+    window.csv.set(str(CSV))
+    window.profile()
+    window.close()
+    assert window.closing and window.busy  # not destroyed mid-run
+    assert _pump_until_closed(root)
+    profile = app.default_output(CSV, tmp_path) / "profile"
+    assert main(["profile", str(CSV), "--out", str(tmp_path / "cli")]) == 0
+    assert (profile / "report.html").read_bytes() == (tmp_path / "cli" / "report.html").read_bytes()
+
+
+def test_typed_synced_output_asks_before_running(tmp_path, monkeypatch):
+    root = _tk_root()
+    from fathom import app_window
+    asked = []
+    monkeypatch.setattr(app_window.messagebox, "askokcancel", lambda *a: asked.append(a) or False)
+    window = app_window.LauncherWindow(home=tmp_path, root=root)
+    try:
+        window.csv.set(str(CSV))
+        window.out.set(str(tmp_path / "OneDrive - Org" / "out"))
+        window.profile()
+        assert asked and not window.busy and not (tmp_path / "OneDrive - Org").exists()
+    finally:
+        window.close()
+        _pump_until_closed(root)

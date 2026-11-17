@@ -122,15 +122,32 @@ def ps_quote(value: object) -> str:
     return "'" + str(value).replace("'", "''") + "'"
 
 
-def windows_shortcut_script(target: Path, start_menu: Path, workdir: Path) -> str:
-    """PowerShell that writes both .lnk files through the user's own WScript.Shell; prints the desktop path."""
+def windows_shortcut_script(target: Path, start_menu: Path, workdir: Path, owned: list[str] = ()) -> str:
+    """PowerShell that writes each .lnk through the user's own WScript.Shell.
+
+    Prints SAVED:<path> after each shortcut is saved and SKIPPED:<path> for an existing
+    shortcut this installer didn't create, so partial results can still be recorded."""
+    owned_list = ",".join(ps_quote(p) for p in owned) or "''"
     return ("$ErrorActionPreference='Stop';$w=New-Object -ComObject WScript.Shell;"
-            f"$desk=Join-Path ([Environment]::GetFolderPath('Desktop')) 'Fathom.lnk';"
+            f"$owned=@({owned_list});"
+            "$desk=Join-Path ([Environment]::GetFolderPath('Desktop')) 'Fathom.lnk';"
             f"foreach($p in @({ps_quote(start_menu)},$desk)){{"
+            "if((Test-Path -LiteralPath $p) -and -not ($owned -contains $p)){Write-Output ('SKIPPED:'+$p);continue};"
             "$s=$w.CreateShortcut($p);"
             f"$s.TargetPath={ps_quote(target)};$s.WorkingDirectory={ps_quote(workdir)};"
-            "$s.Description='Fathom: know your data, keep the evidence';$s.Save()};"
-            "Write-Output $desk")
+            "$s.Description='Fathom: know your data, keep the evidence';$s.Save();"
+            "Write-Output ('SAVED:'+$p)}")
+
+
+def shortcut_results(stdout: str) -> tuple[list[str], list[str]]:
+    saved, skipped = [], []
+    for line in (stdout or "").splitlines():
+        line = line.strip()
+        if line.startswith("SAVED:"):
+            saved.append(line[6:])
+        elif line.startswith("SKIPPED:"):
+            skipped.append(line[8:])
+    return saved, skipped
 
 
 # ---- steps ----------------------------------------------------------------
@@ -143,9 +160,22 @@ def run(args: list[str]) -> None:
     subprocess.run(args, check=True)
 
 
+def read_manifest(plan: Plan) -> list[str]:
+    manifest = plan.data / MANIFEST
+    if not manifest.is_file():
+        return []
+    try:
+        return list(json.loads(manifest.read_text(encoding="utf-8")).get("created", []))
+    except (ValueError, AttributeError):
+        return []
+
+
 def write_manifest(plan: Plan, created: list[str]) -> None:
+    """Record what this installer owns: earlier records are kept, so an upgrade that
+    couldn't recreate a launcher still lets uninstall remove it (Copilot review, #56)."""
+    owned = list(dict.fromkeys([*read_manifest(plan), *created]))
     plan.data.mkdir(parents=True, exist_ok=True)
-    (plan.data / MANIFEST).write_text(json.dumps({"venv": str(plan.venv), "created": created}, indent=2), encoding="utf-8")
+    (plan.data / MANIFEST).write_text(json.dumps({"venv": str(plan.venv), "created": owned}, indent=2), encoding="utf-8")
 
 
 def check_source(plan: Plan) -> None:
@@ -210,36 +240,55 @@ def make_venv(plan: Plan) -> None:
     run([sys.executable, "-m", "venv", str(plan.venv)])
 
 
+def _ours(path: Path, owned: set[str]) -> bool:
+    """A launcher path is ours to write if it's free or an earlier install recorded it."""
+    if not (path.exists() or path.is_symlink()) or str(path) in owned:
+        return True
+    say(f"left {path} alone: it already exists and this installer didn't create it")
+    return False
+
+
 def add_launchers(plan: Plan) -> list[str]:
+    owned = set(read_manifest(plan))
     created = []
     if plan.system == "linux":
         entry, command = (path for _, path in plan.launchers)
-        entry.parent.mkdir(parents=True, exist_ok=True)
-        entry.write_text(desktop_entry(plan.app), encoding="utf-8")
-        command.parent.mkdir(parents=True, exist_ok=True)
-        if command.is_symlink() or command.exists():
-            command.unlink()
-        command.symlink_to(plan.app)
-        created += [str(entry), str(command)]
+        if _ours(entry, owned):
+            entry.parent.mkdir(parents=True, exist_ok=True)
+            entry.write_text(desktop_entry(plan.app), encoding="utf-8")
+            created.append(str(entry))
+        if _ours(command, owned):
+            command.parent.mkdir(parents=True, exist_ok=True)
+            if command.is_symlink() or command.exists():
+                command.unlink()
+            command.symlink_to(plan.app)
+            created.append(str(command))
     elif plan.system == "macos":
         bundle = plan.launchers[0][1]
-        macos = bundle / "Contents" / "MacOS"
-        macos.mkdir(parents=True, exist_ok=True)
-        (bundle / "Contents" / "Info.plist").write_text(mac_info_plist(), encoding="utf-8")
-        launcher = macos / "Fathom"
-        launcher.write_text(mac_launcher_script(plan.app), encoding="utf-8")
-        launcher.chmod(0o755)
-        created.append(str(bundle))
+        if _ours(bundle, owned):
+            macos = bundle / "Contents" / "MacOS"
+            macos.mkdir(parents=True, exist_ok=True)
+            (bundle / "Contents" / "Info.plist").write_text(mac_info_plist(), encoding="utf-8")
+            launcher = macos / "Fathom"
+            launcher.write_text(mac_launcher_script(plan.app), encoding="utf-8")
+            launcher.chmod(0o755)
+            created.append(str(bundle))
     else:
         start_menu = plan.launchers[0][1]
         start_menu.parent.mkdir(parents=True, exist_ok=True)
-        script = windows_shortcut_script(plan.app, start_menu, plan.home)
+        script = windows_shortcut_script(plan.app, start_menu, plan.home, sorted(owned))
         try:
             done = subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", script],
-                                  check=True, capture_output=True, text=True)
-            created += [str(start_menu), done.stdout.strip().splitlines()[-1]]
-        except (OSError, subprocess.CalledProcessError, IndexError):
-            say("couldn't create shortcuts (PowerShell or WScript.Shell may be blocked here). "
+                                  capture_output=True, text=True)
+            output, failed = done.stdout, done.returncode != 0
+        except OSError:
+            output, failed = "", True
+        saved, skipped = shortcut_results(output)
+        created += saved
+        for path in skipped:
+            say(f"left {path} alone: it already exists and this installer didn't create it")
+        if failed:
+            say("couldn't create every shortcut (PowerShell or WScript.Shell may be blocked here). "
                 f"Start Fathom by double-clicking {plan.app}")
     return created
 

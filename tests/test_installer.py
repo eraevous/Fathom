@@ -132,3 +132,46 @@ def test_an_environment_from_another_python_is_rebuilt(tmp_path, monkeypatch):
     monkeypatch.setattr(inst, "venv_python_version", lambda plan: "%d.%d" % sys.version_info[:2])
     inst.make_venv(plan)
     assert calls == []  # same Python: upgraded in place
+
+
+def test_existing_launchers_the_installer_did_not_create_are_left_alone(tmp_path):
+    if sys.platform.startswith("win"):
+        pytest.skip("symlinks")
+    home = tmp_path / "home"
+    plan = inst.make_plan("linux", home, {})
+    plan.app.parent.mkdir(parents=True)
+    plan.app.write_text("#!/bin/sh\n", encoding="utf-8")
+    entry, command = (path for _, path in plan.launchers)
+    command.parent.mkdir(parents=True)
+    command.write_text("the user's own script", encoding="utf-8")
+    created = inst.add_launchers(plan)
+    assert created == [str(entry)] and command.read_text(encoding="utf-8") == "the user's own script"
+    inst.write_manifest(plan, created)
+    inst.uninstall(plan)
+    assert command.read_text(encoding="utf-8") == "the user's own script" and not entry.exists()
+
+
+def test_mac_app_not_ours_is_not_modified_or_removed(tmp_path):
+    home = tmp_path / "home"
+    plan = inst.make_plan("macos", home, {})
+    bundle = plan.launchers[0][1]
+    (bundle / "Contents" / "Resources").mkdir(parents=True)
+    (bundle / "Contents" / "Resources" / "keep").write_text("x", encoding="utf-8")
+    assert inst.add_launchers(plan) == []
+    inst.write_manifest(plan, [])
+    inst.uninstall(plan)
+    assert (bundle / "Contents" / "Resources" / "keep").exists() and not (bundle / "Contents" / "MacOS").exists()
+
+
+def test_upgrades_keep_earlier_launcher_records(tmp_path):
+    plan = inst.make_plan("windows", tmp_path, {"LOCALAPPDATA": str(tmp_path / "local"), "APPDATA": str(tmp_path / "roaming")})
+    inst.write_manifest(plan, ["C:/Start/Fathom.lnk", "C:/Desk/Fathom.lnk"])
+    inst.write_manifest(plan, [])  # an upgrade where PowerShell was blocked
+    assert inst.read_manifest(plan) == ["C:/Start/Fathom.lnk", "C:/Desk/Fathom.lnk"]
+
+
+def test_partial_shortcut_results_are_recorded():
+    saved, skipped = inst.shortcut_results("SAVED:C:\\S\\Fathom.lnk\r\nSKIPPED:C:\\D\\Fathom.lnk\r\nnoise\r\n")
+    assert saved == ["C:\\S\\Fathom.lnk"] and skipped == ["C:\\D\\Fathom.lnk"]
+    script = inst.windows_shortcut_script(Path("C:/x/fathom-app.exe"), Path("C:/S/Fathom.lnk"), Path("C:/x"), ["C:/S/Fathom.lnk"])
+    assert "Test-Path -LiteralPath" in script and "'SAVED:'" in script and "$owned=@('C:" in script
