@@ -257,6 +257,9 @@ def test_write_statements_are_refused_before_execution(tmp_path, statement):
     "SELECT* FROM review",
     "select'x'AS s",
     "SELECT(1)AS one",
+    "SELECT 'it''s' AS s, 'C:\\dir\\' AS p FROM review;",
+    "SELECT [id], `id` AS id2 FROM review",
+    "SELECT 'cost $5' AS s, '$x$' AS t",
 ])
 def test_read_statements_are_accepted(tmp_path, statement):
     db, _ = build_db(tmp_path)
@@ -265,6 +268,22 @@ def test_read_statements_are_accepted(tmp_path, statement):
         assert query_csv_bytes(conn, statement, 100)
     finally:
         conn.close()
+
+
+@pytest.mark.parametrize("statement", [
+    # Each hides a second statement from a scanner that knows only standard quoting.
+    "SELECT E'a\\''; DELETE FROM review; --'",      # PostgreSQL E-string / MySQL backslash escape
+    "SELECT 'a\\''; DELETE FROM review; -- '",      # MySQL default string escapes
+    "SELECT `'`; DELETE FROM review",               # MySQL / SQLite backtick identifier
+    "SELECT [']; DELETE FROM review",               # SQL Server / SQLite bracket identifier
+    "SELECT $$'$$; DELETE FROM review; --'",        # PostgreSQL dollar quoting
+    "SELECT $q$'$q$; DELETE FROM review; --'",      # tagged dollar quoting
+])
+def test_dialect_quoting_cannot_hide_a_second_statement(statement):
+    """Security sweep 2026-11-17: the guard reads every dialect's quoting and fails closed."""
+    from fathom.sql import check_read_query
+    with pytest.raises(ValueError, match="only one statement"):
+        check_read_query(statement)
 
 
 def test_fetch_errors_become_clear_errors(tmp_path):

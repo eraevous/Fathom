@@ -54,26 +54,57 @@ def _cell(value, column: str) -> str:
 READ_KEYWORDS = ("select", "with", "values")
 
 
-def _code_outside_literals(query: str) -> str:
+# Quoting rules that differ between databases. The scanner reads the query once per reading and
+# the guard refuses it if any reading finds a write keyword or a second statement: a quote one
+# database treats as text can hide a ';' that another database runs (fail closed).
+#   standard:  '...' and "..." with doubled quotes (SQLite, standard SQL)
+#   backslash: backslash escapes inside quotes too (MySQL; PostgreSQL E'...' strings)
+#   backtick:  `identifier` (MySQL, SQLite)
+#   bracket:   [identifier] (SQL Server, SQLite)
+#   dollar:    $tag$...$tag$ (PostgreSQL)
+READINGS = ("standard", "backslash", "backtick", "bracket", "dollar")
+_DOLLAR_TAG = re.compile(r"\$(?:[A-Za-z_][A-Za-z0-9_]*)?\$")
+
+
+def _quoted_end(query: str, i: int, close: str, backslash: bool) -> int:
+    """Index just past the quote that ends the quoted run opened at ``i`` (len(query) if none)."""
+    j, n = i + 1, len(query)
+    while j < n:
+        if backslash and query[j] == "\\":
+            j += 2
+            continue
+        if query[j] == close:
+            if j + 1 < n and query[j + 1] == close:
+                j += 2
+                continue
+            return j + 1
+        j += 1
+    return n
+
+
+def _code_outside_literals(query: str, reading: str = "standard") -> str:
     """The query with string literals, quoted identifiers and comments blanked out.
 
     A small scanner, not a SQL parser: '...' and "..." (doubled quotes escape), -- line comments
-    and /* */ block comments. Enough to find the first keyword and a second statement.
+    and /* */ block comments, plus the quoting of one ``reading`` (see READINGS). Enough to find
+    the first keyword and a second statement.
     """
+    closers = {"'": "'", '"': '"'}
+    if reading == "backtick":
+        closers["`"] = "`"
+    elif reading == "bracket":
+        closers["["] = "]"
     out, i, n = [], 0, len(query)
     while i < n:
         c = query[i]
-        if c in "'\"":
-            j = i + 1
-            while j < n:
-                if query[j] == c:
-                    if j + 1 < n and query[j + 1] == c:
-                        j += 2
-                        continue
-                    break
-                j += 1
+        tag = _DOLLAR_TAG.match(query, i) if reading == "dollar" and c == "$" else None
+        if tag:
+            j = query.find(tag.group(), tag.end())
             out.append(" ")
-            i = j + 1
+            i = n if j < 0 else j + len(tag.group())
+        elif c in closers:
+            out.append(" ")
+            i = _quoted_end(query, i, closers[c], reading == "backslash" and c in "'\"")
         elif query.startswith("--", i):
             j = query.find("\n", i)
             i = n if j < 0 else j
@@ -93,15 +124,19 @@ def check_read_query(query: str) -> None:
 
     A guard, not a guarantee (Copilot review, #53): a dialect may allow writes inside WITH, and a
     function called by a SELECT can have side effects. The real protection is a read-only
-    connection, which the docs ask for.
+    connection, which the docs ask for. Quoting differs between databases, so the query is read
+    under each of READINGS and refused if any reading fails; a ';' inside an unusual quote can
+    therefore be refused even where the database would accept it (fail closed).
     """
-    code = _code_outside_literals(query)
-    first_word = re.match(r"[\s(]*([A-Za-z_]+)", code)  # a token boundary, so "SELECT*" reads as SELECT (Codex review)
-    if not first_word or first_word.group(1).lower() not in READ_KEYWORDS:
-        raise ValueError("only a read query is run: it must start with SELECT, WITH or VALUES (nothing was executed)")
-    first, sep, rest = code.partition(";")
-    if sep and rest.strip(" \t\r\n;"):
-        raise ValueError("only one statement is run; remove everything after the first ';' (nothing was executed)")
+    for reading in READINGS:
+        code = _code_outside_literals(query, reading)
+        first_word = re.match(r"[\s(]*([A-Za-z_]+)", code)  # a token boundary, so "SELECT*" reads as SELECT (Codex review)
+        if not first_word or first_word.group(1).lower() not in READ_KEYWORDS:
+            raise ValueError("only a read query is run: it must start with SELECT, WITH or VALUES (nothing was executed)")
+        first, sep, rest = code.partition(";")
+        if sep and rest.strip(" \t\r\n;"):
+            raise ValueError("only one statement is run; remove everything after the first ';', including a ';' that "
+                             "some database's quoting rules would read as outside a string (nothing was executed)")
 
 
 def _driver_error(step: str, exc: Exception) -> ValueError:
