@@ -17,6 +17,7 @@ import secrets
 import socketserver
 import sys
 import time
+import threading
 from urllib.parse import parse_qs, urlsplit
 
 from .config import config_from_yaml, read_config, validate_config
@@ -27,6 +28,9 @@ from .models import ProfilingResult, SchemaContract
 MAX_BODY = 65536
 _GUARD_INSTALLED = False
 _DENIED = []
+# Profiling redirects the process's stdout/stderr; the desktop launcher (spec 031)
+# takes this same lock so its own captured runs never interleave with a rerun.
+PROFILE_LOCK = threading.RLock()
 
 
 def _loopback(host):
@@ -109,7 +113,7 @@ class Session:
         config = self.out / 'server-config.yaml'
         config.write_text(contents, encoding='utf-8', newline='\n')
         from .cli import main
-        with redirect_stdout(StringIO()), redirect_stderr(StringIO()):
+        with PROFILE_LOCK, redirect_stdout(StringIO()), redirect_stderr(StringIO()):
             code = main(['profile', str(self.data), '--config', str(config), '--out', str(self.out)])
         if code or len(_DENIED) != before:
             raise ValueError('profile failed; review the configuration locally')
@@ -273,11 +277,9 @@ def create_server(data, out, config=None, *, host='127.0.0.1', idle_timeout=1800
     return server
 
 
-def run(data, out, config=None, *, host='127.0.0.1', idle_timeout=1800):
-    server = create_server(data, out, config, host=host, idle_timeout=idle_timeout)
+def serve_until_stopped(server):
+    """The one session loop: Stop, idle expiry or Ctrl+C; used by the CLI and the launcher."""
     s = server.session
-    print(s.origin+'/?token='+s.token, flush=True)
-    print('guide: local fixed-file session; Ctrl+C or Stop; idle '+str(idle_timeout)+'s; log '+str(s.out/'serve.log'), flush=True)
     try:
         while not s.stopped and time.monotonic()-s.last_active < s.idle_timeout:
             server.handle_request()
@@ -286,4 +288,12 @@ def run(data, out, config=None, *, host='127.0.0.1', idle_timeout=1800):
         s.log('terminal stop')
     finally:
         server.server_close()
+
+
+def run(data, out, config=None, *, host='127.0.0.1', idle_timeout=1800):
+    server = create_server(data, out, config, host=host, idle_timeout=idle_timeout)
+    s = server.session
+    print(s.origin+'/?token='+s.token, flush=True)
+    print('guide: local fixed-file session; Ctrl+C or Stop; idle '+str(idle_timeout)+'s; log '+str(s.out/'serve.log'), flush=True)
+    serve_until_stopped(server)
     return 0

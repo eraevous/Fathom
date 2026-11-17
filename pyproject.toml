@@ -21,6 +21,10 @@ exports = ["reportlab>=4.4,<5", "python-pptx>=1.0.2,<2"]
 [project.scripts]
 guide = "fathom.cli:main"
 
+# Spec 031: the desktop window; a GUI script has no console window on Windows.
+[project.gui-scripts]
+fathom-app = "fathom.app:gui_main"
+
 [tool.setuptools.packages.find]
 where = ["src"]
 

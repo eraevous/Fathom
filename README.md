@@ -8,6 +8,10 @@ Fathom helps you understand what a table contains, what needs review and what it
 
 **Working prototype · Python 3.12+ · MIT · Local-first.** Package: `fathom-guide`. Command: `guide`. Install from this repository; it is not on PyPI. Open `docs/index.html` locally for the landing page and working synthetic demo. No hosted site is assumed.
 
+## Install with one double-click
+
+Download this repository, then double-click **`install/Install Fathom.bat`** (Windows) or **`install/Install Fathom.command`** (macOS), or run `sh install/install-fathom.sh` (Linux). It installs for you only, with no admin rights, and adds a **Fathom** launcher that opens a small desktop window. In the window you choose a CSV, take a quick look, profile it, or configure it in the browser. It needs Python 3.11+. An offline bundle installs with nothing downloaded. [Install and the desktop window →](docs/install.md)
+
 ## Try it in five minutes
 
 ```bash
@@ -57,6 +61,7 @@ See the [full guide](docs/guide.md), [identifier documentation](docs/identifiers
 | See a first-pass brief and choose declarations | `guide liftoff DATA.csv --out discovery` |
 | Edit configuration offline | `guide configure DATA.csv --out configure` |
 | Rerun from a local browser | `guide serve DATA.csv --out working` |
+| Use the desktop window instead of commands | `guide app` (or the **Fathom** launcher) |
 | Profile a table / check its declared contract | `guide profile DATA.csv --out report` / `guide validate DATA.csv` |
 | Profile a query on your own connection | `guide profile --source sql --connect my_connect.py:make_conn --query "SELECT …" --limit 50000 --out report` |
 | Compare two saved profiles | `guide compare BEFORE.json AFTER.json --out comparison` |
