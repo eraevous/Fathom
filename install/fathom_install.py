@@ -187,10 +187,24 @@ def ensure_bundle_python(plan: Plan, argv: list[str]) -> None:
     raise SystemExit(subprocess.run(command + [str(Path(__file__).resolve()), *argv], env=env).returncode)
 
 
+def venv_python_version(plan: Plan) -> str | None:
+    try:
+        done = subprocess.run([str(plan.python), "-c", "import sys; print('%d.%d' % sys.version_info[:2])"],
+                              capture_output=True, text=True, check=True)
+        return done.stdout.strip()
+    except (OSError, subprocess.CalledProcessError):
+        return None
+
+
 def make_venv(plan: Plan) -> None:
     if plan.python.exists():
-        say(f"upgrading the existing environment in {plan.venv}")
-        return
+        running = "%d.%d" % sys.version_info[:2]
+        if venv_python_version(plan) == running:
+            say(f"upgrading the existing environment in {plan.venv}")
+            return
+        # Wheels match one Python version: rebuild an environment made by another (Codex review, #56).
+        say(f"replacing the environment in {plan.venv}: it isn't Python {running}")
+        shutil.rmtree(plan.venv)
     plan.data.mkdir(parents=True, exist_ok=True)
     say(f"creating a private Python environment in {plan.venv}")
     run([sys.executable, "-m", "venv", str(plan.venv)])

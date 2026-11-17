@@ -114,3 +114,21 @@ def test_windows_wrapper_has_crlf_and_no_admin_steps():
     assert b"\r\n" in bat and b"\n" not in bat.replace(b"\r\n", b"")
     text = bat.decode("ascii").lower()
     assert "runas" not in text and "setx" not in text and "reg add" not in text
+
+
+def test_an_environment_from_another_python_is_rebuilt(tmp_path, monkeypatch):
+    plan = inst.make_plan("linux", tmp_path, {})
+    plan.python.parent.mkdir(parents=True)
+    plan.python.write_text("", encoding="utf-8")
+    (plan.venv / "stale").write_text("old", encoding="utf-8")
+    calls = []
+    monkeypatch.setattr(inst, "run", calls.append)
+    monkeypatch.setattr(inst, "venv_python_version", lambda plan: "3.0")
+    inst.make_venv(plan)
+    assert not (plan.venv / "stale").exists() and calls and calls[0][1:3] == ["-m", "venv"]
+    plan.python.parent.mkdir(parents=True)
+    plan.python.write_text("", encoding="utf-8")
+    calls.clear()
+    monkeypatch.setattr(inst, "venv_python_version", lambda plan: "%d.%d" % sys.version_info[:2])
+    inst.make_venv(plan)
+    assert calls == []  # same Python: upgraded in place
