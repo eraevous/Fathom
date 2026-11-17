@@ -61,7 +61,6 @@ READ_KEYWORDS = ("select", "with", "values")
 # as text can hide a ';' that another database runs, and real dialects combine several rules
 # (Copilot review, #55), so every combination is read (fail closed).
 #   always:    '...' and "..." with doubled quotes; -- and /* */ comments (standard SQL, SQLite);
-#              a MySQL /*! ... */ or /*+ ... */ comment is read as code, since MySQL may run it
 #   backslash: backslash escapes inside '...' and "..." (MySQL; PostgreSQL E'...' strings)
 #   backtick:  `identifier` (MySQL, SQLite)
 #   bracket:   [identifier] (SQL Server, SQLite)
@@ -69,7 +68,8 @@ READ_KEYWORDS = ("select", "with", "values")
 #   hash:      # line comments (MySQL)
 #   nested:    /* /* */ */ block comments nest (PostgreSQL, SQL Server)
 #   dashspace: -- starts a comment only before whitespace or the end (MySQL)
-FEATURES = ("backslash", "backtick", "bracket", "dollar", "hash", "nested", "dashspace")
+#   execcomment: /*! ... */ and /*+ ... */ are code, not comments (MySQL may run them; Codex review)
+FEATURES = ("backslash", "backtick", "bracket", "dollar", "hash", "nested", "dashspace", "execcomment")
 READINGS = tuple(frozenset(f for f, on in zip(FEATURES, bits) if on)
                  for bits in itertools.product((False, True), repeat=len(FEATURES)))
 _DOLLAR_TAG = re.compile(r"\$(?:[^\W\d]\w*)?\$")  # str patterns are Unicode: letters, digits, _
@@ -133,7 +133,7 @@ def _code_outside_literals(query: str, reading=frozenset()) -> str:
             j = query.find("\n", i)
             i = n if j < 0 else j
             out.append(" ")
-        elif query.startswith("/*", i) and query[i + 2:i + 3] not in ("!", "+"):
+        elif query.startswith("/*", i) and not ("execcomment" in reading and query[i + 2:i + 3] in ("!", "+")):
             i = _block_comment_end(query, i, "nested" in reading)
             out.append(" ")
         else:

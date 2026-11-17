@@ -288,6 +288,7 @@ def test_read_statements_are_accepted(tmp_path, statement):
     "SELECT 1--'\n,'; DELETE FROM review; -- '",      # MySQL: -- without a space is not a comment
     "SELECT 1 /* /* */ ' */; DELETE FROM review; -- '",  # PostgreSQL / SQL Server nested comment
     "SELECT 1 /*! ; DELETE FROM review */",          # MySQL executable comment
+    "SELECT 1 /*! ' */; DELETE FROM review; -- '",   # a plain comment elsewhere (Codex review, #55)
 ])
 def test_dialect_quoting_cannot_hide_a_second_statement(statement):
     """Security sweep 2026-11-17: the guard reads every dialect's quoting and fails closed."""
