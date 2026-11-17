@@ -72,7 +72,7 @@ READ_KEYWORDS = ("select", "with", "values")
 FEATURES = ("backslash", "backtick", "bracket", "dollar", "hash", "nested", "dashspace", "execcomment")
 READINGS = tuple(frozenset(f for f, on in zip(FEATURES, bits) if on)
                  for bits in itertools.product((False, True), repeat=len(FEATURES)))
-_DOLLAR_TAG = re.compile(r"\$(?:[^\W\d]\w*)?\$")  # str patterns are Unicode: letters, digits, _
+_DOLLAR_TAG = re.compile(r"\$(?:[A-Za-z_\x80-\U0010ffff][A-Za-z0-9_\x80-\U0010ffff]*)?\$")  # PostgreSQL: letters, _, any non-ASCII
 
 
 def _quoted_end(query: str, i: int, close: str, backslash: bool) -> int:
@@ -147,20 +147,23 @@ def check_read_query(query: str) -> None:
 
     A guard, not a guarantee (Copilot review, #53): a dialect may allow writes inside WITH, and a
     function called by a SELECT can have side effects. The real protection is a read-only
-    connection, which the docs ask for. Quoting and comments differ between databases, so the query
-    is read under every combination of FEATURES and refused if any reading fails; a ';' inside an
-    unusual quote or comment can therefore be refused even where the database would accept it
-    (fail closed).
+    connection, which the docs ask for. The first keyword is read under every combination of
+    FEATURES (quoting and comments differ between databases) and must be a read keyword in each.
+    Any ';' followed by more than ';' and whitespace is refused, wherever it is in the text.
     """
     for reading in READINGS:
         code = _code_outside_literals(query, reading)
         first_word = re.match(r"[\s(]*([A-Za-z_]+)", code)  # a token boundary, so "SELECT*" reads as SELECT (Codex review)
         if not first_word or first_word.group(1).lower() not in READ_KEYWORDS:
             raise ValueError("only a read query is run: it must start with SELECT, WITH or VALUES (nothing was executed)")
-        first, sep, rest = code.partition(";")
-        if sep and rest.strip(" \t\r\n;"):
-            raise ValueError("only one statement is run; remove everything after the first ';', including a ';' that "
-                             "some database's quoting rules would read as outside a string (nothing was executed)")
+    # A second statement is checked on the raw text, not on any reading: each new dialect rule a
+    # reviewer found (#55: combined quoting, PostgreSQL string modes, dollar-tag characters) could
+    # hide a ';' from every reading. Any ';' followed by more than ';' and whitespace is refused,
+    # even inside a string or comment (fail closed; as docs/notebooks.md already states).
+    first, sep, rest = query.partition(";")
+    if sep and rest.strip(" \t\r\n;"):
+        raise ValueError("only one statement is run; remove everything after the first ';', even a ';' inside a "
+                         "string or comment (nothing was executed)")
 
 
 def _driver_error(step: str, exc: Exception) -> ValueError:

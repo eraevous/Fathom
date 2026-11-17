@@ -32,9 +32,10 @@ Proposed for Zach. Serves: P0@2, DG-RE@1, DG-RF@1.
 
 ## Read-only guard (Copilot review, 2026-11-16)
 
-- Before executing, Fathom refuses a query whose first keyword (after comments) isn't `SELECT`, `WITH` or `VALUES`, or that has a second statement after `;`. A small scanner skips string literals, quoted identifiers and comments. Nothing is executed when the query is refused.
+- Before executing, Fathom refuses a query whose first keyword (after comments) isn't `SELECT`, `WITH` or `VALUES`, or that has anything but whitespace after a `;`. A small scanner skips string literals, quoted identifiers and comments when it reads the first keyword. Nothing is executed when the query is refused.
 - This is a guard, not a guarantee. The docs ask for a read-only connection.
-- Quoting and comments differ between databases (backslash escapes, `` `backticks` ``, `[brackets]`, `$tag$` dollar quotes with tags of any letters, MySQL `#` comments and `--` needing a following space, nested `/* */` comments in PostgreSQL and SQL Server). The scanner reads the query under every combination of these rules, since real dialects combine them, and refuses it if any reading finds a non-read start or a second statement. A MySQL `/*! */` or `/*+ */` comment is read both as code and as a comment (Codex review). This fails closed: a `;` inside such a quote or comment may be refused even where the database would accept it (security sweep and Copilot review, #55, 2026-11-17).
+- The first keyword is read under every combination of dialect rules (backslash escapes, `` `backticks` ``, `[brackets]`, `$tag$` dollar quotes with letters, `_` or any non-ASCII character in the tag, MySQL `#` comments and `--` needing a following space, nested `/* */` comments, MySQL `/*! */` and `/*+ */` comments read both as code and as comments) and must be a read keyword in each.
+- A second statement is checked on the raw text: any `;` followed by more than `;` and whitespace is refused, even inside a string or comment. Readings of the query kept missing dialect rules (#55: combined quoting, PostgreSQL string modes, dollar-tag characters), so the check no longer depends on them. This fails closed: `SELECT 'a;b'` is refused (security sweep and Copilot/Codex review, #55, 2026-11-17).
 
 ## Errors
 
