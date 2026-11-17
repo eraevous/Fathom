@@ -65,7 +65,7 @@ def test_launcher_contents():
     entry = inst.desktop_entry(app)
     assert 'Exec="/opt/x y/venv/bin/fathom-app"' in entry and "Terminal=false" in entry
     assert "<key>CFBundleExecutable</key><string>Fathom</string>" in inst.mac_info_plist()
-    assert inst.mac_launcher_script(app) == '#!/bin/sh\nexec "/opt/x y/venv/bin/fathom-app" "$@"\n'
+    assert inst.mac_launcher_script(app) == '#!/bin/sh\nexec \'/opt/x y/venv/bin/fathom-app\' "$@"\n'
     script = inst.windows_shortcut_script(Path("C:/Users/O'Neil/AppData/Local/Fathom/venv/Scripts/fathom-app.exe"),
                                           Path("C:/Start/Fathom.lnk"), Path("C:/Users/O'Neil"))
     assert "O''Neil" in script and "GetFolderPath('Desktop')" in script and "WScript.Shell" in script
@@ -175,3 +175,35 @@ def test_partial_shortcut_results_are_recorded():
     assert saved == ["C:\\S\\Fathom.lnk"] and skipped == ["C:\\D\\Fathom.lnk"]
     script = inst.windows_shortcut_script(Path("C:/x/fathom-app.exe"), Path("C:/S/Fathom.lnk"), Path("C:/x"), ["C:/S/Fathom.lnk"])
     assert "Test-Path -LiteralPath" in script and "'SAVED:'" in script and "$owned=@('C:" in script
+
+
+def test_awkward_paths_are_escaped_for_the_desktop_entry_and_the_shell(tmp_path):
+    odd = PurePosixPath('/home/a$work/100%data/`x`/q"uote\\b/fathom-app')
+    assert inst.desktop_exec_arg(odd) == '"/home/a\\\\$work/100%%data/\\\\`x\\\\`/q\\\\"uote\\\\\\\\b/fathom-app"'
+    if sys.platform.startswith("win"):
+        return
+    target = tmp_path / "a$work `x` 'q'" / "fathom-app"
+    target.parent.mkdir()
+    target.write_text('#!/bin/sh\necho "ran:$*"\n', encoding="utf-8")
+    target.chmod(0o755)
+    script = tmp_path / "Fathom"
+    script.write_text(inst.mac_launcher_script(target), encoding="utf-8")
+    script.chmod(0o755)
+    assert subprocess.run([str(script), "one"], capture_output=True, text=True, check=True).stdout == "ran:one\n"
+
+
+def test_menu_entry_is_recorded_even_if_the_command_link_fails(tmp_path, monkeypatch):
+    if sys.platform.startswith("win"):
+        pytest.skip("symlinks")
+    plan = inst.make_plan("linux", tmp_path / "home", {})
+    plan.app.parent.mkdir(parents=True)
+    plan.app.write_text("#!/bin/sh\n", encoding="utf-8")
+    entry, command = (path for _, path in plan.launchers)
+
+    def refuse(self, *a, **k):
+        raise PermissionError("read-only")
+    monkeypatch.setattr(Path, "symlink_to", refuse)
+    created = inst.add_launchers(plan)
+    assert created == [str(entry)] and inst.read_manifest(plan) == [str(entry)]
+    inst.uninstall(plan)
+    assert not entry.exists()

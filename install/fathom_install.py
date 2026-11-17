@@ -19,6 +19,7 @@ from dataclasses import dataclass, field
 import json
 import os
 from pathlib import Path
+import shlex
 import shutil
 import subprocess
 import sys
@@ -95,9 +96,19 @@ def make_plan(system: str, home: Path, env: dict, here: Path = HERE, extras: tup
 
 # ---- launcher contents (pure, tested on every OS) ---------------------------
 
+def desktop_exec_arg(path: Path) -> str:
+    """Quote a path for a desktop entry's Exec key (freedesktop Desktop Entry spec):
+    backslash-escape the quoting characters, then apply the string escape for '\\',
+    then double '%' so it isn't read as a field code (Copilot review, #56)."""
+    text = str(path)
+    for char in '\\"`$':
+        text = text.replace(char, "\\" + char)
+    return '"' + text.replace("\\", "\\\\").replace("%", "%%") + '"'
+
+
 def desktop_entry(app: Path) -> str:
     return ("[Desktop Entry]\nType=Application\nName=Fathom\nComment=Know your data. Keep the evidence.\n"
-            f'Exec="{app}"\nTerminal=false\nCategories=Office;Development;\n')
+            f"Exec={desktop_exec_arg(app)}\nTerminal=false\nCategories=Office;Development;\n")
 
 
 def mac_info_plist() -> str:
@@ -115,7 +126,7 @@ def mac_info_plist() -> str:
 
 
 def mac_launcher_script(app: Path) -> str:
-    return f'#!/bin/sh\nexec "{app}" "$@"\n'
+    return f'#!/bin/sh\nexec {shlex.quote(str(app))} "$@"\n'
 
 
 def ps_quote(value: object) -> str:
@@ -257,12 +268,16 @@ def add_launchers(plan: Plan) -> list[str]:
             entry.parent.mkdir(parents=True, exist_ok=True)
             entry.write_text(desktop_entry(plan.app), encoding="utf-8")
             created.append(str(entry))
+            write_manifest(plan, created)  # recorded before the next step can fail (Copilot review, #56)
         if _ours(command, owned):
-            command.parent.mkdir(parents=True, exist_ok=True)
-            if command.is_symlink() or command.exists():
-                command.unlink()
-            command.symlink_to(plan.app)
-            created.append(str(command))
+            try:
+                command.parent.mkdir(parents=True, exist_ok=True)
+                if command.is_symlink() or command.exists():
+                    command.unlink()
+                command.symlink_to(plan.app)
+                created.append(str(command))
+            except OSError as error:
+                say(f"couldn't add {command} ({type(error).__name__}); use the menu entry or {plan.app}")
     elif plan.system == "macos":
         bundle = plan.launchers[0][1]
         if _ours(bundle, owned):

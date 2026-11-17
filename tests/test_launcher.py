@@ -26,7 +26,8 @@ def test_default_output_is_a_safe_folder_under_the_workspace(tmp_path):
 @pytest.mark.parametrize("path, synced", [
     ("C:/Users/a/OneDrive - Org/Desktop/x", True), ("/Users/a/Library/Mobile Documents/x", True),
     ("/Users/a/Library/CloudStorage/GoogleDrive-a/x", True), ("/home/a/Dropbox/x", True),
-    ("/home/a/Fathom/x", False), ("C:/Users/a/Fathom/x", False)])
+    ("C:\\Users\\alice\\Box\\reports", True), ("/Users/a/Box Sync/x", True),
+    ("/home/a/Fathom/x", False), ("C:/Users/a/Fathom/x", False), ("/home/a/boxes/x", False)])
 def test_synced_locations_are_flagged(path, synced):
     assert app.synced_location(path) is synced
 

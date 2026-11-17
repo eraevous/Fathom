@@ -46,9 +46,14 @@ def default_output(csv: Path | str, home: Path | None = None) -> Path:
     return workspace(home) / safe_name(Path(csv).stem)
 
 
+# Whole folder names that mean a sync client's root (Box Drive's is plain "Box").
+SYNCED_FOLDERS = ("box",)
+
+
 def synced_location(path: Path | str) -> bool:
     text = str(path).lower()
-    return any(marker in text for marker in SYNCED_MARKERS)
+    parts = re.split(r"[\\/]+", text)
+    return any(marker in text for marker in SYNCED_MARKERS) or any(part in SYNCED_FOLDERS for part in parts)
 
 
 @dataclass(frozen=True)
