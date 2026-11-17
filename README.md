@@ -48,7 +48,7 @@ Use the installed `guide` path above, or activate the virtual environment first.
 | **Notebook and opt-in SQL sources** | `fathom.profile(df)` profiles a DataFrame in Jupyter; `fathom.profile_query(conn, sql, limit=…)` or `guide profile --source sql` profiles a read query on a connection your own code opens. Fathom never opens a connection or sees credentials. |
 | **Repeatable handoff** | Context-first before/after comparisons; saved JSON → HTML/Markdown; optional PDF, PowerPoint and tidy CSV exports. |
 
-See the [full guide](docs/guide.md), [identifier documentation](docs/identifiers.md), [temporal formats](docs/temporal-formats.md), [clock fields](docs/time-definition.md) and [tidy export contract](docs/tidy-export.md) and [notebook and SQL use](docs/notebooks.md).
+See the [full guide](docs/guide.md), [identifier documentation](docs/identifiers.md), [temporal formats](docs/temporal-formats.md), [clock fields](docs/time-definition.md), [tidy export contract](docs/tidy-export.md) and [notebook and SQL use](docs/notebooks.md).
 
 ## Pick a command
 
