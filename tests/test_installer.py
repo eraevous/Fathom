@@ -2,7 +2,7 @@
 import importlib.util
 import json
 import os
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import subprocess
 import sys
 
@@ -61,7 +61,7 @@ def test_bundle_python_mismatch_is_explained(tmp_path, monkeypatch):
 
 
 def test_launcher_contents():
-    app = Path("/opt/x y/venv/bin/fathom-app")
+    app = PurePosixPath("/opt/x y/venv/bin/fathom-app")  # these launchers are written on macOS and Linux only
     entry = inst.desktop_entry(app)
     assert 'Exec="/opt/x y/venv/bin/fathom-app"' in entry and "Terminal=false" in entry
     assert "<key>CFBundleExecutable</key><string>Fathom</string>" in inst.mac_info_plist()
