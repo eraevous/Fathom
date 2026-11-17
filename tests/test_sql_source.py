@@ -278,6 +278,16 @@ def test_read_statements_are_accepted(tmp_path, statement):
     "SELECT [']; DELETE FROM review",               # SQL Server / SQLite bracket identifier
     "SELECT $$'$$; DELETE FROM review; --'",        # PostgreSQL dollar quoting
     "SELECT $q$'$q$; DELETE FROM review; --'",      # tagged dollar quoting
+    # Real dialects combine rules (Copilot review, #55).
+    "SELECT $$\"$$, E'a\\''; DELETE FROM review; -- '",  # PostgreSQL: dollar quote and E-string
+    "SELECT `\"`, 'a\\''; DELETE FROM review; -- '",     # MySQL: backtick and backslash escape
+    "SELECT `[`, [`]; DELETE FROM review; -- ]",       # SQLite: backtick and bracket
+    "SELECT $é$'$é$; DELETE FROM review; --'",       # non-ASCII dollar-quote tag
+    # Comment rules that differ (security sweep follow-up).
+    "SELECT 1 # '\n; DELETE FROM review; -- '",       # MySQL # comment
+    "SELECT 1--'\n,'; DELETE FROM review; -- '",      # MySQL: -- without a space is not a comment
+    "SELECT 1 /* /* */ ' */; DELETE FROM review; -- '",  # PostgreSQL / SQL Server nested comment
+    "SELECT 1 /*! ; DELETE FROM review */",          # MySQL executable comment
 ])
 def test_dialect_quoting_cannot_hide_a_second_statement(statement):
     """Security sweep 2026-11-17: the guard reads every dialect's quoting and fails closed."""

@@ -34,7 +34,7 @@ Proposed for Zach. Serves: P0@2, DG-RE@1, DG-RF@1.
 
 - Before executing, Fathom refuses a query whose first keyword (after comments) isn't `SELECT`, `WITH` or `VALUES`, or that has a second statement after `;`. A small scanner skips string literals, quoted identifiers and comments. Nothing is executed when the query is refused.
 - This is a guard, not a guarantee. The docs ask for a read-only connection.
-- Quoting differs between databases (backslash escapes, `` `backticks` ``, `[brackets]`, `$tag$` dollar quotes). The scanner reads the query under each of these and refuses it if any reading finds a non-read start or a second statement, so a quote one database treats as text can't hide a `;` another database runs. This fails closed: a `;` inside such a quote may be refused even where the database would accept it (security sweep, 2026-11-17).
+- Quoting and comments differ between databases (backslash escapes, `` `backticks` ``, `[brackets]`, `$tag$` dollar quotes with tags of any letters, MySQL `#` comments and `--` needing a following space, nested `/* */` comments in PostgreSQL and SQL Server). The scanner reads the query under every combination of these rules, since real dialects combine them, and refuses it if any reading finds a non-read start or a second statement. A MySQL `/*! */` or `/*+ */` comment is read as code. This fails closed: a `;` inside such a quote or comment may be refused even where the database would accept it (security sweep and Copilot review, #55, 2026-11-17).
 
 ## Errors
 
