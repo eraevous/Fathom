@@ -19,6 +19,7 @@ import csv
 import importlib
 import importlib.util
 import io
+import itertools
 from pathlib import Path
 import re
 import sys
@@ -54,33 +55,86 @@ def _cell(value, column: str) -> str:
 READ_KEYWORDS = ("select", "with", "values")
 
 
-def _code_outside_literals(query: str) -> str:
+# Lexing rules that differ between databases. Each is a feature a reading may switch on; the
+# scanner reads the query under every combination of features, and the guard refuses it if any
+# reading finds a non-read start or a second statement. A quote or comment one database treats
+# as text can hide a ';' that another database runs, and real dialects combine several rules
+# (Copilot review, #55), so every combination is read (fail closed).
+#   always:    '...' and "..." with doubled quotes; -- and /* */ comments (standard SQL, SQLite);
+#   backslash: backslash escapes inside '...' and "..." (MySQL; PostgreSQL E'...' strings)
+#   backtick:  `identifier` (MySQL, SQLite)
+#   bracket:   [identifier] (SQL Server, SQLite)
+#   dollar:    $tag$...$tag$, tags of any letters (PostgreSQL)
+#   hash:      # line comments (MySQL)
+#   nested:    /* /* */ */ block comments nest (PostgreSQL, SQL Server)
+#   dashspace: -- starts a comment only before whitespace or the end (MySQL)
+#   execcomment: /*! ... */ and /*+ ... */ are code, not comments (MySQL may run them; Codex review)
+FEATURES = ("backslash", "backtick", "bracket", "dollar", "hash", "nested", "dashspace", "execcomment")
+READINGS = tuple(frozenset(f for f, on in zip(FEATURES, bits) if on)
+                 for bits in itertools.product((False, True), repeat=len(FEATURES)))
+_DOLLAR_TAG = re.compile(r"\$(?:[A-Za-z_\x80-\U0010ffff][A-Za-z0-9_\x80-\U0010ffff]*)?\$")  # PostgreSQL: letters, _, any non-ASCII
+
+
+def _quoted_end(query: str, i: int, close: str, backslash: bool) -> int:
+    """Index just past the quote that ends the quoted run opened at ``i`` (len(query) if none)."""
+    j, n = i + 1, len(query)
+    while j < n:
+        if backslash and query[j] == "\\":
+            j += 2
+            continue
+        if query[j] == close:
+            if j + 1 < n and query[j + 1] == close:
+                j += 2
+                continue
+            return j + 1
+        j += 1
+    return n
+
+
+def _block_comment_end(query: str, i: int, nested: bool) -> int:
+    """Index just past the */ that closes the comment opened at ``i`` (len(query) if none)."""
+    depth, j, n = 1, i + 2, len(query)
+    while j < n:
+        if nested and query.startswith("/*", j):
+            depth, j = depth + 1, j + 2
+        elif query.startswith("*/", j):
+            depth, j = depth - 1, j + 2
+            if not depth:
+                return j
+        else:
+            j += 1
+    return n
+
+
+def _code_outside_literals(query: str, reading=frozenset()) -> str:
     """The query with string literals, quoted identifiers and comments blanked out.
 
-    A small scanner, not a SQL parser: '...' and "..." (doubled quotes escape), -- line comments
-    and /* */ block comments. Enough to find the first keyword and a second statement.
+    A small scanner, not a SQL parser: the rules marked "always" above plus the features in
+    ``reading`` (a set drawn from FEATURES). Enough to find the first keyword and a second statement.
     """
+    closers = {"'": "'", '"': '"'}
+    if "backtick" in reading:
+        closers["`"] = "`"
+    if "bracket" in reading:
+        closers["["] = "]"
     out, i, n = [], 0, len(query)
     while i < n:
         c = query[i]
-        if c in "'\"":
-            j = i + 1
-            while j < n:
-                if query[j] == c:
-                    if j + 1 < n and query[j + 1] == c:
-                        j += 2
-                        continue
-                    break
-                j += 1
+        tag = _DOLLAR_TAG.match(query, i) if "dollar" in reading and c == "$" else None
+        if tag:
+            j = query.find(tag.group(), tag.end())
             out.append(" ")
-            i = j + 1
-        elif query.startswith("--", i):
+            i = n if j < 0 else j + len(tag.group())
+        elif c in closers:
+            out.append(" ")
+            i = _quoted_end(query, i, closers[c], "backslash" in reading and c in "'\"")
+        elif (query.startswith("--", i) and ("dashspace" not in reading or i + 2 == n or query[i + 2].isspace())) \
+                or (c == "#" and "hash" in reading):
             j = query.find("\n", i)
             i = n if j < 0 else j
             out.append(" ")
-        elif query.startswith("/*", i):
-            j = query.find("*/", i + 2)
-            i = n if j < 0 else j + 2
+        elif query.startswith("/*", i) and not ("execcomment" in reading and query[i + 2:i + 3] in ("!", "+")):
+            i = _block_comment_end(query, i, "nested" in reading)
             out.append(" ")
         else:
             out.append(c)
@@ -93,15 +147,23 @@ def check_read_query(query: str) -> None:
 
     A guard, not a guarantee (Copilot review, #53): a dialect may allow writes inside WITH, and a
     function called by a SELECT can have side effects. The real protection is a read-only
-    connection, which the docs ask for.
+    connection, which the docs ask for. The first keyword is read under every combination of
+    FEATURES (quoting and comments differ between databases) and must be a read keyword in each.
+    Any ';' followed by more than ';' and whitespace is refused, wherever it is in the text.
     """
-    code = _code_outside_literals(query)
-    first_word = re.match(r"[\s(]*([A-Za-z_]+)", code)  # a token boundary, so "SELECT*" reads as SELECT (Codex review)
-    if not first_word or first_word.group(1).lower() not in READ_KEYWORDS:
-        raise ValueError("only a read query is run: it must start with SELECT, WITH or VALUES (nothing was executed)")
-    first, sep, rest = code.partition(";")
+    for reading in READINGS:
+        code = _code_outside_literals(query, reading)
+        first_word = re.match(r"[\s(]*([A-Za-z_]+)", code)  # a token boundary, so "SELECT*" reads as SELECT (Codex review)
+        if not first_word or first_word.group(1).lower() not in READ_KEYWORDS:
+            raise ValueError("only a read query is run: it must start with SELECT, WITH or VALUES (nothing was executed)")
+    # A second statement is checked on the raw text, not on any reading: each new dialect rule a
+    # reviewer found (#55: combined quoting, PostgreSQL string modes, dollar-tag characters) could
+    # hide a ';' from every reading. Any ';' followed by more than ';' and whitespace is refused,
+    # even inside a string or comment (fail closed; as docs/notebooks.md already states).
+    first, sep, rest = query.partition(";")
     if sep and rest.strip(" \t\r\n;"):
-        raise ValueError("only one statement is run; remove everything after the first ';' (nothing was executed)")
+        raise ValueError("only one statement is run; remove everything after the first ';', even a ';' inside a "
+                         "string or comment (nothing was executed)")
 
 
 def _driver_error(step: str, exc: Exception) -> ValueError:

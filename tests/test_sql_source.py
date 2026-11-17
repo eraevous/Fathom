@@ -252,11 +252,13 @@ def test_write_statements_are_refused_before_execution(tmp_path, statement):
     "-- note\nSELECT id FROM review;",
     "/* lead */ WITH t AS (SELECT id FROM review) SELECT id FROM t",
     "SELECT (SELECT count(*) FROM review) AS n",
-    "SELECT 'a;b -- not a comment' AS s, \"odd;name\" FROM (SELECT 1 AS \"odd;name\")",
     "VALUES (1), (2)",
     "SELECT* FROM review",
     "select'x'AS s",
     "SELECT(1)AS one",
+    "SELECT 'it''s' AS s, 'C:\\dir\\' AS p FROM review;",
+    "SELECT [id], `id` AS id2 FROM review",
+    "SELECT 'cost $5' AS s, '$x$' AS t",
 ])
 def test_read_statements_are_accepted(tmp_path, statement):
     db, _ = build_db(tmp_path)
@@ -265,6 +267,43 @@ def test_read_statements_are_accepted(tmp_path, statement):
         assert query_csv_bytes(conn, statement, 100)
     finally:
         conn.close()
+
+
+@pytest.mark.parametrize("statement", [
+    # Each hides a second statement from a scanner that knows only standard quoting.
+    "SELECT E'a\\''; DELETE FROM review; --'",      # PostgreSQL E-string / MySQL backslash escape
+    "SELECT 'a\\''; DELETE FROM review; -- '",      # MySQL default string escapes
+    "SELECT `'`; DELETE FROM review",               # MySQL / SQLite backtick identifier
+    "SELECT [']; DELETE FROM review",               # SQL Server / SQLite bracket identifier
+    "SELECT $$'$$; DELETE FROM review; --'",        # PostgreSQL dollar quoting
+    "SELECT $q$'$q$; DELETE FROM review; --'",      # tagged dollar quoting
+    # Real dialects combine rules (Copilot review, #55).
+    "SELECT $$\"$$, E'a\\''; DELETE FROM review; -- '",  # PostgreSQL: dollar quote and E-string
+    "SELECT `\"`, 'a\\''; DELETE FROM review; -- '",     # MySQL: backtick and backslash escape
+    "SELECT `[`, [`]; DELETE FROM review; -- ]",       # SQLite: backtick and bracket
+    "SELECT $é$'$é$; DELETE FROM review; --'",       # non-ASCII dollar-quote tag
+    # Comment rules that differ (security sweep follow-up).
+    "SELECT 1 # '\n; DELETE FROM review; -- '",       # MySQL # comment
+    "SELECT 1--'\n,'; DELETE FROM review; -- '",      # MySQL: -- without a space is not a comment
+    "SELECT 1 /* /* */ ' */; DELETE FROM review; -- '",  # PostgreSQL / SQL Server nested comment
+    "SELECT 1 /*! ; DELETE FROM review */",          # MySQL executable comment
+    "SELECT 1 /*! ' */; DELETE FROM review; -- '",   # a plain comment elsewhere (Codex review, #55)
+    "SELECT 'a\\', E'\"a\\''; DELETE FROM review; --'",  # PostgreSQL ordinary string + E-string (Copilot, #55)
+    "SELECT $💡$'$💡$; DELETE FROM review; --'",     # non-letter dollar-quote tag (Copilot, #55)
+    "SELECT 'a;b' AS s; DELETE FROM review",         # any later ';' is refused, even inside a string
+])
+def test_dialect_quoting_cannot_hide_a_second_statement(statement):
+    """Security sweep 2026-11-17: the guard reads every dialect's quoting and fails closed."""
+    from fathom.sql import check_read_query
+    with pytest.raises(ValueError, match="only one statement"):
+        check_read_query(statement)
+
+
+def test_a_semicolon_inside_a_string_is_refused():
+    """Fail closed (#55): any ';' followed by more text is refused, as docs/notebooks.md states."""
+    from fathom.sql import check_read_query
+    with pytest.raises(ValueError, match="even a ';' inside"):
+        check_read_query("SELECT 'a;b' AS s")
 
 
 def test_fetch_errors_become_clear_errors(tmp_path):
