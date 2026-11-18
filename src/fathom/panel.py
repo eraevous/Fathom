@@ -16,6 +16,7 @@ from .connectors import CSVConnector
 from .models import GuideDataFrame, ProfilingResult, SchemaContract, canonical_json
 from .panel_stats import advance, calendar, estimate, floor, summarize, usable
 from .profiler import profile
+from .type_pairs import average_ranks as ranks  # one tied-rank helper for both Spearman paths
 from .parsing import parse_date, temporal_failure, temporal_failure_message
 
 RULES = {
@@ -244,15 +245,6 @@ def csv_text(rows):
     if fields:
         writer = csv.DictWriter(stream, fields, lineterminator='\n');writer.writeheader();writer.writerows(rows)
     return stream.getvalue()
-
-
-def ranks(values):
-    out = [0.0] * len(values);ordered = sorted(range(len(values)), key=values.__getitem__);start = 0
-    for _, group in itertools.groupby(ordered, key=values.__getitem__):
-        indices = list(group);rank = (start + 1 + start + len(indices)) / 2
-        for i in indices: out[i] = rank
-        start += len(indices)
-    return out
 
 
 def spearman(a, b):
