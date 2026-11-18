@@ -43,8 +43,20 @@ def test_pip_arguments_online_and_offline(tmp_path):
     offline = inst.make_plan("linux", tmp_path, {}, here=here)
     args = offline.pip_args()
     assert args[-1] == "fathom-guide" and "--no-index" in args and str(here / "wheelhouse") in args
+    assert plan.reinstall_args() is None and offline.reinstall_args() is None  # no wheel yet
     with pytest.raises(SystemExit, match="no fathom_guide wheel"):
         inst.check_source(offline)
+
+
+def test_offline_reinstalls_same_version_wheel(tmp_path):
+    """A rebuilt bundle with the same version must replace the installed code (Codex, #56)."""
+    here = tmp_path / "bundle"
+    wheel = here / "wheelhouse" / "fathom_guide-0.1.0-py3-none-any.whl"
+    wheel.parent.mkdir(parents=True)
+    wheel.write_bytes(b"")
+    args = inst.make_plan("linux", tmp_path, {}, here=here).reinstall_args()
+    assert args[-1] == str(wheel)
+    assert {"--force-reinstall", "--no-deps", "--no-index"} <= set(args)
 
 
 def test_bundle_python_mismatch_is_explained(tmp_path, monkeypatch):

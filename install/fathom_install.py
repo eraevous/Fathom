@@ -74,6 +74,19 @@ class Plan:
             args += ["--no-index", "--find-links", str(self.wheelhouse)]
         return args + [self.requirement]
 
+    def reinstall_args(self) -> list[str] | None:
+        """Offline only: reinstall the bundle's own Fathom wheel by path. `--upgrade` keeps an
+        installed copy with the same version (0.1.0 for every build so far), so a rebuilt bundle
+        would otherwise leave the old code in place (Codex review, #56). Dependencies were
+        resolved by `pip_args`; `--no-deps` leaves them alone."""
+        if not self.wheelhouse:
+            return None
+        wheels = sorted(self.wheelhouse.glob("fathom_guide-*.whl"))
+        if not wheels:
+            return None
+        return [str(self.python), "-m", "pip", "--disable-pip-version-check", "install",
+                "--force-reinstall", "--no-deps", "--no-index", str(wheels[-1])]
+
 
 def make_plan(system: str, home: Path, env: dict, here: Path = HERE, extras: tuple[str, ...] = ()) -> Plan:
     data = data_dir(system, home, env)
@@ -317,6 +330,8 @@ def install(plan: Plan, argv: list[str] = ()) -> int:
     say("installing Fathom " + ("offline from " + str(plan.wheelhouse) if plan.wheelhouse else
                                 "from " + plan.source + " (pip downloads pandas and PyYAML)"))
     run(plan.pip_args())
+    if plan.reinstall_args():
+        run(plan.reinstall_args())
     created = add_launchers(plan)
     write_manifest(plan, created)
     check = subprocess.run([str(plan.guide), "app", "--check"], capture_output=True, text=True)
@@ -358,6 +373,8 @@ def describe(plan: Plan, uninstalling: bool) -> int:
         say(f"would switch to Python {wanted} to match the offline bundle")
     say(f"would create or upgrade {plan.venv} with {sys.executable}")
     say("would run: " + " ".join(plan.pip_args()))
+    if plan.reinstall_args():
+        say("would run: " + " ".join(plan.reinstall_args()))
     for label, path in plan.launchers:
         say(f"would add {label}: {path}")
     return 0
