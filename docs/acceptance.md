@@ -1,6 +1,9 @@
 # How Fathom's usefulness is judged
 
-**Status: proposed (2026-11-01, claude:aec). Zach accepts or changes it** (`FT-R4`, provisional).
+**Status.** Three separate things:
+- **The requirement is committed.** `FT-R4` (v3 in `.aec/records.jsonl`), accepted by Zach on 2026-11-01 at 16:46 CT: "FTR2, R3, and R4 are all pretty much correct" (`docs/decisions/2026-11-01-evening.md`). This page was drafted by claude:aec on 2026-11-01.
+- **The protocol below is unchanged** since that acceptance.
+- **The unseen-table judgment hasn't been made yet.** As of 2026-11-18, `.aec/records.jsonl` has no record of Zach and Kate judging a report on a table the builders hadn't seen. All the evidence so far comes from builders' own tables.
 
 Tests show that Fathom does what its spec says. They don't show that it helps. A feature counts as useful when it passes the criterion below on a table it wasn't developed against.
 
