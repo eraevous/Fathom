@@ -11,7 +11,7 @@ from .charts import svg_chart
 from .palette import THEMES, KIND_COLOURS, theme_css
 from .target import target_tables
 from .temporal_view import temporal_html, temporal_markdown, TEMPORAL_CSS
-from .presentation import formatted, column_tables, html_table, markdown_table, metric_table, structured_tables, formatted_examples, display_charts, top_n_reason, categorical_hint
+from .presentation import formatted, column_tables, html_table, markdown_table, structured_tables, formatted_examples, display_charts, top_n_reason, categorical_hint
 from pathlib import Path
 from .verdicts import headlines_html, key_findings, skew_text, inline_rule
 from .summary_view import summary_html,summary_markdown,SUMMARY_CSS,TRANSPOSE_SCRIPT
