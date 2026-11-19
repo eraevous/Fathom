@@ -538,10 +538,6 @@ def test_groups_k_must_match_groups(numeric_target, tmp_path):
 
 # ---------------------------------------------------------------- execution review codex:rev-2 (5838328411)
 
-def _mutated_load(result, tmp_path, mutate):
-    return _saved(result, tmp_path, mutate)
-
-
 def test_missing_magnitude_key_rejected_but_explicit_null_with_reason_renders(numeric_target, tmp_path):
     def drop(d):
         w = _first(d, 'numeric×numeric')['wording']

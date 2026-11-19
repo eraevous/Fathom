@@ -2,15 +2,14 @@
 
 from collections import Counter
 from dataclasses import asdict
-from datetime import date
 import math
 import re
 import statistics
 
 from .config import validate_config
 from .models import GuideDataFrame, ProfilingResult
-from .quality import quality_profile, copy_evidence
-from .parsing import finite_number, parse_date, parse_temporal, temporal_failure, temporal_failure_message
+from .quality import quality_profile
+from .parsing import finite_number, parse_temporal, temporal_failure, temporal_failure_message
 from .univariate import enrich_columns, identity_and_samples, missingness_patterns, stored
 
 SCHEMA_VERSION = 2
@@ -21,14 +20,6 @@ from .timeseries import time_series
 
 def number(value: str) -> float | None:
     return finite_number(value)
-
-
-def iso_date(value: str) -> str | None:
-    try:
-        parsed = date.fromisoformat(value)
-        return parsed.isoformat() if parsed.isoformat() == value else None
-    except (TypeError, ValueError):
-        return None
 
 
 def rounded(n: float | None) -> float | None:

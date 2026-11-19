@@ -10,7 +10,7 @@ import math
 import statistics
 
 from .presentation import formatted
-from .target import CATEGORY, NUMERIC, WARNING, association, axis_label, cell, geometry_percentile
+from .target import CATEGORY, NUMERIC, WARNING, association, axis_label, cell
 from .univariate import coefficient, percentile, safe
 
 PAIR_TYPES = ('numeric×numeric', 'category×numeric', 'binary×numeric', 'category×category', 'binary×binary')

@@ -1,7 +1,6 @@
 from html_helpers import assert_finding_preserved
 from html_helpers import visible_text, assert_navigation_only_script
 from copy import deepcopy
-from html import unescape
 from pathlib import Path
 
 import pytest
