@@ -219,3 +219,26 @@ def test_menu_entry_is_recorded_even_if_the_command_link_fails(tmp_path, monkeyp
     assert created == [str(entry)] and inst.read_manifest(plan) == [str(entry)]
     inst.uninstall(plan)
     assert not entry.exists()
+
+
+SMART_QUOTE_PATH = "C:/Users/O\u2019Brien \u2018x\u2019 \u201ay\u201b 'z'/Fathom/fathom-app.exe"
+
+
+def test_powershell_quoting_doubles_every_single_quote_character():
+    # PowerShell treats U+2018, U+2019, U+201A and U+201B as single quotes too, so a
+    # profile folder like O\u2019Brien used to end the string early (security idle work).
+    quoted = inst.ps_quote(SMART_QUOTE_PATH)
+    assert quoted == ("'C:/Users/O\u2019\u2019Brien \u2018\u2018x\u2019\u2019 \u201a\u201ay\u201b\u201b"
+                      " ''z''/Fathom/fathom-app.exe'")
+    script = inst.windows_shortcut_script(Path(SMART_QUOTE_PATH), Path("C:/S/Fathom.lnk"), Path("C:/Users/O\u2019Brien"))
+    assert "O\u2019\u2019Brien" in script and "O\u2019Brien" not in script.replace("O\u2019\u2019Brien", "")
+
+
+@pytest.mark.skipif(not sys.platform.startswith("win"), reason="needs Windows PowerShell")
+def test_powershell_reads_the_quoted_value_back_unchanged():
+    value = SMART_QUOTE_PATH + "; Write-Output INJECTED"
+    # Print code points, not text, so the console code page can't blur the comparison.
+    command = "$v=" + inst.ps_quote(value) + ";($v.ToCharArray()|ForEach-Object{[int]$_}) -join ','"
+    done = subprocess.run(["powershell", "-NoProfile", "-NonInteractive", "-Command", command],
+                          capture_output=True, text=True, check=True)
+    assert done.stdout.strip() == ",".join(str(ord(c)) for c in value)

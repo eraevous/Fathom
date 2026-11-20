@@ -142,8 +142,16 @@ def mac_launcher_script(app: Path) -> str:
     return f'#!/bin/sh\nexec {shlex.quote(str(app))} "$@"\n'
 
 
+# PowerShell reads all five of these as a single quote, so each must be doubled
+# inside a verbatim string, not only U+0027 (about_Quoting_Rules; e.g. a profile folder named O\u2019Brien).
+PS_SINGLE_QUOTES = "'\u2018\u2019\u201a\u201b"
+
+
 def ps_quote(value: object) -> str:
-    return "'" + str(value).replace("'", "''") + "'"
+    text = str(value)
+    for char in PS_SINGLE_QUOTES:
+        text = text.replace(char, char * 2)
+    return "'" + text + "'"
 
 
 def windows_shortcut_script(target: Path, start_menu: Path, workdir: Path, owned: list[str] = ()) -> str:
