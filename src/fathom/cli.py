@@ -57,6 +57,15 @@ def _load_sql(args, schema: SchemaContract):
         if callable(close): close()
 
 
+def write_texts(directory, files, report=True):
+    """Write {relative name: text} under directory as UTF-8 with LF line endings."""
+    directory.mkdir(parents=True, exist_ok=True)
+    for name, text in files.items():
+        path = directory / name;path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(text, encoding="utf-8", newline="\n")
+    if report: print("guide: wrote " + ", ".join(str(directory / name) for name in sorted(files)))
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="guide", description="Evidenced local table review")
     parser.add_argument("--version", action="version", version=f"guide {__version__}")
@@ -193,17 +202,12 @@ def main(argv: list[str] | None = None) -> int:
                 from .tidy import tidy_files
                 tidy=tidy_files(result.document)
                 if args.out is None:
-                    args.tidy.mkdir(parents=True,exist_ok=True)
-                    for name,value in tidy.items():(args.tidy/name).write_text(value,encoding='utf-8',newline='\n')
-                    print('guide: wrote '+', '.join(str(args.tidy/name) for name in sorted(tidy)))
+                    write_texts(args.tidy, tidy)
                     return 0
             if result.document['kind'] == 'panel':
                 if args.command == 'export': raise ValueError('panel Office export is not supported; use panel CSV/HTML')
                 from .panel import panel_files
-                files = panel_files(result)
-                for name, text in files.items():
-                    path = args.out / name;path.parent.mkdir(parents=True, exist_ok=True)
-                    path.write_text(text, encoding='utf-8', newline='\n')
+                write_texts(args.out, panel_files(result), report=False)
                 return 0
         else:
             result = compare(ProfilingResult.load(args.input), ProfilingResult.load(args.after))
@@ -225,16 +229,12 @@ def main(argv: list[str] | None = None) -> int:
             from .exports import export_bundle
             binaries, status = export_bundle(result, args.formats or ["pdf","pptx"],deck=args.deck,report=options)
             files['export-status.json'] = canonical_json(status)
-        args.out.mkdir(parents=True, exist_ok=True)
-        for name, contents in files.items():
-            (args.out / name).write_text(contents, encoding="utf-8", newline="\n")
+        write_texts(args.out, files, report=False)
         for name, contents in binaries.items():
             (args.out / name).write_bytes(contents)
         print(f"guide: wrote {', '.join(str(args.out / name) for name in sorted([*files, *binaries]))}")
         if args.command=='export' and args.tidy is not None:
-            args.tidy.mkdir(parents=True,exist_ok=True)
-            for name,value in tidy.items():(args.tidy/name).write_text(value,encoding='utf-8',newline='\n')
-            print('guide: wrote '+', '.join(str(args.tidy/name) for name in sorted(tidy)))
+            write_texts(args.tidy, tidy)
         if args.command == "profile":
             print(summary_line(result.document), file=sys.stderr)
             from .parsing import temporal_failure_message

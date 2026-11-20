@@ -183,7 +183,8 @@ def test_state_runs_are_distinct_and_closures_break_them():
 
 
 def test_rank_ties_and_distinct_series_metric_disagreement(tmp_path):
-    from fathom.panel import ranks, spearman
+    from fathom.panel import spearman
+    from fathom.type_pairs import average_ranks as ranks
     assert ranks([10, 10, 20]) == [1.5, 1.5, 3]
     assert scalar(spearman([1, 2, 2], [3, 2, 2])) == pytest.approx(-1)
     assert spearman([1, 1, 1], [1, 2, 3])['status'] == 'not estimable'
