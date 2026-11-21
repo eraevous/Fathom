@@ -26,11 +26,11 @@ Where these conflict, follow the higher item and record the conflict. Don't sett
 - **Design intent, scope and acceptance:** Zach. Agents propose, and only Zach accepts. Merging a PR doesn't accept anything.
 - **Facts about a dataset:** the data and the people who own it. Fathom never states an inferred meaning as a domain fact.
 
-## How to build: Spec Kit with AEC
+## How to build: Spec Kit with Telosmith (formerly AEC)
 
-Spec Kit skills are in `.agents/skills/`: `speckit-constitution`, `-specify`, `-clarify`, `-plan`, `-tasks`, `-analyze` and `-implement`. The AEC extension adds report-only hooks after specify, tasks and implement (`.specify/extensions/aec/`).
+Spec Kit skills are in `.agents/skills/`: `speckit-constitution`, `-specify`, `-clarify`, `-plan`, `-tasks`, `-analyze` and `-implement`. Telosmith (requirements traceability tooling, formerly AEC; its command is still `aec`) adds report-only hooks through its extension after specify, tasks and implement (`.specify/extensions/aec/`).
 
-1. **Constitution.** `.specify/memory/constitution.md` restates `CHARTER.md` and points to it. It must not add principles of its own. A principle the charter lacks is a proposal for Zach, recorded in an intent note.
+1. **Constitution** (Spec Kit's name for the project's governance charter). `.specify/memory/constitution.md` restates `CHARTER.md` and points to it. It must not add principles of its own. A principle the charter lacks is a proposal for Zach, recorded in an intent note.
 2. **Specify, plan, tasks, implement, one feature at a time,** in `specs/NNN-name/`. Each spec names the records it serves (for example `Serves: P0@2, DG-RA@1`).
 3. **Records come before code.**
    - For each feature, append a `requirement` record if the feature needs one that isn't there yet. Mark it provisional and say it is for Zach to accept.
