@@ -23,12 +23,14 @@ target: churned
 diagnostics:
   task: classification          # classification | regression | count | forecast
   families: [linear, tree]      # any of: linear, tree, distance, time_series
-  features: [tenure, plan, …]   # optional; default = the columns the target screen already uses
+  features: [tenure, plan, …]   # optional; default below
   split: {column: fold, train: [train], evaluation: [test]}   # optional
   entity: customer_id           # optional
   time: signup_date             # optional; required for forecast and time_series
   exposure: months_active       # optional; count task only
 ```
+
+**Default feature set.** When `features` is omitted, it is every column except the target and the declared structural roles (`split.column`, `entity`, `time`, `exposure`), minus columns with `exclude_from_target`. It is **not** the target screen's selection: that screen drops near-copies of the target (row agreement ≥ 95%), which W5 exists to find, and it keeps the split column, which would stop W2 matching otherwise identical rows across the split. Structural roles are never part of a duplicate key; W2 and W3 use them only to say which side a row is on.
 
 ### The context gate (R1)
 
