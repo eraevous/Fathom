@@ -62,7 +62,7 @@ Every diagnostic in this spec is computed from the table alone. Checks that need
 | W2 | Duplicates across the split | split | rows whose features (or whose entity) appear on both sides |
 | W3 | Entity crossing the split | split, entity | entities with rows in both train and evaluation; rows per entity (min, median, max) |
 | W4 | Temporal order across the split | split, time | evaluation rows dated before the latest train row, with the count and the overlap window |
-| W5 | Possible target-derived features | target | a feature that equals the target, is a one-to-one relabelling of it, or has a level (with at least 30 rows) that maps to a single target value; for a numeric target, a feature with \|Spearman\| ≥ 0.98 |
+| W5 | Possible target-derived features | target | **any target:** a feature equal to the target on every complete row. **Categorical target** (classification): a feature whose levels map one-to-one onto the target's classes, with every class and level holding at least 30 rows; or a feature level with at least 30 rows that maps to a single class. **Numeric target** (regression, count): only \|Spearman\| ≥ 0.98; the relabelling and single-level rules don't apply, because with mostly unique values any column maps one-to-one by chance |
 
 W5 says "possible", names the rule that fired, and is followed by a `question` ("When is this value known relative to the target?"). A run with no signals says which checks ran and adds the fixed sentence "These checks can't show that the data is free of leakage; that needs when each value becomes available." There is no "leakage-free" wording anywhere.
 
