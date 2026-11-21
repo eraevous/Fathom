@@ -87,6 +87,6 @@ Install optional serializers with `pip install -e '.[exports]'`, or statistics w
 .venv/bin/python scripts/build_showcase.py
 ```
 
-Fathom is built with [AEC](https://github.com/eraevous/AEC) and Spec Kit. Read [AGENTS.md](AGENTS.md), [CHARTER.md](CHARTER.md), the accepted records in `.aec/records.jsonl` and the [acceptance criteria](docs/acceptance.md) before changing it. The archived Data Guide implementation is not a source for this project.
+Fathom is built with [Telosmith](https://github.com/eraevous/Telosmith) (formerly AEC; requirements traceability tooling that links purposes, requirements and claims to code and marks a link suspect when the code changes) and Spec Kit. Its command and the `.aec/` folder keep the old name. Read [AGENTS.md](AGENTS.md), [CHARTER.md](CHARTER.md), the accepted records in `.aec/records.jsonl` and the [acceptance criteria](docs/acceptance.md) before changing it. The archived Data Guide implementation is not a source for this project.
 
 Fixtures must be synthetic or documented public data. Never commit private reports, credentials or employer material. Work on a branch; owner acceptance is separate from passing tests or merging code. Contributions use the [CLA](CLA.md). [MIT license](LICENSE).

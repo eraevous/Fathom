@@ -6,7 +6,7 @@ Fathom turns raw tables into understanding you can pass on: an enhanced data dic
 
 **Status: working local prototype.** Fathom is the successor to Data Guide.
 It was built from guiding documents and decisions rather than earlier implementation,
-using [AEC](https://github.com/eraevous/AEC) and Spec Kit.
+using [Telosmith](https://github.com/eraevous/Telosmith) (formerly AEC; requirements traceability tooling) and Spec Kit.
 
 It asks **what needs review before you use a table**, and answers with evidence,
 open unknowns, your decisions and context-first before/after comparisons. The slice-3 report scope is accepted; FT-R14 detail and
