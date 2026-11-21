@@ -5,7 +5,7 @@ import ipaddress
 import re
 from urllib.parse import urlsplit
 
-from .parsing import finite_number, parse_date
+from .parsing import finite_number, parse_date, reaches
 
 SPECIAL_TYPES={'phone','email','url','latitude','longitude'}
 
@@ -46,8 +46,8 @@ def infer_special(values,name):
     if len(values)>=3:
         for typ,check in [('email',email_domain),('url',url_domain),('phone',phone_digits)]:
             # Plain numeric measurements alone are not enough to infer a phone number.
-            score=sum(bool(check(v)) and (typ!='phone' or (any(c in v for c in '+()-') and parse_date(v) is None)) for v in values)
-            if score/len(values)>=.8:return typ,'At least 80% of >=3 observed strings match the local special-format rule; alternatives remain possible.'
+            hit=lambda v,typ=typ,check=check:bool(check(v)) and (typ!='phone' or (any(c in v for c in '+()-') and parse_date(v) is None))
+            if reaches(hit,values,lambda score,total:score/total>=.8):return typ,'At least 80% of >=3 observed strings match the local special-format rule; alternatives remain possible.'
     return None
 
 
