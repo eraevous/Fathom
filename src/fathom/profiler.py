@@ -9,7 +9,7 @@ import statistics
 from .config import validate_config
 from .models import GuideDataFrame, ProfilingResult
 from .quality import quality_profile
-from .parsing import finite_number, parse_temporal, temporal_failure, temporal_failure_message
+from .parsing import finite_number, parse_temporal, reaches, temporal_failure, temporal_failure_message
 from .univariate import enrich_columns, identity_and_samples, missingness_patterns, stored
 
 SCHEMA_VERSION = 2
@@ -37,7 +37,8 @@ def infer(values: list[str], name="", meta=None) -> dict:
         typ, reason = "string", "No nonmissing values; type is unknown, string is the storage fallback."
     elif all(v.lower() in {"true", "false"} for v in values):
         typ, reason = "boolean", "All nonmissing values are lexical true/false."
-    elif meta.get("date_format") or (sum(parse_temporal(v,meta.get("date_format"),meta.get('frame_rate')) is not None for v in values)>=len(values)*(.8 if re.search(r"date|release|time|stamp|clock",name,re.I) else 1)):
+    elif meta.get("date_format") or reaches(lambda v:parse_temporal(v,meta.get("date_format"),meta.get('frame_rate')) is not None,values,
+                                            lambda hits,total,share=(.8 if re.search(r"date|release|time|stamp|clock",name,re.I) else 1):hits>=total*share):
         typ, reason = "temporal", "Local temporal formats recognized; ambiguous readings and format evidence are retained."
     elif (all(number(v) is not None for v in values) or (re.search(r"gross|amount|cost|price|revenue|rating|score|count|quantity",name,re.I) and sum(number(v) is not None for v in values)>=.8*len(values))) and not any(re.match(r"^[+-]?0\d", v.strip()) for v in values):
         typ, reason = "numeric", "Finite numeric readings (local currency/thousands syntax allowed); named numeric columns may retain up to 20% incompatible values, counted separately."
