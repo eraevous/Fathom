@@ -6,6 +6,8 @@ import math
 import re
 import statistics
 
+from .parsing import finite_number
+
 
 def stored(n):
     from .univariate import stored as rule
@@ -13,7 +15,6 @@ def stored(n):
 
 
 def finite(value):
-    from .parsing import finite_number
     return finite_number(value)
 
 
@@ -31,12 +32,17 @@ def share(count, total):
 
 def copy_evidence(left, right):
     """Shared absence alone is not evidence of duplicated observed values."""
-    joint=[(a,b) for a,b in zip(left,right) if a is not None and b is not None]
-    agreement=share(sum(a==b for a,b in zip(left,right)),len(left))
-    joint_agreement=share(sum(a==b for a,b in joint),len(joint))
-    near=bool(joint and joint_agreement>=.95 and agreement is not None and
-              (agreement==1 or (len(left)>=5 and len(joint)>=5 and agreement>=.95)))
-    return {"agreement":agreement,"jointly_present":len(joint),"joint_agreement":joint_agreement,"near":near}
+    same=jointly=joint_same=0
+    for a,b in zip(left,right):
+        equal=a==b
+        same+=equal
+        if a is not None and b is not None:
+            jointly+=1;joint_same+=equal
+    agreement=share(same,len(left))
+    joint_agreement=share(joint_same,jointly)
+    near=bool(jointly and joint_agreement>=.95 and agreement is not None and
+              (agreement==1 or (len(left)>=5 and jointly>=5 and agreement>=.95)))
+    return {"agreement":agreement,"jointly_present":jointly,"joint_agreement":joint_agreement,"near":near}
 
 
 MISSINGNESS_TEST = {"family_alpha": .01, "correction": "Bonferroni", "min_cramers_v": .15, "min_group_size": 10,

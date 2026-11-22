@@ -350,7 +350,11 @@ def calendar_profile(values,name,cfg,meta,parsed=None):
 
 def temporal_profile(values,name,cfg,meta):
     from .temporal_profiles import intraday_profile
-    parsed=[(v,p) for v in values if (p:=parse_temporal(v,meta.get('date_format'),meta.get('frame_rate'))) is not None]
+    parsed=[];unparsed=[]
+    for v in values:
+        p=parse_temporal(v,meta.get('date_format'),meta.get('frame_rate'))
+        if p is None:unparsed.append(v)
+        else:parsed.append((v,p))
     from .temporal_formats import BUILTINS,pattern_parts
     fmt=meta.get('date_format');custom=fmt is not None and fmt not in BUILTINS
     tokens={v for k,v in pattern_parts(fmt) if k=='token'} if custom else set()
@@ -363,13 +367,14 @@ def temporal_profile(values,name,cfg,meta):
     kinds={p['kind'] for _,p in parsed}
     stats.update(valid=len(parsed),invalid=len(values)-len(parsed),calendar_valid=len(dated),temporal_kind=next(iter(kinds)) if len(kinds)==1 else 'mixed' if kinds else 'time' if declared_clock and not declared_date else 'timestamp' if declared_clock else 'date',
                  parse_formats=dict(sorted(Counter(p['format'] for _,p in parsed).items())),parse_basis=('human format override' if meta.get('date_format') else 'inferred local formats')+'; written date and local time retained; no timezone conversion',
-                 parsed_examples=[{'raw':v,**p} for v,p in parsed[:10]],invalid_examples=[v for v in values if parse_temporal(v,meta.get('date_format'),meta.get('frame_rate')) is None][:10])
+                 parsed_examples=[{'raw':v,**p} for v,p in parsed[:10]],invalid_examples=unparsed[:10])
     intraday,extra=intraday_profile(parsed,name,chart);stats['intraday']=intraday;charts+=extra
     from .temporal_formats import temporal_fault
     from .temporal_profiles import subsecond_profile
     stats['subsecond']=subsecond_profile(parsed)
     faults={}
-    for value in values:
+    # A value that parsed has no fault: every fault code comes from a failed parse.
+    for value in unparsed:
         fault=temporal_fault(value,meta.get('date_format'),meta.get('frame_rate'))
         if fault:
             bucket=faults.setdefault(fault['code'],{'count':0,'examples':[],'message':fault['message']})
