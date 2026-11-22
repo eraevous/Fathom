@@ -7,11 +7,13 @@ def intraday_profile(parsed,name,chart):
     timed=[p for _,p in parsed if 'time' in p];bases=[];charts=[]
     for basis in sorted({p['clock_basis'] for p in timed}):
         ps=[p for p in timed if p['clock_basis']==basis]
-        hours={f'{h:02d}':sum(p['hour']==h for p in ps) for h in range(24)}
-        minutes={f'{m:02d}':sum(p['minute']==m for p in ps) for m in range(60)}
-        seconds={f'{s:02d}':sum(p['second']==s for p in ps) for s in range(60)}
+        by_hour=Counter(p['hour'] for p in ps);by_minute=Counter(p['minute'] for p in ps);by_second=Counter(p['second'] for p in ps)
+        by_cell=Counter((date.fromisoformat(p['date']).weekday(),p['hour']) for p in ps if 'date' in p)
+        hours={f'{h:02d}':by_hour[h] for h in range(24)}
+        minutes={f'{m:02d}':by_minute[m] for m in range(60)}
+        seconds={f'{s:02d}':by_second[s] for s in range(60)}
         weekdays=('Mon','Tue','Wed','Thu','Fri','Sat','Sun')
-        matrix={day:{f'{h:02d}':sum('date' in p and date.fromisoformat(p['date']).weekday()==i and p['hour']==h for p in ps) for h in range(24)} for i,day in enumerate(weekdays)}
+        matrix={day:{f'{h:02d}':by_cell[(i,h)] for h in range(24)} for i,day in enumerate(weekdays)}
         bases.append({'basis':basis,'count':len(ps),'earliest':min(p['time'] for p in ps),'latest':max(p['time'] for p in ps),
                       'hour_counts':hours,'minute_counts':minutes,'second_counts':seconds,'precision_counts':dict(sorted(Counter(p['precision'] for p in ps).items())),
                       'weekday_hour_counts':matrix if any('date' in p for p in ps) else {}})
