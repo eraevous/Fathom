@@ -79,7 +79,7 @@ Wording: clusters are "groups this algorithm formed on these features", never "s
 
 With `sensitivity.resamples: B` (default 10, at most 20, 0 off), each fit is repeated on B bootstrap resamples of its analysis population (seed `sample_seed`).
 
-- Regression: the range of each coefficient across resamples, and how many resamples kept its sign.
+- Regression: the range of each coefficient across resamples, and how many resamples kept its sign. Every resample reuses the full fit's design: the same category levels, the same reference level, and the full fit's centring and scaling; preprocessing is never re-derived per resample, so each coefficient keeps the same contrast in every resample. A resample in which a level (or the reference level) has no rows can't estimate that contrast: it is left out of that coefficient's range and sign count, and the finding says how many resamples were left out and why.
 - Clustering: the mean adjusted Rand index between the full fit and each resample's fit on the shared rows.
 
 Robustness language follows fixed rules and appears only when sensitivity ran: a coefficient keeps its sign in every resample → "its sign held across B resamples"; a clustering with mean ARI ≥ 0.8 → "the grouping was similar across B resamples"; below that → "the grouping changed across resamples" and no stability wording. With `resamples: 0` no stability sentence appears at all. Nothing searches over `k`, feature subsets or specifications (Kate's cut).
@@ -104,6 +104,7 @@ Robustness language follows fixed rules and appears only when sensitivity ran: a
 - **R3:** a collinear fixture names the aliased column (G7); a fixture with a curved relationship fires G3 and gets a `question`, not an `action`; a grep over the new templates finds no "significant", "accuracy", "predictive performance", "causes" or "effect of".
 - **R3, G6:** a fixture with complete separation fires G6a. A decoy that converges (four rows at x = −1 with one positive, four at x = 1 with three positive, plus correctly classified rows at x = ±100; the fit converges to intercept 0, slope ln 3) fires G6b only and contains no non-convergence wording.
 - **R4:** an anisotropic fixture (one feature on a much larger scale) fires C5's scale-dependence sentence; a single Gaussian cloud clustered with `k: [3]` reports its groups without "segments", "natural" or "real" anywhere in the output.
+- **R5, fixed contrasts:** a fixture with six A rows (outcome 0) and four B rows (outcome 1) keeps "B versus A" in every resample, including ones where B is the more frequent level, and its sign holds in every resample that has both levels; a resample with no B rows is counted as left out, not as a sign change.
 - **R5:** an unstable fixture (two overlapping clouds) gets "the grouping changed across resamples"; the same run with `resamples: 0` has no stability sentence.
 - **R6:** a fit over budget is reported `over_budget` and the run continues; a singular design is `failed` with its error class; two runs of every fixture under the CI lock produce byte-identical artifacts.
 
