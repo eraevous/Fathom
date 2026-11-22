@@ -244,3 +244,14 @@ def test_weekly_default_reaches_52_when_span_allows(make_profile):
     assert g["wavelength"]["values"]["max_lag"] == 52 and g["wavelength"]["calendar_lags"][0]["acf"] is not None
     short = grain(series(make_profile(daily(values[:7 * 60]), declare(grains=("week",))).document), "week")
     assert short["wavelength"]["calendar_lags"][0]["status"] == "not evaluated at max_lag 26"
+
+
+def test_temporal_markdown_escapes_data_values_and_names(make_profile):
+    # A group value is CSV data; the HTML report escaped it but report.md emitted it raw.
+    hostile = "<img src=x onerror=alert(1)>"
+    lines = ["when,amount,shop"] + [f"{(BASE + timedelta(days=i)).date().isoformat()},{i % 7},{hostile if i % 2 else 'plain'}"
+                                    for i in range(60)]
+    md = render_markdown(make_profile("\n".join(lines) + "\n", declare(by="shop")))
+    assert "## Temporal structure" in md
+    assert hostile not in md and "&lt;img src=x onerror=alert\\(1\\)&gt;" in md
+    assert "### amount by when — shop = plain" in md  # clean decoy: ordinary names and values read unchanged
