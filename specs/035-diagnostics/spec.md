@@ -28,6 +28,7 @@ diagnostics:
   entity: customer_id           # optional
   time: signup_date             # optional; required for forecast and time_series
   exposure: months_active       # optional; count task only
+  horizon: {value: 3, unit: month}   # forecast only; unit is one of hour, day, week, month, year
 ```
 
 **Default feature set.** When `features` is omitted, it is every column except the target and the declared structural roles (`split.column`, `entity`, `time`, `exposure`), minus columns with `exclude_from_target`. It is **not** the target screen's selection: that screen drops near-copies of the target (row agreement ≥ 95%), which W5 exists to find, and it keeps the split column, which would stop W2 matching otherwise identical rows across the split. Structural roles are never part of a duplicate key; W2 and W3 use them only to say which side a row is on.
@@ -74,7 +75,7 @@ W5 says "possible", names the rule that fired, and is followed by a `question` (
 | T2 | Class support by split | classification, split | the T1 table per side, and classes missing from one side |
 | T3 | Target range and dispersion | count | mean, variance, variance/mean ratio, share of zeros; exposure ≤ 0 or missing counted |
 | T4 | Target range by split | regression, count, split | evaluation target values outside the train range (count, share) |
-| T5 | Horizon and history | forecast | history length per entity (or overall), the declared horizon against it; gaps and duplicate timestamps from the existing `time_series` evidence |
+| T5 | Horizon and history | forecast, time | history length per entity (or overall) in the horizon's unit, beside `diagnostics.horizon` (a positive integer `value` and a `unit` from `time_series`' grains: hour, day, week, month, year); gaps and duplicate timestamps from the existing `time_series` evidence. Without `horizon`, history length is still reported, the comparison is `not_applicable`, and a `question` asks for the horizon; Fathom never assumes one |
 
 ### Family checks (R5): conditions, not verdicts
 
