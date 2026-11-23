@@ -161,7 +161,9 @@ class _Style(HTMLParser):
         if text.startswith('Examples: '):self.out.append('Examples: '+html_text(text[10:],literal=True));return
         if 'sample-scroll' in classes.split() and 'td' in tags:self.out.append(html_text(text,literal=True));return
         verdict=('finding' in classes.split() or 'key-findings' in ids or 'gate' in classes.split() or 'series-entry' in classes.split() or bool(_STATE.fullmatch(text.strip())) or '→' in text)
-        inferred=('inferred-reading' in classes.split() or ('details' not in tags and ('kind-hypothesis' in classes.split() or 'kind-interpretation' in classes.split())))
+        # Spec 038: a collapsible section wrapper is layout, not an evidence disclosure.
+        evidence_details=any(t=='details' and 'collapsible' not in a.get('class','').split() for t,a in self.stack)
+        inferred=('inferred-reading' in classes.split() or (not evidence_details and ('kind-hypothesis' in classes.split() or 'kind-interpretation' in classes.split())))
         # Existing em context already carries the inferred role; avoid nesting it.
         self.out.append(html_text(text,columns=self.columns,verdict=verdict,inferred=inferred) if 'em' not in tags else escape(text,quote=False))
 
