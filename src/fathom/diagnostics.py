@@ -22,6 +22,8 @@ STATUSES = ("signal", "no_signal", "not_applicable", "insufficient_data", "faile
 MIN_SUPPORT, RANK_LIMIT, EXAMPLES, CLASS_LIST = 30, 0.98, 5, 50
 LEAKAGE_SENTENCE = ("These checks can't show that the data is free of leakage; "
                     "that needs when each value becomes available.")
+TYPE_NOTE = (" Column types used here are inferred, not declared (see type_basis); which W5 rule applies and how T1 "
+             "reads the target rest on that inference, and declaring a task does not confirm column types.")
 UNCERTAINTY = ("Computed from this table alone, for the declared task. A signal is a reason to look, "
                "not a defect verdict; an absent signal is not a certificate.")
 
@@ -177,37 +179,49 @@ def mapping_rules(pairs):
 def w5(rows, index, columns, features, target, task):
     ti = index[target]
     ttype = columns[ti]["effective_type"]
-    hits, checked = [], 0
+    hits, checked, unevaluated = [], 0, []
     for name in features:
         fi = index[name]
         complete = [(r[fi], r[ti]) for r in rows if r[fi] is not None and r[ti] is not None]
         if len(complete) < 2:
+            unevaluated.append(name)
             continue
-        checked += 1
         if len({y for _, y in complete}) >= 2 and all(x == y for x, y in complete):
             hits.append({"feature": name, "rule": "equal to the target on every complete row", "rows": len(complete)})
+            checked += 1
             continue
         if task == "classification":
             found = mapping_rules(complete)
             if found:
                 hits.append({"feature": name, **found, "rows": len(complete)})
+            checked += 1
         elif task in ("regression", "count") and ttype in NUMERIC and columns[fi]["effective_type"] in NUMERIC:
             cases = [(cell(x, "numeric"), cell(y, "numeric")) for x, y in complete]
             cases = [(x, y) for x, y in cases if x is not None and y is not None]
             rho = spearman([x for x, _ in cases], [y for _, y in cases]) if len(cases) >= 3 else None
-            if rho is not None and abs(rho) >= RANK_LIMIT:
+            if rho is None:  # the rank rule could not be computed: not a negative result
+                unevaluated.append(name)
+                continue
+            checked += 1
+            if abs(rho) >= RANK_LIMIT:
                 hits.append({"feature": name, "rule": f"absolute Spearman rho >= {RANK_LIMIT}",
                              "spearman_rho": round(rho, 4), "rows": len(cases)})
-    if not checked:
-        return "insufficient_data", {"usable_features": 0, "minimum": 1}
-    detail = {"checked": f"{checked} features against the target", "features": hits}
+        else:
+            checked += 1
+    if not checked and not hits:
+        return "insufficient_data", {"usable_features": 0, "minimum": 1, "not_evaluated": unevaluated}
+    detail = {"checked": f"{checked} features against the target"
+              + (f"; {len(unevaluated)} could not be evaluated" if unevaluated else ""),
+              "features": hits, "not_evaluated": unevaluated}
     return ("signal" if hits else "no_signal"), detail
 
 
 def t1(rows, index, columns, target):
     ti = index[target]
-    values = [cell(r[ti], columns[ti]["effective_type"]) for r in rows]
-    counts = Counter(str(v) for v in values if v is not None)
+    boolean = columns[ti]["effective_type"] == "boolean"
+    # Class labels stay as stored text (no float parsing, which can merge distinct labels).
+    values = [r[ti].casefold() if boolean and r[ti] is not None else r[ti] for r in rows]
+    counts = Counter(v for v in values if v is not None)
     present = sum(counts.values())
     if len(counts) < 2:
         return "insufficient_data", {"classes": len(counts), "minimum": 2, "rows_with_target": present}
@@ -215,7 +229,7 @@ def t1(rows, index, columns, target):
     small = sorted(k for k, n in counts.items() if n < MIN_SUPPORT)
     detail = {"checked": f"{len(counts)} classes over {present} rows with a target",
               "classes": [{"class": k, "rows": n, "share": round(n / present, 4)} for k, n in ordered[:CLASS_LIST]],
-              "classes_total": len(counts), "missing_target": len(rows) - present,
+              "classes_total": len(counts), "missing_target": sum(r[ti] is None for r in rows),
               "smallest": ordered[-1][1], "under_minimum": small}
     return ("signal" if small else "no_signal"), detail
 
@@ -237,9 +251,10 @@ def t3(rows, index, target, exposure):
     if exposure is not None:
         ei = index[exposure]
         exp = [finite_number(r[ei]) if r[ei] is not None else None for r in rows]
-        detail["exposure_missing"] = sum(e is None for e in exp)
+        detail["exposure_missing"] = sum(r[ei] is None for r in rows)
+        detail["exposure_unparsed"] = sum(r[ei] is not None and e is None for r, e in zip(rows, exp))
         detail["exposure_at_or_below_zero"] = sum(e is not None and e <= 0 for e in exp)
-        flags += detail["exposure_missing"] + detail["exposure_at_or_below_zero"]
+        flags += detail["exposure_missing"] + detail["exposure_unparsed"] + detail["exposure_at_or_below_zero"]
     return ("signal" if flags else "no_signal"), detail
 
 
@@ -263,14 +278,14 @@ def run(rows, columns, cfg, block):
     ctx = {"rows": rows, "columns": columns, "index": index, "features": features, "block": block, **declared}
     results, missing = [], defaultdict(list)
     for row in REGISTRY:
+        if declared["task"] is not None and declared["task"] not in row["tasks"]:
+            results.append(result(row, "not_applicable", reason=f"task is {declared['task']}; applies to " + ", ".join(row["tasks"])))
+            continue
         absent = [r for r in row["roles"] if declared.get(r) is None]
         if absent:
             for role in absent:
                 missing[role].append(row["id"])
             results.append(result(row, "not_applicable", reason="needs " + " and ".join(absent)))
-            continue
-        if declared["task"] is not None and declared["task"] not in row["tasks"]:
-            results.append(result(row, "not_applicable", reason=f"task is {declared['task']}; applies to " + ", ".join(row["tasks"])))
             continue
         if not features and row["id"] in ("W1", "W5"):
             results.append(result(row, "insufficient_data", usable_features=0, minimum=1))
@@ -285,14 +300,20 @@ def run(rows, columns, cfg, block):
     if (block.get("task") == "forecast" or "time_series" in block["families"]) and "time" not in block:
         missing["time"] = []
     questions = [{"role": role, "unlocks": ids, "question": ASK[role].format(ids=", ".join(ids))} for role, ids in missing.items()]
-    ran_warnings = [r for r in results if r["id"].startswith("W") and r["status"] in ("signal", "no_signal")]
+    warning_signal = any(r["id"].startswith("W") and r["status"] == "signal" for r in results)
+    target_col = next((c for c in columns if c["name"] == cfg.get("target")), None)
+    inferred = [] if target_col is None or target_col.get("override") else [cfg["target"]]
+    if inferred and block.get("task") in ("regression", "count"):  # W5's rank rule reads feature types too
+        inferred += [c["name"] for c in columns if c["name"] in features and not c.get("override")]
     return {"context": {"task": block.get("task"), "families": block["families"], "target": cfg.get("target"),
                         **{k: block[k] for k in ("split", "entity", "time", "exposure", "horizon") if k in block}},
             "features": {"basis": basis, "columns": features},
             "registry": [{k: (list(v) if isinstance(v, tuple) else v) for k, v in row.items()} for row in REGISTRY],
             "statuses": list(STATUSES), "results": results, "questions": questions,
-            "leakage_note": LEAKAGE_SENTENCE if ran_warnings and not any(r["status"] == "signal" for r in ran_warnings) else None,
-            "uncertainty": UNCERTAINTY}
+            "leakage_note": None if warning_signal else LEAKAGE_SENTENCE,
+            "type_basis": {"target": None if target_col is None else ("inferred" if inferred else "human-declared"),
+                           "inferred_columns": inferred},
+            "uncertainty": UNCERTAINTY + (TYPE_NOTE if inferred else "")}
 
 
 def describe(r):
@@ -333,6 +354,7 @@ def signal_message(r):
                 + f"; the smallest has {r['smallest']}.")
     parts = [f"{r['negative']} negative" if r["negative"] else "", f"{r['not_whole']} not whole" if r["not_whole"] else "",
              f"{r.get('exposure_missing', 0)} missing exposure" if r.get("exposure_missing") else "",
+             f"{r.get('exposure_unparsed', 0)} exposure not a number" if r.get("exposure_unparsed") else "",
              f"{r.get('exposure_at_or_below_zero', 0)} exposure at or below 0" if r.get("exposure_at_or_below_zero") else ""]
     ratio = "undefined" if r["variance_to_mean"] is None else r["variance_to_mean"]
     return (f"T3: count target values a count cannot hold or unusable exposure: " + ", ".join(p for p in parts if p)
