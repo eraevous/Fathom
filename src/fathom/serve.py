@@ -141,7 +141,17 @@ class Session:
         script = '''<script>
 (function(){
 const token=TOKEN;
-const state=document.getElementById('session-status');
+const state=document.getElementById('session-status');let reportTab=null;
+// A tab that shows the sandboxed report has an opaque origin, so this page cannot write into it.
+// Replace it with a blank page first (about:blank takes this page's origin), then write the status,
+// so a stale report never stays on screen while a rerun runs or after one fails.
+async function show(tab,text){
+ if(!tab||tab.closed)return;
+ const write=()=>{tab.document.title='Fathom: '+text;tab.document.body.textContent=text;};
+ try{write();return;}catch(e){}
+ try{tab.location.replace('about:blank');}catch(e){return;}
+ for(let i=0;i<40;i++){await new Promise(r=>setTimeout(r,25));try{if(tab.document.body&&tab.document.URL==='about:blank'){write();return;}}catch(e){}}
+}
 document.getElementById('rerun').hidden=false;document.getElementById('stop').hidden=false;
 async function send(route,body){
  const response=await fetch('/'+route+'?token='+token,{method:'POST',headers:{'Content-Type':'application/yaml'},body:body,credentials:'omit',cache:'no-store'});
@@ -150,14 +160,23 @@ async function send(route,body){
 }
 document.getElementById('rerun').onclick=async function(){
  this.disabled=true;state.textContent='Profiling the fixed local CSV…';
- try{const answer=await send('rerun',document.getElementById('yaml').textContent);const frame=document.getElementById('local-report');await new Promise(resolve=>{frame.onload=resolve;frame.src=answer.report;});state.textContent='Report updated';}
- catch(e){state.textContent=e.message;}finally{this.disabled=false;}
+ // Spec 038: open the tab during the click (popup blockers allow it then), fill it once the profile is done.
+ // One tab is reused across reruns (this page keeps the handle). /report is served with a CSP sandbox,
+ // so the report runs in an opaque origin: it cannot read this page or navigate it.
+ let tab=reportTab&&!reportTab.closed?reportTab:null,blocked=false;
+ if(!tab){tab=window.open('','fathom-updated-report');if(tab)reportTab=tab;else blocked=true;}
+ await show(tab,'Profiling the fixed local CSV…');
+ try{const answer=await send('rerun',document.getElementById('yaml').textContent);const frame=document.getElementById('local-report');await new Promise(resolve=>{frame.onload=resolve;frame.src=answer.report;});
+  if(tab&&!tab.closed){tab.location.replace(answer.report);tab.focus();state.textContent='Report updated and opened in a new tab.';}
+  else if(blocked){state.textContent='Report updated below. Your browser blocked the new tab; allow pop-ups for this page to open it there.';}
+  else{state.textContent='Report updated below. The report tab was closed; Rerun opens a new one.';}}
+ catch(e){state.textContent=e.message;await show(tab,'Rerun failed: '+e.message+' The previous report is not current.');}finally{this.disabled=false;}
 };
 document.getElementById('stop').onclick=async function(){try{await send('stop','');state.textContent='Stopped. Saved reports remain available on disk.';document.getElementById('rerun').disabled=true;this.disabled=true;}catch(e){state.textContent=e.message;}};
 })();</script>'''.replace('TOKEN', json.dumps(self.token))
         # Controls exist only in this ephemeral response, never in saved HTML.
         frame_at = toolbar.index('<iframe')
-        controls = toolbar[:frame_at]+'<a href="#live-report">Read updated report</a></section>'
+        controls = toolbar[:frame_at]+'<p>After Rerun, the updated report opens in a new tab (and below).</p><a href="#live-report">Read updated report</a></section>'
         frame = '<section id="live-report"><h2>Updated standalone report</h2>'+toolbar[frame_at:]
         return page.replace('<p class="legend">', controls+'<p class="legend">', 1).replace('Nothing here changes the data or runs new analysis.', 'Controls edit YAML only; Rerun runs the fixed local profile.').replace('</body>', frame+script+'</body>')
 
@@ -189,14 +208,14 @@ class Handler(BaseHTTPRequestHandler):
     def session(self):
         return self.server.session
 
-    def respond(self, status, body, content_type='text/plain; charset=utf-8'):
+    def respond(self, status, body, content_type='text/plain; charset=utf-8', sandbox=False):
         if isinstance(body, str): body = body.encode('utf-8')
         self.send_response(status)
         for name, value in {
             'Content-Type': content_type, 'Content-Length': str(len(body)),
             'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff',
             'Referrer-Policy': 'no-referrer', 'Connection': 'close',
-            'Content-Security-Policy': "default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src data:; connect-src 'self'; frame-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'self'",
+            'Content-Security-Policy': "default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src data:; connect-src 'self'; frame-src 'self'; base-uri 'none'; form-action 'self'; frame-ancestors 'self'" + ('; sandbox allow-scripts' if sandbox else ''),
         }.items(): self.send_header(name, value)
         self.end_headers()
         if self.command != 'HEAD': self.wfile.write(body)
@@ -229,7 +248,7 @@ class Handler(BaseHTTPRequestHandler):
             self.respond(200, self.session.page(), 'text/html; charset=utf-8')
         elif self.route == '/report':
             self.session.check_paths()
-            self.respond(200, (self.session.out / 'report.html').read_bytes(), 'text/html; charset=utf-8')
+            self.respond(200, (self.session.out / 'report.html').read_bytes(), 'text/html; charset=utf-8', sandbox=True)
         else: self.respond(404, 'Unknown resource')
 
     def do_POST(self):
