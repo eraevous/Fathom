@@ -65,15 +65,26 @@ def test_intraday_counts_match_per_cell_reference():
 
 # Slice 2: sort once, parse once, select top-k without a full sort.
 
+def reference_percentile(values, p, rule):
+    """The pre-slice-2 percentile, copied verbatim so the test doesn't compare the new code with itself."""
+    if not values: return None
+    ordered=sorted(values);position=(len(ordered)-1)*p/100
+    lo=int(position);hi=min(lo+1,len(ordered)-1);w=position-lo
+    scale=max(abs(ordered[lo]),abs(ordered[hi]),1)
+    return rule((ordered[lo]/scale*(1-w)+ordered[hi]/scale*w)*scale)
+
+
 def test_sorted_percentile_matches_percentile():
-    from fathom.univariate import percentile, sorted_percentile, geometry
+    from fathom.univariate import percentile, sorted_percentile, geometry, stored
     rng = random.Random(330)
     for _ in range(2000):
         values = [rng.choice([rng.gauss(0, 1e6), float(rng.randint(-3, 3)), -0.0, 0.0]) for _ in range(rng.randint(0, 30))]
         ordered = sorted(values)
         for p in (0, 1, 5, 25, 50, 75, 95, 99, 100):
-            assert sorted_percentile(ordered, p) == percentile(values, p)
-            assert sorted_percentile(ordered, p, geometry) == percentile(values, p, geometry)
+            for rule in (stored, geometry):
+                expected = repr(reference_percentile(values, p, rule))  # repr tells -0.0 from 0.0
+                assert repr(sorted_percentile(ordered, p, rule)) == expected
+                assert repr(percentile(values, p, rule)) == expected
 
 
 def test_common_matches_full_sort_with_ties():
