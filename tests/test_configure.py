@@ -10,6 +10,8 @@ import sys
 
 import pytest
 
+from fathom.univariate import report_bin_rule
+
 from fathom.config import load_config, validate_config
 from fathom.configure import config_yaml, loader_knows, schema_from_page, yaml_digest, yaml_js_from_page
 
@@ -185,10 +187,14 @@ def test_bins_and_sections_validation_and_default_disclosure(make_profile):
     for bad in ({"bins": 0}, {"bins": 51}, {"bins": True}, {"sections": {"findings": False}}, {"sections": {"samples": "no"}}):
         with pytest.raises(ValueError):
             validate_config(bad)
-    doc = make_profile("x\n" + "".join(f"{i}\n" for i in range(50))).document
+    doc = make_profile("x\n" + "".join(f"{i + 0.5}\n" for i in range(50))).document
     hist = next(ch for ch in doc["columns"][0]["univariate"]["charts"] if ch["kind"] == "histogram")
     assert len(hist["data"]) == 8 and hist["bin_rule"].startswith("sqrt(n)")
-    assert doc["report"] == {"generator": "system default", "bins": None, "bin_rule": hist["bin_rule"], "omitted_sections": []}
+    assert doc["report"] == {"generator": "system default", "bins": None, "bin_rule": report_bin_rule(), "omitted_sections": []}
+    # spec028: whole numbers disclose their own default (at most 16 bars) on the chart.
+    doc = make_profile("x\n" + "".join(f"{i}\n" for i in range(50))).document
+    hist = next(ch for ch in doc["columns"][0]["univariate"]["charts"] if ch["kind"] == "histogram")
+    assert len(hist["data"]) == 13 and hist["bin_rule"].startswith("whole-number columns")
 
 
 def test_validate_echoes_bins_and_sections(tmp_path):

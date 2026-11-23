@@ -84,3 +84,10 @@ Series and group/window/grain results become keyed entities with flat metric map
 ## Left open
 
 Exact metric vocabulary, reference IDs, chart-storage boundary, unknown extensions, units/basis atoms, long-versus-wide evidence tables and the support window need Zach’s decision. CSV export in spec020 is a derived convenience and does not implement any of these changes. No final schema3 JSON validator, adapter, migration command or new measurement ships in this PR.
+
+## Note: spec027 `type_pair` blocks
+
+The additive `bivariate[i].type_pair` block (spec027) is validated as a closed shape: unknown keys
+inside it are rejected on load, and a nested addition needs the producer, the allowlist, the
+validator and the tests updated together. This is a validation rule for that block only; it does
+not decide schema 2 versus schema 3, which remains Zach's decision.

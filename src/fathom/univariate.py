@@ -3,6 +3,7 @@
 from collections import Counter
 from datetime import date
 import math
+import heapq
 from pathlib import Path
 import random
 import re
@@ -16,9 +17,20 @@ PERCENTILES=(1,5,25,33,50,66,75,95,99)
 BIN_RULE='sqrt(n) rounded up, capped at 10 (system default)'
 
 
-def bin_rule(bins=None):
-    """Disclosed histogram bin rule; `bins` is the human `bins:` declaration (spec012)."""
-    return f'{bins} equal-width bins (declared in configuration)' if bins else BIN_RULE
+WHOLE_BIN_RULE=('whole-number columns: one bar per value up to 16 values; beyond that, the best 16-value range '
+                'with a sparse tail (at most 5% of rows) in a callout, else up to 16 equal whole-value bars (system default)')
+
+
+def bin_rule(bins=None,whole=False):
+    """Disclosed histogram bin rule; `bins` is the human `bins:` declaration (spec012).
+    `whole` selects the whole-number rule (spec 028) for one chart."""
+    if bins:return f'at most {bins} equal whole-value bins (declared in configuration)' if whole else f'{bins} equal-width bins (declared in configuration)'
+    return WHOLE_BIN_RULE if whole else BIN_RULE
+
+
+def report_bin_rule(bins=None):
+    """Report-level disclosure covering both fractional and whole-number histograms."""
+    return f'{bins} equal-width bins; whole-number columns use at most {bins} whole-value bins (declared in configuration)' if bins else BIN_RULE+'; '+WHOLE_BIN_RULE
 
 
 def bin_count(n,lo,hi,bins=None):
@@ -48,8 +60,13 @@ safe=stored
 
 
 def percentile(values,p,rule=None):
-    if not values: return None
-    ordered=sorted(values);position=(len(ordered)-1)*p/100
+    return sorted_percentile(sorted(values),p,rule) if values else None
+
+
+def sorted_percentile(ordered,p,rule=None):
+    """percentile() on values already in ascending order (spec 033: sort once, read many)."""
+    if not ordered: return None
+    position=(len(ordered)-1)*p/100
     lo=int(position);hi=min(lo+1,len(ordered)-1);w=position-lo
     scale=max(abs(ordered[lo]),abs(ordered[hi]),1)
     return (rule or stored)((ordered[lo]/scale*(1-w)+ordered[hi]/scale*w)*scale)
@@ -60,7 +77,8 @@ def raw_percentile(values,p):
 
 
 def common(counter,least=False,limit=10):
-    return [{'value':v,'count':n} for v,n in sorted(counter.items(),key=lambda x:(x[1] if least else -x[1],x[0]))[:limit]]
+    # heapq.nsmallest(k, it, key) equals sorted(it, key=key)[:k], ties included (spec 033).
+    return [{'value':v,'count':n} for v,n in heapq.nsmallest(limit,counter.items(),key=lambda x:(x[1] if least else -x[1],x[0]))]
 
 
 def chart(kind,title,x,y,**data):
@@ -96,8 +114,9 @@ def identity_and_samples(data,cfg,columns):
 
 
 def numeric_profile(values,name,units,bins=None):
-    nums=[n for v in values if (n:=finite_number(v)) is not None];n=len(nums)
-    percentiles={str(p):percentile(nums,p) for p in PERCENTILES}
+    parsed=[(v,x) for v in values if (x:=finite_number(v)) is not None]
+    nums=[x for _,x in parsed];n=len(nums);ordered=sorted(nums)
+    percentiles={str(p):sorted_percentile(ordered,p) for p in PERCENTILES}
     skew=kurt=None
     if n>=2 and max(nums)!=min(nums):
         scale=max(abs(x) for x in nums) or 1;normalized=[x/scale for x in nums]
@@ -105,7 +124,7 @@ def numeric_profile(values,name,units,bins=None):
         if sd:
             skew=coefficient(statistics.mean(((x-mu)/sd)**3 for x in normalized))
             kurt=coefficient(statistics.mean(((x-mu)/sd)**4 for x in normalized)-3)
-    counts=Counter(v for v in values if finite_number(v) is not None)
+    counts=Counter(v for v,_ in parsed)
     stats={'finite':n,'zeros':{'count':sum(x==0 for x in nums),'share':sum(x==0 for x in nums)/n if n else None},
            'negatives':{'count':sum(x<0 for x in nums),'share':sum(x<0 for x in nums)/n if n else None},
            'integers':sum(x.is_integer() for x in nums),'non_integers':sum(not x.is_integer() for x in nums),
@@ -116,17 +135,11 @@ def numeric_profile(values,name,units,bins=None):
            'share_denominator':'finite values','formatting':'Local currency/thousands/parenthesis parsing; symbols do not establish units or comparability.'}
     charts=[]
     if nums:
-        lo,hi=min(nums),max(nums);declared=bins;bins=bin_count(n,lo,hi,declared)
-        # Normalized arithmetic avoids overflowing a finite but wide numeric range.
-        scale=max(abs(lo),abs(hi),1);a,b=lo/scale,hi/scale
-        edges=[(a+(b-a)*i/bins)*scale for i in range(bins+1)]
-        cs=[0]*bins
-        for x in nums:
-            i=min(bins-1,int(((x/scale-a)/(b-a))*bins)) if b!=a else 0;cs[i]+=1
-        data=[{'label':f'{edges[i]:.5g} to {edges[i+1]:.5g}','low':geometry(edges[i]),'high':geometry(edges[i+1]),'count':cs[i]} for i in range(bins)]
+        lo,hi=min(nums),max(nums);declared=bins
+        data,whole=histogram_bins(nums,declared)
         axis=f'{name} ({units or "recorded values; units unknown"})'
-        charts=[chart('histogram',f'Distribution of {name}',axis,'Rows (count)',data=data,bin_rule=bin_rule(declared)),
-                chart('box',f'Five-number view of {name}',axis,'Column',box={'min':geometry(lo),'q1':raw_percentile(nums,25),'median':raw_percentile(nums,50),'q3':raw_percentile(nums,75),'max':geometry(hi)})]
+        charts=[chart('histogram',f'Distribution of {name}',axis,'Rows (count)',data=data,bin_rule=bin_rule(declared,bool(whole)),**whole),
+                chart('box',f'Five-number view of {name}',axis,'Column',box={'min':geometry(lo),'q1':sorted_percentile(ordered,25,geometry),'median':sorted_percentile(ordered,50,geometry),'q3':sorted_percentile(ordered,75,geometry),'max':geometry(hi)})]
         cumulative=0;points=[]
         for x,count in sorted(Counter(nums).items()):
             cumulative+=count;points.append({'x':x,'cumulative':cumulative/n,'count':cumulative})
@@ -147,11 +160,99 @@ def numeric_profile(values,name,units,bins=None):
 
 
 def histogram(nums,title,x_label,bins=None,**metadata):
-    lo,hi=min(nums),max(nums);n=len(nums);metadata['bin_rule']=bin_rule(bins);bins=bin_count(n,lo,hi,bins)
+    # A log10 axis is never a whole-number scale, even when every value is a power of ten.
+    data,whole=histogram_bins(nums,bins,allow_whole=metadata.get('scale')!='log10')
+    metadata['bin_rule']=bin_rule(bins,bool(whole))
+    return chart('histogram',title,x_label,'Values (count)',data=data,**metadata,**whole)
+
+
+WHOLE_BARS=16      # default bar cap for whole-number charts: closest power of two under 32 (owner, 2026-11-11)
+TAIL_SHARE=0.05    # a sparse tail: at most this share of rows outside the best WHOLE_BARS-value window
+TAIL_ITEMS=6       # tail values listed one by one up to this many per side; beyond it, at most 4 ranges
+
+
+def whole_runs(values,width,first=None,last=None):
+    """Group whole ``values`` (a Counter) into inclusive runs of ``width`` from ``first`` to ``last``
+    (default: the smallest and largest value present). Empty runs are kept. The last run may be narrower;
+    renderers place every bar at its own ``low``/``high`` (#45 review), so bars always match labels."""
+    first=min(values) if first is None else first;last=max(values) if last is None else last
+    out=[]
+    for start in range(first,last+1,width):
+        stop=min(last,start+width-1)
+        count=sum(c for v,c in values.items() if start<=v<=stop)
+        out.append({'label':str(start) if start==stop else f'{start} to {stop}','low':start-.5,'high':stop+.5,'count':count})
+    return out
+
+
+def tail_items(values,side):
+    """Sparse-tail callout items for one side: one per distinct value, or at most 4 non-empty ranges."""
+    if not values:return []
+    if len(values)<=TAIL_ITEMS:
+        items=[{'label':str(v),'low':v-.5,'high':v+.5,'count':c} for v,c in sorted(values.items())]
+    else:
+        width=-(-(max(values)-min(values)+1)//4)
+        items=[d for d in whole_runs(values,width) if d['count']]
+    return [{**d,'side':side} for d in items]
+
+
+def histogram_bins(nums,bins=None,allow_whole=True):
+    """Histogram bins for one numeric series (spec 028).
+
+    Returns ``(data, extra)``. ``data`` holds one dict per main-chart bin: ``label``
+    (what the hover title, chart-values table and exports show), ``low``/``high`` (axis
+    geometry) and ``count``. ``extra`` is merged into the chart dict.
+
+    **Whole-number series** (every finite value has no fractional part: counts, mana
+    values, string lengths) get whole-number bins: each holds a contiguous run of
+    integers, labelled inclusively ("3" or "0 to 2"), so a label never names a value the
+    data cannot take ("6 to 7.2"). Geometry sits on half-integers (2.5 to 5.5 for
+    "3 to 5") so each bar is centred on its values. Membership is exact.
+
+    Bar count for whole numbers: a declared ``bins:`` is a maximum, as before. Without a
+    declaration the cap is WHOLE_BARS (16):
+
+    1. a range of at most 16 values gets one bar per value;
+    2. otherwise, if the best 16-value window holds all but a sparse tail (at most
+       TAIL_SHARE of rows), the main chart shows that window one bar per value and the
+       values outside it go to ``tail`` (drawn as a callout inset with its own scale);
+    3. otherwise up to 16 equal whole-value bars cover the whole range.
+
+    ``data`` plus ``tail`` always account for every value. Magnitudes at or above 2**52
+    (where half-integer edges stop being exactly representable) and any series with a fractional value keep the original
+    equal-width real-valued bins and ``.5g`` labels: genuine fractions are never
+    rounded away. Stored values and statistics are untouched either way.
+    """
+    lo,hi=min(nums),max(nums);n=len(nums)
+    # Whole-number geometry sits on half-integers (v - 0.5, v + 0.5), which floats represent exactly only below
+    # 2**52 (#45 review: at 2**52 the last bin collapsed). At and above 2**52 the real-valued bins are kept; above
+    # 2**53 every float is "whole" anyway, so integrality would say nothing about the data there.
+    if allow_whole and max(abs(lo),abs(hi))<2**52 and all(float(x).is_integer() for x in nums):
+        values=Counter(int(x) for x in nums);lo,hi=min(values),max(values);span=hi-lo+1
+        cap=bins or WHOLE_BARS
+        if span<=cap:
+            return whole_runs(values,1),{'whole_number_bins':{'width':1}}
+        if not bins:
+            # Best window of `cap` consecutive values, scanning windows that start at a data value.
+            keys=sorted(values);best=(-1,lo);j=0;inside=0
+            for i,start in enumerate(keys):
+                while j<len(keys) and keys[j]<=start+cap-1:inside+=values[keys[j]];j+=1
+                if inside>best[0]:best=(inside,start)
+                inside-=values[start]
+            outside=n-best[0]
+            if 0<outside<=TAIL_SHARE*n:
+                first=min(best[1],hi-cap+1);last=first+cap-1
+                core=Counter({v:c for v,c in values.items() if first<=v<=last})
+                data=whole_runs(core,1,first,last)
+                tail=tail_items(Counter({v:c for v,c in values.items() if v<first}),'low')+tail_items(Counter({v:c for v,c in values.items() if v>last}),'high')
+                return data,{'whole_number_bins':{'width':1,'core':[first,last],'tail_rows':outside},'tail':tail}
+        width=-(-span//cap)  # exact integer ceiling division
+        return whole_runs(values,width,lo),{'whole_number_bins':{'width':width}}
+    bins=bin_count(n,lo,hi,bins)
+    # Normalized arithmetic avoids overflowing a finite but wide numeric range.
     scale=max(abs(lo),abs(hi),1);a,b=lo/scale,hi/scale
     edges=[(a+(b-a)*i/bins)*scale for i in range(bins+1)];counts=[0]*bins
     for x in nums:counts[min(bins-1,int((x/scale-a)/(b-a)*bins)) if b!=a else 0]+=1
-    return chart('histogram',title,x_label,'Values (count)',data=[{'label':f'{edges[i]:.5g} to {edges[i+1]:.5g}','low':geometry(edges[i]),'high':geometry(edges[i+1]),'count':c} for i,c in enumerate(counts)],**metadata)
+    return [{'label':f'{edges[i]:.5g} to {edges[i+1]:.5g}','low':geometry(edges[i]),'high':geometry(edges[i+1]),'count':c} for i,c in enumerate(counts)],{}
 
 
 def missingness_patterns(columns,rows):
@@ -257,7 +358,11 @@ def calendar_profile(values,name,cfg,meta,parsed=None):
 
 def temporal_profile(values,name,cfg,meta):
     from .temporal_profiles import intraday_profile
-    parsed=[(v,p) for v in values if (p:=parse_temporal(v,meta.get('date_format'),meta.get('frame_rate'))) is not None]
+    parsed=[];unparsed=[]
+    for v in values:
+        p=parse_temporal(v,meta.get('date_format'),meta.get('frame_rate'))
+        if p is None:unparsed.append(v)
+        else:parsed.append((v,p))
     from .temporal_formats import BUILTINS,pattern_parts
     fmt=meta.get('date_format');custom=fmt is not None and fmt not in BUILTINS
     tokens={v for k,v in pattern_parts(fmt) if k=='token'} if custom else set()
@@ -270,13 +375,14 @@ def temporal_profile(values,name,cfg,meta):
     kinds={p['kind'] for _,p in parsed}
     stats.update(valid=len(parsed),invalid=len(values)-len(parsed),calendar_valid=len(dated),temporal_kind=next(iter(kinds)) if len(kinds)==1 else 'mixed' if kinds else 'time' if declared_clock and not declared_date else 'timestamp' if declared_clock else 'date',
                  parse_formats=dict(sorted(Counter(p['format'] for _,p in parsed).items())),parse_basis=('human format override' if meta.get('date_format') else 'inferred local formats')+'; written date and local time retained; no timezone conversion',
-                 parsed_examples=[{'raw':v,**p} for v,p in parsed[:10]],invalid_examples=[v for v in values if parse_temporal(v,meta.get('date_format'),meta.get('frame_rate')) is None][:10])
+                 parsed_examples=[{'raw':v,**p} for v,p in parsed[:10]],invalid_examples=unparsed[:10])
     intraday,extra=intraday_profile(parsed,name,chart);stats['intraday']=intraday;charts+=extra
     from .temporal_formats import temporal_fault
     from .temporal_profiles import subsecond_profile
     stats['subsecond']=subsecond_profile(parsed)
     faults={}
-    for value in values:
+    # A value that parsed has no fault: every fault code comes from a failed parse.
+    for value in unparsed:
         fault=temporal_fault(value,meta.get('date_format'),meta.get('frame_rate'))
         if fault:
             bucket=faults.setdefault(fault['code'],{'count':0,'examples':[],'message':fault['message']})

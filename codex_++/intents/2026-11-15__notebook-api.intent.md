@@ -1,0 +1,8 @@
+# Intent: notebook API (spec 029, HO-DG-20261106-NZ0P PR 1)
+
+- **`fathom.liftoff` is a module, so the function is `fathom.api.liftoff`.** The handoff names `fathom.liftoff(df)`. Python rebinds `fathom.liftoff` to the submodule whenever `fathom.liftoff` is imported (and `tests/test_liftoff.py` does `import fathom.liftoff as m`), so a package-level function would be silently replaced. Renaming the module would churn every import. `fathom.profile` has no clash and is exposed lazily. For Zach: keep this, or rename the internal module in a separate PR.
+- **One parse, not a second connector.** The DataFrame is serialised to CSV bytes and parsed by `load_csv_bytes`, extracted unchanged from `CSVConnector.load`. That is what makes "same code path, byte-identical artifacts" true by construction rather than by a parallel implementation (AGENTS Drift: downstream deriving what upstream owns).
+- **Typed values become text with `str()`.** Fathom profiles text as written. Re-formatting floats or dates would be a silent semantic conversion, which the connector refuses. Documented; the narrower reading.
+- **Always the collapsed inline view.** The handoff says large reports collapse. The full report's navigation uses scripts, and sandboxed outputs strip them, so the cell always shows Key findings plus the summary table and names the full file. Narrower reading.
+- **Python 3.11, not 3.10.** 3.11 cost one line (a nested same-quote f-string). 3.10 wasn't tried in this run; left for a follow-up rather than guessed.
+- **pandas `<3`.** pandas 3 changes string dtype and copy semantics; not tested here.

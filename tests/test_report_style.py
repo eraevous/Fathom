@@ -85,9 +85,6 @@ def test_finding_verdict_remains_outside_collapsed_provenance_and_order_unchange
         if re.match(r'(Automatic|Provisional) · rule ',t):
             assert any(tag=='details' and 'open' not in attrs for tag,attrs in stack)
 
-def ReadText(h):
-    r=Read();r.feed(h);return r.text()
-
 def test_markdown_and_panel_share_typographic_roles():
     from fathom.panel import build_panel
     from fathom.panel_view import html,markdown

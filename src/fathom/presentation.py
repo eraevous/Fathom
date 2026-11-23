@@ -141,7 +141,6 @@ def markdown_table(table):
 def original_tick(chart,value):
     """Transformed log coordinate -> original-unit formatted label; never invent units."""
     if chart.get('scale')=='log10':
-        import math
         try:value=10**value
         except OverflowError:value=float.fromhex('0x1.fffffffffffffp+1023')
     return tick_label(value)

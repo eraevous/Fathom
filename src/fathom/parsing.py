@@ -10,6 +10,24 @@ MONTH_LOOKUP = {name:i+1 for i,name in enumerate(MONTH_NAMES)} | {name[:3]:i+1 f
 DATE_FORMATS = {'ISO','ISO_DATETIME','MON_D_Y','MDY','DMY','YEAR','TIME','DATETIME'}
 
 
+def reaches(predicate, values, test):
+    """Whether ``test(hits, len(values))`` holds, where hits counts values passing ``predicate``.
+
+    Same answer as ``test(sum(bool(predicate(v)) for v in values), len(values))`` for any test that
+    only gets easier as hits grow; it stops as soon as the remaining values cannot change the answer.
+    """
+    total=len(values);hits=0;left=total
+    if test(0,total):return True
+    if not test(total,total):return False
+    for value in values:
+        left-=1
+        if predicate(value):
+            hits+=1
+            if test(hits,total):return True
+        elif not test(hits+left,total):return False
+    return test(hits,total)
+
+
 def finite_number(value):
     if not isinstance(value,str): return None
     text=value.strip()
