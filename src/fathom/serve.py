@@ -106,7 +106,8 @@ class Session:
         raw = config_from_yaml(contents)
         cfg = validate_config(raw)
         self.check_paths()
-        data = CSVConnector(self.data, SchemaContract(**cfg['schema'])).load()
+        from .reshape import apply as reshape_apply
+        data = reshape_apply(CSVConnector(self.data, SchemaContract(**cfg['schema'])).load(), cfg)
         validate_config(raw, list(data.frame.columns))
         before = len(_DENIED)
         self.out.mkdir(parents=True, exist_ok=True)

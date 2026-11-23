@@ -30,7 +30,7 @@ def mapping(value: object, name: str, allowed: set[str]) -> dict:
 def validate_config(raw: dict | None = None, columns: list[str] | None = None) -> dict:
     cfg = dict(mapping({} if raw is None else raw, "config", {
         "question", "target", "pair_budget", "columns", "row_unit", "generating_process",
-        "missingness_mechanism", "decisions", "context", "schema", "title", "description", "sample_rows", "sample_seed", "sample_text_limit", "group_by", "intervals", "time_series", "bins", "sections", "report", "relationships"}))
+        "missingness_mechanism", "decisions", "context", "schema", "title", "description", "sample_rows", "sample_seed", "sample_text_limit", "group_by", "intervals", "time_series", "bins", "sections", "report", "relationships", "reshape"}))
     from .summary_view import report_options
     report_options(cfg)
     cfg.pop("report",None)
@@ -44,6 +44,10 @@ def validate_config(raw: dict | None = None, columns: list[str] | None = None) -
     if type(budget) is not int or not 0 <= budget <= 20:
         raise ValueError("pair_budget must be an integer from 0 to 20")
     cfg["pair_budget"] = budget
+    from .reshape import validate as validate_reshape
+    reshape = validate_reshape(cfg.pop("reshape", None))
+    if reshape is not None:
+        cfg["reshape"] = reshape
     from .relationships import validate as validate_relationships
     cfg["relationships"] = validate_relationships(cfg.get("relationships"), columns)
     bins = cfg.get("bins")

@@ -199,6 +199,11 @@ def profile(data: GuideDataFrame, config: dict | None = None) -> ProfilingResult
         finding(f"relationships-{index}", "observation", relationship_message(item),
                 [{"path": f"relationships.sets.{index}", "value": {k: item[k] for k in ("name", "columns", "skipped", "pairs_planned", "pairs_computed")}}],
                 relationships["uncertainty"], "rule:relationships-v1", rule="declared_relationship_set", columns=item["columns"])
+    if "reshape" in data.source:
+        from .reshape import findings as reshape_findings
+        for suffix, kind, message in reshape_findings(data.source["reshape"]):
+            finding("reshape" + suffix, kind, message, [{"path": "source.reshape", "value": data.source["reshape"]}],
+                    "Counted while reshaping the table as read; the file on disk is unchanged.", "rule:reshape-v1", rule="declared_reshape")
     for f in findings:
         rule=f.get('rule')
         gate=quality.get('rules',{}).get(rule) or structure.get('rules',{}).get(rule)
@@ -209,7 +214,7 @@ def profile(data: GuideDataFrame, config: dict | None = None) -> ProfilingResult
         if rule=='temporal_structure':gate=temporal_structure['rules']['signal']+'; '+temporal_structure['rules']['reliability']
         if gate and f['kind']=='observation':f['gate']=gate
     return ProfilingResult({"schema_version": SCHEMA_VERSION, "kind": "profile", "source": data.source,
-        "schema": asdict(schema), "context": cfg["context"],
+        "schema": asdict(schema), "context": reshape_context(cfg["context"], data.source.get("reshape")),
         "purpose": {"question": cfg.get("question"), "target": cfg.get("target"), "group_by":cfg.get("group_by"),
                     "mode": "declared" if cfg.get("question") or cfg.get("target") else "documentation_qa",
                     "fallback": "Reference, understanding, QA and validation; no general fitness verdict."},
@@ -220,6 +225,15 @@ def profile(data: GuideDataFrame, config: dict | None = None) -> ProfilingResult
         "dataset_summary": dataset_summary, "quality": quality, "dataset":dataset, "samples":samples,
         "target_analysis":target_analysis,"row_structure":structure,"time_series":temporal_structure,"missingness_patterns":missingness_patterns(columns,rows),
         "report":report_settings(cfg), **({"relationships": relationships} if relationships else {})})
+
+
+def reshape_context(context: dict, summary: dict | None) -> dict:
+    """Spec 039: an applied reshape joins the declared transformations, so a comparison states it first (DG-RD)."""
+    if not summary:
+        return context
+    from .reshape import findings as reshape_findings
+    return {**context, "transformations": list(context["transformations"]) + [
+        {"type": "reshape " + summary["operation"] + " (applied by Fathom)", "description": reshape_findings(summary)[0][2]}]}
 
 
 def report_settings(cfg: dict) -> dict:
