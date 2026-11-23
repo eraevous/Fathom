@@ -177,3 +177,21 @@ def test_r3_r4_r5_no_banned_wording_and_byte_identical(tmp_path):
     assert one == two
     found = [f for f in json.loads(one)["findings"] if f.get("rule", "").startswith("diagnostic")]
     assert found and not any(BANNED.search(f["message"] + f["uncertainty"]) for f in found)
+
+
+def test_non_finite_result_fails_only_that_check(tmp_path):
+    data = write(tmp_path, ["x", "y"], [["1", "1e154"], ["2", "-1e154"], ["3", "1e-300"]])
+    doc = profile(data, {"target": "y", "diagnostics": {"task": "count"}}).document  # must not raise
+    r = results(doc)
+    assert r["T3"]["status"] == "failed" and r["T3"]["error"] == "ArithmeticError"
+    assert r["W1"]["status"] in ("signal", "no_signal")
+
+
+def test_no_signal_t3_still_reports_dispersion(tmp_path):
+    rows = [[str(i % 5), str(i % 4)] for i in range(60)]
+    doc = profile(write(tmp_path, ["x", "y"], rows), {"target": "y", "diagnostics": {"task": "count"}}).document
+    t3 = results(doc)["T3"]
+    assert t3["status"] == "no_signal"
+    status = next(f for f in doc["findings"] if f["id"] == "diagnostics-checks")
+    assert f"variance-to-mean {t3['variance_to_mean']}" in status["message"]
+    assert any(e["value"].get("mean") == t3["mean"] for e in status["evidence"])

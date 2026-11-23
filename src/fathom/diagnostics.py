@@ -6,6 +6,7 @@ T1 (class support) and T3 (count target range and dispersion). Every check reads
 alone; nothing here estimates a model (R3). Nothing runs unless `diagnostics` is declared.
 """
 
+import math
 import statistics
 from collections import Counter, defaultdict
 
@@ -120,6 +121,17 @@ def feature_set(columns, cfg, block):
     roles = {cfg.get("target"), block.get("entity"), block.get("time"), block.get("exposure"),
              block.get("split", {}).get("column")}
     return [c["name"] for c in columns if c["name"] not in roles and not c.get("exclude_from_target")], "default"
+
+
+def finite(value):
+    """True when every number in a result is finite (the artifact refuses NaN and infinity)."""
+    if isinstance(value, float):
+        return math.isfinite(value)
+    if isinstance(value, dict):
+        return all(finite(v) for v in value.values())
+    if isinstance(value, (list, tuple)):
+        return all(finite(v) for v in value)
+    return True
 
 
 def result(row, status, **detail):
@@ -265,6 +277,8 @@ def run(rows, columns, cfg, block):
             continue
         try:
             status, detail = CHECKS[row["id"]](ctx)
+            if not finite(detail):
+                raise ArithmeticError("non-finite result")
         except Exception as error:  # R2: a failed computation is its own status; the run continues
             status, detail = "failed", {"error": type(error).__name__}
         results.append(result(row, status, **detail))
@@ -285,7 +299,7 @@ def describe(r):
     """One line per result; the five statuses never share wording."""
     status = r["status"]
     if status == "no_signal":
-        return f"{r['id']} {r['title']}: checked, not found ({r['checked']})."
+        return f"{r['id']} {r['title']}: checked, not found ({r['checked']}{figures(r)})."
     if status == "not_applicable":
         return f"{r['id']} {r['title']}: not applicable, {r['reason']}."
     if status == "insufficient_data":
@@ -294,6 +308,17 @@ def describe(r):
     if status == "failed":
         return f"{r['id']} {r['title']}: computation failed ({r['error']}); the other checks still ran."
     return signal_message(r)
+
+
+def figures(r):
+    """The descriptive figures a check reports whatever its status (T1 class support, T3 dispersion)."""
+    if r["id"] == "T1":
+        return f"; smallest class {r['smallest']} rows"
+    if r["id"] == "T3":
+        ratio = "undefined" if r["variance_to_mean"] is None else r["variance_to_mean"]
+        return (f"; mean {r['mean']}, variance {r['variance']}, variance-to-mean {ratio}, "
+                f"zero share {r['zero_share']}")
+    return ""
 
 
 def signal_message(r):
@@ -340,5 +365,6 @@ def emit(diagnostics, finding):
         lines.append(diagnostics["leakage_note"])
     if lines:
         finding("diagnostics-checks", "observation", "Diagnostics: " + " ".join(lines),
-                [{"path": "diagnostics.results", "value": [{"id": r["id"], "status": r["status"]} for r in diagnostics["results"]]}],
+                [{"path": f"diagnostics.results.{i}", "value": {k: v for k, v in r.items() if k != "title"}}
+                 for i, r in enumerate(diagnostics["results"]) if r["status"] != "signal"],
                 diagnostics["uncertainty"], "rule:diagnostics-v1", rule="diagnostic_status")
