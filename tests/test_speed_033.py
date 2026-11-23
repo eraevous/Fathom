@@ -61,3 +61,61 @@ def test_intraday_counts_match_per_cell_reference():
         expected = {day: {f'{h:02d}': sum('date' in p and date.fromisoformat(p['date']).weekday() == i and p['hour'] == h for p in ps) for h in range(24)}
                     for i, day in enumerate(('Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'))}
         assert basis['weekday_hour_counts'] == (expected if any('date' in p for p in ps) else {})
+
+
+# Slice 2: sort once, parse once, select top-k without a full sort.
+
+def reference_percentile(values, p, rule):
+    """The pre-slice-2 percentile, copied verbatim so the test doesn't compare the new code with itself."""
+    if not values: return None
+    ordered=sorted(values);position=(len(ordered)-1)*p/100
+    lo=int(position);hi=min(lo+1,len(ordered)-1);w=position-lo
+    scale=max(abs(ordered[lo]),abs(ordered[hi]),1)
+    return rule((ordered[lo]/scale*(1-w)+ordered[hi]/scale*w)*scale)
+
+
+def test_sorted_percentile_matches_percentile():
+    from fathom.univariate import percentile, sorted_percentile, geometry, stored
+    rng = random.Random(330)
+    for _ in range(2000):
+        values = [rng.choice([rng.gauss(0, 1e6), float(rng.randint(-3, 3)), -0.0, 0.0]) for _ in range(rng.randint(0, 30))]
+        ordered = sorted(values)
+        for p in (0, 1, 5, 25, 50, 75, 95, 99, 100):
+            for rule in (stored, geometry):
+                expected = repr(reference_percentile(values, p, rule))  # repr tells -0.0 from 0.0
+                assert repr(sorted_percentile(ordered, p, rule)) == expected
+                assert repr(percentile(values, p, rule)) == expected
+
+
+def test_common_matches_full_sort_with_ties():
+    from collections import Counter
+    from fathom.univariate import common
+    rng = random.Random(331)
+    for _ in range(2000):
+        counter = Counter(rng.choice('abcdefghijklmnop') for _ in range(rng.randint(0, 60)))
+        for least in (False, True):
+            for limit in (1, 3, 10, 20):
+                full = sorted(counter.items(), key=lambda x: (x[1] if least else -x[1], x[0]))[:limit]
+                assert common(counter, least, limit) == [{'value': v, 'count': n} for v, n in full]
+
+
+def test_numeric_profile_parses_each_cell_once(monkeypatch):
+    import fathom.univariate as uni
+    from fathom.parsing import finite_number
+    calls = []
+    monkeypatch.setattr(uni, 'finite_number', lambda v: calls.append(v) or finite_number(v))
+    values = ['1', '2', '$3', '(4)', 'x', '1,000', '2']
+    uni.numeric_profile(values, 'amount', None)
+    assert len(calls) == len(values)
+
+
+def test_quality_parses_each_numeric_cell_once(monkeypatch):
+    import fathom.quality as quality
+    from fathom.parsing import finite_number
+    calls = []
+    monkeypatch.setattr(quality, 'finite_number', lambda v: calls.append(v) or finite_number(v))
+    rows = [[str(i % 7), 'g%d' % (i % 3), None if i % 5 == 0 else str(i)] for i in range(40)]
+    columns = [{'name': n, 'effective_type': t, 'missing': sum(r[i] is None for r in rows), 'inference': {'type': t}}
+               for i, (n, t) in enumerate((('a', 'numeric'), ('g', 'categorical'), ('b', 'numeric')))]
+    quality.quality_profile(rows, columns, {'columns': {}}, lambda *a, **k: None)
+    assert len(calls) == 2 * len(rows)

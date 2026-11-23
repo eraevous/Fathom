@@ -120,6 +120,8 @@ def quality_profile(rows, columns, cfg, emit):
     """Return additive summary, screening evidence and quality pair candidates."""
     n, p = len(rows), len(columns)
     vectors = {c["name"]: [r[i] for r in rows] for i, c in enumerate(columns)}
+    # Spec 033 slice 2: each numeric column is parsed once here and read by every check below.
+    parsed = {c["name"]: [finite(v) for v in vectors[c["name"]]] for c in columns if c["effective_type"] == "numeric"}
     by_name = {c["name"]: c for c in columns}
     constants, dominant, blocked, groups, missing_candidates = [], [], {}, {}, []
     skew_gates = {}
@@ -173,7 +175,7 @@ def quality_profile(rows, columns, cfg, emit):
                            {"count": len(matched), "share": len(matched)/len(values), "values": sorted(set(matched))[:10]},
                            f"Ask whether the {rule}-like labels in {name} should be retained, recoded or excluded.",
                            f"The flagged labels in {name} may mark test records or unknown values rather than genuine domain categories.")
-        nums = [x for v in values if (x := finite(v)) is not None] if typ == "numeric" else []
+        nums = [x for x in parsed[name] if x is not None] if typ == "numeric" else []
         if len(nums) >= 5:
             for candidate in (-1, 999, 9999, 99999):
                 count = nums.count(candidate); others = [x for x in nums if x != candidate]
@@ -225,7 +227,7 @@ def quality_profile(rows, columns, cfg, emit):
         mask = tuple(i for i,v in enumerate(raw) if v is None)
         if mask:
             masks[mask].append(name)
-        nums = [finite(v) for v in raw] if col["effective_type"] == "numeric" else []
+        nums = parsed[name] if col["effective_type"] == "numeric" else []
         valid = [v for v in nums if v is not None]
         if len(valid) >= 5 and len(set(valid)) >= 3:
             scale = max(abs(x) for x in valid) or 1
@@ -297,10 +299,10 @@ def quality_profile(rows, columns, cfg, emit):
                 continue
             gcol, graw = by_name[group_name], vectors[group_name]
             if gcol["effective_type"] == "numeric":
-                nums = [x for v in graw if (x:=finite(v)) is not None]
+                gnums = parsed[group_name]; nums = [x for x in gnums if x is not None]
                 if not nums: continue
                 median = statistics.median(nums)
-                labels = [None if (x:=finite(v)) is None else (f"<= median ({median:.6g})" if x<=median else f"> median ({median:.6g})") for v in graw]
+                labels = [None if x is None else (f"<= median ({median:.6g})" if x<=median else f"> median ({median:.6g})") for x in gnums]
                 basis = {"grouping": "numeric median split (descriptive)", "median": median}
             elif gcol["effective_type"] in {"categorical", "boolean", "string"}:
                 labels = [v.lower() if v is not None and gcol["effective_type"]=="boolean" else v for v in graw]
