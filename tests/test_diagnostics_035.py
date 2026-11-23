@@ -263,3 +263,11 @@ def test_inferred_feature_types_are_labelled_when_the_target_is_declared(tmp_pat
     assert results(doc)["W5"]["status"] == "signal"
     assert doc["diagnostics"]["type_basis"] == {"target": "human-declared", "inferred_columns": ["x"]}
     assert dx.TYPE_NOTE in doc["diagnostics"]["uncertainty"]
+
+
+def test_w5_boolean_target_spellings_are_one_class(tmp_path):
+    rows = [["A", "true"]] * 15 + [["A", "TRUE"]] * 15 + [["B", "false"]] * 15 + [["B", "FALSE"]] * 15
+    doc = profile(write(tmp_path, ["f", "y"], rows), {"target": "y", "columns": {"y": {"type": "boolean"}},
+                                                     "diagnostics": {"task": "classification"}}).document
+    hits = {h["feature"]: h for h in results(doc)["W5"]["features"]}
+    assert hits["f"]["rule"] == "levels map one-to-one onto classes"

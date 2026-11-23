@@ -191,7 +191,8 @@ def w5(rows, index, columns, features, target, task):
             checked += 1
             continue
         if task == "classification":
-            found = mapping_rules(complete)
+            # Classes as T1 counts them: Boolean spellings are case-folded, other labels kept as stored.
+            found = mapping_rules([(x, y.casefold()) for x, y in complete] if ttype == "boolean" else complete)
             if found:
                 hits.append({"feature": name, **found, "rows": len(complete)})
             checked += 1
