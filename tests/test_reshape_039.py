@@ -78,6 +78,17 @@ def test_aggregates_are_exact_and_leave_single_cells_as_written(tmp_path):
     big = "k,m,v\na,x,1e34\na,x,1\na,x,-1e34\nb,x,12345678901234567890123456789012345\nb,x,0\n"
     exact, _ = run(tmp_path, big, {"reshape": {"pivot": {**pivot, "aggregate": "sum"}}})
     assert [r[1] for r in exact.raw_rows] == ["1", "12345678901234567890123456789012345"]  # Codex on #78
+    for value in ("1e-1001", "1e1001"):
+        with pytest.raises(ValueError, match="exponents from -1000 to 1000"):
+            run(tmp_path, f"k,m,v\na,x,{value}\na,x,{value}\n", {"reshape": {"pivot": {**pivot, "aggregate": "sum"}}})
+    edge, _ = run(tmp_path, "k,m,v\na,x,1e-1000\na,x,1e-1000\nb,x,1e1000\nb,x,1e1000\n", {"reshape": {"pivot": {**pivot, "aggregate": "sum"}}})
+    assert [r[1] for r in edge.raw_rows] == ["0." + "0" * 999 + "2", "2" + "0" * 1000]
+    # The caller's decimal context does not leak in (Copilot on #78).
+    import decimal
+    with decimal.localcontext() as caller:
+        caller.rounding, caller.traps[decimal.Inexact] = decimal.ROUND_UP, True
+        third, _ = run(tmp_path, "k,m,v\na,x,1\na,x,0\na,x,0\n", {"reshape": {"pivot": {**pivot, "aggregate": "mean"}}})
+    assert third.raw_rows[0][1] == "0." + "3" * 34
     first, _ = run(tmp_path, long, {"reshape": {"pivot": {**pivot, "aggregate": "first"}}})
     assert first.raw_rows[3][1] == "5"  # blank rows are skipped by first/last
     counts, result = run(tmp_path, long, {"reshape": {"pivot": {**pivot, "aggregate": "count"}}})
@@ -90,6 +101,8 @@ def test_pivot_refusals(tmp_path):
         run(tmp_path, LONG + "A,2024-03,,5,x\n", PIVOT)
     with pytest.raises(ValueError, match="repeat an index column name"):
         run(tmp_path, LONG + "A,2024-03,site,5,x\n", PIVOT)
+    with pytest.raises(ValueError, match="repeat an index column name"):
+        run(tmp_path, LONG + "A,2024-03,site ,5,x\n", PIVOT)
     with pytest.raises(ValueError, match="not in the table: nope"):
         run(tmp_path, LONG, {"reshape": {"pivot": {"index": ["nope"], "columns": "metric", "values": "value"}}})
     with pytest.raises(ValueError, match="blank index value"):
@@ -108,7 +121,9 @@ def test_config_shape_is_checked_before_data(tmp_path):
                        ({"pivot": {"index": ["a"], "columns": "a", "values": "c"}}, "different columns"),
                        ({"pivot": {"index": ["a"], "columns": "b", "values": "c", "aggregate": "median"}}, "aggregate must be one of"),
                        ({"melt": {"value_columns": ["a"]}}, "needs id"), ({"melt": {"id": ["a"], "value_name": "a"}}, "must differ"),
-                       ({"melt": {"id": []}}, "1 to 20")]:
+                       ({"melt": {"id": []}}, "1 to 20"), ({"melt": {"id": [[]]}}, "distinct column names"),
+                       ({"pivot": {"index": [{}], "columns": "b", "values": "c"}}, "distinct column names"),
+                       ({"melt": {"id": ["a"], "value_columns": [["b"]]}}, "distinct column names")]:
         with pytest.raises(ValueError, match=match):
             validate_config({"reshape": bad})
 

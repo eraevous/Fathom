@@ -8,7 +8,7 @@ from the file on disk. The source hash stays the hash of the file as read.
 """
 
 import re
-from decimal import Decimal, localcontext
+from decimal import ROUND_HALF_EVEN, Context, Decimal, Inexact, InvalidOperation, Overflow, Underflow
 
 import pandas as pd
 
@@ -17,13 +17,15 @@ from .models import GuideDataFrame
 AGGREGATES = ("none", "first", "last", "count", "sum", "mean")
 MAX_INDEX, MAX_NEW_COLUMNS, MAX_ROWS_OUT, MAX_CELLS_OUT = 20, 500, 2_000_000, 20_000_000
 # sum/mean take plain decimal numbers only: no currency, grouping commas, parentheses or underscores.
+MAX_EXPONENT = 1000
 PLAIN = re.compile(r'[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?')
 PIVOT_KEYS, MELT_KEYS = {"index", "columns", "values", "aggregate"}, {"id", "value_columns", "variable_name", "value_name"}
 
 
 def _names(value, name, low=1, high=MAX_INDEX):
-    if (not isinstance(value, list) or not low <= len(value) <= high or len(set(value)) != len(value)
-            or any(not isinstance(c, str) or not c.strip() for c in value)):
+    # Element types first: set() on unhashable items would raise TypeError (Copilot on #78).
+    if (not isinstance(value, list) or not low <= len(value) <= high
+            or any(not isinstance(c, str) or not c.strip() for c in value) or len(set(value)) != len(value)):
         raise ValueError(f"{name} must list {low} to {high} distinct column names")
     return list(value)
 
@@ -97,19 +99,23 @@ def _aggregate(how, raws):
     if any(not PLAIN.fullmatch(r.strip()) for r in present):
         return None
     numbers = [Decimal(r.strip()) for r in present]
-    with localcontext() as ctx:
-        # Enough digits for an exact sum: from the largest exponent reached down to the smallest
-        # one present (Codex on #78). The sum is exact; a mean is then rounded to 34 digits.
-        top = max((n.adjusted() for n in numbers if n), default=0) + len(str(len(numbers))) + 1
-        ctx.prec = max(34, top - min(n.as_tuple().exponent for n in numbers) + 1)
-        if ctx.prec > 10_000:
-            return None
-        total = sum(numbers, Decimal(0))
+    if any(not -MAX_EXPONENT <= e <= MAX_EXPONENT for n in numbers for e in (n.adjusted(), n.as_tuple().exponent)):
+        raise ValueError(f"reshape.pivot: aggregate {how} supports numbers with exponents from -{MAX_EXPONENT} to {MAX_EXPONENT}")
+    # Explicit contexts, never the caller's (a notebook may have changed rounding or traps).
+    # Enough digits for an exact sum: from the largest exponent reached down to the smallest one
+    # present (Codex on #78); Inexact, Overflow and Underflow are trapped, so the sum is exact or refused.
+    top = max((n.adjusted() for n in numbers if n), default=0) + len(str(len(numbers))) + 1
+    prec = max(34, top - min(n.as_tuple().exponent for n in numbers) + 1)
+    traps = [Inexact, InvalidOperation, Overflow, Underflow]
+    bounds = dict(Emax=2 * MAX_EXPONENT + 100, Emin=-2 * MAX_EXPONENT - 100, rounding=ROUND_HALF_EVEN)
+    ctx = Context(prec=prec, traps=traps, **bounds)
+    total = Decimal(0)
+    for n in numbers:
+        total = ctx.add(total, n)
     if how == "sum":
         return _decimal_text(total)
-    with localcontext() as ctx:
-        ctx.prec = 34
-        return _decimal_text(total / len(numbers))
+    # A mean is the exact sum divided, rounded half-even to 34 significant digits.
+    return _decimal_text(Context(prec=34, traps=[InvalidOperation, Overflow, Underflow], **bounds).divide(total, Decimal(len(numbers))))
 
 
 def _pivot(columns, raw_rows, spec):
@@ -136,7 +142,8 @@ def _pivot(columns, raw_rows, spec):
             if norm in seen and seen[norm] != v:
                 raise ValueError(f"reshape.pivot: {label} differ only by surrounding spaces ({seen[norm]!r} and {v!r}); clean them first")
             seen.setdefault(norm, v)
-    clash = [n for n in new if n in index]
+    stripped_index = {c.strip() for c in index}
+    clash = [n for n in new if n.strip() in stripped_index]  # 'site ' clashes with index 'site' (Copilot on #78)
     if clash:
         raise ValueError(f"reshape.pivot: values of '{col}' repeat an index column name: " + ", ".join(clash))
     if len(new) > MAX_NEW_COLUMNS:
