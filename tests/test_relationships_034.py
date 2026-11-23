@@ -99,3 +99,21 @@ def test_r5_no_banned_wording_in_module_or_findings(tmp_path):
     found = [f for f in doc["findings"] if f.get("rule") == "declared_relationship_set"]
     assert found and all(f["kind"] == "observation" for f in found)
     assert not any(BANNED.search(f["message"] + f["uncertainty"]) for f in found)
+
+
+def test_type_basis_is_labelled_per_pair_and_in_the_finding(tmp_path):
+    rows = [[str(i % 3 + 1), f"{i * 1.5:.1f}", f"{i % 4}.5"] for i in range(30)]
+    data = write(tmp_path, ["coded", "x", "y"], rows)
+    cfg = {"columns": {"coded": {"type": "categorical"}, "x": {"type": "numeric"}},
+           "relationships": {"sets": [{"name": "s", "columns": ["coded", "x", "y"]}]}}
+    doc = profile(data, cfg).document
+    pairs = {(p["left"], p["right"]): p["semantics"] for p in doc["relationships"]["sets"][0]["pairs"]}
+    assert pairs == {("coded", "x"): "human-declared", ("coded", "y"): "inferred", ("x", "y"): "inferred"}
+    f = next(f for f in doc["findings"] if f.get("rule") == "declared_relationship_set")
+    assert "2 of 3 pairs use at least one inferred column type" in f["message"]
+
+
+def test_eta_is_described_as_the_square_root_of_the_variance_share(tmp_path):
+    data, header = wide(tmp_path, 3, 20)
+    text = profile(data, {"relationships": {"sets": [{"name": "s", "columns": header}]}}).document["relationships"]["measures"]["category×numeric"]
+    assert "square root" in text and "eta squared" in text

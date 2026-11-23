@@ -16,7 +16,7 @@ MAX_SETS, MAX_COLUMNS, MAX_LEVELS, MIN_CASES = 3, 12, 20, 3
 SAMPLING = "all rows; complete cases per pair (no sampling)"
 MEASURES = {
     "numeric×numeric": "Pearson r and Spearman rho (monotone; average ranks for ties)",
-    "category×numeric": "correlation ratio eta (between-group share of numeric variance)",
+    "category×numeric": "correlation ratio eta: the square root of the between-group share of numeric variance (eta squared is that share)",
     "category×category": "bias-corrected Cramer's V (Bergsma 2013)",
 }
 UNCERTAINTY = ("Descriptive complete-case association inside a declared column set, not causation. "
@@ -111,7 +111,8 @@ def matrix(rows, columns, block):
             kind = ("numeric×numeric" if a in NUMERIC and b in NUMERIC else
                     "category×category" if a in CATEGORY and b in CATEGORY else "category×numeric")
             result, reason = measure(a, b, cases)
-            pairs.append({"left": left, "right": right, "type_pair": kind, "n": len(cases),
+            basis = "human-declared" if columns[index[left]].get("override") and columns[index[right]].get("override") else "inferred"
+            pairs.append({"left": left, "right": right, "type_pair": kind, "semantics": basis, "n": len(cases),
                           "excluded_rows": len(rows) - len(cases), "measures": result,
                           **({"undefined": reason} if reason else {})})
         out.append({"name": item["name"], "columns": cols, "skipped": skipped,
@@ -129,6 +130,10 @@ def message(item):
     text = (f"Declared relationship set {item['name']}: {item['pairs_computed']} pairs measured among "
             f"{len(item['columns']) - len(item['skipped'])} of {len(item['columns'])} declared columns; "
             f"{len(defined)} with a defined value.")
+    inferred = sum(p["semantics"] == "inferred" for p in item["pairs"])
+    if inferred:
+        text += (f" {inferred} of {len(item['pairs'])} pairs use at least one inferred column type, so the measure chosen "
+                 "for them rests on that inference; declaring a set does not confirm column types.")
     if item["skipped"]:
         text += " Skipped: " + "; ".join(f"{s['column']} ({s['reason']})" for s in item["skipped"]) + "."
     return text + " Descriptive, not causal."
