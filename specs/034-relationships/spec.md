@@ -43,7 +43,7 @@ Every result is an `observation` with its measure, usable n, exclusions and the 
 
 ## Slices
 
-1. A1 and its wording (config, measure, JSON, HTML/MD table, CSV). About 300 lines.
+1. A1 and its wording, in two PRs to stay near 300 lines: **1a** config, measures, JSON and the set finding; **1b** the HTML/Markdown table and CSV export.
 2. A2 and A3.
 3. A4 and A5, with the stdlib fallback and the identical-numbers check.
 
