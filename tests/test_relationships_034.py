@@ -117,3 +117,15 @@ def test_eta_is_described_as_the_square_root_of_the_variance_share(tmp_path):
     data, header = wide(tmp_path, 3, 20)
     text = profile(data, {"relationships": {"sets": [{"name": "s", "columns": header}]}}).document["relationships"]["measures"]["category×numeric"]
     assert "square root" in text and "eta squared" in text
+
+
+def test_populated_column_with_no_parseable_values_is_not_called_missing(tmp_path):
+    rows = [[w, f"{i}.5", f"{i * 2}"] for i, w in enumerate(["bad", "worse", "invalid"] * 5)]
+    data = write(tmp_path, ["junk", "x", "y"], rows)
+    cfg = {"columns": {"junk": {"type": "numeric"}},
+           "relationships": {"sets": [{"name": "s", "columns": ["junk", "x", "y"]}]}}
+    doc = profile(data, cfg).document
+    skipped = {s["column"]: s["reason"] for s in doc["relationships"]["sets"][0]["skipped"]}
+    assert skipped["junk"] == "no values usable as numeric (cells present but none parse)"
+    f = next(f for f in doc["findings"] if f.get("rule") == "declared_relationship_set")
+    assert "all values missing" not in f["message"]

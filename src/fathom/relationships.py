@@ -50,11 +50,13 @@ def validate(raw, columns=None):
     return {"sets": cleaned}
 
 
-def skip_reason(column, values):
+def skip_reason(column, values, raw):
     kind = column["effective_type"]
     present = [v for v in values if v is not None]
-    if not present:
+    if not any(v is not None for v in raw):
         return "all values missing"
+    if not present:
+        return f"no values usable as {kind} (cells present but none parse)"
     if kind not in NUMERIC | CATEGORY:
         return f"unsupported type: {kind}"
     if len(set(present)) < 2:
@@ -102,7 +104,7 @@ def matrix(rows, columns, block):
         cols = item["columns"]
         values = {name: [cell(r[index[name]], columns[index[name]]["effective_type"]) for r in rows] for name in cols}
         skipped = [{"column": name, "reason": reason} for name in cols
-                   if (reason := skip_reason(columns[index[name]], values[name]))]
+                   if (reason := skip_reason(columns[index[name]], values[name], [r[index[name]] for r in rows]))]
         usable = [name for name in cols if name not in {s["column"] for s in skipped}]
         pairs = []
         for left, right in combinations(usable, 2):
