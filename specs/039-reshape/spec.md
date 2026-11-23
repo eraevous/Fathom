@@ -41,7 +41,7 @@ The block's shape is checked with the rest of the config, before any data is rea
 - With a declared aggregate:
   - `first`/`last` take the first or last non-blank value.
   - `count` counts rows.
-  - `sum`/`mean` use exact decimal arithmetic on plain numbers. Currency, grouping commas, parentheses or underscores stop the run, because combining "$5" with "€5" would hide a unit.
+  - `sum`/`mean` use exact decimal arithmetic on plain numbers: the sum keeps every digit, and a mean is that exact sum divided and rounded to 34 significant digits. Currency, grouping commas, parentheses or underscores stop the run, because combining "$5" with "€5" would hide a unit.
   - A cell that came from a single row keeps its value as written. Under `count` it becomes 1.
 - Refused, with a named count:
   - blank `columns` values (they'd become column names);

@@ -75,6 +75,9 @@ def test_aggregates_are_exact_and_leave_single_cells_as_written(tmp_path):
     assert [r[1] for r in sums.raw_rows] == ["9007199254740993", "0.3", "007", "5"]
     means, _ = run(tmp_path, long, {"reshape": {"pivot": {**pivot, "aggregate": "mean"}}})
     assert [r[1] for r in means.raw_rows] == ["4503599627370496.5", "0.15", "007", "5"]
+    big = "k,m,v\na,x,1e34\na,x,1\na,x,-1e34\nb,x,12345678901234567890123456789012345\nb,x,0\n"
+    exact, _ = run(tmp_path, big, {"reshape": {"pivot": {**pivot, "aggregate": "sum"}}})
+    assert [r[1] for r in exact.raw_rows] == ["1", "12345678901234567890123456789012345"]  # Codex on #78
     first, _ = run(tmp_path, long, {"reshape": {"pivot": {**pivot, "aggregate": "first"}}})
     assert first.raw_rows[3][1] == "5"  # blank rows are skipped by first/last
     counts, result = run(tmp_path, long, {"reshape": {"pivot": {**pivot, "aggregate": "count"}}})

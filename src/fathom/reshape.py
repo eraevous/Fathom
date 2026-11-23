@@ -96,10 +96,20 @@ def _aggregate(how, raws):
         return ""
     if any(not PLAIN.fullmatch(r.strip()) for r in present):
         return None
+    numbers = [Decimal(r.strip()) for r in present]
+    with localcontext() as ctx:
+        # Enough digits for an exact sum: from the largest exponent reached down to the smallest
+        # one present (Codex on #78). The sum is exact; a mean is then rounded to 34 digits.
+        top = max((n.adjusted() for n in numbers if n), default=0) + len(str(len(numbers))) + 1
+        ctx.prec = max(34, top - min(n.as_tuple().exponent for n in numbers) + 1)
+        if ctx.prec > 10_000:
+            return None
+        total = sum(numbers, Decimal(0))
+    if how == "sum":
+        return _decimal_text(total)
     with localcontext() as ctx:
         ctx.prec = 34
-        total = sum((Decimal(r.strip()) for r in present), Decimal(0))
-        return _decimal_text(total if how == "sum" else total / len(present))
+        return _decimal_text(total / len(numbers))
 
 
 def _pivot(columns, raw_rows, spec):
