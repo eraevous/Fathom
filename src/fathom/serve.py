@@ -141,6 +141,16 @@ class Session:
 (function(){
 const token=TOKEN;
 const state=document.getElementById('session-status');let reportTab=null;
+// A tab that shows the sandboxed report has an opaque origin, so this page cannot write into it.
+// Replace it with a blank page first (about:blank takes this page's origin), then write the status,
+// so a stale report never stays on screen while a rerun runs or after one fails.
+async function show(tab,text){
+ if(!tab||tab.closed)return;
+ const write=()=>{tab.document.title='Fathom: '+text;tab.document.body.textContent=text;};
+ try{write();return;}catch(e){}
+ try{tab.location.replace('about:blank');}catch(e){return;}
+ for(let i=0;i<40;i++){await new Promise(r=>setTimeout(r,25));try{if(tab.document.body&&tab.document.URL==='about:blank'){write();return;}}catch(e){}}
+}
 document.getElementById('rerun').hidden=false;document.getElementById('stop').hidden=false;
 async function send(route,body){
  const response=await fetch('/'+route+'?token='+token,{method:'POST',headers:{'Content-Type':'application/yaml'},body:body,credentials:'omit',cache:'no-store'});
@@ -152,13 +162,14 @@ document.getElementById('rerun').onclick=async function(){
  // Spec 038: open the tab during the click (popup blockers allow it then), fill it once the profile is done.
  // One tab is reused across reruns (this page keeps the handle). /report is served with a CSP sandbox,
  // so the report runs in an opaque origin: it cannot read this page or navigate it.
- let tab=reportTab&&!reportTab.closed?reportTab:null;
- if(!tab){tab=window.open('','fathom-updated-report');if(tab)reportTab=tab;}
- if(tab){try{tab.document.title='Fathom: profiling…';tab.document.body.textContent='Profiling the fixed local CSV…';}catch(e){}}
+ let tab=reportTab&&!reportTab.closed?reportTab:null,blocked=false;
+ if(!tab){tab=window.open('','fathom-updated-report');if(tab)reportTab=tab;else blocked=true;}
+ await show(tab,'Profiling the fixed local CSV…');
  try{const answer=await send('rerun',document.getElementById('yaml').textContent);const frame=document.getElementById('local-report');await new Promise(resolve=>{frame.onload=resolve;frame.src=answer.report;});
   if(tab&&!tab.closed){tab.location.replace(answer.report);tab.focus();state.textContent='Report updated and opened in a new tab.';}
-  else{state.textContent='Report updated below. Your browser blocked the new tab; allow pop-ups for this page to open it there.';}}
- catch(e){state.textContent=e.message;if(tab&&!tab.closed){try{tab.document.body.textContent='Rerun failed: '+e.message;}catch(x){}}}finally{this.disabled=false;}
+  else if(blocked){state.textContent='Report updated below. Your browser blocked the new tab; allow pop-ups for this page to open it there.';}
+  else{state.textContent='Report updated below. The report tab was closed; Rerun opens a new one.';}}
+ catch(e){state.textContent=e.message;await show(tab,'Rerun failed: '+e.message+' The previous report is not current.');}finally{this.disabled=false;}
 };
 document.getElementById('stop').onclick=async function(){try{await send('stop','');state.textContent='Stopped. Saved reports remain available on disk.';document.getElementById('rerun').disabled=true;this.disabled=true;}catch(e){state.textContent=e.message;}};
 })();</script>'''.replace('TOKEN', json.dumps(self.token))

@@ -46,6 +46,10 @@ def test_rerun_opens_a_named_tab_and_report_is_sandboxed(tmp_path):
         # Opened during the click, before the profile is awaited, so pop-up blockers allow it.
         assert page.index("window.open(") < page.index("await send('rerun'")
         assert 'opens in a new tab' in page
+        # A reused tab shows the opaque-origin report: it is blanked before status is written, and a
+        # closed tab is told apart from a blocked pop-up (Copilot on #76).
+        assert "tab.location.replace('about:blank')" in page and 'The report tab was closed' in page
+        assert page.index("await show(tab,'Profiling") < page.index("await send('rerun'")
         status, headers, body = client.request('GET', '/report')
         assert status == 200 and headers['Content-Security-Policy'].endswith('; sandbox allow-scripts')
         status, headers, _ = client.request()
