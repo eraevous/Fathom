@@ -9,10 +9,10 @@ import re
 import zipfile
 from html import escape as html_escape
 
-from .renderers import KINDS, omitted, omitted_notes, repetition_groups, sample_cell, scalar, summary_rows
+from .renderers import KINDS, omitted, omitted_notes, repetition_groups, sample_cell, summary_rows
 from .presentation import formatted, column_tables, structured_tables, formatted_examples, display_charts, top_n_reason, original_tick
 from .target import target_tables
-from .palette import LIGHT as C,KIND_COLOURS
+from .palette import LIGHT as C
 from .report_style import runs
 from .summary_view import summary_panels,report_options
 from .identifier_view import identifier_columns,identifier_tables
@@ -328,7 +328,7 @@ def target_slide_views(chart):
 def pptx_bytes(d,full=False,report=None):
     from pptx import Presentation
     from pptx.chart.data import CategoryChartData, XyChartData
-    from pptx.enum.chart import XL_CHART_TYPE, XL_DATA_LABEL_POSITION, XL_TICK_MARK
+    from pptx.enum.chart import XL_CHART_TYPE, XL_DATA_LABEL_POSITION
     from pptx.enum.shapes import MSO_SHAPE
     from pptx.util import Inches, Pt
     from pptx.enum.text import PP_ALIGN
@@ -504,7 +504,6 @@ def pptx_bytes(d,full=False,report=None):
                 for para in axis.axis_title.text_frame.paragraphs:para.font.color.rgb=RGBColor.from_string(C['ink'][1:])
             chart.value_axis.tick_labels.number_format='#,##0.###'
             if ch['kind']=='ecdf':
-                import math
                 raw=[10**p['x'] if ch.get('scale')=='log10' else p['x'] for p in ch['points']]
                 fmt='[>=1000000000]0.##,,,"B";[>=1000000]0.##,,"M";#,##0.###' if max(raw)>=1e9 else '[>=1000000]0.##,,"M";[>=1000]0.##,"K";0.###'
                 chart.category_axis.tick_labels.number_format='0.##E+0' if any(0<abs(x)<.001 for x in raw) else fmt

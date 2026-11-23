@@ -2,15 +2,14 @@
 
 from collections import Counter
 from dataclasses import asdict
-from datetime import date
 import math
 import re
 import statistics
 
 from .config import validate_config
 from .models import GuideDataFrame, ProfilingResult
-from .quality import quality_profile, copy_evidence
-from .parsing import finite_number, parse_date, parse_temporal, temporal_failure, temporal_failure_message
+from .quality import quality_profile
+from .parsing import finite_number, parse_temporal, reaches, temporal_failure, temporal_failure_message
 from .univariate import enrich_columns, identity_and_samples, missingness_patterns, stored
 
 SCHEMA_VERSION = 2
@@ -21,14 +20,6 @@ from .timeseries import time_series
 
 def number(value: str) -> float | None:
     return finite_number(value)
-
-
-def iso_date(value: str) -> str | None:
-    try:
-        parsed = date.fromisoformat(value)
-        return parsed.isoformat() if parsed.isoformat() == value else None
-    except (TypeError, ValueError):
-        return None
 
 
 def rounded(n: float | None) -> float | None:
@@ -46,7 +37,8 @@ def infer(values: list[str], name="", meta=None) -> dict:
         typ, reason = "string", "No nonmissing values; type is unknown, string is the storage fallback."
     elif all(v.lower() in {"true", "false"} for v in values):
         typ, reason = "boolean", "All nonmissing values are lexical true/false."
-    elif meta.get("date_format") or (sum(parse_temporal(v,meta.get("date_format"),meta.get('frame_rate')) is not None for v in values)>=len(values)*(.8 if re.search(r"date|release|time|stamp|clock",name,re.I) else 1)):
+    elif meta.get("date_format") or reaches(lambda v:parse_temporal(v,meta.get("date_format"),meta.get('frame_rate')) is not None,values,
+                                            lambda hits,total,share=(.8 if re.search(r"date|release|time|stamp|clock",name,re.I) else 1):hits>=total*share):
         typ, reason = "temporal", "Local temporal formats recognized; ambiguous readings and format evidence are retained."
     elif (all(number(v) is not None for v in values) or (re.search(r"gross|amount|cost|price|revenue|rating|score|count|quantity",name,re.I) and sum(number(v) is not None for v in values)>=.8*len(values))) and not any(re.match(r"^[+-]?0\d", v.strip()) for v in values):
         typ, reason = "numeric", "Finite numeric readings (local currency/thousands syntax allowed); named numeric columns may retain up to 20% incompatible values, counted separately."
@@ -201,6 +193,12 @@ def profile(data: GuideDataFrame, config: dict | None = None) -> ProfilingResult
             finding(f"pair-{index}-type", "observation", type_pair_message(pair, tp),
                     [{"path": f"bivariate.{index}.type_pair", "value": {k: v for k, v in tp.items() if k != "chart"}}],
                     pair["uncertainty"], "rule:type-pairs-v1", rule="type_pair_association", columns=[pair["left"], pair["right"]])
+    from .relationships import matrix as relationship_matrix, message as relationship_message
+    relationships = relationship_matrix(rows, columns, cfg.get("relationships"))
+    for index, item in enumerate((relationships or {}).get("sets", [])):
+        finding(f"relationships-{index}", "observation", relationship_message(item),
+                [{"path": f"relationships.sets.{index}", "value": {k: item[k] for k in ("name", "columns", "skipped", "pairs_planned", "pairs_computed")}}],
+                relationships["uncertainty"], "rule:relationships-v1", rule="declared_relationship_set", columns=item["columns"])
     for f in findings:
         rule=f.get('rule')
         gate=quality.get('rules',{}).get(rule) or structure.get('rules',{}).get(rule)
@@ -221,7 +219,7 @@ def profile(data: GuideDataFrame, config: dict | None = None) -> ProfilingResult
         "selection": selection, "bivariate": pairs, "dependencies": dependencies, "annotations": {},
         "dataset_summary": dataset_summary, "quality": quality, "dataset":dataset, "samples":samples,
         "target_analysis":target_analysis,"row_structure":structure,"time_series":temporal_structure,"missingness_patterns":missingness_patterns(columns,rows),
-        "report":report_settings(cfg)})
+        "report":report_settings(cfg), **({"relationships": relationships} if relationships else {})})
 
 
 def report_settings(cfg: dict) -> dict:

@@ -3,6 +3,7 @@
 from collections import Counter
 from datetime import date
 import math
+import heapq
 from pathlib import Path
 import random
 import re
@@ -59,8 +60,13 @@ safe=stored
 
 
 def percentile(values,p,rule=None):
-    if not values: return None
-    ordered=sorted(values);position=(len(ordered)-1)*p/100
+    return sorted_percentile(sorted(values),p,rule) if values else None
+
+
+def sorted_percentile(ordered,p,rule=None):
+    """percentile() on values already in ascending order (spec 033: sort once, read many)."""
+    if not ordered: return None
+    position=(len(ordered)-1)*p/100
     lo=int(position);hi=min(lo+1,len(ordered)-1);w=position-lo
     scale=max(abs(ordered[lo]),abs(ordered[hi]),1)
     return (rule or stored)((ordered[lo]/scale*(1-w)+ordered[hi]/scale*w)*scale)
@@ -71,7 +77,8 @@ def raw_percentile(values,p):
 
 
 def common(counter,least=False,limit=10):
-    return [{'value':v,'count':n} for v,n in sorted(counter.items(),key=lambda x:(x[1] if least else -x[1],x[0]))[:limit]]
+    # heapq.nsmallest(k, it, key) equals sorted(it, key=key)[:k], ties included (spec 033).
+    return [{'value':v,'count':n} for v,n in heapq.nsmallest(limit,counter.items(),key=lambda x:(x[1] if least else -x[1],x[0]))]
 
 
 def chart(kind,title,x,y,**data):
@@ -107,8 +114,9 @@ def identity_and_samples(data,cfg,columns):
 
 
 def numeric_profile(values,name,units,bins=None):
-    nums=[n for v in values if (n:=finite_number(v)) is not None];n=len(nums)
-    percentiles={str(p):percentile(nums,p) for p in PERCENTILES}
+    parsed=[(v,x) for v in values if (x:=finite_number(v)) is not None]
+    nums=[x for _,x in parsed];n=len(nums);ordered=sorted(nums)
+    percentiles={str(p):sorted_percentile(ordered,p) for p in PERCENTILES}
     skew=kurt=None
     if n>=2 and max(nums)!=min(nums):
         scale=max(abs(x) for x in nums) or 1;normalized=[x/scale for x in nums]
@@ -116,7 +124,7 @@ def numeric_profile(values,name,units,bins=None):
         if sd:
             skew=coefficient(statistics.mean(((x-mu)/sd)**3 for x in normalized))
             kurt=coefficient(statistics.mean(((x-mu)/sd)**4 for x in normalized)-3)
-    counts=Counter(v for v in values if finite_number(v) is not None)
+    counts=Counter(v for v,_ in parsed)
     stats={'finite':n,'zeros':{'count':sum(x==0 for x in nums),'share':sum(x==0 for x in nums)/n if n else None},
            'negatives':{'count':sum(x<0 for x in nums),'share':sum(x<0 for x in nums)/n if n else None},
            'integers':sum(x.is_integer() for x in nums),'non_integers':sum(not x.is_integer() for x in nums),
@@ -131,7 +139,7 @@ def numeric_profile(values,name,units,bins=None):
         data,whole=histogram_bins(nums,declared)
         axis=f'{name} ({units or "recorded values; units unknown"})'
         charts=[chart('histogram',f'Distribution of {name}',axis,'Rows (count)',data=data,bin_rule=bin_rule(declared,bool(whole)),**whole),
-                chart('box',f'Five-number view of {name}',axis,'Column',box={'min':geometry(lo),'q1':raw_percentile(nums,25),'median':raw_percentile(nums,50),'q3':raw_percentile(nums,75),'max':geometry(hi)})]
+                chart('box',f'Five-number view of {name}',axis,'Column',box={'min':geometry(lo),'q1':sorted_percentile(ordered,25,geometry),'median':sorted_percentile(ordered,50,geometry),'q3':sorted_percentile(ordered,75,geometry),'max':geometry(hi)})]
         cumulative=0;points=[]
         for x,count in sorted(Counter(nums).items()):
             cumulative+=count;points.append({'x':x,'cumulative':cumulative/n,'count':cumulative})
@@ -350,7 +358,11 @@ def calendar_profile(values,name,cfg,meta,parsed=None):
 
 def temporal_profile(values,name,cfg,meta):
     from .temporal_profiles import intraday_profile
-    parsed=[(v,p) for v in values if (p:=parse_temporal(v,meta.get('date_format'),meta.get('frame_rate'))) is not None]
+    parsed=[];unparsed=[]
+    for v in values:
+        p=parse_temporal(v,meta.get('date_format'),meta.get('frame_rate'))
+        if p is None:unparsed.append(v)
+        else:parsed.append((v,p))
     from .temporal_formats import BUILTINS,pattern_parts
     fmt=meta.get('date_format');custom=fmt is not None and fmt not in BUILTINS
     tokens={v for k,v in pattern_parts(fmt) if k=='token'} if custom else set()
@@ -363,13 +375,14 @@ def temporal_profile(values,name,cfg,meta):
     kinds={p['kind'] for _,p in parsed}
     stats.update(valid=len(parsed),invalid=len(values)-len(parsed),calendar_valid=len(dated),temporal_kind=next(iter(kinds)) if len(kinds)==1 else 'mixed' if kinds else 'time' if declared_clock and not declared_date else 'timestamp' if declared_clock else 'date',
                  parse_formats=dict(sorted(Counter(p['format'] for _,p in parsed).items())),parse_basis=('human format override' if meta.get('date_format') else 'inferred local formats')+'; written date and local time retained; no timezone conversion',
-                 parsed_examples=[{'raw':v,**p} for v,p in parsed[:10]],invalid_examples=[v for v in values if parse_temporal(v,meta.get('date_format'),meta.get('frame_rate')) is None][:10])
+                 parsed_examples=[{'raw':v,**p} for v,p in parsed[:10]],invalid_examples=unparsed[:10])
     intraday,extra=intraday_profile(parsed,name,chart);stats['intraday']=intraday;charts+=extra
     from .temporal_formats import temporal_fault
     from .temporal_profiles import subsecond_profile
     stats['subsecond']=subsecond_profile(parsed)
     faults={}
-    for value in values:
+    # A value that parsed has no fault: every fault code comes from a failed parse.
+    for value in unparsed:
         fault=temporal_fault(value,meta.get('date_format'),meta.get('frame_rate'))
         if fault:
             bucket=faults.setdefault(fault['code'],{'count':0,'examples':[],'message':fault['message']})

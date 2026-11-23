@@ -4,6 +4,7 @@ from html import escape
 
 from .presentation import formatted, html_table, markdown_table
 from .palette import LIGHT as C
+from .report_style import markdown_text
 
 TEMPORAL_CSS = ('.temporal-tables .table-scroll{max-width:100%;overflow-x:auto}'
                 '.temporal-tables .review-table{width:100%;max-width:none;table-layout:auto}'
@@ -173,7 +174,8 @@ def temporal_markdown(d):
     if not ts.get("series"): return []
     lines = ["## Temporal structure", "", INTRO, "", EDGE_NOTE, ""]
     for title, head, tables, charted, s in blocks(d):
-        lines += ["### " + title, ""] + [h + "\n" for h in head] + [markdown_table(t) for t in tables]
+        # Titles and headers carry column names and group values (CSV data): escape them as the HTML view does.
+        lines += ["### " + markdown_text(title), ""] + [markdown_text(h) + "\n" for h in head] + [markdown_table(t) for t in tables]
         for g in charted: lines += [stem(g, "acf"), "", stem(g, "pacf"), ""]
         for g in s["granularities"]:
             if g["wavelength"]["values"]["status"] == "computed":

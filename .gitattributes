@@ -1,0 +1,2 @@
+# Spec 031: the Windows installer keeps CRLF line endings in every checkout and download.
+*.bat -text

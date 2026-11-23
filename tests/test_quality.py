@@ -5,7 +5,6 @@ from html_helpers import visible_text, assert_navigation_only_script
 from pathlib import Path
 import csv
 import io
-from html import unescape
 
 import pytest
 

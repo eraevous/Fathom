@@ -6,7 +6,6 @@ Python (`config_yaml`), following the same rules so tests can round-trip without
 The page carries inline JavaScript; reports use progressive display controls.
 """
 
-from collections import Counter
 import hashlib
 import json
 import re
@@ -16,7 +15,7 @@ from pathlib import Path
 from .presentation import categorical_hint
 from .config import BINS_RANGE, OPTIONAL_SECTIONS, validate_config
 from .models import TYPES
-from .parsing import DATE_FORMATS, parse_date, parse_datetime, parse_temporal
+from .parsing import DATE_FORMATS, parse_datetime, parse_temporal
 from .rows import RULES as ROW_RULES
 from .timeseries import DEFAULT_LAG, GRAINS, MIN_N, TOP_N, undeclared
 from .univariate import report_bin_rule

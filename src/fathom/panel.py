@@ -8,7 +8,6 @@ import itertools
 import math
 from pathlib import Path
 import re
-import statistics as st
 
 import pandas as pd
 
@@ -16,6 +15,7 @@ from .connectors import CSVConnector
 from .models import GuideDataFrame, ProfilingResult, SchemaContract, canonical_json
 from .panel_stats import advance, calendar, estimate, floor, summarize, usable
 from .profiler import profile
+from .type_pairs import spearman as rank_correlation  # one Spearman (average tied ranks) for both paths
 from .parsing import parse_date, temporal_failure, temporal_failure_message
 
 RULES = {
@@ -246,19 +246,10 @@ def csv_text(rows):
     return stream.getvalue()
 
 
-def ranks(values):
-    out = [0.0] * len(values);ordered = sorted(range(len(values)), key=values.__getitem__);start = 0
-    for _, group in itertools.groupby(ordered, key=values.__getitem__):
-        indices = list(group);rank = (start + 1 + start + len(indices)) / 2
-        for i in indices: out[i] = rank
-        start += len(indices)
-    return out
-
-
 def spearman(a, b):
-    x, y = ranks(a), ranks(b)
-    if len(x) < 3 or not st.pvariance(x) or not st.pvariance(y): return estimate(status='not estimable', reason='fewer than three pairs or constant ranks')
-    return estimate(st.correlation(x, y))
+    rho = rank_correlation(a, b)
+    if rho is None: return estimate(status='not estimable', reason='fewer than three pairs or constant ranks')
+    return estimate(rho)
 
 
 def join_metrics(doc, cfg, root):

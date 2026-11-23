@@ -73,14 +73,14 @@ def seasonal(periods, grain, cycle):
     if periods:
         first = date.fromisoformat(periods[0].get('covered_start', periods[0]['period']))
         last = date.fromisoformat(periods[-1]['covered_end']) if 'covered_end' in periods[-1] else advance(date.fromisoformat(periods[-1]['period']), grain) - timedelta(days=1)
-        start = floor(first, cycle) if cycle != 'year' else first.replace(month=1, day=1)
+        start = floor(first, cycle)
         while start <= last:
-            end = advance(start, cycle) if cycle != 'year' else date(start.year + 1, 1, 1)
+            end = advance(start, cycle)
             if start >= first and end - timedelta(days=1) <= last: covered += 1
             start = end
     if grain=='year':
         return {'calendar_cycles_covered':covered,'complete_cycles':0,'strength':estimate(status='not estimable',reason='annual totals cannot resolve within-year seasonality')}
-    if cycle == 'week' and grain != 'day' or cycle == 'month' and grain != 'day':
+    if cycle in ('week', 'month') and grain != 'day':
         return {'calendar_cycles_covered': covered, 'complete_cycles': 0, 'strength': estimate(status='not estimable', reason='native grain cannot resolve this cycle')}
     for p in periods:
         d = date.fromisoformat(p['period'])
@@ -88,7 +88,7 @@ def seasonal(periods, grain, cycle):
         groups[key].append(p)
     complete = []
     for key, ps in sorted(groups.items()):
-        if cycle == 'week': start = date.fromisocalendar(key[0], key[1], 1);end = start + timedelta(days=6)
+        if cycle == 'week': start = date.fromisocalendar(key[0], key[1], 1);end = advance(start, 'week') - timedelta(days=1)
         elif cycle == 'month': start = date(key[0], key[1], 1);end = advance(start, 'month') - timedelta(days=1)
         elif grain == 'week': start = date.fromisocalendar(key, 1, 1);end = date.fromisocalendar(key + 1, 1, 1) - timedelta(days=1)
         else: start = date(key, 1, 1);end = date(key, 12, 31)
