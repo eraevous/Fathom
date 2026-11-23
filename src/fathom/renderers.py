@@ -20,6 +20,27 @@ from .report_style import style_html, STYLE_CSS, NAV_SCRIPT, navigation, markdow
 
 KINDS = (("observation", "Observations"), ("interpretation", "Interpretations"),
          ("hypothesis", "Hypotheses"), ("action", "Suggested actions"), ("question", "Open questions"))
+# Spec 038: Findings and each kind group collapse; all start open so nothing is hidden by default.
+FINDINGS_TOOLS = ('<div class="findings-tools" hidden><button type="button" data-findings="collapse">Collapse all groups</button> '
+                  '<button type="button" data-findings="expand">Expand all groups</button></div>')
+COLLAPSE_CSS = ('.collapsible>summary{display:flex;align-items:baseline;gap:10px;list-style:none;color:inherit}'
+                '.collapsible>summary::-webkit-details-marker{display:none}'
+                '.collapsible>summary::before{content:"\\25B8";color:var(--muted);font-size:.9em;flex:none}'
+                '.collapsible[open]>summary::before{content:"\\25BE"}'
+                '.collapsible>summary>h2,.collapsible>summary>h3{margin-bottom:0}'
+                '.findings-section>summary{border-bottom:2px solid var(--rule);margin-top:40px;padding-bottom:7px}.findings-section>summary>h2{border:0;margin:0;padding:0}'
+                '.group-count{font-size:.75em;font-weight:400;color:var(--muted)}.kind-group{margin:4px 0 12px}'
+                '.findings-tools{margin:10px 0}.findings-tools button{font:inherit;font-size:14px;cursor:pointer}'
+                '@media print{.findings-tools{display:none}}')
+# Progressive (runs inside the navigation script, the report's one allowed script): buttons appear only with script; following a link into a collapsed group opens it first.
+FINDINGS_JS = ("(()=>{const s=document.querySelector('#findings .findings-section');if(!s)return;"
+                   "const t=s.querySelector('.findings-tools'),g=Array.from(s.querySelectorAll('.kind-group'));"
+                   "t.addEventListener('click',e=>{const b=e.target.closest('[data-findings]');if(!b)return;const open=b.dataset.findings==='expand';s.open=true;g.forEach(x=>x.open=open);});"
+                   "const reveal=id=>{const el=id&&document.getElementById(id);if(!el)return;for(let d=el.parentElement;d;d=d.parentElement){if(d.tagName==='DETAILS'&&s.contains(d))d.open=true;}};"
+                   "const fromHash=()=>{try{reveal(decodeURIComponent(location.hash.slice(1)));}catch{}};"
+                   "window.addEventListener('hashchange',fromHash);"
+                   "document.addEventListener('click',e=>{const a=e.target.closest('a[href^=\"#\"]');if(a){try{reveal(decodeURIComponent(a.getAttribute('href').slice(1)));}catch{}}},true);"
+                   "t.hidden=false;fromHash();})();")
 PALETTE = {"themes": THEMES, "kinds": KIND_COLOURS}  # the recorded palette; values live in fathom.palette
 KIND_CSS = ('.kind-tag{display:inline-block;font-size:12px;line-height:1.5;font-weight:700;letter-spacing:.04em;text-transform:uppercase;'
             'padding:0 8px;margin-right:8px;border:1px solid currentColor;border-radius:999px;background:var(--panel);vertical-align:1px}'
@@ -291,20 +312,22 @@ def render_html(result: ProfilingResult,report=None):
         out += ['</tbody></table><h3>Usefulness</h3><p>'+escape(d['purpose'].get('question') or d['purpose'].get('fallback','Reference, understanding, QA and validation.'))+'</p>',
                 '<p>Use these observations to choose what to review; they do not certify fitness or authorize automatic cleaning.</p>',
                 '<h3>What the data cannot tell</h3>'+readable_html(unknowns(d))+'</section>',
-                '<section id="findings"><h2>Findings</h2><input id="full-view" type="checkbox"><label for="full-view">Show full per-item detail</label>',
+                '<section id="findings"><details class="collapsible findings-section" open><summary><h2>Findings</h2><span class="group-count">('+f"{len(d['findings']):,}"+')</span></summary>',
+                FINDINGS_TOOLS+'<input id="full-view" type="checkbox"><label for="full-view">Show full per-item detail</label>',
                 '<div class="full-view">']
         summaries=repetition_groups(d)
         repeated_ids={f['id'] for _,items in summaries for f in items}
         for kind,title in KINDS:
-            out.append(f'<h3 class="kind-heading kind-{kind}">'+title+'</h3>')
+            fs=[f for f in d['findings'] if f['kind']==kind]
+            out.append(f'<details class="collapsible kind-group" data-kind="{kind}" open><summary><h3 class="kind-heading kind-{kind}">'+title+f'</h3><span class="group-count">({len(fs):,})</span></summary>')
             for message,items in summaries:
                 if not items or items[0]['kind']!=kind: continue
                 links=''.join('<p><a href="#'+escape(f['id'],quote=True)+'">Original item</a>: '+escape(f['message'])+'</p>'+readable_html({'evidence':f['evidence'],'generator':f['generator'],'uncertainty':f['uncertainty'],'provenance':f['provenance']}) for f in items)
                 out.append(f'<div class="summary-view"><p class="kind-{kind}">'+kind_tag(kind)+escape(message)+'</p><details><summary>Evidence, uncertainty and original items</summary>'+links+'</details></div>')
-            fs=[f for f in d['findings'] if f['kind']==kind]
             out.extend(finding_html(f,repeated_ids,document=d) for f in fs)
             if not fs: out.append('<p>None recorded.</p>')
-        out += ['</div></section>',temporal_html(d)]
+            out.append('</details>')
+        out += ['</div></details></section>',temporal_html(d)]
         out += ['<section id="report-relations"><h2>Relations</h2><p>'+escape(d['selection'].get('ranking_rule','Legacy input-order selection; no relevance ranking recorded.'))+'</p>',
                 '<p>Selected '+str(len(d['bivariate']))+' relationship(s); budget '+str(d['selection']['budget'])+'.</p>']
         ta=d.get('target_analysis')
@@ -326,7 +349,8 @@ def render_html(result: ProfilingResult,report=None):
     css += '.finding-verdict{max-width:90ch}.quantity-list{margin:8px 0}.quantity-list li{margin:4px 0}.column-entry{box-sizing:border-box;width:100%;border:1px solid var(--border);border-radius:6px;padding:20px;margin:24px 0}.column-entry h3{margin-top:0;overflow-wrap:anywhere}.review-table{table-layout:fixed;margin:12px 0 20px}.review-table td,.review-table th{padding:6px 10px}caption{text-align:left;font-weight:600;padding:8px 0}.num{text-align:right;font-variant-numeric:tabular-nums}.table-scroll{overflow-x:auto;max-width:100%}.chart{margin:20px 0;max-width:100%;overflow-x:auto}.chart svg{width:720px;max-width:none;display:block}.chart svg text{font:15px system-ui,sans-serif}.chart-title{font-weight:600}figcaption{font-size:14px;margin:8px 0;color:var(--muted)}p{overflow-wrap:anywhere}'
     css += '.type-pair .review-table{table-layout:auto;width:auto;max-width:none;min-width:0}.type-pair td,.type-pair th{overflow-wrap:normal;word-break:normal}.type-pair .num{white-space:nowrap}.type-pair .target-chart .review-table{min-width:0}.type-pair-note{font-size:14px;color:var(--muted);max-width:90ch}.type-pair .table-scroll caption{position:sticky;left:0;max-width:calc(100vw - 64px)}.type-pair .chart{max-width:100%}.type-pair .chart svg{width:100%;max-width:560px;height:auto}.scroll-note{font-size:14px;color:var(--muted);margin:2px 0 12px;display:none}.scroll-note.always{display:block}@media(max-width:700px){.scroll-note{display:block}}.type-pair .table-scroll{overflow-x:auto;padding-bottom:4px}.type-pair .table-scroll::-webkit-scrollbar{height:10px;background:var(--tint)}.type-pair .table-scroll::-webkit-scrollbar-thumb{background:var(--muted);border-radius:5px}.heat td,.heat th{padding:6px 8px}.heat td{min-width:4.5em}.heat-bar{display:block;height:5px;margin-top:4px;background:var(--accent);min-width:0}.heat th[scope=row]{white-space:nowrap}'
     css += '.target-chart .review-table{max-width:none;min-width:680px;table-layout:auto}.target-chart .review-table .num{white-space:nowrap}.target-tables td{white-space:pre-line}.target-tables .review-table{max-width:none;min-width:640px;table-layout:auto}.column-entry{padding:12px 16px;margin:10px 0}.column-entry>summary{display:list-item}.column-entry>summary h3{display:inline;margin:0 16px 0 0;font-size:18px}.column-entry>summary span{font-size:14px;font-weight:400;color:var(--muted)}.column-grid{display:grid;grid-template-columns:minmax(230px,.75fr) minmax(0,1.25fr);gap:24px;align-items:start}.column-statistics{min-width:0;max-width:360px;position:sticky;top:12px;max-height:65vh;overflow-y:auto}.column-plots{min-width:0}.review-table{max-width:420px}.chart{max-width:760px}.chart svg{width:100%;max-width:100%;height:auto}.chart svg text{font:18px system-ui,sans-serif}.chart h4{font-size:16px;margin:8px 0}.axis-captions p{margin:3px 0;font-size:14px;overflow-wrap:anywhere}.box-summary{max-width:320px}.chart{overflow:visible;margin:10px 0 20px}.column-entry .table-scroll{max-width:100%}@media(max-width:800px){.column-grid{grid-template-columns:minmax(0,1fr)}.column-entry{padding:10px}.column-statistics{max-width:100%;position:static;max-height:none;overflow:visible}}@media(max-width:500px){.chart svg text{font-size:22px}}'
-    return style_html('<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Fathom — '+escape(d['kind'])+'</title><style>'+css+STYLE_CSS+SUMMARY_CSS+IDENTIFIER_CSS+'</style></head><body>'+'\n'.join(out)+NAV_SCRIPT+TRANSPOSE_SCRIPT+'</body></html>\n', columns=[c['name'] for c in d.get('columns',[])])
+    css += COLLAPSE_CSS
+    return style_html('<!doctype html>\n<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Fathom — '+escape(d['kind'])+'</title><style>'+css+STYLE_CSS+SUMMARY_CSS+IDENTIFIER_CSS+'</style></head><body>'+'\n'.join(out)+NAV_SCRIPT.replace('</script>',FINDINGS_JS+'</script>')+TRANSPOSE_SCRIPT+'</body></html>\n', columns=[c['name'] for c in d.get('columns',[])])
 
 
 def dictionary_and_provenance_markdown(d):
