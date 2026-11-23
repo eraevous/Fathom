@@ -255,3 +255,11 @@ def test_inferred_types_are_labelled(tmp_path):
                               "diagnostics": {"task": "classification"}}).document
     assert declared["diagnostics"]["type_basis"]["target"] == "human-declared"
     assert dx.TYPE_NOTE not in declared["diagnostics"]["uncertainty"]
+
+
+def test_inferred_feature_types_are_labelled_when_the_target_is_declared(tmp_path):
+    data = write(tmp_path, ["x", "y"], [[str(10 * i), str(i)] for i in range(1, 40)])
+    doc = profile(data, {"target": "y", "columns": {"y": {"type": "numeric"}}, "diagnostics": {"task": "regression"}}).document
+    assert results(doc)["W5"]["status"] == "signal"
+    assert doc["diagnostics"]["type_basis"] == {"target": "human-declared", "inferred_columns": ["x"]}
+    assert dx.TYPE_NOTE in doc["diagnostics"]["uncertainty"]

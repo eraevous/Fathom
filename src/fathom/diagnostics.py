@@ -302,8 +302,9 @@ def run(rows, columns, cfg, block):
     questions = [{"role": role, "unlocks": ids, "question": ASK[role].format(ids=", ".join(ids))} for role, ids in missing.items()]
     warning_signal = any(r["id"].startswith("W") and r["status"] == "signal" for r in results)
     target_col = next((c for c in columns if c["name"] == cfg.get("target")), None)
-    inferred = [] if target_col is None or target_col.get("override") else [cfg["target"]]
-    if inferred and block.get("task") in ("regression", "count"):  # W5's rank rule reads feature types too
+    target_inferred = target_col is not None and not target_col.get("override")
+    inferred = [cfg["target"]] if target_inferred else []
+    if target_col is not None and block.get("task") in ("regression", "count"):  # W5's rank rule reads feature types too
         inferred += [c["name"] for c in columns if c["name"] in features and not c.get("override")]
     return {"context": {"task": block.get("task"), "families": block["families"], "target": cfg.get("target"),
                         **{k: block[k] for k in ("split", "entity", "time", "exposure", "horizon") if k in block}},
@@ -311,7 +312,7 @@ def run(rows, columns, cfg, block):
             "registry": [{k: (list(v) if isinstance(v, tuple) else v) for k, v in row.items()} for row in REGISTRY],
             "statuses": list(STATUSES), "results": results, "questions": questions,
             "leakage_note": None if warning_signal else LEAKAGE_SENTENCE,
-            "type_basis": {"target": None if target_col is None else ("inferred" if inferred else "human-declared"),
+            "type_basis": {"target": None if target_col is None else ("inferred" if target_inferred else "human-declared"),
                            "inferred_columns": inferred},
             "uncertainty": UNCERTAINTY + (TYPE_NOTE if inferred else "")}
 
