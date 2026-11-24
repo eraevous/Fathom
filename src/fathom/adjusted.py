@@ -59,7 +59,7 @@ def conditional(rows, columns, index, pair, z):
     left, right = pair
     a, b, kz = (columns[index[n]]["effective_type"] for n in (left, right, z))
     base = {"left": left, "right": right, "condition_on": z, "declared_as": "relationships.condition_on",
-            "estimand": CONDITIONAL_ESTIMAND}
+            "estimand": CONDITIONAL_ESTIMAND, **_basis({n: columns[index[n]] for n in (left, right, z)}, [left, right, z])}
     if z in pair:
         return {**base, "status": "skipped", "reason": "conditioning column is one of the pair"}
     if kz not in CATEGORY:
@@ -96,15 +96,30 @@ def _residuals(values, basis):
 
 
 def _centered(values):
-    mean = math.fsum(values) / len(values)
-    scale = max(abs(v - mean) for v in values) or 1.0
-    return [(v - mean) / scale for v in values]
+    """Center on the mean without losing small differences at a large offset (Codex on #80).
+
+    Differences from a middle value are taken first (exact when values are close, by Sterbenz),
+    then their own mean is removed, so the result has a zero sum up to rounding of the differences.
+    """
+    ref = sorted(values)[len(values) // 2]
+    diffs = [v - ref for v in values]
+    mean = math.fsum(diffs) / len(diffs)
+    centered = [d - mean for d in diffs]
+    scale = max(abs(v) for v in centered) or 1.0
+    return [v / scale for v in centered]
+
+
+def _basis(columns, names):
+    """Type basis of the named columns (AGENTS: inferred is labelled, not hidden)."""
+    inferred = [n for n in names if not columns[n].get("override")]
+    return {"semantics": "inferred" if inferred else "human-declared", "inferred_columns": inferred}
 
 
 def partial(rows, columns, index, pair, controls):
     left, right = pair
     base = {"left": left, "right": right, "controls": list(controls), "declared_as": "relationships.controls",
-            "estimand": PARTIAL_ESTIMAND}
+            "estimand": PARTIAL_ESTIMAND,
+            **_basis({n: columns[index[n]] for n in (left, right, *controls)}, [left, right, *controls])}
     names = [left, right, *controls]
     if left in controls:
         return {**base, "status": "skipped", "reason": "a declared control is one of the pair"}
@@ -165,21 +180,29 @@ def _value(measures):
     return ", ".join(shown) or "none"
 
 
+def _inferred_note(item):
+    cols = item.get("inferred_columns") or []
+    if not cols:
+        return ""
+    return (f" Column types inferred, not declared, for {', '.join(cols)}; which columns were eligible and which "
+            "measure was used rest on that inference, and declaring them here does not confirm their types.")
+
+
 def conditional_message(item):
     head = f"{item['left']} and {item['right']} within levels of {item['condition_on']} (declared in relationships.condition_on)"
     if item["status"] != "computed":
-        return f"{head}: not computed ({item['reason']})."
+        return f"{head}: not computed ({item['reason']})." + _inferred_note(item)
     shown = "; ".join(f"{lv['level']}: {_value(lv['measures'])} (n={lv['n']})" if lv["measures"] else
                       f"{lv['level']}: n={lv['n']}, {lv['reason']}" for lv in item["levels"])
     return (f"{head}: all levels {_value(item['marginal'])} (n={item['n']}); {shown}. "
-            "Descriptive, not causal; other columns are not held fixed.")
+            "Descriptive, not causal; other columns are not held fixed." + _inferred_note(item))
 
 
 def partial_message(item):
     head = f"{item['left']} and {item['right']} with {', '.join(item['controls'])} held linear (declared in relationships.controls)"
     if item["status"] != "computed":
-        return f"{head}: not computed ({item['reason']})."
+        return f"{head}: not computed ({item['reason']})." + _inferred_note(item)
     from .presentation import formatted
     return (f"{head}: partial r {formatted(item['partial_r'])} beside Pearson r {formatted(item['marginal_pearson_r'])} on the same "
             f"{item['n']} complete cases ({item['excluded_rows']} rows excluded). Descriptive, not causal; "
-            "only linear structure in the declared controls is removed.")
+            "only linear structure in the declared controls is removed." + _inferred_note(item))

@@ -209,7 +209,7 @@ def profile(data: GuideDataFrame, config: dict | None = None) -> ProfilingResult
             for index, item in enumerate(extra.get(key, [])):
                 named = [item["left"], item["right"], *([item["condition_on"]] if key == "conditional" else item["controls"])]
                 finding(f"relationships-{key}-{index}", "observation", text(item),
-                        [{"path": f"relationships.{key}.{index}", "value": {k: item.get(k) for k in ("status", "n", "excluded_rows")}}],
+                        [{"path": f"relationships.{key}.{index}", "value": {k: item.get(k) for k in ("status", "n", "excluded_rows", "semantics", "inferred_columns")}}],
                         extra["uncertainty"], "rule:relationships-v2", rule=rule, columns=named)
     for f in findings:
         rule=f.get('rule')

@@ -132,3 +132,29 @@ def test_r5_no_banned_wording(tmp_path):
     assert found and all(f["kind"] == "observation" for f in found)
     assert not any(BANNED.search(f["message"] + f["uncertainty"]) for f in found)
     assert not any("confound" in f["message"].lower() or "effect of" in f["message"].lower() for f in found)
+
+
+def test_partial_is_unchanged_by_a_large_exact_offset(tmp_path):
+    """Codex on #80: rounding the mean at a 1e16 offset must not flip the partial r."""
+    x, y, z = [0, 2, 0, 0, 2, 2, 2, 0], [2, 0, 0, 2, 2, 0, 0, 2], [7, 6, 6, 4, 6, 3, 0, 0]
+    results = []
+    for offset in (0, 10**16):
+        rows = [[str(a + offset), str(b + offset), str(c)] for a, b, c in zip(x, y, z)]
+        doc = profile(write(tmp_path, ["x", "y", "z"], rows, f"o{offset}.csv"),
+                      {"target": "y", "relationships": {"controls": ["z"]}}).document
+        results.append(next(p for p in doc["relationships"]["partial"] if p["left"] == "x")["partial_r"])
+    assert results[0] == pytest.approx(-0.4953271028, abs=1e-9)
+    assert results[1] == pytest.approx(results[0], abs=1e-9)
+
+
+def test_inferred_types_are_labelled_on_results_and_findings(tmp_path):
+    data = confounded(tmp_path)
+    doc = profile(data, CFG).document
+    cond = next(c for c in doc["relationships"]["conditional"] if c["left"] == "x")
+    assert cond["semantics"] == "inferred" and cond["inferred_columns"] == ["x", "y"]
+    msgs = [f["message"] for f in doc["findings"] if f.get("rule") in {"conditional_association", "partial_correlation"}]
+    assert msgs and all("inferred, not declared" in m for m in msgs)
+    declared = {n: {"type": t} for n, t in (("x", "numeric"), ("y", "numeric"), ("zcode", "numeric"), ("zlevel", "categorical"))}
+    doc = profile(confounded(tmp_path), {**CFG, "columns": declared}).document
+    part = next(p for p in doc["relationships"]["partial"] if p["left"] == "x")
+    assert part["semantics"] == "human-declared" and part["inferred_columns"] == []
