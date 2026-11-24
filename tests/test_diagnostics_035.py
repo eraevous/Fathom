@@ -69,7 +69,7 @@ def test_r1_config_refuses_undeclared_or_malformed_roles():
 
 def test_r2_registry_rows_carry_every_contract_field():
     fields = {"id", "tasks", "families", "roles", "inputs", "computation", "threshold", "limitations", "finding"}
-    assert [r["id"] for r in dx.REGISTRY] == ["W1", "W5", "T1", "T3"]
+    assert [r["id"] for r in dx.REGISTRY] == ["W1", "W5", "T1", "T3", "W2", "W3", "W4", "T2", "T4", "E4"]
     for row in dx.REGISTRY:
         assert fields <= set(row) and all(row[f] for f in fields)
 
@@ -78,7 +78,8 @@ def test_r2_five_statuses_are_distinct_and_rendered_differently(tmp_path, monkey
     data = clean(tmp_path)
     doc = profile(data, {"target": "label", "diagnostics": {"task": "classification"}}).document
     seen = {r["id"]: r["status"] for r in doc["diagnostics"]["results"]}
-    assert seen == {"W1": "no_signal", "W5": "no_signal", "T1": "no_signal", "T3": "not_applicable"}
+    assert {k: seen[k] for k in ("W1", "W5", "T1", "T3")} == {"W1": "no_signal", "W5": "no_signal", "T1": "no_signal",
+                                                              "T3": "not_applicable"}
     tiny = write(tmp_path, ["x", "y"], [["1", "2"]], "tiny.csv")
     assert results(profile(tiny, {"target": "y", "diagnostics": {"task": "count"}}).document)["T3"]["status"] == "insufficient_data"
     small = write(tmp_path, ["x", "y"], [[str(i), "a" if i < 40 else "b"] for i in range(50)], "small.csv")
@@ -212,7 +213,7 @@ def test_dataset_level_questions_render_without_column_grouping(tmp_path):
 def test_gate_asks_only_for_checks_the_task_allows(tmp_path):
     doc = profile(clean(tmp_path), {"diagnostics": {"task": "regression"}}).document
     ask = next(q for q in doc["diagnostics"]["questions"] if q["role"] == "target")
-    assert ask["unlocks"] == ["W1", "W5"]
+    assert ask["unlocks"] == ["W1", "W5", "T4"]  # T4 (slice 2) is a regression check too
     assert results(doc)["T1"]["reason"].startswith("task is regression")
 
 
