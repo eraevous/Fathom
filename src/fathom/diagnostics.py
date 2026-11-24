@@ -26,8 +26,9 @@ STATUSES = ("signal", "no_signal", "not_applicable", "insufficient_data", "faile
 MIN_SUPPORT, RANK_LIMIT, EXAMPLES, CLASS_LIST = 30, 0.98, 5, 50
 LEAKAGE_SENTENCE = ("These checks can't show that the data is free of leakage; "
                     "that needs when each value becomes available.")
-TYPE_NOTE = (" Column types used here are inferred, not declared (see type_basis); which W5 rule applies and how T1 "
-             "reads the target rest on that inference, and declaring a task does not confirm column types.")
+TYPE_NOTE = (" Column types used here are inferred, not declared (see type_basis); which W5 rule applies, how T1 "
+             "reads the target and whether E4 compares ranges or levels rest on that inference, and declaring a task does "
+             "not confirm column types.")
 UNCERTAINTY = ("Computed from this table alone, for the declared task. A signal is a reason to look, "
                "not a defect verdict; an absent signal is not a certificate.")
 
@@ -417,7 +418,7 @@ def t2(rows, index, columns, target, split):
         ordered = sorted(counts.items(), key=lambda kv: (-kv[1], kv[0]))
         return {"rows_with_target": n,
                 "classes": [{"class": k, "rows": c, "share": round(c / n, 4)} for k, c in ordered[:CLASS_LIST]],
-                "classes_total": len(counts), "under_minimum": sorted(k for k, c in counts.items() if c < MIN_SUPPORT)}
+                "classes_total": len(counts), "smallest": min(counts.values()) if counts else 0, "under_minimum": sorted(k for k, c in counts.items() if c < MIN_SUPPORT)}
     only_train = sorted(set(tables["train"]) - set(tables["evaluation"]))
     only_eval = sorted(set(tables["evaluation"]) - set(tables["train"]))
     detail = {"checked": f"{len(tables['train'] | tables['evaluation'])} classes across both sides", **split_counts(side, outside),
@@ -539,7 +540,9 @@ def run(rows, columns, cfg, block):
     target_col = next((c for c in columns if c["name"] == cfg.get("target")), None)
     target_inferred = target_col is not None and not target_col.get("override")
     inferred = [cfg["target"]] if target_inferred else []
-    if target_col is not None and block.get("task") in ("regression", "count"):  # W5's rank rule reads feature types too
+    rank_rule = target_col is not None and block.get("task") in ("regression", "count")  # W5's rank rule reads feature types
+    e4_ran = any(r["id"] == "E4" and r["status"] in ("signal", "no_signal") for r in results)  # E4 picks range or levels by type
+    if rank_rule or e4_ran:
         inferred += [c["name"] for c in columns if c["name"] in features and not c.get("override")]
     return {"context": {"task": block.get("task"), "families": block["families"], "target": cfg.get("target"),
                         **{k: block[k] for k in ("split", "entity", "time", "exposure", "horizon") if k in block}},
@@ -575,7 +578,7 @@ def figures(r):
         p = r["rows_per_entity"]
         return f"; rows per entity min {p['min']}, median {p['median']}, max {p['max']}"
     if r["id"] == "T2":
-        return f"; smallest class train {min(c['rows'] for c in r['train']['classes'])}, evaluation {min(c['rows'] for c in r['evaluation']['classes'])} rows"
+        return f"; smallest class train {r['train']['smallest']}, evaluation {r['evaluation']['smallest']} rows"
     if r["id"] == "T3":
         ratio = "undefined" if r["variance_to_mean"] is None else r["variance_to_mean"]
         return (f"; mean {r['mean']}, variance {r['variance']}, variance-to-mean {ratio}, "

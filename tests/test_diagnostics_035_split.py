@@ -120,3 +120,30 @@ def test_slice2_wording_and_bytes(tmp_path):
     assert not any(BANNED.search(f["message"] + f["uncertainty"]) for f in found)
     lines = [dx.describe(r) for r in json.loads(one)["diagnostics"]["results"]]
     assert all(lines)
+
+
+def test_e4_labels_inferred_feature_types_without_a_target(tmp_path):
+    """Codex P1 on #81: E4 chooses range or levels from feature types, so inferred types are labelled."""
+    data = table(tmp_path)
+    for c in ({"target": "label", "columns": {"label": {"type": "categorical"}},
+               "diagnostics": {"task": "classification", "split": SPLIT, "families": ["tree"]}},
+              {"diagnostics": {"task": "classification", "split": SPLIT, "families": ["tree"]}}):
+        d = profile(data, c).document["diagnostics"]
+        assert {"x", "colour"} <= set(d["type_basis"]["inferred_columns"]) and dx.TYPE_NOTE in d["uncertainty"]
+    declared = profile(data, {"columns": {"x": {"type": "numeric"}, "colour": {"type": "categorical"}},
+                              "diagnostics": {"task": "classification", "split": SPLIT, "families": ["tree"],
+                                              "features": ["x", "colour"]}}).document["diagnostics"]
+    assert declared["type_basis"]["inferred_columns"] == []
+
+
+def test_t2_smallest_class_counts_every_class_not_only_the_listed_fifty(tmp_path):
+    """Codex P2 on #81: the smallest class comes from the full counts, not the truncated list."""
+    rows = []
+    for side in ("train", "test"):
+        for k in range(51):
+            rows += [[f"{len(rows)}", side, f"k{k:02d}"]] * (1 if k == 50 else 40)
+    data = write(tmp_path, ["x", "fold", "label"], rows)
+    t2 = results(profile(data, cfg()).document)["T2"]
+    assert t2["status"] == "no_signal" and len(t2["train"]["classes"]) == 50
+    assert t2["train"]["smallest"] == 1 and t2["evaluation"]["smallest"] == 1
+    assert "smallest class train 1, evaluation 1 rows" in dx.describe(t2)
