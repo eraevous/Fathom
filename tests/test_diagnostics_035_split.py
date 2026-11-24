@@ -147,3 +147,14 @@ def test_t2_smallest_class_counts_every_class_not_only_the_listed_fifty(tmp_path
     assert t2["status"] == "no_signal" and len(t2["train"]["classes"]) == 50
     assert t2["train"]["smallest"] == 1 and t2["evaluation"]["smallest"] == 1
     assert "smallest class train 1, evaluation 1 rows" in dx.describe(t2)
+
+
+def test_e4_lists_identifier_columns_as_not_evaluated(tmp_path):
+    """Codex P2 on #81: a sequential numeric ID split by time would always fall outside the train range."""
+    rows = [[str(1000 + i), f"{(i * 7) % 13}", "test" if i >= 60 else "train", "yes" if i % 2 else "no"] for i in range(80)]
+    data = write(tmp_path, ["order_id", "x", "fold", "label"], rows)
+    c = {"target": "label", "columns": {"order_id": {"role": "identifier"}},
+         "diagnostics": {"task": "classification", "split": SPLIT, "families": ["tree"]}}
+    e4 = results(profile(data, c).document)["E4"]
+    assert "order_id" in e4["not_evaluated"] and "order_id" not in {h["feature"] for h in e4["features"]}
+    assert e4["status"] == "no_signal"

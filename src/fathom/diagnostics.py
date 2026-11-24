@@ -14,6 +14,7 @@ import math
 import statistics
 from collections import Counter, defaultdict
 
+from .identifiers import is_identifier
 from .parsing import finite_number, parse_date, parse_datetime
 from .target import CATEGORY, NUMERIC, cell
 from .type_pairs import spearman
@@ -456,7 +457,7 @@ def e4(rows, index, columns, features, split):
     for name in features:
         fi = index[name]
         typ = columns[fi]["effective_type"]
-        if typ not in NUMERIC and typ not in CATEGORY:
+        if is_identifier(columns[fi]) or (typ not in NUMERIC and typ not in CATEGORY):
             unevaluated.append(name)
             continue
         cells = {k: [c for c in (cell(rows[i][fi], typ) for i in side[k]) if c is not None] for k in ("train", "evaluation")}
