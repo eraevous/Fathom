@@ -69,7 +69,8 @@ def test_r1_config_refuses_undeclared_or_malformed_roles():
 
 def test_r2_registry_rows_carry_every_contract_field():
     fields = {"id", "tasks", "families", "roles", "inputs", "computation", "threshold", "limitations", "finding"}
-    assert [r["id"] for r in dx.REGISTRY] == ["W1", "W5", "T1", "T3", "W2", "W3", "W4", "T2", "T4", "E4"]
+    assert [r["id"] for r in dx.REGISTRY] == ["W1", "W5", "T1", "T3", "W2", "W3", "W4", "T2", "T4", "E4",
+                                                "L1", "L2", "L3", "E1", "E2", "E3"]
     for row in dx.REGISTRY:
         assert fields <= set(row) and all(row[f] for f in fields)
 
