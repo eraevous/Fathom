@@ -593,6 +593,9 @@ def l1(rows, index, columns, features):
     z, constant, kept = [], [], []
     for j, name in enumerate(design):
         col = [row[j] for row in data]
+        if len(set(col)) == 1:  # before centering: a rounded mean can leave a constant column a tiny spread
+            constant.append(name)
+            continue
         mean = math.fsum(col) / n
         sd = math.sqrt(math.fsum((v - mean) ** 2 for v in col) / n)
         if sd == 0.0 or not math.isfinite(sd):
@@ -776,6 +779,9 @@ def e3(rows, index, columns, features, target, task):
         if gap >= MEAN_GAP:
             hits.append({"feature": name, "target_mean_missing": round(m_missing, 6), "target_mean_present": round(m_present, 6),
                          "rows_missing": len(missing), "standardized_gap": round(gap, 4)})
+    if with_missing and not compared:  # every feature with missing cells fell under the minimum: nothing was compared
+        return "insufficient_data", {"features_compared": 0, "minimum": 1, "features_with_missing": with_missing,
+                                     "rows_per_group_minimum": MIN_SUPPORT}
     detail = {"checked": f"{len(features)} features, {with_missing} with missing cells, {compared} compared",
               "features_with_missing": with_missing, "compared": compared, "features": hits}
     return ("signal" if hits else "no_signal"), detail

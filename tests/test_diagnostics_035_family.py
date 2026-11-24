@@ -121,3 +121,19 @@ def test_family_checks_label_inferred_types_wording_and_bytes(tmp_path):
     found = [f for f in json.loads(one)["findings"] if f.get("rule", "").startswith("diagnostic")]
     assert not any(BANNED.search(f["message"] + f["uncertainty"]) for f in found)
     assert all(dx.describe(r) for r in d["results"])
+
+
+def test_l1_constant_column_found_before_centering(tmp_path):
+    """Codex P2 on #82: 0.1 repeated 41 times has an fsum mean that differs from 0.1, which left a tiny spread."""
+    rows = [["0.1", str(i), f"{(i * 7) % 11}", "yes" if i % 2 else "no"] for i in range(41)]
+    l1 = results(profile(write(tmp_path, ["k", "x", "z", "label"], rows), cfg(families=["linear"])).document)["L1"]
+    assert l1["status"] == "signal" and l1["constant"] == ["k"]
+
+
+def test_e3_regression_with_no_comparable_feature_is_insufficient(tmp_path):
+    """Codex P2 on #82: a feature missing on 29 rows can't be compared, so E3 has not checked anything."""
+    rows = [["" if i < 29 else str(i % 5), f"{i * 0.5:.1f}"] for i in range(100)]
+    c = {"target": "label", "diagnostics": {"task": "regression", "families": ["tree"]}}
+    e3 = results(profile(write(tmp_path, ["x", "label"], rows), c).document)["E3"]
+    assert e3["status"] == "insufficient_data" and e3["features_with_missing"] == 1
+    assert "too little data" in dx.describe(e3)
