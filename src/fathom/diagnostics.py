@@ -6,6 +6,9 @@ T1 (class support) and T3 (count target range and dispersion).
 Slice 2: the declared train/evaluation split and entity: W2 (duplicates across the split),
 W3 (entity crossing the split), W4 (temporal order across the split), T2 (class support by
 split), T4 (target range by split) and E4 (tree family: evaluation range and level coverage).
+Slice 3: the linear and tree families: L1 (design rank and conditioning), L2 (sparse levels), L3 (complete
+separation in the data), E1 (rare-level support), E2 (identifier-like features) and E3 (missingness against
+the target). Each reports a condition of this table for the family; none ranks families or says which to use (R5).
 Every check reads the table alone; nothing here estimates a model (R3). Nothing runs unless
 `diagnostics` is declared.
 """
@@ -25,11 +28,15 @@ ROLES = ("split", "entity", "time", "exposure")
 UNITS = ("hour", "day", "week", "month", "year")
 STATUSES = ("signal", "no_signal", "not_applicable", "insufficient_data", "failed")
 MIN_SUPPORT, RANK_LIMIT, EXAMPLES, CLASS_LIST = 30, 0.98, 5, 50
+DESIGN_CAP, DEPENDENT_TOL, CONDITION_LIMIT, VIF_LIMIT = 12, 1e-6, 30.0, 10.0
+DISTINCT_SHARE, MISSING_GAP, MEAN_GAP = 0.9, 0.10, 0.2
 LEAKAGE_SENTENCE = ("These checks can't show that the data is free of leakage; "
                     "that needs when each value becomes available.")
 TYPE_NOTE = (" Column types used here are inferred, not declared (see type_basis); which W5 rule applies, how T1 "
-             "reads the target and whether E4 compares ranges or levels rest on that inference, and declaring a task does "
+             "reads the target, whether E4 compares ranges or levels, and which features the linear and tree checks treat as "
+             "numeric or categorical rest on that inference, and declaring a task does "
              "not confirm column types.")
+TYPED = ("E4", "L1", "L2", "L3", "E1", "E2", "E3")
 UNCERTAINTY = ("Computed from this table alone, for the declared task. A signal is a reason to look, "
                "not a defect verdict; an absent signal is not a certificate.")
 
@@ -88,6 +95,46 @@ REGISTRY = (
      "roles": ("split",), "inputs": "each declared numeric or categorical feature on each side of the split",
      "computation": "numeric: evaluation values outside the train range; categorical: evaluation levels unseen in train",
      "threshold": "any such value or level", "limitations": "text, date and identifier features are listed as not evaluated",
+     "finding": "observation"},
+    {"id": "L1", "title": "Design rank and conditioning", "tasks": TASKS, "families": ("linear",),
+     "roles": ("features",), "inputs": f"the declared numeric features, at most {DESIGN_CAP} in feature order, on rows where all parse",
+     "computation": ("standardize each feature; constant features, features that are a linear combination of earlier ones, "
+                     "the condition number of the standardized design and each feature's variance inflation factor"),
+     "threshold": (f"a constant or dependent feature, or a condition number of at least {CONDITION_LIMIT:g}; "
+                   f"features with a variance inflation factor of at least {VIF_LIMIT:g} are named"),
+     "limitations": "numeric features only, as stored; categorical indicators and transformations are not part of the design",
+     "finding": "observation"},
+    {"id": "L2", "title": "Sparse levels", "tasks": TASKS, "families": ("linear",),
+     "roles": ("features",), "inputs": "each declared categorical or boolean feature",
+     "computation": "count the rows of each level; levels under the minimum would become near-empty indicator columns",
+     "threshold": f"any level under {MIN_SUPPORT} rows", "limitations": "missing cells are not a level; identifier features are listed as not evaluated",
+     "finding": "observation"},
+    {"id": "L3", "title": "Complete separation in the data", "tasks": ("classification",), "families": ("linear",),
+     "roles": ("target", "task"), "inputs": "each declared feature against the target, on complete rows",
+     "computation": ("categorical: levels whose rows all hold one class; numeric: a class whose values all lie below, or all "
+                     "above, every other class's values"),
+     "threshold": "any such level or threshold",
+     "limitations": "one feature at a time; separation by a combination of features is not searched",
+     "finding": "observation"},
+    {"id": "E1", "title": "Rare-level support", "tasks": TASKS, "families": ("tree",),
+     "roles": ("features",), "inputs": "each declared categorical or boolean feature",
+     "computation": "count the rows of each level; the share of rows that sit in rare levels",
+     "threshold": f"any level under {MIN_SUPPORT} rows", "limitations": "missing cells are not a level; identifier features are listed as not evaluated",
+     "finding": "observation"},
+    {"id": "E2", "title": "Identifier-like features", "tasks": TASKS, "families": ("tree",),
+     "roles": ("features",), "inputs": "each declared feature",
+     "computation": ("the identifier role (declared or inferred), or, for features not read as numeric, the share of "
+                     "distinct values among present cells"),
+     "threshold": f"identifier role, or a distinct share of at least {DISTINCT_SHARE} over at least {MIN_SUPPORT} present cells",
+     "limitations": "numeric features are judged by the identifier role only; many distinct measurements are not memorisation",
+     "finding": "observation"},
+    {"id": "E3", "title": "Missingness against the target", "tasks": ("classification", "regression", "count"),
+     "families": ("tree",), "roles": ("target", "task"), "inputs": "each declared feature's missing cells against the target",
+     "computation": ("classification: the feature's missing share within each class; regression and count: the target "
+                     "mean where the feature is missing against where it is present, over the target's standard deviation"),
+     "threshold": (f"a gap of at least {MISSING_GAP} in missing share between classes with {MIN_SUPPORT} or more rows; "
+                   f"a standardized mean gap of at least {MEAN_GAP} with {MIN_SUPPORT} or more rows on each side"),
+     "limitations": "describes association with missingness in this table; it does not say why values are missing",
      "finding": "observation"},
 )
 
@@ -483,6 +530,263 @@ def e4(rows, index, columns, features, split):
     return ("signal" if hits else "no_signal"), detail
 
 
+def symmetric_eigenvalues(matrix):
+    """Eigenvalues of a small symmetric matrix by cyclic Jacobi rotations (standard library; at most 12 x 12)."""
+    a, n = [row[:] for row in matrix], len(matrix)
+    for _ in range(100):
+        if sum(a[i][j] ** 2 for i in range(n) for j in range(n) if i != j) < 1e-24:
+            break
+        for p in range(n):
+            for q in range(p + 1, n):
+                if a[p][q] == 0.0:
+                    continue
+                theta = (a[q][q] - a[p][p]) / (2 * a[p][q])
+                t = (1.0 if theta >= 0 else -1.0) / (abs(theta) + math.sqrt(theta * theta + 1))
+                c = 1 / math.sqrt(t * t + 1)
+                s = t * c
+                for k in range(n):
+                    a[k][p], a[k][q] = c * a[k][p] - s * a[k][q], s * a[k][p] + c * a[k][q]
+                for k in range(n):
+                    a[p][k], a[q][k] = c * a[p][k] - s * a[q][k], s * a[p][k] + c * a[q][k]
+    return sorted(a[i][i] for i in range(n))
+
+
+def inverse_diagonal(matrix):
+    """Diagonal of the inverse of a positive definite matrix (Gauss-Jordan with partial pivoting)."""
+    n = len(matrix)
+    a = [row[:] + [1.0 if i == j else 0.0 for j in range(n)] for i, row in enumerate(matrix)]
+    for col in range(n):
+        pivot = max(range(col, n), key=lambda r: abs(a[r][col]))
+        a[col], a[pivot] = a[pivot], a[col]
+        lead = a[col][col]
+        a[col] = [v / lead for v in a[col]]
+        for r in range(n):
+            if r != col and a[r][col] != 0.0:
+                factor = a[r][col]
+                a[r] = [v - factor * w for v, w in zip(a[r], a[col])]
+    return [a[i][n + i] for i in range(n)]
+
+
+def usable_type(column):
+    """'numeric', 'categorical' or None (identifier, text, date), from the effective type."""
+    if is_identifier(column):
+        return None
+    typ = column["effective_type"]
+    return "numeric" if typ in NUMERIC else "categorical" if typ in CATEGORY else None
+
+
+def l1(rows, index, columns, features):
+    numeric = [f for f in features if usable_type(columns[index[f]]) == "numeric"]
+    design, over_cap = numeric[:DESIGN_CAP], numeric[DESIGN_CAP:]
+    unevaluated = [f for f in features if f not in numeric] + over_cap
+    if len(design) < 2:
+        return "insufficient_data", {"numeric_features": len(design), "minimum": 2, "not_evaluated": unevaluated}
+    fi = [index[f] for f in design]
+    data = []
+    for r in rows:
+        values = [cell(r[i], "numeric") for i in fi]
+        if all(v is not None for v in values):
+            data.append(values)
+    if len(data) < MIN_SUPPORT:
+        return "insufficient_data", {"complete_rows": len(data), "minimum": MIN_SUPPORT, "not_evaluated": unevaluated}
+    n = len(data)
+    z, constant, kept = [], [], []
+    for j, name in enumerate(design):
+        col = [row[j] for row in data]
+        if len(set(col)) == 1:  # before centering: a rounded mean can leave a constant column a tiny spread
+            constant.append(name)
+            continue
+        mean = math.fsum(col) / n
+        sd = math.sqrt(math.fsum((v - mean) ** 2 for v in col) / n)
+        if sd == 0.0 or not math.isfinite(sd):
+            constant.append(name)
+            continue
+        z.append([(v - mean) / sd for v in col])
+        kept.append(name)
+    basis, dependent = [], []
+    for name, col in zip(kept, z):
+        rest = col[:]
+        for b in basis:
+            proj = math.fsum(x * y for x, y in zip(rest, b))
+            rest = [x - proj * y for x, y in zip(rest, b)]
+        norm = math.sqrt(math.fsum(x * x for x in rest))
+        if norm * norm < DEPENDENT_TOL * n:
+            dependent.append(name)
+        else:
+            basis.append([x / norm for x in rest])
+    corr = [[math.fsum(x * y for x, y in zip(a, b)) / n for b in z] for a in z]
+    condition, vifs = None, []
+    if not dependent and kept:
+        eig = symmetric_eigenvalues(corr)
+        if eig[0] > 0:
+            condition = math.sqrt(eig[-1] / eig[0])
+            vifs = [{"feature": name, "vif": round(v, 4)} for name, v in zip(kept, inverse_diagonal(corr)) if v >= VIF_LIMIT]
+    involved = sorted({*constant, *dependent, *(v["feature"] for v in vifs)}, key=design.index)
+    detail = {"checked": f"{len(design)} numeric features over {n} complete rows"
+              + (f"; {len(unevaluated)} not in the design" if unevaluated else ""),
+              "design": design, "complete_rows": n, "constant": constant, "dependent": dependent,
+              "condition_number": None if condition is None else round(condition, 4), "high_vif": vifs,
+              "features": [{"feature": f} for f in involved], "not_evaluated": unevaluated}
+    flagged = constant or dependent or (condition is not None and condition >= CONDITION_LIMIT)
+    return ("signal" if flagged else "no_signal"), detail
+
+
+def level_counts(rows, index, columns, features):
+    """Per categorical feature: level counts over present cells (Boolean spellings case-folded); others not evaluated."""
+    tables, unevaluated = {}, []
+    for name in features:
+        column = columns[index[name]]
+        if usable_type(column) != "categorical":
+            unevaluated.append(name)
+            continue
+        fi, typ = index[name], column["effective_type"]
+        counts = Counter(c for c in (cell(r[fi], typ) for r in rows) if c is not None)
+        if counts:
+            tables[name] = counts
+        else:
+            unevaluated.append(name)
+    return tables, unevaluated
+
+
+def sparse(rows, index, columns, features):
+    tables, unevaluated = level_counts(rows, index, columns, features)
+    if not tables:
+        return "insufficient_data", {"categorical_features": 0, "minimum": 1, "not_evaluated": unevaluated}
+    hits = []
+    for name, counts in tables.items():
+        small = sorted((k for k, c in counts.items() if c < MIN_SUPPORT), key=lambda k: (counts[k], k))
+        if small:
+            present = sum(counts.values())
+            hits.append({"feature": name, "levels": len(counts), "sparse_levels": len(small),
+                         "rows_in_sparse_levels": sum(counts[k] for k in small),
+                         "share_of_rows": round(sum(counts[k] for k in small) / present, 4),
+                         "example_levels": [{"level": k, "rows": counts[k]} for k in small[:EXAMPLES]]})
+    detail = {"checked": f"{len(tables)} categorical features" + (f"; {len(unevaluated)} not evaluated" if unevaluated else ""),
+              "features": hits, "not_evaluated": unevaluated}
+    return ("signal" if hits else "no_signal"), detail
+
+
+def target_class(value, boolean):
+    return value.casefold() if boolean else value
+
+
+def l3(rows, index, columns, features, target):
+    ti = index[target]
+    boolean = columns[ti]["effective_type"] == "boolean"
+    hits, checked, unevaluated = [], 0, []
+    for name in features:
+        fi, column = index[name], columns[index[name]]
+        kind = usable_type(column)
+        pairs = [(cell(r[fi], column["effective_type"]), target_class(r[ti], boolean)) for r in rows
+                 if r[fi] is not None and r[ti] is not None] if kind else []
+        pairs = [(x, y) for x, y in pairs if x is not None]
+        if len({y for _, y in pairs}) < 2:
+            unevaluated.append(name)
+            continue
+        checked += 1
+        if kind == "categorical":
+            by_level = defaultdict(Counter)
+            for x, y in pairs:
+                by_level[x][y] += 1
+            pure = sorted(((lv, sum(c.values()), next(iter(c))) for lv, c in by_level.items() if len(c) == 1),
+                          key=lambda t: (-t[1], t[0]))
+            if pure:
+                hits.append({"feature": name, "kind": "level", "levels": len(pure),
+                             "rows": sum(n for _, n, _ in pure),
+                             "example_levels": [{"level": lv, "rows": n, "class": cls} for lv, n, cls in pure[:EXAMPLES]]})
+            continue
+        by_class = defaultdict(list)
+        for x, y in pairs:
+            by_class[y].append(x)
+        classes = sorted(by_class)
+        for cls in classes[:1] if len(classes) == 2 else classes:
+            own = by_class[cls]
+            rest = [v for k in classes if k != cls for v in by_class[k]]
+            if max(own) < min(rest):
+                hits.append({"feature": name, "kind": "threshold", "class": cls, "side": "below", "between": [max(own), min(rest)]})
+            elif min(own) > max(rest):
+                hits.append({"feature": name, "kind": "threshold", "class": cls, "side": "above", "between": [max(rest), min(own)]})
+    if not checked:
+        return "insufficient_data", {"usable_features": 0, "minimum": 1, "not_evaluated": unevaluated}
+    detail = {"checked": f"{checked} features against the target" + (f"; {len(unevaluated)} not evaluated" if unevaluated else ""),
+              "features": hits, "not_evaluated": unevaluated}
+    return ("signal" if hits else "no_signal"), detail
+
+
+def e2(rows, index, columns, features):
+    hits, checked = [], 0
+    for name in features:
+        column = columns[index[name]]
+        checked += 1
+        if is_identifier(column):
+            hits.append({"feature": name, "rule": "identifier role"})
+            continue
+        if column["effective_type"] in NUMERIC:
+            continue
+        present = [r[index[name]] for r in rows if r[index[name]] is not None]
+        if len(present) >= MIN_SUPPORT:
+            share = len(set(present)) / len(present)
+            if share >= DISTINCT_SHARE:
+                hits.append({"feature": name, "rule": f"distinct share >= {DISTINCT_SHARE}", "distinct_share": round(share, 4),
+                             "present_cells": len(present)})
+    detail = {"checked": f"{checked} features", "features": hits}
+    return ("signal" if hits else "no_signal"), detail
+
+
+def e3(rows, index, columns, features, target, task):
+    ti = index[target]
+    boolean = columns[ti]["effective_type"] == "boolean"
+    known = [r for r in rows if r[ti] is not None]
+    if task == "classification":
+        classes = Counter(target_class(r[ti], boolean) for r in known)
+        large = sorted(k for k, c in classes.items() if c >= MIN_SUPPORT)
+        if len(large) < 2:
+            return "insufficient_data", {"classes_with_minimum_rows": len(large), "minimum": 2}
+    else:
+        ys = [finite_number(r[ti]) for r in known]
+        known = [r for r, y in zip(known, ys) if y is not None]
+        ys = [y for y in ys if y is not None]
+        if len(ys) < 2 * MIN_SUPPORT:
+            return "insufficient_data", {"numeric_targets": len(ys), "minimum": 2 * MIN_SUPPORT}
+        mean = math.fsum(ys) / len(ys)
+        sd = math.sqrt(math.fsum((y - mean) ** 2 for y in ys) / len(ys))
+        if sd == 0.0:
+            return "insufficient_data", {"target_spread": 0, "minimum": "a non-constant target"}
+    hits, with_missing, compared = [], 0, 0
+    for name in features:
+        fi = index[name]
+        if not any(r[fi] is None for r in known):
+            continue
+        with_missing += 1
+        if task == "classification":
+            shares = {}
+            for k in large:
+                group = [r for r in known if target_class(r[ti], boolean) == k]
+                shares[k] = sum(r[fi] is None for r in group) / len(group)
+            compared += 1
+            gap = max(shares.values()) - min(shares.values())
+            if gap >= MISSING_GAP:
+                hits.append({"feature": name, "missing_share_by_class": {k: round(v, 4) for k, v in shares.items()},
+                             "gap": round(gap, 4)})
+            continue
+        missing = [y for r, y in zip(known, ys) if r[fi] is None]
+        present = [y for r, y in zip(known, ys) if r[fi] is not None]
+        if len(missing) < MIN_SUPPORT or len(present) < MIN_SUPPORT:
+            continue
+        compared += 1
+        m_missing, m_present = math.fsum(missing) / len(missing), math.fsum(present) / len(present)
+        gap = abs(m_missing - m_present) / sd
+        if gap >= MEAN_GAP:
+            hits.append({"feature": name, "target_mean_missing": round(m_missing, 6), "target_mean_present": round(m_present, 6),
+                         "rows_missing": len(missing), "standardized_gap": round(gap, 4)})
+    if with_missing and not compared:  # every feature with missing cells fell under the minimum: nothing was compared
+        return "insufficient_data", {"features_compared": 0, "minimum": 1, "features_with_missing": with_missing,
+                                     "rows_per_group_minimum": MIN_SUPPORT}
+    detail = {"checked": f"{len(features)} features, {with_missing} with missing cells, {compared} compared",
+              "features_with_missing": with_missing, "compared": compared, "features": hits}
+    return ("signal" if hits else "no_signal"), detail
+
+
 CHECKS = {"W1": lambda ctx: w1(ctx["rows"], ctx["index"], ctx["features"], ctx["target"]),
           "W5": lambda ctx: w5(ctx["rows"], ctx["index"], ctx["columns"], ctx["features"], ctx["target"], ctx["task"]),
           "T1": lambda ctx: t1(ctx["rows"], ctx["index"], ctx["columns"], ctx["target"]),
@@ -492,7 +796,13 @@ CHECKS = {"W1": lambda ctx: w1(ctx["rows"], ctx["index"], ctx["features"], ctx["
           "W4": lambda ctx: w4(ctx["rows"], ctx["index"], ctx["split"], ctx["time"]),
           "T2": lambda ctx: t2(ctx["rows"], ctx["index"], ctx["columns"], ctx["target"], ctx["split"]),
           "T4": lambda ctx: t4(ctx["rows"], ctx["index"], ctx["target"], ctx["split"]),
-          "E4": lambda ctx: e4(ctx["rows"], ctx["index"], ctx["columns"], ctx["features"], ctx["split"])}
+          "E4": lambda ctx: e4(ctx["rows"], ctx["index"], ctx["columns"], ctx["features"], ctx["split"]),
+          "L1": lambda ctx: l1(ctx["rows"], ctx["index"], ctx["columns"], ctx["features"]),
+          "L2": lambda ctx: sparse(ctx["rows"], ctx["index"], ctx["columns"], ctx["features"]),
+          "L3": lambda ctx: l3(ctx["rows"], ctx["index"], ctx["columns"], ctx["features"], ctx["target"]),
+          "E1": lambda ctx: sparse(ctx["rows"], ctx["index"], ctx["columns"], ctx["features"]),
+          "E2": lambda ctx: e2(ctx["rows"], ctx["index"], ctx["columns"], ctx["features"]),
+          "E3": lambda ctx: e3(ctx["rows"], ctx["index"], ctx["columns"], ctx["features"], ctx["target"], ctx["task"])}
 
 ASK = {"target": "Declare `target` to run {ids}.",
        "task": "Declare `diagnostics.task` (one of classification, regression, count, forecast) to run {ids}; Fathom does not infer the task.",
@@ -518,13 +828,13 @@ def run(rows, columns, cfg, block):
         if row["families"] != "any" and not set(row["families"]) & set(block["families"]):
             results.append(result(row, "not_applicable", reason="family not declared; applies to " + ", ".join(row["families"])))
             continue
-        absent = [r for r in row["roles"] if declared.get(r) is None]
+        absent = [r for r in row["roles"] if r != "features" and declared.get(r) is None]  # features: declared or default
         if absent:
             for role in absent:
                 missing[role].append(row["id"])
             results.append(result(row, "not_applicable", reason="needs " + " and ".join(absent)))
             continue
-        if not features and row["id"] in ("W1", "W5", "W2", "E4"):
+        if not features and row["id"] in ("W1", "W5", "W2", "E4", "L1", "L2", "L3", "E1", "E2", "E3"):
             results.append(result(row, "insufficient_data", usable_features=0, minimum=1))
             continue
         try:
@@ -542,8 +852,8 @@ def run(rows, columns, cfg, block):
     target_inferred = target_col is not None and not target_col.get("override")
     inferred = [cfg["target"]] if target_inferred else []
     rank_rule = target_col is not None and block.get("task") in ("regression", "count")  # W5's rank rule reads feature types
-    e4_ran = any(r["id"] == "E4" and r["status"] in ("signal", "no_signal") for r in results)  # E4 picks range or levels by type
-    if rank_rule or e4_ran:
+    typed = any(r["id"] in TYPED and r["status"] in ("signal", "no_signal") for r in results)  # these read feature types
+    if rank_rule or typed:
         inferred += [c["name"] for c in columns if c["name"] in features and not c.get("override")]
     return {"context": {"task": block.get("task"), "families": block["families"], "target": cfg.get("target"),
                         **{k: block[k] for k in ("split", "entity", "time", "exposure", "horizon") if k in block}},
@@ -575,6 +885,8 @@ def figures(r):
     """The descriptive figures a check reports whatever its status (T1 class support, T3 dispersion)."""
     if r["id"] == "T1":
         return f"; smallest class {r['smallest']} rows"
+    if r["id"] == "L1" and r["condition_number"] is not None:
+        return f"; condition number {r['condition_number']}"
     if r["id"] == "W3":
         p = r["rows_per_entity"]
         return f"; rows per entity min {p['min']}, median {p['median']}, max {p['max']}"
@@ -618,6 +930,34 @@ def signal_message(r):
                 return f"{h['feature']} ({h['below_train_min']} below, {h['above_train_max']} above the train range)"
             return f"{h['feature']} ({h['unseen_levels']} levels unseen in train, {h['evaluation_rows']} evaluation rows)"
         return "E4 tree: evaluation values the train side never covers: " + "; ".join(one(h) for h in r["features"]) + "."
+    if r["id"] in ("L2", "E1"):
+        lead = ("L2 linear: levels under {m} rows would become near-empty indicator columns: " if r["id"] == "L2"
+                else "E1 tree: levels under {m} rows give splits little support: ").format(m=MIN_SUPPORT)
+        return lead + "; ".join(f"{h['feature']} ({h['sparse_levels']} of {h['levels']} levels, {h['share_of_rows']} of rows)"
+                                for h in r["features"]) + "."
+    if r["id"] == "L1":
+        parts = ([f"constant: {', '.join(r['constant'])}"] if r["constant"] else []) + \
+                ([f"a linear combination of earlier features: {', '.join(r['dependent'])}"] if r["dependent"] else []) + \
+                ([f"condition number {r['condition_number']}"] if r["condition_number"] is not None else []) + \
+                ([f"variance inflation at or above {VIF_LIMIT:g}: " + ", ".join(f"{v['feature']} {v['vif']}" for v in r["high_vif"])]
+                 if r["high_vif"] else [])
+        return f"L1 linear: the standardized design of {len(r['design'])} numeric features is " + \
+            ("rank deficient" if r["constant"] or r["dependent"] else "ill-conditioned") + "; " + "; ".join(parts) + "."
+    if r["id"] == "L3":
+        def sep(h):
+            if h["kind"] == "level":
+                return f"{h['feature']} ({h['levels']} levels whose rows all hold one class, {h['rows']} rows)"
+            return f"{h['feature']} (class {h['class']} lies entirely {h['side']} the other classes, between {h['between'][0]} and {h['between'][1]})"
+        return "L3 linear: features that separate the classes on their own, with no overlap: " + "; ".join(sep(h) for h in r["features"]) + "."
+    if r["id"] == "E2":
+        return "E2 tree: features a tree can memorise row by row: " + "; ".join(
+            f"{h['feature']} ({h['rule']}" + (f", {h['distinct_share']}" if "distinct_share" in h else "") + ")" for h in r["features"]) + "."
+    if r["id"] == "E3":
+        def gap(h):
+            if "gap" in h:
+                return f"{h['feature']} (missing share differs by {h['gap']} between classes)"
+            return f"{h['feature']} (target mean {h['target_mean_missing']} where missing, {h['target_mean_present']} where present)"
+        return "E3 tree: missing cells that go with the target: " + "; ".join(gap(h) for h in r["features"]) + "."
     if r["id"] == "T1":
         return (f"T1: {len(r['under_minimum'])} of {r['classes_total']} classes have fewer than {MIN_SUPPORT} rows: "
                 + ", ".join(r["under_minimum"][:EXAMPLES]) + (" and more" if len(r["under_minimum"]) > EXAMPLES else "")
