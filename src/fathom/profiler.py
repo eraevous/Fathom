@@ -199,6 +199,9 @@ def profile(data: GuideDataFrame, config: dict | None = None) -> ProfilingResult
         finding(f"relationships-{index}", "observation", relationship_message(item),
                 [{"path": f"relationships.sets.{index}", "value": {k: item[k] for k in ("name", "columns", "skipped", "pairs_planned", "pairs_computed")}}],
                 relationships["uncertainty"], "rule:relationships-v1", rule="declared_relationship_set", columns=item["columns"])
+    from .diagnostics import run as run_diagnostics, emit as emit_diagnostics
+    diagnostics = run_diagnostics(rows, columns, cfg, cfg.get("diagnostics"))
+    emit_diagnostics(diagnostics, finding)
     for f in findings:
         rule=f.get('rule')
         gate=quality.get('rules',{}).get(rule) or structure.get('rules',{}).get(rule)
@@ -219,7 +222,8 @@ def profile(data: GuideDataFrame, config: dict | None = None) -> ProfilingResult
         "selection": selection, "bivariate": pairs, "dependencies": dependencies, "annotations": {},
         "dataset_summary": dataset_summary, "quality": quality, "dataset":dataset, "samples":samples,
         "target_analysis":target_analysis,"row_structure":structure,"time_series":temporal_structure,"missingness_patterns":missingness_patterns(columns,rows),
-        "report":report_settings(cfg), **({"relationships": relationships} if relationships else {})})
+        "report":report_settings(cfg), **({"relationships": relationships} if relationships else {}),
+        **({"diagnostics": diagnostics} if diagnostics else {})})
 
 
 def report_settings(cfg: dict) -> dict:
