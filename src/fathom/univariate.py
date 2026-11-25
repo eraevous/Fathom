@@ -72,10 +72,6 @@ def sorted_percentile(ordered,p,rule=None):
     return (rule or stored)((ordered[lo]/scale*(1-w)+ordered[hi]/scale*w)*scale)
 
 
-def raw_percentile(values,p):
-    return percentile(values,p,geometry)
-
-
 def common(counter,least=False,limit=10):
     # heapq.nsmallest(k, it, key) equals sorted(it, key=key)[:k], ties included (spec 033).
     return [{'value':v,'count':n} for v,n in heapq.nsmallest(limit,counter.items(),key=lambda x:(x[1] if least else -x[1],x[0]))]
