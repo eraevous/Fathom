@@ -30,7 +30,7 @@ def mapping(value: object, name: str, allowed: set[str]) -> dict:
 def validate_config(raw: dict | None = None, columns: list[str] | None = None) -> dict:
     cfg = dict(mapping({} if raw is None else raw, "config", {
         "question", "target", "pair_budget", "columns", "row_unit", "generating_process",
-        "missingness_mechanism", "decisions", "context", "schema", "title", "description", "sample_rows", "sample_seed", "sample_text_limit", "group_by", "intervals", "time_series", "bins", "sections", "report", "relationships"}))
+        "missingness_mechanism", "decisions", "context", "schema", "title", "description", "sample_rows", "sample_seed", "sample_text_limit", "group_by", "intervals", "time_series", "bins", "sections", "report", "relationships", "diagnostics"}))
     from .summary_view import report_options
     report_options(cfg)
     cfg.pop("report",None)
@@ -46,6 +46,8 @@ def validate_config(raw: dict | None = None, columns: list[str] | None = None) -
     cfg["pair_budget"] = budget
     from .relationships import validate as validate_relationships
     cfg["relationships"] = validate_relationships(cfg.get("relationships"), columns, cfg.get("target"))
+    from .diagnostics import validate as validate_diagnostics
+    cfg["diagnostics"] = validate_diagnostics(cfg.get("diagnostics"), columns, cfg.get("target"))
     bins = cfg.get("bins")
     if bins is not None and (type(bins) is not int or not BINS_RANGE[0] <= bins <= BINS_RANGE[1]):
         raise ValueError(f"bins must be an integer from {BINS_RANGE[0]} to {BINS_RANGE[1]}")
