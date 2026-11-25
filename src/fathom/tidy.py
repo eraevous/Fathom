@@ -71,6 +71,9 @@ def tidy_files(d):
     files={'columns.csv':csv_text(cols,['column','effective_type','metric','value','value_type','unit']),
            'findings.csv':csv_text(findings,['collection','id','kind','message','generator','uncertainty']),
            'relations.csv':csv_text(relations,['left','right','method','semantics','generator','uncertainty'])}
+    if d.get('relationships'):
+        from .relationships import csv_rows,CSV_FIRST,LABELS
+        files['relationships.csv']=csv_text(csv_rows(d),CSV_FIRST,['measure.'+k for k in LABELS])
     samples=d.get('samples')
     if samples is not None:
         rows=[]

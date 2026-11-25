@@ -10,6 +10,7 @@ from .models import ProfilingResult,canonical_json
 from .charts import svg_chart
 from .palette import THEMES, KIND_COLOURS, theme_css
 from .target import target_tables
+from .relationships import tables as relationship_tables, notes as relationship_notes
 from .temporal_view import temporal_html, temporal_markdown, TEMPORAL_CSS
 from .presentation import formatted, column_tables, html_table, markdown_table, structured_tables, formatted_examples, display_charts, top_n_reason, categorical_hint
 from pathlib import Path
@@ -301,6 +302,7 @@ def render_html(result: ProfilingResult,report=None):
         items=[('key-findings','Key findings',len(key_findings(d))),('report-dataset','Dataset',None),('report-dictionary','Dictionary',len(d['columns'])),('findings','Findings',len(d['findings'])),('report-relations','Relations',len(d['bivariate']))]
         if d.get('time_series',{}).get('series'):items.append(('temporal-structure','Temporal',len(d['time_series']['series'])))
         if d.get('target_analysis'):items.append(('report-target','Target',len(d['target_analysis'].get('ranked',[]))))
+        if d.get('relationships'):items.append(('report-relationship-sets','Declared sets',len(d['relationships']['sets'])))
         items.extend([('report-exclusions','Exclusions',len(d['selection'].get('excluded',[]))),('report-provenance','Provenance',None)])
         if d['columns']:items.insert(1,('distribution-summaries','Distributions',len(d['columns'])-len(identifier_columns(d))))
         if identifier_columns(d):items.insert(3,('report-identifiers','Identifiers',len(identifier_columns(d))))
@@ -339,6 +341,8 @@ def render_html(result: ProfilingResult,report=None):
             out += ['<article><h3>'+escape(pair['left'])+' × '+escape(pair['right'])+'</h3><p>'+escape(pair['method'])+' · '+escape(pair['semantics'])+'</p>',
                     ''.join(html_table(t) for t in structured_tables('Relationship statistics',pair['statistics'])),type_pair_html(pair,ta['charts'] if ta else None),'<p>'+escape(pair['uncertainty'])+'</p></article>']
         if ta:out += ['</details>']
+        if d.get('relationships'):
+            out += ['<div id="report-relationship-sets" class="relationship-sets"><h3>Declared relationship sets</h3>']+[html_table(t) for t in relationship_tables(d)]+['<p>'+escape(n)+'</p>' for n in relationship_notes(d)]+['</div>']
         out += ['<details id="report-exclusions"><summary>Ranking and exclusions</summary>',readable_html(d['selection']),'</details>']
         if 'quality' in d:
             out += ['<details><summary>Quality rules and screening coverage</summary>',readable_html(d['quality']),'</details>']
@@ -464,6 +468,8 @@ def render_markdown(result: ProfilingResult,report=None):
         if ta:lines += ['<a id="target-chart-'+str(i)+'"></a>\n'+svg_chart(ch) for i,ch in enumerate(ta['charts'])]
         for pair in d['bivariate']:
             lines += ['### '+md_text(pair['left'])+' × '+md_text(pair['right']),'',md_text(pair['method']+' · '+pair['semantics']),'','\n'.join(markdown_table(t) for t in structured_tables('Relationship statistics',pair['statistics'])),type_pair_markdown(pair,ta['charts'] if ta else None),md_text(pair['uncertainty']),'']
+        if d.get('relationships'):
+            lines += ['<a id="report-relationship-sets"></a>','','### Declared relationship sets','']+[markdown_table(t) for t in relationship_tables(d)]+[md_text(n)+'\n' for n in relationship_notes(d)]
         lines += ['<details id="report-exclusions"><summary>Ranking and exclusions</summary>','',readable_md(d['selection']),'</details>','']
         if 'quality' in d:
             lines += ['<details><summary>Quality rules and screening coverage</summary>','',readable_md(d['quality']),'</details>','']
