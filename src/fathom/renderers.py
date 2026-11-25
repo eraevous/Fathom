@@ -127,6 +127,8 @@ def repetition_groups(d):
         rule = f.get('rule') or (match.group(1) if match else None)
         if rule is None or rule in {'dataset_summary','selected_relation','conditional_missingness'} or (f.get('columns') and len(f['columns'])!=1):
             continue
+        if not f.get('columns') and not re.fullmatch(r'column-\d+-.*', f['id']):
+            continue  # dataset-level finding (e.g. a diagnostics question): no column to group by
         buckets.setdefault((rule,f['kind']),[]).append(f)
     for (rule,kind),items in buckets.items():
         if len(items)<2: continue
