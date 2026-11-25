@@ -144,3 +144,60 @@ def message(item):
         text += " Skipped: " + "; ".join(f"{s['column']} ({s['reason']})" for s in item["skipped"]) + "."
     return text + " Descriptive, not causal."
 
+
+
+# Slice 1b: the stored sets as report tables and a scalar CSV view (no new computation).
+CSV_FIRST = ["set", "row_kind", "left", "right", "type_pair", "semantics", "n", "excluded_rows", "reason"]
+LABELS = {"pearson_r": "Pearson r", "spearman_rho": "Spearman rho", "eta": "eta",
+          "cramers_v_corrected": "Cramer's V (bias-corrected)"}
+
+
+def measures_text(pair):
+    """One cell naming each stored measure with its value, or the stored reason there is none."""
+    from .presentation import formatted
+    shown = [f"{LABELS.get(k, k)} {formatted(v)}" for k, v in sorted((pair["measures"] or {}).items()) if v is not None]
+    return "; ".join(shown) or "undefined: " + pair.get("undefined", "no value")
+
+
+def tables(d):
+    """Report tables for each declared set: one row per measured pair, then any skipped columns."""
+    out = []
+    for item in (d.get("relationships") or {}).get("sets", []):
+        out.append({"caption": (f"Declared set {item['name']}: {item['pairs_computed']} pairs measured "
+                                f"({item['pairs_planned']} possible among {len(item['columns'])} declared columns); "
+                                "complete cases per pair"),
+                    "headers": ["Left", "Right", "Type pair", "Measures", "Complete n", "Excluded rows", "Type basis"],
+                    "rows": [[p["left"], p["right"], p["type_pair"], measures_text(p), p["n"], p["excluded_rows"],
+                              p["semantics"]] for p in item["pairs"]],
+                    "numeric": [4, 5]})
+        if item["skipped"]:
+            out.append({"caption": f"Declared set {item['name']}: columns not measured",
+                        "headers": ["Column", "Reason"],
+                        "rows": [[s["column"], s["reason"]] for s in item["skipped"]], "numeric": []})
+    return out
+
+
+def notes(d):
+    """Method lines shown under the tables: measures, sampling, threshold and uncertainty, as stored."""
+    block = d.get("relationships") or {}
+    if not block:
+        return []
+    return ([f"{kind}: {text}." for kind, text in sorted(block["measures"].items())]
+            + [f"Sampling: {block['sampling']}.", f"Threshold: {block['threshold']}.", block["uncertainty"]])
+
+
+def csv_rows(d):
+    """Scalar rows for relationships.csv: one per pair, one per skipped column (row_kind says which).
+
+    `reason` is the stored undefined reason for a pair, or the skip reason for a column.
+    """
+    rows = []
+    for item in (d.get("relationships") or {}).get("sets", []):
+        for p in item["pairs"]:
+            rows.append({"set": item["name"], "row_kind": "pair", "left": p["left"], "right": p["right"],
+                         "type_pair": p["type_pair"], "semantics": p["semantics"], "n": p["n"],
+                         "excluded_rows": p["excluded_rows"], "reason": p.get("undefined"),
+                         **{"measure." + k: v for k, v in sorted((p["measures"] or {}).items())}})
+        for s in item["skipped"]:
+            rows.append({"set": item["name"], "row_kind": "skipped_column", "left": s["column"], "reason": s["reason"]})
+    return rows
