@@ -204,6 +204,9 @@ def profile(data: GuideDataFrame, config: dict | None = None) -> ProfilingResult
         for suffix, kind, message in reshape_findings(data.source["reshape"]):
             finding("reshape" + suffix, kind, message, [{"path": "source.reshape", "value": data.source["reshape"]}],
                     "Counted while reshaping the table as read; the file on disk is unchanged.", "rule:reshape-v1", rule="declared_reshape")
+    from .diagnostics import run as run_diagnostics, emit as emit_diagnostics
+    diagnostics = run_diagnostics(rows, columns, cfg, cfg.get("diagnostics"))
+    emit_diagnostics(diagnostics, finding)
     for f in findings:
         rule=f.get('rule')
         gate=quality.get('rules',{}).get(rule) or structure.get('rules',{}).get(rule)
@@ -224,7 +227,8 @@ def profile(data: GuideDataFrame, config: dict | None = None) -> ProfilingResult
         "selection": selection, "bivariate": pairs, "dependencies": dependencies, "annotations": {},
         "dataset_summary": dataset_summary, "quality": quality, "dataset":dataset, "samples":samples,
         "target_analysis":target_analysis,"row_structure":structure,"time_series":temporal_structure,"missingness_patterns":missingness_patterns(columns,rows),
-        "report":report_settings(cfg), **({"relationships": relationships} if relationships else {})})
+        "report":report_settings(cfg), **({"relationships": relationships} if relationships else {}),
+        **({"diagnostics": diagnostics} if diagnostics else {})})
 
 
 def reshape_context(context: dict, summary: dict | None) -> dict:
