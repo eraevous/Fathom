@@ -211,6 +211,8 @@ def _profile_data(data: GuideDataFrame, raw, cfg, out) -> NotebookResult:
     from .profiler import profile as run_profile
     from .renderers import render_html, render_markdown
     from .summary_view import report_options
+    from .reshape import apply as reshape_apply
+    data = reshape_apply(data, cfg)
     cfg = validate_config(cfg, list(data.frame.columns))
     result = run_profile(data, cfg)
     options = report_options(raw)
