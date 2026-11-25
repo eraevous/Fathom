@@ -87,6 +87,30 @@ are literal values. Date inference recognizes strict ISO, English month names an
 recorded ambiguity and a fixed two-digit-year pivot (69). Numeric
 overrides count incompatible/non-finite values rather than silently coercing them.
 
+## Reshape long or wide tables
+
+A `reshape` block turns a long table wide (`pivot`) or a wide table long (`melt`) before profiling. Every other key then refers to the reshaped table's columns.
+
+```yaml
+reshape:
+  pivot:
+    index: [site, date]   # one output row per combination
+    columns: metric       # each value becomes a column (at most 500)
+    values: value
+    aggregate: none       # none | first | last | count | sum | mean
+```
+
+```yaml
+reshape:
+  melt:
+    id: [site]
+    value_columns: [jan, feb, mar]   # default: every non-id column
+    variable_name: month             # default: variable
+    value_name: rainfall             # default: value
+```
+
+A pivot cell with more than one row stops the run unless you declare `aggregate`. `sum` and `mean` accept plain numbers only, so strip currency and grouping commas first. Blank or space-variant keys are refused. The report says what the reshape did, which columns it dropped, and how many wide cells are missing only because the long table had no row for them. The source hash stays the file's. See `specs/039-reshape/spec.md` for every rule.
+
 ## Configure
 
 ```bash

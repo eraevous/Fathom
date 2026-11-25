@@ -24,13 +24,17 @@ UNCERTAINTY = ("Descriptive complete-case association inside a declared column s
                "so a few sizeable values can arise by chance; this matrix is for review, not selection.")
 
 
-def validate(raw, columns=None):
+def validate(raw, columns=None, target=None):
     """Return the cleaned `relationships` block; raise ValueError on anything undeclared or over the bound."""
     if raw is None:
         return None
-    if not isinstance(raw, dict) or set(raw) - {"sets"}:
-        raise ValueError("relationships must be a mapping with keys: sets")
-    sets = raw.get("sets", [])
+    if not isinstance(raw, dict) or not raw or set(raw) - {"sets", "condition_on", "controls"}:
+        raise ValueError("relationships must be a mapping with keys: sets, condition_on, controls (at least one)")
+    from .adjusted import validate as validate_adjusted
+    extra = validate_adjusted(raw, columns, target)
+    if "sets" not in raw:
+        return extra
+    sets = raw["sets"]
     if not isinstance(sets, list) or not 1 <= len(sets) <= MAX_SETS:
         raise ValueError(f"relationships.sets must be a list of 1 to {MAX_SETS} {{name, columns}} mappings")
     cleaned, names = [], set()
@@ -47,7 +51,7 @@ def validate(raw, columns=None):
             raise ValueError(f"relationships.sets.{name} references an unknown column")
         names.add(name)
         cleaned.append({"name": name, "columns": list(cols)})
-    return {"sets": cleaned}
+    return {"sets": cleaned, **extra}
 
 
 def skip_reason(column, values, raw):
@@ -100,7 +104,7 @@ def matrix(rows, columns, block):
         return None
     index = {c["name"]: i for i, c in enumerate(columns)}
     out = []
-    for item in block["sets"]:
+    for item in block.get("sets", []):
         cols = item["columns"]
         values = {name: [cell(r[index[name]], columns[index[name]]["effective_type"]) for r in rows] for name in cols}
         skipped = [{"column": name, "reason": reason} for name in cols
