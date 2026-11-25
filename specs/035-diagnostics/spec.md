@@ -112,7 +112,7 @@ Standard library only. No extra is needed for 035. The thresholds are fixed cons
 
 ## Change from the plan
 
-The plan in HO-FTH-20261121-0ETR listed "linearity and heteroscedasticity, outlier influence" and "stationarity" under 035. Following R3, residual-based checks move to spec 036, where a fit is explicit. Following Kate's time-series cut, there is no stationarity test or verdict; S1–S3 report the evidence instead. This is the implementer's reading; if Zach wants a stationarity test back, it is a one-line change to this spec.
+The plan in HO-FTH-20261121-0ETR listed "linearity and heteroscedasticity, outlier influence" and "stationarity" under 035. Following R3, residual-based checks move to spec 036, where a fit is explicit. Following Kate's time-series cut, there is no stationarity test or verdict; S1–S3 report the evidence instead. Zach confirmed this reading on 2026-11-23 (reading 6, "Accepted"; DEC-264 in relay-kit-private, handoff HO-FTH-20261123-G628).
 
 ## Acceptance (from Kate's records, made concrete)
 
@@ -125,7 +125,7 @@ The plan in HO-FTH-20261121-0ETR listed "linearity and heteroscedasticity, outli
 
 ## Slices
 
-1. Config block, registry, the five statuses, the context gate, W1, W5, T1, T3. About 300 lines.
+1. Config block, registry, the five statuses, the context gate, W1, W5, T1, T3. About 300 lines. Results appear as findings and in the artifact's `diagnostics` key; a dedicated HTML section comes with a later slice.
 2. Split and entity: W2, W3, W4, T2, T4, E4.
 3. Linear and tree: L1–L3, E1–E3.
 4. Distance and time series: K1–K4, S1–S3, T5.
