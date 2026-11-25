@@ -45,7 +45,7 @@ def validate_config(raw: dict | None = None, columns: list[str] | None = None) -
         raise ValueError("pair_budget must be an integer from 0 to 20")
     cfg["pair_budget"] = budget
     from .relationships import validate as validate_relationships
-    cfg["relationships"] = validate_relationships(cfg.get("relationships"), columns)
+    cfg["relationships"] = validate_relationships(cfg.get("relationships"), columns, cfg.get("target"))
     from .diagnostics import validate as validate_diagnostics
     cfg["diagnostics"] = validate_diagnostics(cfg.get("diagnostics"), columns, cfg.get("target"))
     bins = cfg.get("bins")
