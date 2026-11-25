@@ -199,6 +199,18 @@ def profile(data: GuideDataFrame, config: dict | None = None) -> ProfilingResult
         finding(f"relationships-{index}", "observation", relationship_message(item),
                 [{"path": f"relationships.sets.{index}", "value": {k: item[k] for k in ("name", "columns", "skipped", "pairs_planned", "pairs_computed")}}],
                 relationships["uncertainty"], "rule:relationships-v1", rule="declared_relationship_set", columns=item["columns"])
+    from .adjusted import adjusted, conditional_message, partial_message
+    extra = adjusted(rows, columns, cfg.get("relationships"),
+                     [[p["left"], p["right"]] for p in pairs if p.get("generator") == "rule:target-v1"], cfg.get("target"))
+    if extra:
+        relationships.update(extra)
+        for key, rule, text in (("conditional", "conditional_association", conditional_message),
+                                ("partial", "partial_correlation", partial_message)):
+            for index, item in enumerate(extra.get(key, [])):
+                named = [item["left"], item["right"], *([item["condition_on"]] if key == "conditional" else item["controls"])]
+                finding(f"relationships-{key}-{index}", "observation", text(item),
+                        [{"path": f"relationships.{key}.{index}", "value": {k: item.get(k) for k in ("status", "n", "excluded_rows", "semantics", "inferred_columns")}}],
+                        extra["uncertainty"], "rule:relationships-v2", rule=rule, columns=named)
     if "reshape" in data.source:
         from .reshape import findings as reshape_findings
         for suffix, kind, message in reshape_findings(data.source["reshape"]):
