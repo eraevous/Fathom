@@ -12,6 +12,7 @@ from . import __version__
 from .config import load_config, read_config, validate_config
 from .connectors import CSVConnector
 from .models import ProfilingResult, SchemaContract, canonical_json
+from .reshape import apply as reshape_apply
 from .profiler import compare, profile
 from .renderers import render_html, render_markdown
 
@@ -170,7 +171,7 @@ def main(argv: list[str] | None = None) -> int:
             from .configure import build_schema, render_page
             raw = read_config(args.config) if args.config else None
             cfg = validate_config(raw)
-            data = CSVConnector(args.input, SchemaContract(**cfg["schema"])).load()
+            data = reshape_apply(CSVConnector(args.input, SchemaContract(**cfg["schema"])).load(), cfg)
             result = profile(data, validate_config(cfg, list(data.frame.columns)))
             schema = build_schema(result.document, data.frame, raw)
             page = render_page(schema)
@@ -187,6 +188,7 @@ def main(argv: list[str] | None = None) -> int:
                 data = _load_sql(args, SchemaContract(**cfg["schema"]))
             else:
                 data = CSVConnector(args.input, SchemaContract(**cfg["schema"])).load()
+            data = reshape_apply(data, cfg)
             cfg = validate_config(cfg, list(data.frame.columns))
             if args.command == "validate":
                 # The resolved schema keys stay at top level (CLI contract); "resolved" echoes
