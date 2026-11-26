@@ -557,10 +557,8 @@ def _fail(what):
 
 
 # Closed field sets: every field the type-pair tables, notes, finding tree, heat table and shared grouped-box
-# renderer read is listed here with its type; anything else is rejected, so a validating artifact always renders.
-TOP_KEYS = {'pair_type', 'roles', 'binary_rule', 'n', 'basis', 'measures', 'wording', 'chart', 'groups', 'table'}
-ROLE_KEYS = {'column', 'role', 'levels'}
-WORDING_KEYS = {'magnitude', 'near_zero', 'rule', 'magnitude_status'}
+# renderer read is listed here or inline in _validate (top-level, role and wording fields, whose required set
+# depends on the pair type); anything else is rejected, so a validating artifact always renders.
 GROUP_KEYS = {'value', 'n', 'min', 'median', 'q1', 'q3', 'max', 'iqr', 'mean'}
 TABLE_KEYS = {'row_column', 'column_column', 'row_levels', 'column_levels', 'counts', 'other_row_levels',
               'other_column_levels', 'shown_cap', 'basis'}
