@@ -11,6 +11,7 @@ from .config import validate_config
 from .connectors import CSVConnector
 from .models import SchemaContract, canonical_json
 from .profiler import profile
+from .reshape import apply as reshape_apply
 from .renderers import render_html, render_markdown
 from .summary_view import report_options
 
@@ -106,6 +107,8 @@ def build_bundle(manifest: Path, out: Path) -> dict:
             # Relative provenance makes copied bundles reproducible and avoids host paths.
             data.source['origin'] = table['path']
             entry['sha256'] = data.source['sha256']
+            # Same order as `guide profile`: reshape, then validate against the reshaped columns.
+            data = reshape_apply(data, cfg)
             result = profile(data, validate_config(cfg, list(data.frame.columns)))
             options = report_options(table.get('config'))
             artifacts = {'guide-profile.json': result.to_json(),

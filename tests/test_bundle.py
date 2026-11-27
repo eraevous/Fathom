@@ -100,3 +100,23 @@ def test_symlink_output_and_prevalidation_no_writes(tmp_path):
     with pytest.raises(ValueError):
         build_bundle(manifest, tmp_path / 'new')
     assert not (tmp_path / 'new').exists()
+
+
+def test_bundle_applies_declared_reshape_like_profile(tmp_path):
+    # Codex P2 on #48: a declared reshape must be applied before profiling, as `guide profile` does.
+    (tmp_path / 'wide.csv').write_text('site,jan,feb\nn,1,2\ns,3,\n')
+    cfg = {'reshape': {'melt': {'id': ['site'], 'value_columns': ['jan', 'feb'], 'variable_name': 'month'}},
+           'columns': {'month': {'type': 'categorical'}}}
+    manifest = tmp_path / 'bundle.json'
+    manifest.write_text(json.dumps({'version': 1, 'tables': [{'id': 'wide', 'path': 'wide.csv', 'config': cfg}]}))
+    index = build_bundle(manifest, tmp_path / 'out')
+    assert index['tables'][0]['status'] == 'ok'
+    (tmp_path / 'cfg.json').write_text(json.dumps(cfg))
+    assert main(['profile', str(tmp_path / 'wide.csv'), '--config', str(tmp_path / 'cfg.json'),
+                 '--out', str(tmp_path / 'single')]) == 0
+    original = ProfilingResult.load(tmp_path / 'single/guide-profile.json').document
+    bundled = ProfilingResult.load(tmp_path / 'out/wide/guide-profile.json').document
+    assert bundled['source']['sha256'] == index['tables'][0]['sha256']
+    assert 'reshape' in bundled['source']
+    original['source']['origin'] = 'wide.csv'
+    assert original == bundled
