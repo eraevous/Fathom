@@ -71,9 +71,9 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="guide", description="Evidenced local table review")
     parser.add_argument("--version", action="version", version=f"guide {__version__}")
     commands = parser.add_subparsers(dest="command", required=True)
-    helps = {"serve": "edit configuration and rerun a startup-fixed CSV on authenticated 127.0.0.1 only", "liftoff": "inspect a CSV without config; write a Brief + Configurations HTML page and its profile", "configure": "write configure.html, a self-contained page that builds a YAML config from this table's profile "
+    helps = {"bundle": "profile independent local CSV tables from a JSON manifest; no joins", "serve": "edit configuration and rerun a startup-fixed CSV on authenticated 127.0.0.1 only", "liftoff": "inspect a CSV without config; write a Brief + Configurations HTML page and its profile", "configure": "write configure.html, a self-contained page that builds a YAML config from this table's profile "
                           "(defaults, observable suggestions, explicit selections), and configure-profile.json, the profile it used"}
-    for command in ("profile", "render", "compare", "validate", "export", "configure", "liftoff", "panel", "serve"):
+    for command in ("profile", "render", "compare", "validate", "export", "configure", "liftoff", "panel", "serve", "bundle"):
         sub = commands.add_parser(command, help=helps.get(command), description=helps.get(command))
         # profile also takes an opt-in SQL source (spec 030), where the positional CSV is absent.
         sub.add_argument("input", type=Path, **({"nargs": "?"} if command == "profile" else {}))
@@ -120,6 +120,12 @@ def main(argv: list[str] | None = None) -> int:
     if args.command=='export' and args.out is None and args.tidy is None:parser.error('export needs --out or --tidy')
     if args.command=='export' and args.formats and args.out is None:parser.error('--formats requires --out')
     try:
+        if args.command == "bundle":
+            from .bundle import build_bundle
+            index = build_bundle(args.input, args.out)
+            failed = sum(t["status"] != "ok" for t in index["tables"])
+            print(f"guide: bundle written; {failed} table(s) failed; no joins performed")
+            return 2 if failed else 0
         if args.command == "serve":
             from .serve import run
             return run(args.input, args.out, args.config, host=args.host, idle_timeout=args.idle_timeout)
